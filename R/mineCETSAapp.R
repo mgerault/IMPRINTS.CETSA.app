@@ -9,7 +9,6 @@
 #'
 #' @name mineCETSAapp
 #'
-#' @import mineCETSA
 #' @import ggplot2
 #' @import stringr
 #' @import shiny

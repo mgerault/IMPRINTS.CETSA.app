@@ -598,7 +598,7 @@ server <- function(input, output, session){
                 selected = "PI3K")
   })
   output$drug2_ui <- renderUI({
-    selectInput("drug2", "Choose a drug", choices = names(drug_data_sh$data), multiple = TRUE, selected = "PI3K")
+    selectInput("drug2", "Choose a drug", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "PI3K")
   })
 
   observeEvent(input$up_daba,{

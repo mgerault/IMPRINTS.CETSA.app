@@ -124,11 +124,9 @@ hitlist <- function(inputdata,
 
 
   ###  Cleaning data and calculating statistics  ###
-  bc <<- data
   data <- data %>%
     gather(condition,value,-id)
 
-  bcd <<- data
   # Cleaning and calculating according to treatment format
   if (length(unlist(strsplit(data$condition[1],'_')))==4) {
     data <- data %>%
@@ -144,16 +142,23 @@ hitlist <- function(inputdata,
     }
   else if (length(unlist(strsplit(data$condition[1],'_')))==3) {
     if(any(grepl('[a-zA-Z][0-9]{2}[a-zA-Z]',unlist(strsplit(data$condition[1],'_'))))){
+      print("IKABFGIUWHEPGUH")
+      bc <<- data
       data[,2] <- gsub("X","",data[,2],perl = TRUE)
+      bou <<- data
       data <- data %>%
         separate(condition, into = c('Temperature',
                                    'Replicate',
                                    'Condition'),sep = '_')
+      bou2 <<- data
       data_clean <- data %>%
         group_by(id,Temperature, Condition) %>%
         summarise(Mean = mean(value,na.rm=T),
                 SD = sd(value,na.rm=T),
                 SEM = SD/sqrt(length(na.omit(value))))
+      
+      
+      bcd <<- data_clean
       }
     else {
       identifiers <- data.frame(str_split(data$condition,

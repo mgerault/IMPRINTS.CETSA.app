@@ -215,6 +215,7 @@ hitlist <- function(inputdata,
   ## Impose metric based conditions
 
 
+  bcd <<- data_clean
   if (dispmeas == 'SD') {
     selection_metrics <- data_clean %>%
       group_by(mean_threshold = (abs(Mean) > meancutoff),
@@ -227,6 +228,7 @@ hitlist <- function(inputdata,
              bounded = (abs(Mean)- boundedness*SEM>0),
              wellmeasured = (SEM < qualitycutoff))
     }
+  bc <<- selection_metrics
   ########################################################################
 
 
@@ -236,7 +238,7 @@ hitlist <- function(inputdata,
   hits_definition <- selection_metrics %>%
     filter(mean_threshold == T, bounded == T)
 
-  bc <<- hits_definition 
+ 
   #Unique id,cond pair for hits
   keys_hits <- hits_definition %>% ungroup() %>%  select(id,Condition) %>%  distinct()
 

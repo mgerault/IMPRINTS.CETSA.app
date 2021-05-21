@@ -124,9 +124,11 @@ hitlist <- function(inputdata,
 
 
   ###  Cleaning data and calculating statistics  ###
+  bc <<- data
   data <- data %>%
     gather(condition,value,-id)
 
+  bcd <<- data
   # Cleaning and calculating according to treatment format
   if (length(unlist(strsplit(data$condition[1],'_')))==4) {
     data <- data %>%
@@ -215,7 +217,7 @@ hitlist <- function(inputdata,
   ## Impose metric based conditions
 
 
-  bcd <<- data_clean
+ 
   if (dispmeas == 'SD') {
     selection_metrics <- data_clean %>%
       group_by(mean_threshold = (abs(Mean) > meancutoff),
@@ -228,7 +230,7 @@ hitlist <- function(inputdata,
              bounded = (abs(Mean)- boundedness*SEM>0),
              wellmeasured = (SEM < qualitycutoff))
     }
-  bc <<- selection_metrics
+ 
   ########################################################################
 
 

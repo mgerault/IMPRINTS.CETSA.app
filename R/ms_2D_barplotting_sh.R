@@ -54,7 +54,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                                   usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
                                   linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
                                   save_pdf = FALSE, toplabel = "IMPRINTS-CETSA bar plotting",
-                                  leftlabel = "", bottomlabel = "", pdfname = "bar_ggplotting",
+                                  leftlabel = "", bottomlabel = "", pdfname = "barplot",
                                   pdfheight = 12, pdfwidth = 12)
 {
 
@@ -306,14 +306,14 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                                         bottom = bottomlabel)))
     })
     class(pl) <- c("arrangelist", "ggplot", class(pl))
-    pdfname <- paste0("/", pdfname, ".pdf")
+    pdfname <- paste0(pdfname, ".pdf")
     if (length(outdir)) {
       ggsave(file = paste0(outdir, "/", format(Sys.time(),
-                                               "%y%m%d_%H%M_"), dataname, "_", pdfname), pl, height = pdfheight,
+                                               "%y%m%d_"), dataname, "_", pdfname), pl, height = pdfheight,
              width = pdfwidth)
     }
     else {
-      ggsave(file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
+      ggsave(file = paste0(format(Sys.time(), "%y%m%d_"),
                            dataname, "_", pdfname), pl, height = pdfheight,
              width = pdfwidth)
     }

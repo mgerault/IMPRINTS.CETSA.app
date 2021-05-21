@@ -236,6 +236,7 @@ hitlist <- function(inputdata,
   hits_definition <- selection_metrics %>%
     filter(mean_threshold == T, bounded == T)
 
+  bc <<- hits_definition 
   #Unique id,cond pair for hits
   keys_hits <- hits_definition %>% ungroup() %>%  select(id,Condition) %>%  distinct()
 

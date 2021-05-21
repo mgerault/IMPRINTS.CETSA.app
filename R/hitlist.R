@@ -13,11 +13,6 @@
 #' @param exported Logical to tell if you want to export the results. Use it when use_prompt is FALSE.
 #'
 #'
-#' @import tidyr
-#' @import dplyr
-#' @import stringr
-#'
-#'
 #' @return Dataframe of the export.
 #'
 #' @export

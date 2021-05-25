@@ -25,7 +25,7 @@ ms_2D_barplotting_sh(
   toplabel = "IMPRINTS-CETSA bar plotting",
   leftlabel = "",
   bottomlabel = "",
-  pdfname = "bar_ggplotting",
+  pdfname = "barplot",
   pdfheight = 12,
   pdfwidth = 12
 )

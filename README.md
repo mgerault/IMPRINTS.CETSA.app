@@ -32,7 +32,7 @@ Then, type and run the following commands in R console:
 
 *> }*  
 
-*> devtools::install_guithub("mgerault/mineCETSAapp")*
+*> devtools::install_github("mgerault/mineCETSAapp")*
 
 *> library(mineCETSAapp)*
 

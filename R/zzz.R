@@ -10,6 +10,22 @@
       )
     )
   }
+  if (!("STRINGdb" %in% rownames(installed.packages()))) {
+    packageStartupMessage(
+      paste0(
+        "Please install `STRINGdb` package by",
+        " `BiocManager::install('STRINGdb')`"
+      )
+    )
+  }
+  if (!("EBImage" %in% rownames(installed.packages()))) {
+    packageStartupMessage(
+      paste0(
+        "Please install `EBImage` package by",
+        " `BiocManager::install('EBImage')`"
+      )
+    )
+  }
 
 }
 

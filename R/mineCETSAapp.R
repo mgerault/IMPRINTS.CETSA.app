@@ -16,7 +16,6 @@
 #' @import shinydashboard
 #' @import shinycssloaders
 #' @import rio
-#' @import EBImage
 #' @import shinyjs
 #' @import DT
 #' @import dplyr

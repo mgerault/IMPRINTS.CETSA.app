@@ -12,10 +12,10 @@ LazyData: true
 RoxygenNote: 7.1.1
 Depends: 
     R (>= 2.10)
-Imports: ggplot2,  stringr, tidyr, EBImage,
+Imports: ggplot2,  stringr, tidyr, 
    shiny, shinydashboard, shinycssloaders, DT, rio, purrr,
    dplyr, plyr, shinyjs, cowplot, plotly, pubmedR, 
    rentrez, XML, gridExtra,
    bibliometrix, officer, colourpicker, openxlsx
-Suggests: mineCETSA
+Suggests: mineCETSA, EBImage, STRINGdb
 

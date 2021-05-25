@@ -24,7 +24,17 @@ please refer to the [CETSA website](https://www.cetsa.org/about).
 ## How to install mineCETSAapp?  
 First go to Rstudio. This package totally depends on the last version of the mineCETSA package. If you havn't donwload it yet, please do so.
 For installation from github https://github.com/nkdailingyun/mineCETSA ; it may not be the last version also.
-Then, type and run the following commands in R console:
+Moreover, you need to install EBImage and STRINGdb package from BioConductor :
+
+*> if(!requireNamespace("BiocManager", quietly = TRUE)){*
+
+*> install.packages("BiocManager")*  
+
+*> }*
+
+*> BiocManager::install(c("EBImage", "STRINGdb"))*  
+
+When all of this is done, type and run the following commands in R console:
 
 *> if(!requireNamespace("devtools", quietly = TRUE)){*
 

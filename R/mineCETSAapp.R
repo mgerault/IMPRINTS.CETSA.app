@@ -12,6 +12,7 @@
 #' @import ggplot2
 #' @import stringr
 #' @import shiny
+#' @import magick
 #' @import tidyr
 #' @import shinydashboard
 #' @import shinycssloaders

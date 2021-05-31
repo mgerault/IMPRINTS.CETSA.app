@@ -51,28 +51,54 @@ img2 <- readImage("./data-raw/Animal_Cell.png")
 
 img2@.Data <- aperm(img2@.Data, c(2,1,3))
 
-library(plotly)
-fig2 <- plot_ly(type="image", z=img2*255,
-                hovertemplate = paste('<br>x: %{x}',
-                                      '<br>y: %{y}',
-                                      '<extra></extra>')) %>%
-  add_trace(type = "scatter",
-            mode = "markers",
-            x = loca_orga$x[c(5, 240)], y = loca_orga$y[c(5, 240)],
-            customdata = c("P85037", "Q9Y3U8"),
-            text = c("P85037", "Q9Y3U8"),
-            hovertext = loca_orga$organelle[c(5, 240)],
-            marker =
-              list(color = c("red", "blue"),
-                   size = 10),
-            hovertemplate = paste('Protein: %{text}',
-                                  '<br>Organelle: %{hovertext}',
-                                  '<extra></extra>'),
-            showlegend = FALSE
-  ) %>%
-  layout(xaxis = list(visible = FALSE),
-         yaxis = list(visible = FALSE))
 
+
+
+###get location
+#https://www.proteinatlas.org/api/search_download.php?search=Human&format=json&columns=g,up,relih,scl,scml,scal&compress=no
+pr_atlas <- rjson::fromJSON(file = "./data-raw/Human.json")
+pr_atlas <- lapply(pr_atlas, function(y) lapply(y, function(x) {
+  if(length(x) != 0){
+    if(length(x) > 1){
+      x <- paste(x, collapse = ", ")
+    }
+  }
+  else{
+    x <- NA
+  }; x})
+)
+pr_atlas <- lapply(pr_atlas, function(x) {x <- as.data.frame(x); x})
+pr_atlas <- do.call(rbind, pr_atlas)
+
+#get correspondances between organellar names
+orgatlas_match <- openxlsx::read.xlsx("./data-raw/organellar list.xlsx")
+orgatlas_match$location.corres <- mapply(function(x,y){
+  if(purrr::is_empty(x)){
+    z <- y
+  }
+  else{
+    z <- x
+  }
+  ;z
+},
+stringr::str_extract_all(orgatlas_match$location.from.pratlas,  "(?<=\\().+?(?=\\))"),
+as.list(orgatlas_match$location.from.pratlas))
+
+orgatlas_match$location.from.pratlas <- stringr::str_replace_all(orgatlas_match$location.from.pratlas,  "\\(|(?<=\\().+?(?=\\))|\\)", "")
+orgatlas_match <- orgatlas_match[,-c(1:2)]
+rownames(orgatlas_match) <- orgatlas_match$location.from.pratlas
+
+
+loca_orga
+
+rg_list <- list()
+for(i in levels(loca_orga$organelle)){
+  idx <- which(loca_orga$organelle == i)
+  rg_x <- range(loca_orga$x[idx])
+  rg_y <- range(loca_orga$y[idx])
+  rg_list[[i]] <- data.frame(x = rg_x, y = rg_y)
+}
+rg_list
 
 usethis::use_data(PI3K1h6h_file, overwrite = TRUE)
 usethis::use_data(hitlist_PI3K1h6h, overwrite = TRUE)
@@ -83,6 +109,9 @@ usethis::use_data(NN_TNF, overwrite = TRUE)
 usethis::use_data(drug_data, overwrite = TRUE)
 usethis::use_data(ev_null_print, overwrite = TRUE)
 usethis::use_data(img2, overwrite = TRUE)
-usethis::use_data(fig2, overwrite = TRUE)
+usethis::use_data(pr_atlas, overwrite = TRUE)
+usethis::use_data(orgatlas_match, overwrite = TRUE)
+usethis::use_data(loca_orga, overwrite = TRUE)
+usethis::use_data(rg_list, overwrite = TRUE)
 
 

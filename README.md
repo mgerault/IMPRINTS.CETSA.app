@@ -4,8 +4,8 @@ The goal of this package is to provide a user friendly interface of this package
 of many proteins from drug experiement available in the database; add new dataset or remove old ones from this database; start a PubMed search based on the protein names or
 any character you want and save the results in word files; etc.
 
-The app contains also a tab called "Interactive cell". This one is not perfectly finished but the goal is to visualize proteins directly into the cell
-and get information on it when clicking or select one.
+The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell
+and get information on it when clicking one. The subcellular location is obtained thanks to the protein Atlas data base.
 
 ## What is CETSA?
 The Cellular Thermal Shift Assay (CETSA) (orginially described in [Science 341(6141):84-87 (2013)](http://www.sciencemag.org/lookup/doi/10.1126/science.1233606)) is a 

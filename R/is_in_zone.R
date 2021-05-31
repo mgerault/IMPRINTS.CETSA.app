@@ -50,8 +50,11 @@ is_in_zone <- function(border, target){
     }
 
   }
+  deg <- abs(degree)
+  deg <- deg %% 360
+  deg <- deg/360
 
-  if(abs(round(degree) - 360) <= 3){ #if sum of angles is equal to 360 +/- 3, point is in the zone (3 is an arbitrary confidence parameter)
+  if((deg >= 0 & deg < 1e-20) | (deg > 359.9995/360 & deg <= 1)){
     return(TRUE)
   }
   else{

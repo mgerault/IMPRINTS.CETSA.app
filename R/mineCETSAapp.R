@@ -22,6 +22,7 @@
 #' @import dplyr
 #' @import plyr
 #' @import cowplot
+#' @importFrom  rjson fromJSON
 #' @import plotly
 #' @import pubmedR
 #' @import bibliometrix

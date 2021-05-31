@@ -16,10 +16,6 @@ library(shinydashboard)
 library(shinycssloaders)
 library(colourpicker)
 
-treat_PI3K <- get_treat_level(PI3K1h6h_file)
-treat_TNF <- get_treat_level(TNF_MOLM1316)
-treat_TNF_PI3K <- append(treat_PI3K, treat_TNF)
-
 
 #increase the max request size for uploading files
 options(shiny.maxRequestSize = 1000*1024^2)
@@ -422,48 +418,123 @@ ui <- dashboardPage(
       tabItem(tabName = "cell",
               h2(tags$u("Proteins localization")),
               tags$hr(),
-
-              withSpinner(plotlyOutput("cell_p", height = "700px"), type = 6),
-              tags$hr(),
-
-              fluidRow(box(title = "Bar plot parameters", status = "primary",
+              fluidRow(
+                box(title = "Get subcellular location from your hitlist", status = "primary",
                   solidHeader = TRUE, collapsible = TRUE, width = 12,
-                  fluidRow(
-                    column(6, radioButtons("cond_sel_cell", "Selection type",
-                                           choices = c("Select the treatment level" = "treat",
-                                                       "Select treatment level by category" = "cat",
-                                                       "Select all the treatment level" = "all_cond"),
-                                           selected = "treat", inline = TRUE),
 
-                           conditionalPanel(condition = "input.cond_sel_cell != 'all_cond' ",
-                                            selectInput("cond_cell", "Select one or more conditions",
-                                                        choices = NULL,
-                                                        multiple = TRUE)
-                                            )
+                  fluidRow(column(4, fileInput("hitl_cell", "Import the summary file from the hitlist output")),
+                           conditionalPanel(condition = "output.hitdata_cell_up",
+                                            column(4, actionButton("goloca_cell", "Get subcellular location")))
                            ),
-                    column(6, conditionalPanel(condition = "input.cond_sel_cell != 'cat' ",
-                                               checkboxInput("rem_con_cell", "Remove the controls", FALSE),
-                                               conditionalPanel(condition = "input.rem_con_cell",
-                                                                textInput("con_name_cell", "Type the name of your controls", "Vehicle|DMSO")
-                                                                )
-                                               )
-                           )
-                    ),
+                  textOutput("diagl_cell"),
 
                   tags$hr(),
+                  conditionalPanel(condition = "output.resdata_cell_up",
+                                   DT::dataTableOutput("locatab_cell"),
 
-                  fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE)),
-                           column(4, checkboxInput("grad_cell", "Use color gradient", FALSE)),
-                           column(4, checkboxInput("line_cell", "Use line instead of bar", FALSE))
-                           )
-                  )),
+                                   downloadButton("down_prl_cell"))
 
+                  )
+                ),
+
+              conditionalPanel(condition = "output.resdata_cell_up",
+                               fluidRow(
+                                 box(title = "The cell", status = "primary",
+                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                   fluidRow(column(4, textInput("titp_cell", "Type a title for the plot", "PI3K data in the cell")),
+                                            column(4, selectInput("condp_cell", "Select some conditions", multiple = TRUE, choices = NULL)),
+                                            column(4, actionButton("gop_cell", "See the plot"))
+                                            ),
+                                   tags$hr(),
+
+                                   withSpinner(plotlyOutput("cell_p", height = "700px"), type = 6),
+                                   downloadButton("downthe_cell", "Download the plot as html file")
+                                   )
+                                 )
+                               ),
 
               tags$hr(),
 
-              actionButton("barp_cell", "See bar plot"),
-              withSpinner(plotOutput("bar_pr_cell", height = "800px"), type = 6),
-              downloadButton("downbar_cell", "Download the plot as png file")
+              fluidRow(
+                box(title = "Bar plot", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+                  fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
+                                              please import the cal_diff output file which correspond to your hitlist."),
+                  conditionalPanel(condition = "!input.selpr_loca_cell",
+                                   textOutput("prsel_p_cell")
+                                   ),
+
+                  conditionalPanel(condition = "output.barpdata_cell_up",
+                                   fluidRow(column(4, checkboxInput("selpr_loca_cell", "Select proteins according to their subcellular location", FALSE)),
+                                            conditionalPanel(condition = "input.selpr_loca_cell",
+                                                             column(4, selectInput("selorga_cell", "Select some organelle", multiple = TRUE, choices = NULL)),
+                                                             column(4, checkboxInput("allpr_cell", "Select all the proteins from the organelle you selected", FALSE),
+                                                                       conditionalPanel(condition = "!input.allpr_cell",
+                                                                                        selectizeInput("selectpr_cell", "Select some proteins", multiple = TRUE, choices = NULL)
+                                                                                        )
+                                                                    )
+                                                             )
+                                            ),
+
+                                   radioButtons("cond_sel_cell", "Selection type",
+                                                            choices = c("Select the treatment level" = "treat",
+                                                                        "Select treatment level by category" = "cat",
+                                                                        "Select all the treatment level" = "all_cond"),
+                                                            selected = "treat", inline = TRUE
+                                                ),
+
+                                   conditionalPanel(condition = "input.cond_sel_cell != 'all_cond' ",
+                                                                      selectInput("cond_cell", "Select one or more conditions",
+                                                                                  choices = NULL,
+                                                                                  multiple = TRUE)
+                                                                      ),
+
+                                   tags$hr(),
+
+                                   fluidRow(column(4, checkboxInput("save_bar_cell", "Save the bar plots in a pdf file", FALSE)),
+                                            conditionalPanel(condition = "input.save_bar_cell",
+                                                             column(4, numericInput("lay_bar1_cell", "Type the number of plot per row",
+                                                                                    min = 1, max = 10, step = 1, value = 4)),
+                                                             column(4, numericInput("lay_bar2_cell", "Type the number of plot per column",
+                                                                                    min = 1, max = 10, step = 1, value = 3))
+                                            )
+                                   ),
+
+                                   tags$hr(),
+                                   fluidRow(column(4, checkboxInput("ch_own_col_cell", "Choose your own color", FALSE)),
+                                            column(4, conditionalPanel(condition = "input.ch_own_col_cell",
+                                                                       textOutput("n_cond_sel_cell"),
+                                                                       colourInput("own_color_pick_cell", NULL, "#FF2B00",
+                                                                                   allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                       textOutput("own_color_cell")
+                                                                       )
+                                                   ),
+                                            conditionalPanel(condition = "input.ch_own_col_cell",
+                                                             column(4, actionButton("add_col_cell", "Add the color"),
+                                                                    actionButton("rem_col_cell", "Remove the last color"))
+                                                             )
+                                            ),
+                                   tags$hr(),
+
+                                   fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE)),
+                                            column(4, checkboxInput("grad_cell", "Use color gradient", FALSE)),
+                                            column(4, checkboxInput("line_cell", "Use line instead of bar", FALSE))
+                                            ),
+
+                                   tags$hr(),
+
+                                   actionButton("barp_cell", "See bar plot"),
+                                   tags$hr(),
+                                   textOutput("diag_bar_cell"),
+                                   tags$hr(),
+
+                                   withSpinner(plotOutput("bar_pr_cell", height = "800px"), type = 6),
+                                   downloadButton("downbar_cell", "Download the plot as png file")
+                                   )
+                  )
+                  )
+
+
 
               ),
 
@@ -1254,9 +1325,6 @@ server <- function(input, output, session){
   observeEvent(input$start_string, {
     showNotification("Getting the STRING id, this may take a while", type = "message")
     if(!exists("string_db")){
-      if(!file.exists(file.path(getwd(), "STRING_data"))){
-        dir.create(file.path(getwd(), "STRING_data"))
-      }
       string_db <<- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
                                 score_threshold=200,
                                 input_directory=  file.path(getwd(), "STRING_data"))
@@ -1447,34 +1515,176 @@ server <- function(input, output, session){
 
   ### CELL
 
-  output$cell_p <- renderPlotly({
-    fig2
+  hitdata_cell <- reactive({
+    File <- input$hitl_cell
+    if (is.null(File))
+      return(NULL)
+
+    import_list(File$datapath, header = TRUE)[[1]]
   })
-  PR_event <- reactive({
-     event_data("plotly_click")
+  output$hitdata_cell_up <- reactive({
+    return(!is.null(hitdata_cell()))
+  })
+  outputOptions(output, "hitdata_cell_up", suspendWhenHidden = FALSE)
+
+
+  resdata_cell <- reactiveValues(
+    ch = NULL
+  )
+  observeEvent(input$goloca_cell, {
+    showNotification("Getting subcellular locations", type = "message")
+
+    withCallingHandlers({
+      shinyjs::html("diagl_cell", "")
+      resdata_cell$ch <- hit_for_cell(hitdata_cell())
+     },
+     message = function(m) {
+      shinyjs::html(id = "diagl_cell", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+    }
+    )
+
+
+    output$locatab_cell <- DT::renderDataTable({
+      DT::datatable(resdata_cell$ch,
+                    caption = htmltools::tags$caption(
+                      style = 'caption-side: top; text-align: left;',
+                      htmltools::strong("Subcellular locations from your hitlist")
+                    ),
+                    rownames = FALSE,
+                    options = list(lengthMenu = c(10,20,30), pageLength = 10))
     })
 
+    output$down_prl_cell <- downloadHandler(
+      filename = function() {
+        paste0("HIT_locations_", Sys.Date(), ".xlsx")
+      },
+      content = function(file){
+        openxlsx::write.xlsx(resdata_cell$ch, file, row.names = FALSE)
+      }
+    )
 
-  Sel_cond_cell <- reactive({
-    tr <- NULL
-    if(input$cond_sel_cell == "cat"){
-      trh <- hitlist_TNF_PI3K[which(hitlist_TNF_PI3K$id == PR_event()$customdata),c("Condition", "category")]
-      tr <- NN_TNF_PI3K[which(NN_TNF_PI3K$id == PR_event()$customdata), c("Condition", "category")]
-      tr <- tr[!duplicated(tr),]
-      tr <- rbind(trh, tr)
+    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$Condition))
+    updateSelectInput(session, "selorga_cell", choices = unique(resdata_cell$ch$main.location.cell))
+  })
+  output$resdata_cell_up <- reactive({
+    return(!is.null(resdata_cell$ch))
+  })
+  outputOptions(output, "resdata_cell_up", suspendWhenHidden = FALSE)
+
+
+  cell_p_Rv <- reactiveValues(
+    g = NULL
+  )
+
+  cell_p_R <- reactive({
+    hit_plotcell(resdata_cell$ch, tit = input$titp_cell,
+                 cond = input$condp_cell,
+                 cat_col_list = list("CC" = "red", "CN" = "lightblue",
+                                     "NC" = "yellow", "ND" = "#747474",
+                                     "NN" = "#CCCCCC"))
+  })
+  observeEvent(input$gop_cell, {
+    showNotification("Getting plot, this can take a while. Please wait", type = "message")
+
+    cell_p_Rv$g <- cell_p_R()
+  })
+
+  output$cell_p <- renderPlotly({
+    cell_p_Rv$g
+  })
+  output$downthe_cell <- downloadHandler(
+    filename = function() {
+      paste("Int_cell_", Sys.Date(), ".html", sep = "")
+    },
+    content = function(file){
+      withr::with_dir(WD, htmlwidgets::saveWidget(partial_bundle(cell_p_Rv$g), file))
     }
-    else if(input$cond_sel_cell == "treat"){
-      if(input$rem_con_cell){
-        tr <- treat_TNF_PI3K[-grep(input$con_name_cell, treat_TNF_PI3K)]
+  )
+
+
+
+  #handle selection of proteins
+  PR_event <- reactiveVal()
+  observeEvent(event_data("plotly_click", source = "M"), {
+    PR <- event_data("plotly_click", source = "M")$customdata
+    if(!is.null(PR_event)){
+      if(purrr::is_empty(which(PR_event() == PR))){
+        PR_old_new <- c(PR_event(), PR)
       }
       else{
-        tr <- treat_TNF_PI3K
+        PR_old_new <- PR_event()[-which(PR_event() == PR)] #if already clicked, remove
       }
     }
     else{
-      tr <- NULL
+      PR_old_new <- c(PR_event(), PR)
     }
 
+    PR_event(unique(PR_old_new))
+  })
+  # clear the set of cars when a double-click occurs
+  observeEvent(event_data("plotly_doubleclick", source = "M"), {
+    PR_event(NULL)
+  })
+
+  output$prsel_p_cell <- renderText({
+    if(!is.null(PR_event())){
+      paste("You clicked on", paste(PR_event(), collapse = ", "))
+    }
+    else{
+      NULL
+    }
+  })
+
+  barpdata_cell <- reactive({
+    File <- input$filebarp_cell
+    if (is.null(File))
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  output$barpdata_cell_up <- reactive({
+    return(!is.null(barpdata_cell()))
+  })
+  outputOptions(output, "barpdata_cell_up", suspendWhenHidden = FALSE)
+
+
+  sel_prot_cell <- reactive({
+    pr <- NULL
+    if(input$selpr_loca_cell){
+      if(!is.null(resdata_cell$ch)){
+        pr <- resdata_cell$ch$id[which(!is.na(match(resdata_cell$ch$main.location.cell, input$selorga_cell)))]
+        pr <- unique(pr)
+      }
+    }
+  })
+  observe({
+    updateSelectizeInput(session, "selectpr_cell", choices = sel_prot_cell(), server = TRUE)
+
+  })
+
+  Sel_cond_cell <- reactive({
+    if(input$selpr_loca_cell){
+      if(input$allpr_cell){
+        pr <- sel_prot_cell()
+      }
+      else{
+        pr <- input$selectpr_cell
+      }
+    }
+    else{
+      pr <- PR_event()
+    }
+
+    tr <- NULL
+    if(!is.null(resdata_cell$ch)){
+      if(input$cond_sel_cell == "cat"){
+        tr <- resdata_cell$ch[which(!is.na(match(resdata_cell$ch$id,pr))),c("Condition", "category")]
+      }
+      else {
+        tr <- resdata_cell$ch[which(!is.na(match(resdata_cell$ch$id, pr))),c("Condition")]
+      }
+    }
     tr
   })
 
@@ -1490,34 +1700,92 @@ server <- function(input, output, session){
   })
 
   data_cell <- reactive({
-    data <- TNF_PI3K
-    TREAT <- treat_TNF_PI3K
+    if(!is.null(barpdata_cell())){
+      data <- barpdata_cell()
+      TREAT <- get_treat_level(barpdata_cell())
+
+      if(input$selpr_loca_cell){
+        if(input$allpr_cell){
+          pr <- sel_prot_cell()
+        }
+        else{
+          pr <- input$selectpr_cell
+        }
+      }
+      else{
+        pr <- PR_event()
+      }
+
+      data <- ms_subsetting(data, isfile = F, hitidlist = c(pr))
 
 
-    if(input$rem_con_cell){
-      data <- data[,-grep(input$con_name_cell,  names(data))]
+      if(input$cond_sel_cell == "treat"){
+        notsel_cond <- TREAT[!(TREAT %in% input$cond_cell)]
+        if(!purrr::is_empty(notsel_cond)){
+          notsel_cond <- paste(notsel_cond, collapse = "|")
+
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+
+      }
+      else if(input$cond_sel_cell == "cat"){
+        sele_cond <- Sel_cond_cell()$Condition[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
+        notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
+        if(!purrr::is_empty(notsel_cond)){
+          notsel_cond <- paste(notsel_cond, collapse = "|")
+
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+
+      }
+      else if(input$cond_sel_cell == "all_cond"){
+        notsel_cond <- TREAT[!(TREAT %in% Sel_cond_cell())]
+        if(!purrr::is_empty(notsel_cond)){
+          notsel_cond <- paste(notsel_cond, collapse = "|")
+
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+      }
     }
-
-    data <- ms_subsetting(data, isfile = F, hitidlist = c(PR_event()$customdata))
-
-
-    if(input$cond_sel_cell == "treat"){
-      notsel_cond <- TREAT[!(TREAT %in% input$cond_cell)]
-      notsel_cond <- paste(notsel_cond, collapse = "|")
-
-      data <- data[,-str_which(names(data), notsel_cond)]
-    }
-    else if(input$cond_sel_cell == "cat"){
-      sele_cond <- Sel_cond_cell()$Condition[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
-      notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
-      notsel_cond <- paste(notsel_cond, collapse = "|")
-
-      data <- data[,-str_which(names(data), notsel_cond)]
+    else{
+      data <- NULL
     }
 
     data
   })
 
+
+  output$n_cond_sel_cell <- renderText({
+    if(input$ch_own_col_cell){
+      if (input$cond_sel_cell  == "all_cond"){
+        paste("You selected", length(get_treat_level(data_cell())), "conditions, please enter the same number of colors")
+      }
+      else{
+        paste("You selected", length(input$cond_cell), "conditions, please enter the same number of colors")
+      }
+    }
+    else{
+      NULL
+    }
+  })
+
+  OWN_color_cell <- reactiveValues(
+    ch = c()
+  )
+  observeEvent(input$add_col_cell, {
+    OWN_color_cell$ch <- append(OWN_color_cell$ch, input$own_color_pick_cell)
+  })
+  observeEvent(input$rem_col_cell, {
+    if(length(OWN_color_cell$ch) <= 1){
+      OWN_color_cell$ch <- c()
+    }
+    else{
+      OWN_color_cell$ch <- OWN_color_cell$ch[1:(length(OWN_color_cell$ch)-1)]
+    }
+  })
+  output$own_color_cell <- renderText({
+    paste("You selected this colors :", paste(OWN_color_cell$ch, collapse = ", "))
+  })
 
 
   BAR_cell <- reactiveValues(
@@ -1525,33 +1793,64 @@ server <- function(input, output, session){
   )
 
   Bar_one_cell <- reactive({
-    ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
-                         usegradient = input$grad_cell, linegraph = input$line_cell)
+    withCallingHandlers({
+      shinyjs::html("diag_bar_cell", "")
+      if(input$ch_own_col_cell){
+        COL <- OWN_color_cell$ch
+        if(length(get_treat_level(data_cell())) == length(COL)){
+          ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+                               usegradient = input$grad_cell, linegraph = input$line_cell,
+                               save_pdf = input$save_bar_cell, colorpanel = COL,
+                               layout = c(input$lay_bar1_cell, input$lay_bar2_cell))
+        }
+        else{
+          showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+        }
+
+      }
+      else{
+        ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+                             usegradient = input$grad_cell, linegraph = input$line_cell,
+                             save_pdf = input$save_bar_cell,
+                             layout = c(input$lay_bar1_cell, input$lay_bar2_cell))
+      }
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_cell", html = paste(m$message, "<br>", sep = ""), add = TRUE)}
+    )
   })
 
   observeEvent(input$barp_cell, {
-    if(input$cond_sel_cell == "cat"){
-      if (length(unique(Sel_cond_cell()$category)) > 1){
-        che <- length(input$cond_cell) == length(unique(Sel_cond_cell()$category))
+    if(input$selpr_loca_cell){
+      if(input$allpr_cell){
+        pr <- sel_prot_cell()
       }
       else{
-        che <- FALSE
+        pr <- input$selectpr_cell
       }
     }
     else{
-      che <- length(input$cond_cell) == length(Sel_cond_cell())
+      pr <- PR_event()
     }
 
-    if (is.null(input$cond_cell)){
-      showNotification("Don't forget to select a condition !", type = "error")
-    }
-    else if(che){
-      showNotification("If you want to select all conditions,
-                       please select the option 'Select all the treatment level'", type = "error")
+    if(is.null(pr)){
+      showNotification("Don't forget to select a protein !", type = "error")
     }
     else{
-      BAR_cell$ch <- Bar_one_cell()
+      if (input$cond_sel_cell != "all_cond"){
+        if (is.null(input$cond_cell)){
+          showNotification("Don't forget to select a condition !", type = "error")
+        }
+        else{
+          BAR_cell$ch <- Bar_one_cell()
+        }
+      }
+      else{
+        BAR_cell$ch <- Bar_one_cell()
+      }
     }
+
 
   })
 
@@ -1561,7 +1860,7 @@ server <- function(input, output, session){
 
   output$downbar_cell <- downloadHandler(
     filename = function() {
-      paste("2D_barplot_", Sys.Date(), "_", PR_event()$customdata, ".png", sep = "")
+      paste("2D_barplot_", Sys.Date(), ".png", sep = "")
     },
     content = function(file){
       ggsave(file, BAR_cell$ch[[1]], device = "png")

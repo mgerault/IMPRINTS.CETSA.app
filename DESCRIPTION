@@ -15,7 +15,7 @@ Depends:
 Imports: ggplot2,  stringr, tidyr, magick,
    shiny, shinydashboard, shinycssloaders, DT, rio, purrr,
    dplyr, plyr, shinyjs, cowplot, plotly, pubmedR, 
-   rentrez, XML, gridExtra,
+   rentrez, XML, gridExtra, rjson,
    bibliometrix, officer, colourpicker, openxlsx
 Suggests: mineCETSA, EBImage, STRINGdb
 

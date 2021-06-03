@@ -182,7 +182,7 @@ ui <- dashboardPage(
                               ),
 
                          fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                             fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2F_caldiff")),
+                             fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff")),
                                       column(4, fileInput("hitsum_daba", "Import the summary file from the hitlist outputs")),
                                       column(4, fileInput("NN_daba", "Import the NN file from the hitlist outputs")),
                                       ),
@@ -294,9 +294,10 @@ ui <- dashboardPage(
                              fluidRow(column(4, checkboxInput("save_bar", "Save the bar plots in a pdf file", FALSE)),
                                       conditionalPanel(condition = "input.save_bar",
                                                        column(4, numericInput("lay_bar1", "Type the number of plot per row",
-                                                                              min = 1, max = 10, step = 1, value = 4)),
-                                                       column(4, numericInput("lay_bar2", "Type the number of plot per column",
-                                                                              min = 1, max = 10, step = 1, value = 3))
+                                                                              min = 1, max = 10, step = 1, value = 4),
+                                                              numericInput("lay_bar2", "Type the number of plot per column",
+                                                                           min = 1, max = 10, step = 1, value = 3)),
+                                                       column(4, textInput("pdftit", "Choose a name for your pdf file", "barplot"))
                                                        )
                                       ),
 
@@ -321,7 +322,199 @@ ui <- dashboardPage(
 
                   tags$hr(),
                   h3("Go to", a(href = "http://www.webgestalt.org/", "WebGestalt"), "for a gene ontology analysis.")
-                  )
+                  ),
+                
+                tabPanel("Protein complex",
+                         h2(tags$u("Protein complex and 2D bar plot")),
+                         tags$hr(),
+                         
+                         fluidRow(box(title = "Map proteins to known protein complex", status = "primary", 
+                                      solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                      
+                                      fluidRow(column(4, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
+                                               column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
+                                               column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
+                                               ),
+                                      fluidRow(column(4, checkboxInput("gave_compl", "Don't have the ms_2D_average output 
+                                                                                     (will calculate and save it)", TRUE)),
+                                               conditionalPanel(condition = "!input.gave_compl",
+                                                                column(4, fileInput("avef_compl", "Import the output from ms_2D_average"))
+                                                                )
+                                               ),
+                                      tags$hr(),
+                                      
+                                      conditionalPanel(condition = "output.DIFcompl_fileup & output.HITcompl_fileup & output.NNcompl_fileup & output.AVEcompl_fileup",
+                                                       fluidRow(column(4, selectInput("condsel_compl", "Select a condition", choices = NULL)),
+                                                                column(4, selectInput("catego_compl", "Select some categories", choices = NULL, multiple = TRUE)),
+                                                                column(4, selectInput("organism_compl", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                ),
+                                                       
+                                                       actionButton("ave_map_compl", "Map proteins to known protein complex"),
+                                                       textOutput("diagmapping_compl"),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       conditionalPanel(condition = "output.resmappingcompl_fileup",
+                                                                        DT::dataTableOutput("tabmap_compl"),
+                                                                        downloadButton("downrestab_compl")
+                                                                        )
+                                                       )
+                                      
+                                      )
+                                  ),
+                         
+                         conditionalPanel(condition = "output.resmappingcompl_fileup",
+                                          fluidRow(box(title = "2D bar plot paramter", status = "primary", 
+                                                       solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                       
+                                                       fluidRow(column(4,selectInput("allcomplex_compl", "Select some protein complex", choices = NULL, multiple = TRUE)),
+                                                                column(4, checkboxInput("ALL_prot_compl", "Select all the proteins", FALSE),
+                                                                       checkboxInput("alliso_bar_compl", "Take all isoform", FALSE)),
+                                                                conditionalPanel(condition = "!input.ALL_prot_compl", 
+                                                                                 column(4,selectizeInput("prot_compl", "Select a protein", choices = NULL, multiple = TRUE))
+                                                                                 )
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       fluidRow(column(4, checkboxInput("ch_own_col_compl", "Choose your own color", FALSE)),
+                                                                column(4, conditionalPanel(condition = "input.ch_own_col_compl",
+                                                                                           colourInput("own_color_pick_compl", NULL, "#FF2B00",
+                                                                                                       allowTransparent = TRUE, closeOnClick = TRUE)
+                                                                                           )
+                                                                       )
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       fluidRow(column(4, checkboxInput("save_bar_compl", "Save the bar plots in a pdf file", FALSE)),
+                                                                conditionalPanel(condition = "input.save_bar_compl",
+                                                                                 column(4, numericInput("lay_bar1_compl", "Type the number of plot per row",
+                                                                                                        min = 1, max = 10, step = 1, value = 4),
+                                                                                        numericInput("lay_bar2_compl", "Type the number of plot per column",
+                                                                                                     min = 1, max = 10, step = 1, value = 3)),
+                                                                                 column(4, textInput("pdftit_compl", "Choose a name for your pdf file", "barplot"))
+                                                                                 )
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       fluidRow(column(4, checkboxInput("werb_compl", "Print error bar", TRUE)),
+                                                                column(4, checkboxInput("grad_compl", "Use color gradient", FALSE)),
+                                                                column(4, checkboxInput("line_compl", "Use line instead of bar", FALSE))
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       actionButton("barp_compl", "See bar plot"),
+                                                       tags$hr(),
+                                                       textOutput("diag_bar_compl"),
+                                                       tags$hr(),
+                                                       
+                                                       withSpinner(plotOutput("bar_plot_compl", height = "800px"), type = 6),
+                                                       downloadButton("downbar_compl", "Download the plot as png file")
+                                                       )
+                                                   ),
+                                          
+                                          )
+                         
+                         ),
+                
+                tabPanel("Similar profiles",
+                         h2(tags$u("Find similar profiles")),
+                         tags$hr(),
+                         
+                         fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                      fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from ms_2D_caldiff")),
+                                               column(4, checkboxInput("gave_simpf", "Don't have the ms_2D_average output 
+                                                                                     (will calculate and save it)", TRUE)),
+                                               conditionalPanel(condition = "!input.gave_simpf",
+                                                                column(4, fileInput("avef_simpf", "Import the output from ms_2D_average"))
+                                                                )
+                                               ),
+                                      
+                                      conditionalPanel(condition = "output.AVEsimpf_fileup & output.DIFsimpf_fileup",
+                                                       fluidRow(column(3, selectInput("treat_simpf", "Select a condition", choices = NULL)),
+                                                                column(3, selectizeInput("prot_simpf", "Select a protein from which you want to get 
+                                                                                          the similar profiles", choices = NULL)),
+                                                                column(3, sliderInput("maxna_simpf", "Choose a maximum number of
+                                                                                                      missing values per rows", value = 0, min = 0, max = 10, step = 1)),
+                                                                column(3, selectInput("scoremeth_simpf", "Select a method for calculating the similarity score", 
+                                                                                      choices = c("Euclidean distance score" = "euclidean",
+                                                                                                  "Pearson correlation" = "pearson"), selected = "euclidean"),
+                                                                       numericInput("scothr_simpf", "Choose a threshold for the similarity score", 
+                                                                                    value = 0.9, min = 0, max = 1, step = 0.01))
+                                                                ),
+                                                       tags$hr(),
+                                                       
+                                                       checkboxInput("infoscmeth_simpf", h4("See some informations about the method for calculating the similarity score"), FALSE),
+                                                       conditionalPanel(condition = "input.infoscmeth_simpf",
+                                                                        HTML("<p><h5>You have actually two methods for calculating the similarity score : <br>
+                                                                                     - The euclidean distance score <br>
+                                                                                     - The Pearson correlation <br>
+                                                                                     This score will determine which proteins got a similar profile from the one you selected. <br>
+                                                                                     The euclidean distance score : <br>
+                                                                                     With this method, every euclidean distance between the value from each protein profile and the
+                                                                                     selected will be calculate. Then for each distance we calculate a score between 0 and 1  
+                                                                                     by dividing 1 by 1 + d, where d is the euclidean distance. <br>
+                                                                                     This score means that you will search for protein profile with similar values from the the one you selected.
+                                                                                     So the profile with a similar shape but with lower or higher values will not have a good score. 
+                                                                                     It also means that with a high score (~0.9) you're not very likely to find a lot of proteins.<br>
+                                                                                     <br>
+                                                                                     This is not the case with Pearson correlation. For this score, each covariance and standard deviation
+                                                                                     between the protein you selected and all the other proteins will be calculated. Then, the covariance is divided 
+                                                                                     by the product of the two standard devation. It gives you score between -1 and 1. -1 means the data are negatively 
+                                                                                     correlated, 1 positively correlated and 0 not correlated. <br>
+                                                                                     Because you calculate a correlation score, you will search for all proteins profile with a similar shape from the one 
+                                                                                     you selected, not matter their values. It's like searching mountains with similar shapes, no matter their height.
+                                                                                     It also means that with a high score (~0.95) you may find a lot of proteins.
+                                                                             </h5></p>")),
+                                                       
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       fluidRow(column(4, checkboxInput("ch_own_col_simpf", "Choose your own color", FALSE)),
+                                                                conditionalPanel(condition = "input.ch_own_col_simpf",
+                                                                                 column(4, colourInput("own_color_pick_simpf", NULL, "#FF2B00",
+                                                                                                       allowTransparent = TRUE, closeOnClick = TRUE)
+                                                                                        )
+                                                                                 )
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       fluidRow(column(4, checkboxInput("save_bar_simpf", "Save the bar plots in a pdf file", TRUE)),
+                                                                conditionalPanel(condition = "input.save_bar_simpf",
+                                                                                 column(4, numericInput("lay_bar1_simpf", "Type the number of plot per row",
+                                                                                                        min = 1, max = 10, step = 1, value = 4),
+                                                                                           numericInput("lay_bar2_simpf", "Type the number of plot per column",
+                                                                                                        min = 1, max = 10, step = 1, value = 3)
+                                                                                        ),
+                                                                                 column(4, textInput("pdftit_simpf", "Choose a name for your pdf file", "barplot"))
+                                                                                 )
+                                                                ),
+                                                       
+                                                       checkboxInput("seeprsel_simpf", "See barplot from the selected protein", FALSE),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       fluidRow(column(4, checkboxInput("werb_simpf", "Print error bar", TRUE)),
+                                                                column(4, checkboxInput("grad_simpf", "Use color gradient", FALSE)),
+                                                                column(4, checkboxInput("line_simpf", "Use line instead of bar", FALSE))
+                                                                ),
+                                                       
+                                                       tags$hr(),
+                                                       
+                                                       actionButton("getsimi_simpf", "Get similar profile !"),
+                                                       tags$hr(),
+                                                       textOutput("diag_bar_simpf"),
+                                                       tags$hr(),
+                                                       
+                                                       withSpinner(plotOutput("bar_plot_sim_pf", height = "800px"), type = 6),
+                                                       downloadButton("downbar_simpf", "Download the plot as png file")
+                                                       )
+                                      
+                                      )
+                                  )
+                         )
                 )
               ),
 
@@ -494,9 +687,10 @@ ui <- dashboardPage(
                                    fluidRow(column(4, checkboxInput("save_bar_cell", "Save the bar plots in a pdf file", FALSE)),
                                             conditionalPanel(condition = "input.save_bar_cell",
                                                              column(4, numericInput("lay_bar1_cell", "Type the number of plot per row",
-                                                                                    min = 1, max = 10, step = 1, value = 4)),
-                                                             column(4, numericInput("lay_bar2_cell", "Type the number of plot per column",
-                                                                                    min = 1, max = 10, step = 1, value = 3))
+                                                                                    min = 1, max = 10, step = 1, value = 4),
+                                                                    numericInput("lay_bar2_cell", "Type the number of plot per column",
+                                                                                 min = 1, max = 10, step = 1, value = 3)),
+                                                             column(4, textInput("pdftit_cell", "Choose a name for your pdf file", "barplot"))
                                             )
                                    ),
 
@@ -1207,7 +1401,8 @@ server <- function(input, output, session){
           ms_2D_barplotting_sh(data(), witherrorbar = input$werb,
                                usegradient = input$grad, linegraph = input$line,
                                save_pdf = input$save_bar, colorpanel = COL,
-                               layout = c(input$lay_bar1, input$lay_bar2))
+                               layout = c(input$lay_bar1, input$lay_bar2),
+                               pdfname = input$pdftit)
         }
         else{
           showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
@@ -1218,7 +1413,8 @@ server <- function(input, output, session){
         ms_2D_barplotting_sh(data(), witherrorbar = input$werb,
                              usegradient = input$grad, linegraph = input$line,
                              save_pdf = input$save_bar,
-                             layout = c(input$lay_bar1, input$lay_bar2))
+                             layout = c(input$lay_bar1, input$lay_bar2),
+                             pdfname = input$pdftit)
       }
 
     },
@@ -1291,9 +1487,364 @@ server <- function(input, output, session){
   )
 
 
+  
+  
+  ### PROTEIN COMPLEX
+  
+  DIF_compl <- reactive({
+    File <- input$caldif_compl
+    if (is.null(File))
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$DIFcompl_fileup <- reactive({
+    return(!is.null(DIF_compl()))
+  })
+  outputOptions(output, "DIFcompl_fileup", suspendWhenHidden = FALSE)
+  
+  HIT_compl <- reactive({
+    File <- input$hitsum_compl
+    if (is.null(File))
+      return(NULL)
+    
+    read.csv(File$datapath, row.names = 1)
+    
+  })
+  #check if a file is upload
+  output$HITcompl_fileup <- reactive({
+    return(!is.null(HIT_compl()))
+  })
+  outputOptions(output, "HITcompl_fileup", suspendWhenHidden = FALSE)
+  
+  NN_compl <- reactive({
+    File <- input$NN_compl
+    if (is.null(File))
+      return(NULL)
+    
+    read.csv(File$datapath, row.names = 1)
+  })
+  #check if a file is upload
+  output$NNcompl_fileup <- reactive({
+    return(!is.null(NN_compl()))
+  })
+  outputOptions(output, "NNcompl_fileup", suspendWhenHidden = FALSE)
+  
+  AVE_compl <- reactive({
+    File <- input$avef_compl
+    if (is.null(File))
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$AVEcompl_fileup <- reactive({
+    if(input$gave_compl){
+      return(TRUE)
+    }
+    else{
+      return(!is.null(AVE_compl()))
+    }
+  })
+  outputOptions(output, "AVEcompl_fileup", suspendWhenHidden = FALSE)
 
+  observe({
+    if(!is.null(HIT_compl()) & !is.null(NN_compl())){
+      updateSelectInput(session, "condsel_compl", choices = unique(HIT_compl()$Condition))
+      updateSelectInput(session, "catego_compl", choices = append(unique(HIT_compl()$category),  "NN"), 
+                        selected = unique(HIT_compl()$category)[1])
+    }
+  })
+  
+  resmapping_compl <- reactiveValues(
+    ch = NULL
+  )
+  observeEvent(input$ave_map_compl, {
+    if(length(input$catego_compl) == 0){
+      showNotification("Don't forget to select a category !", type = "error")
+    }
+    else {
+      showNotification("Start mapping proteins, this may take a while", type = "message")
+      
+      if(input$gave_compl){
+        data_ave <- ms_2D_average_sh(DIF_compl())
+        showNotification("Average calculation succeed !", type = "message")
+      }
+      else{
+        data_ave <- AVE_compl()
+      }
+      
+      
+      cat_tab <- HIT_compl()
+      colnames(cat_tab)[str_which(colnames(cat_tab), "^[C|c]ondition")] <- "treatment"
+      
+      cat_tabNN <- NN_compl()
+      colnames(cat_tabNN)[str_which(colnames(cat_tabNN), "^[C|c]ondition")] <- "treatment"
+      cat_tabNN <- cat_tabNN %>% group_by(id, treatment, category) %>% summarise()
+      
+      cat_tab <- rbind(cat_tab, cat_tabNN)
+      
+      withCallingHandlers({
+        shinyjs::html("diagmapping_compl", "")
+        map_compl <- ms_2D_complex_mapping_sh(data_ave, cat_tab, treatment = input$condsel_compl,
+                                              targetcategory = input$catego_compl, 
+                                              organism = input$organism_compl)
+      },
+      message = function(m) {
+        shinyjs::html(id = "diagmapping_compl", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      }
+      )
+      
+      map_compl <- map_compl[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",
+                                 "id", "description", "gene", "category")]
+      map_compl$description <- mineCETSA:::getProteinName(map_compl$description)
+      
+      resmapping_compl$ch <- map_compl
+      
+      output$tabmap_compl <- DT::renderDataTable({
+        DT::datatable(resmapping_compl$ch,
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Mapping proteins results")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))
+      })
+      
+      showNotification("Mapping protein succeed !", type = "message")
+      
+      updateSelectInput(session, "allcomplex_compl", choices = unique(resmapping_compl$ch$ComplexName))
+    }
+    
+  })
+  #check if a file is upload
+  output$resmappingcompl_fileup <- reactive({
+    return(!is.null(resmapping_compl$ch))
+  })
+  outputOptions(output, "resmappingcompl_fileup", suspendWhenHidden = FALSE)
 
+  output$downrestab_compl <- downloadHandler(
+    filename = function() {
+      paste0("ProteinComplexMapping_", Sys.Date(), ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(resmapping_compl$ch, file, row.names = FALSE)
+    }
+  )
+  
+  
+  sel_prot_compl <- reactive({
+    pr <- NULL
+    if(!is.null(resmapping_compl$ch)){
+        pr <- resmapping_compl$ch$id[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl)))]
+        pr <- unique(pr)
+      }
+    
+  })
+  observe({
+    updateSelectizeInput(session, "prot_compl", choices = sel_prot_compl(), server = TRUE)
+    
+  })
+  
+  data_compl <- reactive({
+    if(input$ALL_prot_compl){
+      PROT <- sel_prot_compl()
+    }
+    else{
+      PROT <- input$prot_compl
+    }
+    
+    data <- DIF_compl()
+    TREAT <- get_treat_level(data)
+    
+    cate <- resmapping_compl$ch[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl))),]
+    notsel_cond <- TREAT[!(TREAT %in% input$condsel_compl)]
+    notsel_cond <- paste(notsel_cond, collapse = "|")
+    
+    if(input$save_bar_compl){
+      data_l <- list()
+      for(i in input$allcomplex_compl){
+        cate_ <- cate[which(cate$ComplexName == i), ]
+        
+        pr_comp <- cate_$id
+        pr_comp <- pr_comp[which(!is.na(match(pr_comp, PROT)))]
+        
+        data_l[[i]] <- ms_subsetting(data, isfile = F, hitidlist = c(pr_comp), allisoform = input$alliso_bar_compl)
+        
+        data_l[[i]] <- data_l[[i]][,-str_which(names(data_l[[i]]), notsel_cond)]
+        data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))]
+      }
+      
+      data <- data_l
+      
+    }
+    else{
+      data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar_compl)
+      
+      data <- data[,-str_which(names(data), notsel_cond)]
+      data$category <- cate$category[which(!is.na(match(cate$id, data$id)))]
+    }
+    
+    data
+  })
+  
+  BAR_compl <- reactiveValues(
+    ch = NULL
+  )
+  
+  Bar_one_compl <- reactive({
+    withCallingHandlers({
+      shinyjs::html("diag_bar_compl", "")
+      
+      COL <- ifelse(input$ch_own_col_compl, input$own_color_pick_compl, "#18FF00")
+      
+      
+      ms_2D_barplotting_sh(data_compl(), witherrorbar = input$werb_compl,
+                           usegradient = input$grad_compl, linegraph = input$line_compl,
+                           save_pdf = input$save_bar_compl, colorpanel = COL,
+                           layout = c(input$lay_bar1_compl, input$lay_bar2_compl),
+                           toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",
+                           pdfname = input$pdftit_compl
+                           )
+      
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_compl", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      
+    }
+    )
+    
+  })
+  
+  
+  observeEvent(input$barp_compl, {
+    if(length(input$prot_compl) == 0 & !input$ALL_prot_compl){
+      showNotification("Don't forget to select a protein !", type = "error")
+    }
+    else{
+      BAR_compl$ch <- Bar_one_compl()
+    }
+    
+  })
+  
+  output$bar_plot_compl <- renderPlot({
+    BAR_compl$ch
+  })
+  
+  output$downbar_compl <- downloadHandler(
+    filename = function() {
+      paste0("2D_barplot_", Sys.Date(), "_", paste(str_remove_all(input$allcomplex_compl, " "), sep = "_"), ".png")
+    },
+    content = function(file){
+      ggsave(file, BAR_compl$ch[[1]], device = "png")
+    }
+  )
+  
+  
+  
+  
+  ### SIMILAR PROFILE
+  
+  DIF_simpf <- reactive({
+    File <- input$cdiff_simpf
+    if (is.null(File))
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$DIFsimpf_fileup <- reactive({
+    return(!is.null(DIF_simpf()))
+  })
+  outputOptions(output, "DIFsimpf_fileup", suspendWhenHidden = FALSE)
+  
+  AVE_simpf <- reactive({
+    File <- input$avef_simpf
+    if (is.null(File))
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$AVEsimpf_fileup <- reactive({
+    if(input$gave_simpf){
+      return(TRUE)
+    }
+    else{
+      return(!is.null(AVE_simpf()))
+    }
+  })
+  outputOptions(output, "AVEsimpf_fileup", suspendWhenHidden = FALSE)
+  
+  observe({
+    if(!is.null(DIF_simpf())){
+      updateSelectInput(session, "treat_simpf", choices = get_treat_level(DIF_simpf()))
+      updateSelectizeInput(session, "prot_simpf", choices = DIF_simpf()$id, server = TRUE)
+      
+      nc <- str_subset(names(DIF_simpf()), input$treat_simpf)
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_simpf", max = nc)
+    }
+  })
+  
 
+  
+  BAR_simpf <- reactiveValues(
+    ch = NULL
+  )
+  
+  Bar_one_simpf <- reactive({
+    average <- switch(input$gave_simpf, NULL, AVE_simpf())
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+    
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+        ms_2D_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+                                  treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                  usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                  use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                  max_na_prow = input$maxna_simpf,
+                                  ret_plot = input$seeprsel_simpf, save_pdf = input$save_bar_simpf, 
+                                  colorpanel = COL,
+                                  layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                  toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                  pdfname = input$pdftit_simpf)
+        
+      
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      
+    }
+    )
+    
+  })
+  
+  
+  observeEvent(input$getsimi_simpf, {
+    showNotification("Getting similar profiles, this may take a while.", type = "message")
+      BAR_simpf$ch <- Bar_one_simpf()
+    
+  })
+  
+  output$bar_plot_simpf <- renderPlot({
+    BAR_simpf$ch
+  })
+  
+  output$downbar_simpf <- downloadHandler(
+    filename = function() {
+      paste0("2D_barplot_", Sys.Date(), "_", paste0("similar_", input$prot_simpf), ".png")
+    },
+    content = function(file){
+      ggsave(file, BAR_simpf$ch[[1]], device = "png")
+    }
+  )
+  
+  
+  
   ### STRINGdb
   stri_data <- reactive({
     if(input$impfile_stri){
@@ -1580,8 +2131,8 @@ server <- function(input, output, session){
   cell_p_R <- reactive({
     hit_plotcell(resdata_cell$ch, tit = input$titp_cell,
                  cond = input$condp_cell,
-                 cat_col_list = list("CC" = "red", "CN" = "lightblue",
-                                     "NC" = "yellow", "ND" = "#747474",
+                 cat_col_list = list("CC" = "#FB4F0B", "CN" = "#0FAEB9",
+                                     "NC" = "#E7B700", "ND" = "#747474",
                                      "NN" = "#CCCCCC"))
   })
   observeEvent(input$gop_cell, {
@@ -1801,7 +2352,8 @@ server <- function(input, output, session){
           ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
                                usegradient = input$grad_cell, linegraph = input$line_cell,
                                save_pdf = input$save_bar_cell, colorpanel = COL,
-                               layout = c(input$lay_bar1_cell, input$lay_bar2_cell))
+                               layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                               pdfname = input$pdftit_cell)
         }
         else{
           showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
@@ -1812,7 +2364,8 @@ server <- function(input, output, session){
         ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
                              usegradient = input$grad_cell, linegraph = input$line_cell,
                              save_pdf = input$save_bar_cell,
-                             layout = c(input$lay_bar1_cell, input$lay_bar2_cell))
+                             layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                             pdfname = input$pdftit_cell)
       }
 
     },

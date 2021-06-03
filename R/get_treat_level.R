@@ -10,7 +10,7 @@
 #'
 #'
 get_treat_level <- function(data){
-  lev <- names(data[,-str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^id$|^description$|^drug$")])
+  lev <- names(data[,-str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^id$|^description$|^drug$|^category")])
   lev <- str_split(lev, "_")
   lev <- lapply(lev, function(x) x[length(x)]) #take the last element after a '_', so in theory the condition
   lev <- unique(unlist(lev))

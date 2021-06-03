@@ -1,17 +1,21 @@
-#' ms_2D_barplotting_sh
+#' ms_2D_barplotting_simprof
 #'
-#' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data.
+#' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data of
+#' proteins which have similar profile from a selected protein.
 #' It is totally based on the function ms_2D_barplotting from the mineCETSA package.
-#' It was retaken for easier use in the shiny app.
 #'
-#' @param data dataset after ms_2D_caldiff to plot. Can also be a list of this dataset.
-#' @param treatmentlevel a vector of treatment labels, such as c("DMSO","TNFa","AT26533")
-#'                       the order determines the arrangement, so in this case DMSO
-#'                       group would be the first group
+#' @param data dataset after ms_2D_caldiff to plot.
+#' @param data_average dataset after ms_2D_average_sh. If null, will get it from data.
+#' @param treatmentlevel A single character element which corresponds to one of the condition from the data
+#' @param protein_profile A single character element which corresponds to one
+#'                        of the protein from the data that you want the similar profile
 #' @param corrtable A correlation table
 #' @param setlevel a vector of set information if any, such as c("M13","M16")
 #' @param plotseq a vector of plots arragement sequence (in composite ID)
 #' @param printBothName A logical to tell if you want to print the both protein names on the plot
+#' @param score_threshold A numeric value to indicate the threshold, default set to 0.9
+#' @param use_score A single character element that define the method score. Method available : 'euclidean' or 'pearson'
+#' @param max_na_prow An integer indicating the maximun number of missing value for one protein
 #' @param printGeneName A logical to tell if you want to print the gene names on the plot
 #' @param pfdatabase A logical for using pdf database or not
 #' @param witherrorbar A logical to print or not the error bar on the plot
@@ -21,7 +25,7 @@
 #' @param linegraph whether to plot the graph in a line graph format, default set to FALSE
 #' @param log2scale whether the yscales should be in log2 scale, default set to TRUE
 #' @param ratio aspect ratio of the plot, default set to 0.6
-#' @param ret_plot Logical to tell if you want to return the last plot
+#' @param ret_plot Logical to tell if you want to return the bar plot from the protein selected
 #' @param save_pdf A logical to tell if you want to save plots in a pdf file
 #' @param layout a vector indicating the panel layout for multi-panel plots per page,
 #'               default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE
@@ -35,35 +39,73 @@
 #'
 #' @return The ms 2D barplot
 #'
-#' @examples
-#' library(mineCETSA)
-#' library(mineCETSAapp)
-#'
-#' PI3K1h6h_wVeh <- PI3K1h6h_file[,-grep("Vehicle",names(PI3K1h6h_file))]
-#' P85037_1h6h <- ms_subsetting(PI3K1h6h_wVeh, isfile = FALSE, hitidlist = c("P85037"))
-#' ms_2D_barplotting_sh(P85037_1h6h)
-#'
-#' @seealso \code{\link{ms_2D_barplotting}}
+#' @seealso \code{\link{ms_2D_barplotting}} , \code{\link{ms_2D_corr_to_ref_sh}}
 #'
 #' @export
 #'
 
-ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), setlevel = NULL, corrtable = NULL,
-                                  plotseq = NULL, printBothName = TRUE, printGeneName = FALSE,
-                                  pfdatabase = FALSE, witherrorbar = TRUE, layout = NULL,
-                                  colorpanel = PaletteWithoutGrey(treatmentlevel),
-                                  usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
-                                  linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
-                                  ret_plot = TRUE,
-                                  save_pdf = FALSE, toplabel = "IMPRINTS-CETSA bar plotting",
-                                  leftlabel = "", bottomlabel = "", pdfname = "barplot",
-                                  pdfheight = 12, pdfwidth = 12)
+ms_2D_barplotting_simprof <- function (data, data_average = NULL,
+                                       treatmentlevel = "Buparlisib6h", protein_profile = "P85037",
+                                       setlevel = NULL, corrtable = NULL, plotseq = NULL,
+                                       printBothName = TRUE, printGeneName = FALSE,
+                                       score_threshold = 0.9, max_na_prow = 0,
+                                       use_score = "euclidean",
+                                       pfdatabase = FALSE, witherrorbar = TRUE, layout = NULL,
+                                       colorpanel = "#18FF00",
+                                       usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
+                                       linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
+                                       ret_plot = FALSE,
+                                       save_pdf = TRUE, toplabel = "IMPRINTS-CETSA bar plotting",
+                                       leftlabel = "", bottomlabel = "", pdfname = "barplot",
+                                       pdfheight = 12, pdfwidth = 12)
 {
+  if(length(treatmentlevel) != 1){
+    stop("You must select only one condition !")
+  }
+  else if(!(treatmentlevel %in% get_treat_level(data))){
+    stop("You must select a condition present in your data !")
+  }
+
+  if(length(protein_profile) != 1){
+    stop("You must select only one protein !")
+  }
 
   if(save_pdf){
     dataname <- deparse(substitute(data))
     outdir <- mineCETSA:::ms_directory(data, dataname)$outdir
   }
+
+  if(is.null(data_average)){
+    message("Start average calculation")
+    data_ave <- ms_2D_average_sh(data)
+    message("Average calculation done !")
+  }
+  else{
+    data_ave <- data_average
+  }
+
+
+  target_profile <- data_ave[which(data_ave$id == protein_profile),]
+  if(nrow(target_profile) == 0){
+    stop("You must select a  protein present in your data")
+  }
+  idx_cond <- get_treat_level(target_profile)[(get_treat_level(target_profile) %in% treatmentlevel)]
+  target_profile <- as.numeric(target_profile[,str_which(names(target_profile), idx_cond)])
+
+  message("Getting similar profile")
+  data_simi <- ms_2D_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
+                                    reference = target_profile,
+                                    use_score = use_score,
+                                    score_threshold = score_threshold,
+                                    max_na = max_na_prow)
+
+  data <- ms_subsetting(data, isfile = F, hitidlist = c(data_simi$id), allisoform = FALSE)
+  tr_data <- get_treat_level(data)[!(get_treat_level(data) %in% treatmentlevel)]
+  tr_data <- paste(tr_data, collapse = "|")
+  data <- data[,-str_which(names(data), tr_data)]
+  data$score <- data_simi$score
+  message("Filtering done !")
+
 
   barplotting <- function(d1, withset = FALSE) {
     if (withset) {
@@ -104,7 +146,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
             q <- q + ylab("fold change") + ggtitle(paste(j,
                                                          as.character(unique(d2$id)), sep = "\n"))
           }
-          q <- q + labs(subtitle = subt$category[n_loop]) +
+          q <- q + labs(subtitle = subt$score[n_loop]) +
             theme_cowplot() + theme(text = element_text(size = 10),
                                     strip.text.x = element_text(size = 5),
                                     plot.title = element_text(hjust = 0.5,
@@ -183,7 +225,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       else {
         q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
       }
-      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
+      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "score"]) +
         theme_cowplot() + theme(text = element_text(size = 10),
                                 strip.text.x = element_text(size = 5),
                                 plot.title = element_text(hjust = 0.5,size = rel(0.8)),
@@ -199,199 +241,8 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       return(q)
     }
   }
-  if(class(data) == "list"){
-    if(!save_pdf){
-      stop("Your input data is a list. The aim is to save in the same pdf with diffrent data sets.
-           Retry with setting 'save_pdf' to TRUE.")
-    }
-    else{
-      pl <- list()
-      sav_data <- data
-      for(k in names(data)){
-        data <- sav_data[[k]]
-
-        nrowdata <- nrow(data)
-        if (nrowdata == 0) {
-          message("Make sure there are more than one experimental condition in dataset.")
-          stop("Otherwise specify remsinglecondprot==FALSE !")
-        }
-        if (printBothName & !pfdatabase) {
-          data <- data %>% rowwise() %>% mutate(description1 = mineCETSA:::getProteinName(description,
-                                                                                          pfdatabase)) %>%
-            mutate(description2 = mineCETSA:::getGeneName(description)) %>%
-            mutate(id = paste(id, description1, description2,
-                              sep = "\n"))
-          data$description1 <- NULL
-          data$description2 <- NULL
-        }
-        else if (printGeneName & !pfdatabase) {
-          data <- data %>% rowwise() %>%
-            mutate(description = getGeneName(description)) %>%
-            mutate(id = paste(id, description, sep = "\n"))
-        }
-        else {
-          data <- data %>% rowwise() %>%
-            mutate(description = getProteinName(description, pfdatabase)) %>%
-            mutate(id = paste(id, description, sep = "\n"))
-        }
-
-        if(!purrr::is_empty(grep("^category", names(data)))){
-          subt <- data[, c(1, grep("^category", names(data)))]
-          subt <- as.data.frame(subt)
-          colnames(subt) <- c("id", "category")
-          subt$category <- paste("Category :", subt$category)
-          rownames(subt) <- subt$id
-
-          catego <- data[,grep("^category", names(data))]
-          id_cc <- which(catego == "CC")
-          id_nc <- which(catego == "NC")
-          id_cn <- which(catego == "CN")
-          id_nd <- which(catego == "ND")
-          id_nn <- which(catego == "NN")
-
-          catego_order <- c(id_cn, id_nc, id_cc, id_nd, id_nn)
-
-          if(!purrr::is_empty(catego_order))
-            data <- data[catego_order, ]
-        }
-        else{
-          subt <- NULL
-        }
-
-        data$description <- NULL
-        data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^category")],
-                               condition, reading, -id)
-        if (!log2scale) {
-          data1 <- mutate(data1, reading = 2^reading)
-        }
-        a <- data1$condition[1]
-        if (length(unlist(strsplit(a, "_"))) == 4) {
-          withset <- TRUE
-          data1 <- tidyr::separate(data1, condition, into = c("set",
-                                                              "temperature", "replicate", "treatment"), sep = "_")
-          temperature <- sort(unique(data1$temperature))
-          data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-          cdata <- plyr::ddply(data1, c("id", "set", "temperature",
-                                        "treatment"),
-                               summarise, N = length(na.omit(reading)),
-                               mean = mean(reading, na.rm = T), sd = sd(reading, na.rm = T), se = sd/sqrt(N))
-          cdata$id <- as.character(cdata$id)
-          if (length(layout) == 0) {
-            layout <- c(2, 3)
-          }
-
-        }
-        else if (length(unlist(strsplit(a, "_"))) == 3) {
-          withset <- FALSE
-          data1 <- tidyr::separate(data1, condition, into = c("temperature",
-                                                              "replicate", "treatment"), sep = "_")
-          temperature <- sort(unique(data1$temperature))
-          data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-          cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
-                               summarise, N = length(na.omit(reading)), mean = mean(reading,na.rm = T),
-                               sd = sd(reading, na.rm = T), se = sd/sqrt(N))
-          cdata$id <- as.character(cdata$id)
-          if (length(layout) == 0) {
-            layout <- c(4, 3)
-          }
-
-        }
-        else {
-          stop("make sure the namings of the columns of the dasaset are correct.")
-        }
-        cdata <- cdata %>% rowwise() %>% mutate(condition = paste(temperature,
-                                                                  treatment, sep = "_"))
-        if (withset) {
-          cdata$set <- factor(as.character(cdata$set), levels = setlevel)
-        }
-        if (class(corrtable) != "NULL") {
-          corrtable <- corrtable[order(corrtable$correlation,
-                                       decreasing = T), ]
-          if (printBothName & !pfdatabase) {
-            corrtable <- ms_composite_ID_Gene_Protein(corrtable,
-                                                      pfdatabase)
-          }
-          else if (printGeneName & !pfdatabase) {
-            corrtable <- ms_composite_ID_Gene(corrtable)
-          }
-          else {
-            corrtable <- ms_composite_ID_Protein(corrtable,
-                                                 pfdatabase)
-          }
-          cdata$id <- factor(cdata$id, levels = corrtable$id)
-        }
-        if (length(plotseq)) {
-          cdata$id <- factor(cdata$id, levels = plotseq)
-        }
-        else {
-          cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
-        }
-        cdata$treatment <- factor(as.character(cdata$treatment),
-                                  levels = treatmentlevel)
-        cdata$condition <- factor(as.character(cdata$condition),
-                                  levels = apply(expand.grid(temperature, treatmentlevel),
-                                                 1, paste, collapse = "_"))
-        message("Generating fitted plot, pls wait.")
 
 
-        plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
-                             withset = withset)
-
-
-
-
-
-        params <- list(nrow = layout[1], ncol = layout[2])
-        n <- with(params, nrow * ncol)
-        pages <- length(plots)%/%n + as.logical(length(plots)%%n)
-        groups <- split(seq_along(plots), gl(pages, n, length(plots)))
-        pl[[k]] <- lapply(names(groups), function(i) {
-          gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
-                                          c(plots[groups[[i]]], params,
-                                            top = paste(toplabel, k), left = leftlabel,
-                                            bottom = bottomlabel)))
-          })
-
-        class(pl[[k]]) <- c("arrangelist", "ggplot", class(pl[[k]]))
-      }
-
-      message("Start saving plot")
-      class(pl) <- c("arrangelist", "ggplot", class(pl))
-      pdfname <- paste0(pdfname, ".pdf")
-      if (length(outdir)) {
-        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
-                         plotlist = pl,
-                         height = pdfheight, width = pdfwidth)
-      }
-      else {
-        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
-               plotlist = pl,
-               height = pdfheight, width = pdfwidth)
-      }
-
-      message("IMPRINTS-CETSA bar plot file generated successfully.")
-
-      if(ret_plot){
-        return(plots)
-      }
-      else{
-        g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
-          geom_text(x=0.5, y=0.5, label = "All the barplots has been saved succesfully !
-                                         \nGo check your files", size = 6) +
-          theme_cowplot() +
-          theme(axis.text.x = element_blank(),
-                axis.title.x = element_blank(),
-                axis.ticks.x = element_blank(),
-                axis.text.y = element_blank(),
-                axis.title.y = element_blank(),
-                axis.ticks.y = element_blank())
-
-        return(g)
-      }
-    }
-
-  }
-  else{
     nrowdata <- nrow(data)
     if (nrowdata == 0) {
       message("Make sure there are more than one experimental condition in dataset.")
@@ -417,31 +268,16 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         mutate(id = paste(id, description, sep = "\n"))
     }
 
-    if(!purrr::is_empty(grep("^category", names(data)))){
-      subt <- data[, c(1, grep("^category", names(data)))]
-      subt <- as.data.frame(subt)
-      colnames(subt) <- c("id", "category")
-      subt$category <- paste("Category :", subt$category)
-      rownames(subt) <- subt$id
+    #get subtitle
+    subt <- data[, c(1, grep("^score", names(data)))]
+    subt <- as.data.frame(subt)
+    colnames(subt) <- c("id", "score")
+    subt$score <- paste(use_score, "score with", protein_profile, ":", round(subt$score, 4))
+    rownames(subt) <- subt$id
 
-      catego <- data[,grep("^category", names(data))]
-      id_cc <- which(catego == "CC")
-      id_nc <- which(catego == "NC")
-      id_cn <- which(catego == "CN")
-      id_nd <- which(catego == "ND")
-      id_nn <- which(catego == "NN")
-
-      catego_order <- c(id_cn, id_nc, id_cc, id_nd, id_nn)
-
-      if(!purrr::is_empty(catego_order))
-        data <- data[catego_order, ]
-    }
-    else{
-      subt <- NULL
-    }
 
     data$description <- NULL
-    data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^category")],
+    data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^score")],
                            condition, reading, -id)
     if (!log2scale) {
       data1 <- mutate(data1, reading = 2^reading)
@@ -517,44 +353,62 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                                              1, paste, collapse = "_"))
     message("Generating fitted plot, pls wait.")
 
-
-
-    plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
+    cdata_ <- cdata[-str_which(cdata$id, paste0("^", protein_profile, "\\n")),]
+    plots <- plyr::dlply(cdata_, plyr::.(id), .fun = barplotting,
                          withset = withset)
 
+    subt <- NULL
+    main_prof <- cdata[str_which(cdata$id, protein_profile),]
+    plotsmain <- plyr::dlply(main_prof, plyr::.(id), .fun = barplotting,
+                         withset = withset)
 
     if(save_pdf){
       message("Start saving plot")
+
+      pl <- list()
+
+      groups <- split(seq_along(plotsmain), gl(1, 1, 1))
+      pl[["main"]] <- lapply(names(groups), function(i) {
+        gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
+                                        c(plotsmain[groups[[i]]], list(nrow = 1, ncol = 1),
+                                          top = toplabel, left = leftlabel,
+                                          bottom = bottomlabel)))
+        })
+
 
       params <- list(nrow = layout[1], ncol = layout[2])
       n <- with(params, nrow * ncol)
       pages <- length(plots)%/%n + as.logical(length(plots)%%n)
       groups <- split(seq_along(plots), gl(pages, n, length(plots)))
-      pl <- lapply(names(groups), function(i) {
+      pl[["all"]] <- lapply(names(groups), function(i) {
         gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
                                         c(plots[groups[[i]]], params,
                                           top = toplabel, left = leftlabel,
                                           bottom = bottomlabel)))
-      })
+        })
 
+      class(pl[["main"]]) <- c("arrangelist", "ggplot", class(pl[["main"]]))
+      class(pl[["all"]]) <- c("arrangelist", "ggplot", class(pl[["all"]]))
       class(pl) <- c("arrangelist", "ggplot", class(pl))
       pdfname <- paste0(pdfname, ".pdf")
+
       if (length(outdir)) {
-        ggsave(file = paste0(outdir, "/", format(Sys.time(),
-                                                 "%y%m%d_"), dataname, "_", pdfname), pl, height = pdfheight,
-               width = pdfwidth)
+        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+                         plotlist = pl,
+                         height = pdfheight, width = pdfwidth)
       }
       else {
-        ggsave(file = paste0(format(Sys.time(), "%y%m%d_"),
-                             dataname, "_", pdfname), pl, height = pdfheight,
-               width = pdfwidth)
+        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+                         plotlist = pl,
+                         height = pdfheight, width = pdfwidth)
       }
 
       message("IMPRINTS-CETSA bar plot file generated successfully.")
     }
 
+
     if(ret_plot){
-      return(plots)
+      return(plotsmain)
     }
     else{
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
@@ -570,29 +424,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
 
       return(g)
     }
-  }
-
 }
-
-
-### PaletteWithoutGrey function ###
-#generates a color list depending on the number of different treatment
-PaletteWithoutGrey <- function(treatment){
-
-  n = length(unique(treatment))
-  x <- grDevices::colors(distinct = TRUE)                           #all the color from R
-  mycol <- x[which(is.na(stringr::str_extract(x, "gr(e|a)y")))]   #keep only colors that are not grey
-
-  listcolor <- c()
-  for (i in 0:(n-1))
-    listcolor <- append(listcolor, mycol[i*20 + 9])      #save a color from the list (the number 20 and 9 were chosen in order to have distincts colors, this is empirical, can be changed)
-
-  return(listcolor)
-}
-
-
-
-
 
 
 

@@ -33,8 +33,6 @@
 .onLoad <- function(...){
   WD <<- getwd()
   message(
-    paste0("Your working directory has been save to the variable WD as ",
-           WD, " Please don't change this variable unless you want to change
-           your saving directory when using the app.")
+    paste0("Your working directory has been save to the variable WD as ", WD, " Please don't change this variable unless you want to change your saving directory when using the app.")
   )
 }

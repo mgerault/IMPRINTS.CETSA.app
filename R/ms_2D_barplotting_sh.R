@@ -216,23 +216,23 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
           stop("Otherwise specify remsinglecondprot==FALSE !")
         }
         if (printBothName & !pfdatabase) {
-          data <- data %>% rowwise() %>% mutate(description1 = mineCETSA:::getProteinName(description,
+          data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description,
                                                                                           pfdatabase)) %>%
-            mutate(description2 = mineCETSA:::getGeneName(description)) %>%
-            mutate(id = paste(id, description1, description2,
+            dplyr::mutate(description2 = getGeneName(description)) %>%
+            dplyr::mutate(id = paste(id, description1, description2,
                               sep = "\n"))
           data$description1 <- NULL
           data$description2 <- NULL
         }
         else if (printGeneName & !pfdatabase) {
-          data <- data %>% rowwise() %>%
-            mutate(description = getGeneName(description)) %>%
-            mutate(id = paste(id, description, sep = "\n"))
+          data <- data %>% dplyr::rowwise() %>%
+            dplyr::mutate(description = getGeneName(description)) %>%
+            dplyr::mutate(id = paste(id, description, sep = "\n"))
         }
         else {
-          data <- data %>% rowwise() %>%
-            mutate(description = getProteinName(description, pfdatabase)) %>%
-            mutate(id = paste(id, description, sep = "\n"))
+          data <- data %>% dplyr::rowwise() %>%
+            dplyr::mutate(description = getProteinName(description, pfdatabase)) %>%
+            dplyr::mutate(id = paste(id, description, sep = "\n"))
         }
 
         if(!purrr::is_empty(grep("^category", names(data)))){
@@ -262,7 +262,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^category")],
                                condition, reading, -id)
         if (!log2scale) {
-          data1 <- mutate(data1, reading = 2^reading)
+          data1 <- dplyr::mutate(data1, reading = 2^reading)
         }
         a <- data1$condition[1]
         if (length(unlist(strsplit(a, "_"))) == 4) {
@@ -299,7 +299,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         else {
           stop("make sure the namings of the columns of the dasaset are correct.")
         }
-        cdata <- cdata %>% rowwise() %>% mutate(condition = paste(temperature,
+        cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
                                                                   treatment, sep = "_"))
         if (withset) {
           cdata$set <- factor(as.character(cdata$set), levels = setlevel)
@@ -359,12 +359,12 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       class(pl) <- c("arrangelist", "ggplot", class(pl))
       pdfname <- paste0(pdfname, ".pdf")
       if (length(outdir)) {
-        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_", pdfname),
                          plotlist = pl,
                          height = pdfheight, width = pdfwidth)
       }
       else {
-        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_", pdfname),
                plotlist = pl,
                height = pdfheight, width = pdfwidth)
       }
@@ -398,25 +398,26 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       stop("Otherwise specify remsinglecondprot==FALSE !")
     }
     if (printBothName & !pfdatabase) {
-      data <- data %>% rowwise() %>% mutate(description1 = mineCETSA:::getProteinName(description,
+      data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description,
                                                                                       pfdatabase)) %>%
-        mutate(description2 = mineCETSA:::getGeneName(description)) %>%
-        mutate(id = paste(id, description1, description2,
+        dplyr::mutate(description2 = getGeneName(description)) %>%
+        dplyr::mutate(id = paste(id, description1, description2,
                           sep = "\n"))
       data$description1 <- NULL
       data$description2 <- NULL
     }
     else if (printGeneName & !pfdatabase) {
-      data <- data %>% rowwise() %>%
-        mutate(description = getGeneName(description)) %>%
-        mutate(id = paste(id, description, sep = "\n"))
+      data <- data %>% dplyr::rowwise() %>%
+        dplyr::mutate(description = getGeneName(description)) %>%
+        dplyr::mutate(id = paste(id, description, sep = "\n"))
     }
     else {
-      data <- data %>% rowwise() %>%
-        mutate(description = getProteinName(description, pfdatabase)) %>%
-        mutate(id = paste(id, description, sep = "\n"))
+      data <- data %>% dplyr::rowwise() %>%
+        dplyr::mutate(description = getProteinName(description, pfdatabase)) %>%
+        dplyr::mutate(id = paste(id, description, sep = "\n"))
     }
 
+    print(data$id)
     if(!purrr::is_empty(grep("^category", names(data)))){
       subt <- data[, c(1, grep("^category", names(data)))]
       subt <- as.data.frame(subt)
@@ -444,7 +445,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^category")],
                            condition, reading, -id)
     if (!log2scale) {
-      data1 <- mutate(data1, reading = 2^reading)
+      data1 <- dplyr::mutate(data1, reading = 2^reading)
     }
     a <- data1$condition[1]
     if (length(unlist(strsplit(a, "_"))) == 4) {
@@ -483,7 +484,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     else {
       stop("make sure the namings of the columns of the dasaset are correct.")
     }
-    cdata <- cdata %>% rowwise() %>% mutate(condition = paste(temperature,
+    cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
                                                               treatment, sep = "_"))
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
@@ -541,11 +542,11 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       pdfname <- paste0(pdfname, ".pdf")
       if (length(outdir)) {
         ggsave(file = paste0(outdir, "/", format(Sys.time(),
-                                                 "%y%m%d_"), dataname, "_", pdfname), pl, height = pdfheight,
+                                                 "%y%m%d_%H%M_"), dataname, "_", pdfname), pl, height = pdfheight,
                width = pdfwidth)
       }
       else {
-        ggsave(file = paste0(format(Sys.time(), "%y%m%d_"),
+        ggsave(file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
                              dataname, "_", pdfname), pl, height = pdfheight,
                width = pdfwidth)
       }
@@ -590,8 +591,31 @@ PaletteWithoutGrey <- function(treatment){
   return(listcolor)
 }
 
+getGeneName <- function (x){
+  gene = stringr::str_split(stringr::str_split(x, "GN=")[[1]][2], " ")[[1]][1]
+  if (length(gene) == 0) {
+    return(" ")
+  }
+  else {
+    return(gene)
+  }
+}
 
-
+getProteinName <- function (x, pfdatabase = FALSE)
+{
+  if (pfdatabase) {
+    protein = gsub("gene_product=", "", stringr::str_split(x, "\\|")[[1]][4])
+  }
+  else {
+    protein = stringr::str_split(x, " OS=")[[1]][1]
+  }
+  if (length(protein) == 0) {
+    return(" ")
+  }
+  else {
+    return(protein)
+  }
+}
 
 
 

@@ -86,7 +86,6 @@ ms_2D_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, ref
   dataw <- apply(dataw, 2, as.numeric)
   rownames(dataw) <- rname
   dataw <- as.data.frame(dataw)
-  ad <<- dataw
 
 
   if(use_score == "euclidean"){

@@ -111,7 +111,7 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
   if (nrow(data2) == 0) {
     stop("No protein complex found...")
   }
-  data2 <- data2 %>% dplyr::rowwise() %>% dplyr::mutate(gene = mineCETSA:::getGeneName(description))
+  data2 <- data2 %>% dplyr::rowwise() %>% dplyr::mutate(gene = getGeneName(description))
   comps3 <- cbind(comps, data2)
   comp_table <- comps3 %>% dplyr::add_count(ComplexID, gene)
   cleariso <- FALSE

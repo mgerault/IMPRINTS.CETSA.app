@@ -242,30 +242,33 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     }
   }
 
+  nrowdata <- nrow(data)
 
-    nrowdata <- nrow(data)
+
+
+
     if (nrowdata == 0) {
       message("Make sure there are more than one experimental condition in dataset.")
       stop("Otherwise specify remsinglecondprot==FALSE !")
     }
     if (printBothName & !pfdatabase) {
-      data <- data %>% rowwise() %>% mutate(description1 = mineCETSA:::getProteinName(description,
+      data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description,
                                                                                       pfdatabase)) %>%
-        mutate(description2 = mineCETSA:::getGeneName(description)) %>%
-        mutate(id = paste(id, description1, description2,
+        dplyr::mutate(description2 = getGeneName(description)) %>%
+        dplyr::mutate(id = paste(id, description1, description2,
                           sep = "\n"))
       data$description1 <- NULL
       data$description2 <- NULL
     }
     else if (printGeneName & !pfdatabase) {
-      data <- data %>% rowwise() %>%
-        mutate(description = getGeneName(description)) %>%
-        mutate(id = paste(id, description, sep = "\n"))
+      data <- data %>% dplyr::rowwise() %>%
+        dplyr::mutate(description = getGeneName(description)) %>%
+        dplyr::mutate(id = paste(id, description, sep = "\n"))
     }
     else {
-      data <- data %>% rowwise() %>%
-        mutate(description = getProteinName(description, pfdatabase)) %>%
-        mutate(id = paste(id, description, sep = "\n"))
+      data <- data %>% dplyr::rowwise() %>%
+        dplyr::mutate(description = getProteinName(description, pfdatabase)) %>%
+        dplyr::mutate(id = paste(id, description, sep = "\n"))
     }
 
     #get subtitle
@@ -280,7 +283,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^score")],
                            condition, reading, -id)
     if (!log2scale) {
-      data1 <- mutate(data1, reading = 2^reading)
+      data1 <- dplyr::mutate(data1, reading = 2^reading)
     }
     a <- data1$condition[1]
     if (length(unlist(strsplit(a, "_"))) == 4) {
@@ -319,7 +322,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     else {
       stop("make sure the namings of the columns of the dasaset are correct.")
     }
-    cdata <- cdata %>% rowwise() %>% mutate(condition = paste(temperature,
+    cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
                                                               treatment, sep = "_"))
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
@@ -393,12 +396,12 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       pdfname <- paste0(pdfname, ".pdf")
 
       if (length(outdir)) {
-        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+        ggpubr::ggexport(filename = paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_", pdfname),
                          plotlist = pl,
                          height = pdfheight, width = pdfwidth)
       }
       else {
-        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_"), dataname, "_", pdfname),
+        ggpubr::ggexport(filename = paste0(format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_", pdfname),
                          plotlist = pl,
                          height = pdfheight, width = pdfwidth)
       }

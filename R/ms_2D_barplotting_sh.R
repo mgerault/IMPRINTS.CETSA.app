@@ -417,7 +417,6 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         dplyr::mutate(id = paste(id, description, sep = "\n"))
     }
 
-    print(data$id)
     if(!purrr::is_empty(grep("^category", names(data)))){
       subt <- data[, c(1, grep("^category", names(data)))]
       subt <- as.data.frame(subt)

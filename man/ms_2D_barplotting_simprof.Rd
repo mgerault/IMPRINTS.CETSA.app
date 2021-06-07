@@ -27,6 +27,7 @@ ms_2D_barplotting_simprof(
   log2scale = TRUE,
   ratio = 0.6,
   ret_plot = FALSE,
+  withprompt = TRUE,
   save_pdf = TRUE,
   toplabel = "IMPRINTS-CETSA bar plotting",
   leftlabel = "",
@@ -82,6 +83,9 @@ default value is c(2,3) for set containing data, otherwise c(4,3), use when save
 \item{ratio}{aspect ratio of the plot, default set to 0.6}
 
 \item{ret_plot}{Logical to tell if you want to return the bar plot from the protein selected}
+
+\item{withprompt}{A logical to tell if you want to use the prompt. If TRUE, will ask if you want to continue and save the plots
+considering the number of proteins with similar profiles which have been found.}
 
 \item{save_pdf}{A logical to tell if you want to save plots in a pdf file}
 

@@ -26,6 +26,8 @@
 #' @param log2scale whether the yscales should be in log2 scale, default set to TRUE
 #' @param ratio aspect ratio of the plot, default set to 0.6
 #' @param ret_plot Logical to tell if you want to return the bar plot from the protein selected
+#' @param withprompt A logical to tell if you want to use the prompt. If TRUE, will ask if you want to continue and save the plots
+#'                   considering the number of proteins with similar profiles which have been found.
 #' @param save_pdf A logical to tell if you want to save plots in a pdf file
 #' @param layout a vector indicating the panel layout for multi-panel plots per page,
 #'               default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE
@@ -54,7 +56,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                        colorpanel = "#18FF00",
                                        usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
                                        linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
-                                       ret_plot = FALSE,
+                                       ret_plot = FALSE, withprompt = TRUE,
                                        save_pdf = TRUE, toplabel = "IMPRINTS-CETSA bar plotting",
                                        leftlabel = "", bottomlabel = "", pdfname = "barplot",
                                        pdfheight = 12, pdfwidth = 12)
@@ -245,6 +247,33 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
   nrowdata <- nrow(data)
 
 
+  if(withprompt){
+    go <- ''
+    while(!(go %in% c('YES','NO','Y','N')) ){
+      go <- toupper(readline(prompt =
+                               paste(nrowdata, "proteins with similar profiles have been found. Do you want to continue ? (Yes/No): ")))
+      if (go %in% c('YES','Y')){
+        message("Let's get this profiles then !")
+      }
+      else if (go %in% c('NO','N')) {
+        g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+          geom_text(x=0.5, y=0.5, label = "Try to change the threshold or
+                                         \nthe score method then", size = 6) +
+          theme_cowplot() +
+          theme(axis.text.x = element_blank(),
+                axis.title.x = element_blank(),
+                axis.ticks.x = element_blank(),
+                axis.text.y = element_blank(),
+                axis.title.y = element_blank(),
+                axis.ticks.y = element_blank())
+
+        return(g)
+      }
+      else {
+        message("Invalid choice")
+      }
+    }
+  }
 
 
     if (nrowdata == 0) {

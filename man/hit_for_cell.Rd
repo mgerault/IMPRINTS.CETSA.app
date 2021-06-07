@@ -4,11 +4,13 @@
 \alias{hit_for_cell}
 \title{hit_for_cell}
 \usage{
-hit_for_cell(HIT)
+hit_for_cell(HIT, organism = c("HUMAN", "MOUSE"))
 }
 \arguments{
-\item{data}{Usually, the output from hitlist function; but just has to be a data frame with the
+\item{HIT}{Usually, the output from hitlist function; but just has to be a data frame with the
 columns id, Condition and category}
+
+\item{organism}{The organism on whi you did your experiment. For now, only 'HUMAN' and 'MOUSE' are available.}
 }
 \value{
 Dataframe (format for hit_plotcell)

@@ -3,8 +3,9 @@
 #' Function to get subcellular location based on the database from protein Atlas, and coordinates
 #' of each protein on the pplot cell (img2) according to their location
 #'
-#' @param data Usually, the output from hitlist function; but just has to be a data frame with the
+#' @param HIT Usually, the output from hitlist function; but just has to be a data frame with the
 #'             columns id, Condition and category
+#' @param organism The organism on whi you did your experiment. For now, only 'HUMAN' and 'MOUSE' are available.
 #'
 #' @return Dataframe (format for hit_plotcell)
 #'
@@ -12,8 +13,16 @@
 #'
 #' @seealso \code{\link{hitplot_cell}}
 
-hit_for_cell <- function(HIT){
-  loca_hit <- pr_atlas[which(!is.na(match(pr_atlas$Uniprot, unique(HIT$id)))),]
+hit_for_cell <- function(HIT, organism = c("HUMAN", "MOUSE")){
+  if(organism == "HUMAN"){
+    loca_hit <- pr_atlas[which(!is.na(match(pr_atlas$Uniprot, unique(HIT$id)))),]
+  }
+  else if(organism == "MOUSE"){
+    loca_hit <- pr_atlas_mouse[which(!is.na(match(pr_atlas_mouse$Uniprot, unique(HIT$id)))),]
+  }
+  else{
+    stop("Please, choose a valid organism name : 'HUMAN' or 'MOUSE'")
+  }
 
   message("Assign proteins to their main location from protein Atlas")
   HIT[,c("gene.name", "main.location", "additional.location")] <- rep(NA, nrow(HIT))
@@ -38,10 +47,15 @@ hit_for_cell <- function(HIT){
     unlist(
       lapply(as.list(HIT$main.location.cell), function(x) {ifelse(x != "NA", length(str_split(x, ", ")[[1]]), NA)})))
 
-  nwl <- nrow(HIT)
+  nwl <- length(unique(HIT$id))
   HIT <- HIT[which(!is.na(HIT$nb_location)),] #remove prot without location
-  nwl <- nwl - nrow(HIT)
+  nwl <- nwl - length(unique(HIT$id))
   message(paste(nwl, "proteins were removed because no subcellular location has been found"))
+
+  if(nrow(HIT) == 0){
+    message("No proteins have been found in the Protein Atlas database")
+    return(HIT)
+  }
 
   #duplicate row when more than 1 location
   message("Duplicate row when more than one location and separate them")
@@ -82,5 +96,8 @@ hit_for_cell <- function(HIT){
 
   return(HIT)
 }
+
+
+
 
 

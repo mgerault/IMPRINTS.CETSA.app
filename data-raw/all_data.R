@@ -1,4 +1,6 @@
 library(mineCETSA)
+library(stringr)
+
 #the PI3K file
 PI3K1h6h_file <- ms_fileread("210503_1729_PI3K1h6h.txt")
 names(PI3K1h6h_file) <- str_replace(names(PI3K1h6h_file), ".x", "1h") #change condition name to fit the treatmentlevel
@@ -55,6 +57,7 @@ img2@.Data <- aperm(img2@.Data, c(2,1,3))
 
 
 ###get location
+### HUMAN
 #https://www.proteinatlas.org/api/search_download.php?search=Human&format=json&columns=g,up,relih,scl,scml,scal&compress=no
 pr_atlas <- rjson::fromJSON(file = "./data-raw/Human.json")
 pr_atlas <- lapply(pr_atlas, function(y) lapply(y, function(x) {
@@ -69,6 +72,28 @@ pr_atlas <- lapply(pr_atlas, function(y) lapply(y, function(x) {
 )
 pr_atlas <- lapply(pr_atlas, function(x) {x <- as.data.frame(x); x})
 pr_atlas <- do.call(rbind, pr_atlas)
+
+
+### Mouse
+#https://www.proteinatlas.org/api/search_download.php?search=Mouse&format=json&columns=g,up,relih,scl,scml,scal&compress=no
+pr_atlas_mouse <- rjson::fromJSON(file = "./data-raw/Mouse.json")
+pr_atlas_mouse <- lapply(pr_atlas_mouse, function(y) lapply(y, function(x) {
+  if(length(x) != 0){
+    if(length(x) > 1){
+      x <- paste(x, collapse = ", ")
+    }
+  }
+  else{
+    x <- NA
+  }; x})
+)
+pr_atlas_mouse <- lapply(pr_atlas_mouse, function(x) {x <- as.data.frame(x); x})
+pr_atlas_mouse <- do.call(rbind, pr_atlas_mouse)
+
+### no subcellular location that we don't already have with Human
+#setdiff(unique(unlist(str_split(unique(pr_atlas_mouse$Subcellular.main.location), ", "))),
+ #       orgatlas_match$location.from.pratlas)
+
 
 #get correspondances between organellar names
 orgatlas_match <- openxlsx::read.xlsx("./data-raw/organellar list.xlsx")
@@ -110,6 +135,7 @@ usethis::use_data(drug_data, overwrite = TRUE)
 usethis::use_data(ev_null_print, overwrite = TRUE)
 usethis::use_data(img2, overwrite = TRUE)
 usethis::use_data(pr_atlas, overwrite = TRUE)
+usethis::use_data(pr_atlas_mouse, overwrite = TRUE)
 usethis::use_data(orgatlas_match, overwrite = TRUE)
 usethis::use_data(loca_orga, overwrite = TRUE)
 usethis::use_data(rg_list, overwrite = TRUE)

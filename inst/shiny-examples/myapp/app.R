@@ -245,6 +245,8 @@ ui <- dashboardPage(
                                column(4, checkboxInput("protlist_bar", "Import a protein lsit", FALSE),
                                       conditionalPanel(condition = "!input.protlist_bar",
                                                        checkboxInput("hit", "Only take the hited proteins", FALSE),
+                                                       conditionalPanel(condition = "input.hit",
+                                                                        selectInput("cond_fhit", "Select hits condition", choices = NULL, multiple = TRUE))
                                                        ),
                                       conditionalPanel(condition = "input.protlist_bar",
                                                        fileInput("prlist_file_bar", "Import your protein list (txt file)", accept = ".txt"),
@@ -537,7 +539,11 @@ ui <- dashboardPage(
                                                    conditionalPanel(condition = "!input.ishit_stri",
                                                                     textInput("idfile_stri", "What is the name of the column of
                                                                                               your file which contains the proteins ID ?"))
-                                                   )
+                                                   ),
+                                            conditionalPanel(condition = "input.ishit_stri",
+                                                             column(3, selectInput("cond_fhit_stri", "Select some condition for filtering your hits",
+                                                                                   choices = NULL, multiple = TRUE))
+                                                             )
                                             )
                                    ),
                   conditionalPanel(condition = "!input.impfile_stri",
@@ -1157,6 +1163,41 @@ server <- function(input, output, session){
     hit_bar$NN <- h$NN
   })
 
+  
+  
+  Sel_cond_fhit <- reactive({
+     tr <- NULL
+     
+    if(input$hit){
+      HIT <- NULL
+      
+      if(input$drug == "base" & length(input$drug2) >= 1){
+        HIT <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
+      }
+      else if(input$drug == "dat"){
+        if(is.null(hit_bar$summa)){
+          idx <- grep("Summary", names(barhit_data()))
+          
+          HIT <- barhit_data()[idx][[1]]
+        }
+        else{
+          HIT <- hit_bar$summa
+        }
+      }
+      
+      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      if(!purrr::is_empty(c_idx)){
+        tr <- HIT[, c_idx]
+        tr <- unique(tr)
+      }
+    }
+    
+    tr
+  })
+  
+  observe({
+    updateSelectInput(session, "cond_fhit", choices = Sel_cond_fhit(), selected = Sel_cond_fhit()[1])
+  })
 
   sel_prot <- reactive({
     pr <- NULL
@@ -1168,7 +1209,15 @@ server <- function(input, output, session){
         }
         else{
           pr <- unique(read.delim(File$datapath, header = FALSE)[[1]])
-          prcheck <- drug_data_sh$y$data[[input$drug2]]$id
+          
+          prcheck <- ""
+          if(length(input$drug2) == 1){
+            prcheck <- drug_data_sh$y$data[[input$drug2]]$id
+          }
+          else if(length(input$drug2) > 1){
+            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
+          }
+          
           a <- pr[!(pr %in% prcheck)]
           if(!purrr::is_empty(a)){
             pr <- pr[(pr %in% prcheck)]
@@ -1179,16 +1228,22 @@ server <- function(input, output, session){
       }
       else{
         if(length(input$drug2) == 1){
-          if(input$hit){
-            pr <- unique(drug_data_sh$y$hitlist[[input$drug2]]$id)
+          if(input$hit & !is.null(input$cond_fhit)){
+            pr <- drug_data_sh$y$hitlist[[input$drug2]]
+            pr <- pr %>% dplyr::filter(Condition == c(input$cond_fhit))
+            pr <- pr$id
+            pr <- unique(pr)
           }
           else{
             pr <- drug_data_sh$y$data[[input$drug2]]$id
           }
         }
         else if(length(input$drug2) > 1){
-          if(input$hit){
-            pr <- unique(do.call(rbind, drug_data_sh$y$hitlist[input$drug2])$id)
+          if(input$hit& !is.null(input$cond_fhit)){
+            pr <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
+            pr <- pr %>% dplyr::filter(Condition == c(input$cond_fhit))
+            pr <- pr$id
+            pr <- unique(pr)
           }
           else{
             pr <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
@@ -1323,7 +1378,7 @@ server <- function(input, output, session){
 
     data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar)
 
-    ad <<- data
+    
 
     if(input$cond_sel == "treat"){
       notsel_cond <- TREAT[!(TREAT %in% input$cond)]
@@ -1457,7 +1512,7 @@ server <- function(input, output, session){
 
     },
     message = function(m) {
-      shinyjs::html(id = "diag_bar", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      shinyjs::html(id = "diag_bar", html = paste(m$message, "<br>", sep = ""), add = FALSE)
 
     }
     )
@@ -1770,7 +1825,7 @@ server <- function(input, output, session){
       
     },
     message = function(m) {
-      shinyjs::html(id = "diag_bar_compl", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      shinyjs::html(id = "diag_bar_compl", html = paste(m$message, "<br>", sep = ""), add = FALSE)
       
     }
     )
@@ -1881,7 +1936,7 @@ server <- function(input, output, session){
       
     },
     message = function(m) {
-      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
       
     }
     )
@@ -1937,6 +1992,27 @@ server <- function(input, output, session){
     return(!is.null(stri_data()))
   })
   outputOptions(output, "file_stri_up", suspendWhenHidden = FALSE)
+  
+  Sel_cond_fhit_stri <- reactive({
+    tr <- NULL
+    
+    if(input$ishit_stri & input$impfile_stri){
+      HIT <- stri_data()
+     
+      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      
+      if(!purrr::is_empty(c_idx)){
+        tr <- HIT[, c_idx]
+        tr <- unique(tr)
+      }
+    }
+    
+    tr
+  })
+  
+  observe({
+    updateSelectInput(session, "cond_fhit_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+  })
 
   string_res <- reactiveValues(
     x = NULL
@@ -1979,7 +2055,17 @@ server <- function(input, output, session){
     if (!is.null(stri_data())){
       if(input$impfile_stri){
         if(input$ishit_stri){
-          a <- string_db$map(stri_data(), "id", removeUnmappedRows = TRUE)
+          if(!is.null(input$cond_fhit_stri)){
+            dat <- stri_data()
+            dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_stri))
+            
+            a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+          }
+          else{
+            showNotification("Don't forget to select some conditions !", type = "error")
+            a <- NULL
+          }
+          
         }
         else{
           a <- string_db$map(stri_data(), input$idfile_stri, removeUnmappedRows = TRUE)
@@ -2481,7 +2567,7 @@ server <- function(input, output, session){
 
     },
     message = function(m) {
-      shinyjs::html(id = "diag_bar_cell", html = paste(m$message, "<br>", sep = ""), add = TRUE)}
+      shinyjs::html(id = "diag_bar_cell", html = paste(m$message, "<br>", sep = ""), add = FALSE)}
     )
   })
 

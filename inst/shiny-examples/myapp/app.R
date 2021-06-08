@@ -1323,9 +1323,11 @@ server <- function(input, output, session){
 
     data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar)
 
+    ad <<- data
 
     if(input$cond_sel == "treat"){
       notsel_cond <- TREAT[!(TREAT %in% input$cond)]
+      notsel_cond <- paste0("_", notsel_cond, "$")
       notsel_cond <- paste(notsel_cond, collapse = "|")
       
       if(str_length(notsel_cond) != 0){
@@ -2372,6 +2374,7 @@ server <- function(input, output, session){
 
       if(input$cond_sel_cell == "treat"){
         notsel_cond <- TREAT[!(TREAT %in% input$cond_cell)]
+        notsel_cond <- paste0("_", notsel_cond, "$")
         notsel_cond <- paste(notsel_cond, collapse = "|")
         
         if(str_length(notsel_cond) != 0){

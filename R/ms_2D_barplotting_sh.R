@@ -345,7 +345,9 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         n <- with(params, nrow * ncol)
         pages <- length(plots)%/%n + as.logical(length(plots)%%n)
         groups <- split(seq_along(plots), gl(pages, n, length(plots)))
+        n_p <- length(names(groups))
         pl[[k]] <- lapply(names(groups), function(i) {
+          message(paste("Saving page", i, "/", n_p))
           gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
                                           c(plots[groups[[i]]], params,
                                             top = paste(toplabel, k), left = leftlabel,
@@ -530,7 +532,9 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       n <- with(params, nrow * ncol)
       pages <- length(plots)%/%n + as.logical(length(plots)%%n)
       groups <- split(seq_along(plots), gl(pages, n, length(plots)))
+      n_p <- length(names(groups))
       pl <- lapply(names(groups), function(i) {
+        message(paste("Saving page", i, "/", n_p))
         gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
                                         c(plots[groups[[i]]], params,
                                           top = toplabel, left = leftlabel,
@@ -554,6 +558,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     }
 
     if(ret_plot){
+      message("IMPRINTS-CETSA bar plot generated successfully.")
       return(plots)
     }
     else{

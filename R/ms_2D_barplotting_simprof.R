@@ -94,12 +94,31 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
   idx_cond <- get_treat_level(target_profile)[(get_treat_level(target_profile) %in% treatmentlevel)]
   target_profile <- as.numeric(target_profile[,str_which(names(target_profile), idx_cond)])
 
+  if(sum(is.na(target_profile)) == length(target_profile)){
+    g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = "The profile you selected
+                                       \ncontains only missing values !", size = 6) +
+      theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
+
+    return(g)
+  }
+
   message("Getting similar profile")
   data_simi <- ms_2D_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
                                     reference = target_profile,
                                     use_score = use_score,
                                     score_threshold = score_threshold,
                                     max_na = max_na_prow)
+
+  if(class(data_simi) != "data.frame"){
+    return(data_simi)
+  }
 
   data <- ms_subsetting(data, isfile = F, hitidlist = c(data_simi$id), allisoform = FALSE)
   tr_data <- get_treat_level(data)[!(get_treat_level(data) %in% treatmentlevel)]
@@ -412,7 +431,9 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       n <- with(params, nrow * ncol)
       pages <- length(plots)%/%n + as.logical(length(plots)%%n)
       groups <- split(seq_along(plots), gl(pages, n, length(plots)))
+      n_p <- length(names(groups))
       pl[["all"]] <- lapply(names(groups), function(i) {
+        message(paste("Saving page", i, "/", n_p))
         gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
                                         c(plots[groups[[i]]], params,
                                           top = toplabel, left = leftlabel,

@@ -118,8 +118,20 @@ ms_2D_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, ref
     }
   }
   if (nrow(cortable) == 0) {
-    stop(paste0("No proteins pass the score threshold of ",
-                score_threshold, "\n try to lower the threshold..."))
+    g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = paste0("No proteins pass the score threshold of ",
+                                             score_threshold, "\n try to lower the threshold",
+                                             "\nor change the maximum number",
+                                             "\nof missing values"), size = 6) +
+      theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
+
+    return(g)
   }
   else {
     message(paste0(nrow(cortable), " proteins pass the score threshold of ",

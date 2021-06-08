@@ -630,6 +630,7 @@ ui <- dashboardPage(
                            column(4, selectInput("organism_cell", "Choose an organism", choices = c("Human" = "HUMAN",
                                                                                                     "Mouse" = "MOUSE"), selected = "HUMAN")),
                            conditionalPanel(condition = "output.hitdata_cell_up",
+                                            column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
                                             column(4, actionButton("goloca_cell", "Get subcellular location")))
                            ),
                   textOutput("diagl_cell"),
@@ -1037,7 +1038,12 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    read.csv(File$datapath, row.names = 1)
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
 
   })
   #check if a file is upload
@@ -1051,7 +1057,12 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    read.csv(File$datapath, row.names = 1)
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
   })
   #check if a file is upload
   output$NNdaba_fileup <- reactive({
@@ -1066,7 +1077,7 @@ server <- function(input, output, session){
       showNotification("This name is already taken ! Please, choose anoter one.", type = "error")
     }
     else{
-      showNotification("Satrt saving dataset, this may take a while.", type = "message")
+      showNotification("Start saving dataset, this may take a while.", type = "message")
       saveData(drug_data_sh$y, new_add = list("data" = DIF_daba(),
                                          "hitlist" = HIT_daba(),
                                          "NN" = NN_daba(),
@@ -1325,7 +1336,7 @@ server <- function(input, output, session){
       w <- 1:ncol(data)
       w <- w[!(w %in% id_sel)]
       
-      ord <- unlist(lapply(input$cond, function(x) str_which(names(data), paste0("_", x))))
+      ord <- unlist(lapply(input$cond, function(x) str_which(names(data), paste0("_", x, "$"))))
 
       data <- data[,c(w,ord)]
     }
@@ -1531,7 +1542,12 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
     
-    read.csv(File$datapath, row.names = 1)
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
     
   })
   #check if a file is upload
@@ -1545,7 +1561,12 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
     
-    read.csv(File$datapath, row.names = 1)
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
   })
   #check if a file is upload
   output$NNcompl_fileup <- reactive({
@@ -1928,7 +1949,7 @@ server <- function(input, output, session){
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }
-      string_db <- string_db_human
+      string_db <<- string_db_human
     }
     else if(input$species_string == 10090){
       if(!exists("string_db_mouse")){
@@ -1936,7 +1957,7 @@ server <- function(input, output, session){
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }
-      string_db <- string_db_mouse
+      string_db <<- string_db_mouse
     }
     else if(input$species_string == 10116){
       if(!exists("string_db_rat")){
@@ -1944,7 +1965,7 @@ server <- function(input, output, session){
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }
-      string_db <- string_db_rat
+      string_db <<- string_db_rat
     }
     
 
@@ -2144,6 +2165,12 @@ server <- function(input, output, session){
     return(!is.null(hitdata_cell()))
   })
   outputOptions(output, "hitdata_cell_up", suspendWhenHidden = FALSE)
+  
+  observe({
+    if(!is.null(hitdata_cell())){
+      updateSelectInput(session, "condhit_cell", choices = unique(hitdata_cell()$Condition), selected = unique(hitdata_cell()$Condition)[1])
+    }
+  })
 
 
   resdata_cell <- reactiveValues(
@@ -2152,9 +2179,12 @@ server <- function(input, output, session){
   observeEvent(input$goloca_cell, {
     showNotification("Getting subcellular locations", type = "message")
 
+    data_hit <- hitdata_cell() %>%
+      filter(Condition == input$condhit_cell)
+    
     withCallingHandlers({
       shinyjs::html("diagl_cell", "")
-      resdata_cell$ch <- hit_for_cell(hitdata_cell(), input$organism_cell)
+      resdata_cell$ch <- hit_for_cell(data_hit, input$organism_cell)
      },
      message = function(m) {
       shinyjs::html(id = "diagl_cell", html = paste(m$message, "<br>", sep = ""), add = TRUE)
@@ -2182,7 +2212,7 @@ server <- function(input, output, session){
       }
     )
 
-    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$Condition))
+    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$Condition), selected = input$condhit_cell)
     updateSelectInput(session, "selorga_cell", choices = unique(resdata_cell$ch$main.location.cell))
   })
   output$resdata_cell_up <- reactive({
@@ -2349,7 +2379,7 @@ server <- function(input, output, session){
         w <- 1:ncol(data)
         w <- w[!(w %in% id_sel)]
         
-        ord <- unlist(lapply(input$cond_cell, function(x) str_which(names(data), paste0("_", x))))
+        ord <- unlist(lapply(input$cond_cell, function(x) str_which(names(data), paste0("_", x, "$"))))
         
         data <- data[,c(w,ord)]
 

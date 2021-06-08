@@ -1618,13 +1618,12 @@ server <- function(input, output, session){
         data_ave <- AVE_compl()
       }
       
-      
       cat_tab <- HIT_compl()
       colnames(cat_tab)[str_which(colnames(cat_tab), "^[C|c]ondition")] <- "treatment"
       
       cat_tabNN <- NN_compl()
       colnames(cat_tabNN)[str_which(colnames(cat_tabNN), "^[C|c]ondition")] <- "treatment"
-      cat_tabNN <- cat_tabNN %>% group_by(id, treatment, category) %>% summarise()
+      cat_tabNN <- cat_tabNN %>% dplyr::group_by(id, treatment, category) %>% dplyr::summarise()
       
       cat_tab <- rbind(cat_tab, cat_tabNN)
       
@@ -1735,10 +1734,14 @@ server <- function(input, output, session){
       
     }
     else{
+      ad <<- data
       data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar_compl)
       
+      ad1 <<- data
       data <- data[,-str_which(names(data), notsel_cond)]
+      ad2 <<- data
       data$category <- cate$category[which(!is.na(match(cate$id, data$id)))]
+      ad3 <<- data
     }
     
     data
@@ -1866,9 +1869,9 @@ server <- function(input, output, session){
                                   treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
                                   usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                   use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
-                                  max_na_prow = input$maxna_simpf, withprompt = FALSE,
+                                  max_na_prow = input$maxna_simpf, 
                                   ret_plot = input$seeprsel_simpf, save_pdf = input$save_bar_simpf, 
-                                  colorpanel = COL, withjs = TRUE, jsvar = input$count,
+                                  colorpanel = COL, withprompt = FALSE, 
                                   layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
                                   toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
                                   pdfname = input$pdftit_simpf)
@@ -2180,7 +2183,7 @@ server <- function(input, output, session){
     showNotification("Getting subcellular locations", type = "message")
 
     data_hit <- hitdata_cell() %>%
-      filter(Condition == input$condhit_cell)
+      dplyr::filter(Condition == input$condhit_cell)
     
     withCallingHandlers({
       shinyjs::html("diagl_cell", "")

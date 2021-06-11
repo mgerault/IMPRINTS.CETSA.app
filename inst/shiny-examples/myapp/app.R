@@ -30,6 +30,7 @@ ui <- dashboardPage(
   dashboardSidebar(width = 300,
                    sidebarMenu(menuItem("mineCETSA analysis", tabName = "analysis", icon = icon("chart-bar")),
                                menuItem("Hit proteins and bar plot", tabName = "main", icon = icon("clipboard-list"), selected = TRUE),
+                               menuItem("Heatmap", tabName = "heat", icon = icon("h-square")),
                                menuItem("Network", tabName = "string", icon = icon("project-diagram")),
                                menuItem("Interactive cell", tabName = "cell", icon = icon("magic")),
                                menuItem("PubMed Search", tabName = "pubmed", icon = icon("search"))
@@ -526,6 +527,83 @@ ui <- dashboardPage(
               ),
 
 
+      
+      tabItem(tabName = "heat",
+              h2(tags$u("Get heatmaps from your data")),
+              tags$hr(),
+              
+              fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
+                           solidHeader = TRUE, collapsible = TRUE, width = 12,
+                           fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output 
+                                                                         (will calculate and save it)", TRUE),
+                                           conditionalPanel(condition = "input.gave_heat",
+                                                            fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
+                                                            ),
+                                           conditionalPanel(condition = "!input.gave_heat",
+                                                            fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
+                                                            )
+                                           ),  
+                                    column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
+                                    column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
+                                           conditionalPanel(condition = "input.impNN_heat",
+                                                            fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
+                                                            )
+                                           )
+                                    ),
+                           
+                           tags$hr(),
+                           
+                           conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                                            fluidRow(column(3, selectInput("cond_heat", "Select a condition", choices = NULL)),
+                                                     column(3, selectInput("resp_heat", "Select a response to the drug", 
+                                                                           choices = c("Stabilization" = "S",
+                                                                                       "Destabilization" = "D",
+                                                                                       "Both" = "both"), selected = "both")),
+                                                     column(3, selectInput("catego_heat", "Select some categories", choices = NULL, multiple = TRUE)),
+                                                     column(3, sliderInput("maxna_heat", "Choose a maximum number of
+                                                                                         missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                     ),
+                                            
+                                            fluidRow(column(3, textInput("titleH_heat", "Type a title for your heatmap", "Heatmap")),
+                                                     column(3, colourInput("backcol_heat", "Choose a background color", "#FFFFFF",
+                                                                           allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                     column(3, colourInput("bordercol_heat", "Choose a border color (can be NULL)", NULL,
+                                                                           allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                     column(3, 
+                                                            colourInput("grad1col_heat", "Choose the low gradient color", "#005EFF",
+                                                                           allowTransparent = TRUE, closeOnClick = TRUE),
+                                                            colourInput("grad2col_heat", "Choose the middle gradient color", "#FFFFFF",
+                                                                        allowTransparent = TRUE, closeOnClick = TRUE),
+                                                            colourInput("grad3col_heat", "Choose the high gradient color", "#FF0000",
+                                                                        allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                     
+                                                     ),
+                                            
+                                            fluidRow(column(4, checkboxInput("saveH_heat", "Save the heatmap", TRUE)),
+                                                     conditionalPanel(condition = "input.saveH_heat",
+                                                                      column(4, textInput("fnameH_heat", "Type a your file name", "My_heatmap")),
+                                                                      column(4, selectInput("formatH_heat", "Choose a format for your file", 
+                                                                                            choices = c("png", "pdf"), selected = "png"))
+                                                                      )
+                                                     )
+                                            
+                                            )
+                           )
+                       ),
+                       
+                 
+              conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                               actionButton("getH_heat", "See heatmap"),
+                               tags$hr(),
+                               
+                               textOutput("diagl_heat"),
+                               tags$hr(),
+                               
+                               withSpinner(plotOutput("H_heat"), type = 6)
+                               )
+              ),
+              
+              
       tabItem(tabName = "string",
               h2(tags$u("Network and enrichment analysis")),
               tags$hr(),
@@ -1896,15 +1974,17 @@ server <- function(input, output, session){
     if(!is.null(DIF_simpf())){
       updateSelectInput(session, "treat_simpf", choices = get_treat_level(DIF_simpf()))
       updateSelectizeInput(session, "prot_simpf", choices = DIF_simpf()$id, server = TRUE)
-      
-      nc <- str_subset(names(DIF_simpf()), input$treat_simpf)
+    }
+  })
+  observe({
+    if(!is.null(DIF_simpf())){
+      nc <- str_subset(names(DIF_simpf()), paste0("_", input$treat_simpf, "$"))
       nc <- str_split(nc, "B\\d{1}_")
       nc <- lapply(nc, function(x) paste(x, collapse = ""))
       nc <- length(unique(as.character(nc)))
       updateSliderInput(session, "maxna_simpf", max = nc)
     }
-  })
-  
+    })
 
   
   BAR_simpf <- reactiveValues(
@@ -1941,16 +2021,99 @@ server <- function(input, output, session){
     }
     )
     
-    session$sendCustomMessage("handler1", "NULL")
     
   })
   
   
+  geting_data_simpf <- reactiveValues(
+    ch = NULL
+  )
+  
   observeEvent(input$getsimi_simpf, {
     showNotification("Getting similar profiles, this may take a while.", type = "message")
-      BAR_simpf$ch <- Bar_one_simpf()
-      session$sendCustomMessage("handler1", "NULL")
     
+    if(input$gave_simpf){
+      average <- NULL
+    }
+    else{
+      average <- AVE_simpf()
+    }
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+    
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      geting_data_simpf$ch <- ms_2D_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+                                                        treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                        usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                        use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                        max_na_prow = input$maxna_simpf, 
+                                                        ret_plot = input$seeprsel_simpf, save_pdf = FALSE, 
+                                                        withpopup = TRUE, continue = FALSE, modvar = "",
+                                                        colorpanel = COL,  
+                                                        layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                        toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                        pdfname = input$pdftit_simpf)
+      
+      
+      
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+      
+    }
+    )
+    
+    
+    
+  })
+  
+  observeEvent(input$ok, {
+    removeModal()
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+    
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      BAR_simpf$ch <- ms_2D_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                max_na_prow = input$maxna_simpf, 
+                                                ret_plot = input$seeprsel_simpf, save_pdf = input$save_bar_simpf, 
+                                                withpopup = TRUE, continue = FALSE, modvar = "Y", got_it = TRUE,
+                                                colorpanel = COL, 
+                                                layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                pdfname = input$pdftit_simpf)
+      },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+      
+    }
+    )
+  })
+  observeEvent(input$cancel, {
+    removeModal()
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+    
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      BAR_simpf$ch <- ms_2D_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                max_na_prow = input$maxna_simpf,
+                                                ret_plot = input$seeprsel_simpf, save_pdf = FALSE, 
+                                                withpopup = TRUE, continue = FALSE, modvar = "N", got_it = TRUE,
+                                                colorpanel = COL, 
+                                                layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                pdfname = input$pdftit_simpf)
+      },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+      
+    }
+    )
   })
   
   output$bar_plot_simpf <- renderPlot({
@@ -1965,6 +2128,154 @@ server <- function(input, output, session){
       ggsave(file, BAR_simpf$ch[[1]], device = "png")
     }
   )
+  
+  
+  
+  ### HEATMAP
+  
+  DIF_heat <- reactive({
+    File <- input$filedif_heat
+    if (is.null(File) | !input$gave_heat)
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  
+  AVE_heat <- reactive({
+    File <- input$fileave_heat
+    if (is.null(File)  | input$gave_heat)
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$heat_fileup <- reactive({
+     return(!is.null(AVE_heat()) | !is.null(DIF_heat()))
+  })
+  outputOptions(output, "heat_fileup", suspendWhenHidden = FALSE)
+  
+  HIT_heat <- reactive({
+    File <- input$summary_heat
+    if (is.null(File))
+      return(NULL)
+    
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
+  })
+  #check if a file is upload
+  output$HITheat_fileup <- reactive({
+    return(!is.null(HIT_heat()))
+  })
+  outputOptions(output, "HITheat_fileup", suspendWhenHidden = FALSE)
+  
+  NN_heat <- reactive({
+    File <- input$NNfile_heat
+    if (is.null(File) | !input$impNN_heat)
+      return(NULL)
+    
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
+  })
+  #check if a file is upload
+  output$NNheat_fileup <- reactive({
+    return(!is.null(NN_heat()) | !input$impNN_heat)
+  })
+  outputOptions(output, "NNheat_fileup", suspendWhenHidden = FALSE)
+  
+  observe({
+    if(!is.null(HIT_heat())){
+      c_idx <- str_which(colnames(HIT_heat()), "^[C|c]ondition")
+      cat_idx <- str_which(colnames(HIT_heat()), "^[C|c]ategory")
+      
+      tr <- NULL
+      if(!purrr::is_empty(c_idx)){
+        tr <- HIT_heat()[, c_idx]
+        tr <- unique(tr)
+      }
+      cat <- c()
+      if(!purrr::is_empty(cat_idx)){
+        cat <- HIT_heat()[, cat_idx]
+        cat <- unique(cat)
+      }
+      if(!is.null(NN_heat())){
+        cat <- append(cat, "NN")
+      }
+      
+      updateSelectInput(session, "cond_heat", choices = tr)
+      updateSelectInput(session, "catego_heat", choices = cat, selected = cat[1])
+    }
+  })
+  observe({
+    if(!is.null(DIF_heat())){
+      nc <- str_subset(names(DIF_heat()), paste0("_", input$cond_heat, "$"))
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_heat", max = nc)
+    }
+    if(!is.null(AVE_heat())){
+      nc <- str_subset(names(AVE_heat()), paste0("_", input$cond_heat, "$"))
+      nc <- length(unique(nc))
+      updateSliderInput(session, "maxna_heat", max = nc)
+    }
+  })
+  
+  pH_heat <- reactiveValues(
+    g = NULL
+  )
+  
+  plotH_heat <- reactive({
+    dat <- NULL
+    if(!is.null(AVE_heat())){
+      dat <- AVE_heat()
+    }
+    else if(!is.null(DIF_heat())){
+      showNotification("Start average calculation, this mays take a while.", type = "message")
+      dat <- ms_2D_average_sh(DIF_heat())
+    }
+    
+    withCallingHandlers({
+      shinyjs::html("diagl_heat", "")
+      h <- ms_2D_heatmap(dat, HIT_heat(), NN_data = NN_heat(),
+                         treatment = input$cond_heat, max_na = input$maxna_heat,
+                         response = input$resp_heat, select_cat = input$catego_heat,
+                         gradient_color = c(input$grad1col_heat, input$grad2col_heat, input$grad3col_heat),
+                         titleH = input$titleH_heat,
+                         saveHeat = input$saveH_heat, file_type = input$formatH_heat, file_name = input$fnameH_heat,
+                         cat_color = NULL, back_color = input$backcol_heat, border_color = input$bordercol_heat)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagl_heat", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      
+    }
+    )
+    
+  })
+  
+  observeEvent(input$getH_heat, {
+    if(is.null(input$catego_heat)){
+      showNotification("Don't forget to select a category !", type = "error")
+    }
+    else{
+      showNotification("Getting heatmap", type = "message")
+      pH_heat$g <- plotH_heat()
+    }
+  })
+  
+  output$H_heat <- renderPlot({
+    if(!is.null(pH_heat$g))
+      return(plot(pH_heat$g))
+    else
+      NULL
+  })
   
   
   

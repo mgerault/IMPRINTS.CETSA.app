@@ -26,8 +26,13 @@
 #' @param log2scale whether the yscales should be in log2 scale, default set to TRUE
 #' @param ratio aspect ratio of the plot, default set to 0.6
 #' @param ret_plot Logical to tell if you want to return the bar plot from the protein selected
-#' @param withprompt A logical to tell if you want to use the prompt. If TRUE, will ask if you want to continue and save the plots
-#'                   considering the number of proteins with similar profiles which have been found.
+#' @param withpopup A logical, only use in shiny context. If TRUE, will call a modal dialog in a shiny app;
+#'                  else, it will ask a question directly in the R console (readline function)
+#' @param modvar A character used when withpopup is TRUE, so in shiny context. Y or YES and the function goes on;
+#'               N or NO and the function stop (doesn't save and return the similar protein profiles)
+#' @param continue A logical to tell if you wanna continue and get the bar plots after getting the similar profile.
+#'                 This was thought when withpopup is TRUE. If continue is FALSE will only stop after getting similar profiles.
+#' @param got_it A logical to tell if you already have your data filtered. If TRUE, will directly starting to get the bar plot.
 #' @param save_pdf A logical to tell if you want to save plots in a pdf file
 #' @param layout a vector indicating the panel layout for multi-panel plots per page,
 #'               default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE
@@ -56,11 +61,16 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                        colorpanel = "#18FF00",
                                        usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
                                        linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
-                                       ret_plot = FALSE, withprompt = TRUE,
+                                       ret_plot = FALSE,
+                                       withpopup = FALSE, continue = TRUE, modvar = "", got_it = FALSE,
                                        save_pdf = TRUE, toplabel = "IMPRINTS-CETSA bar plotting",
                                        leftlabel = "", bottomlabel = "", pdfname = "barplot",
                                        pdfheight = 12, pdfwidth = 12)
 {
+  if(is.null(getDefaultReactiveDomain()) & withpopup){
+    stop("withpopup is for a shiny context only. Please set it to FALSE.")
+  }
+
   if(length(treatmentlevel) != 1){
     stop("You must select only one condition !")
   }
@@ -77,55 +87,58 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     outdir <- mineCETSA:::ms_directory(data, dataname)$outdir
   }
 
-  if(is.null(data_average)){
-    message("Start average calculation")
-    data_ave <- ms_2D_average_sh(data)
-    message("Average calculation done !")
-  }
-  else{
-    data_ave <- data_average
-  }
+  if(!got_it){
+    if(is.null(data_average)){
+      message("Start average calculation")
+      data_ave <- ms_2D_average_sh(data)
+      message("Average calculation done !")
+    }
+    else{
+      data_ave <- data_average
+    }
 
 
-  target_profile <- data_ave[which(data_ave$id == protein_profile),]
-  if(nrow(target_profile) == 0){
-    stop("You must select a  protein present in your data")
-  }
-  idx_cond <- get_treat_level(target_profile)[(get_treat_level(target_profile) %in% treatmentlevel)]
-  target_profile <- as.numeric(target_profile[,str_which(names(target_profile), idx_cond)])
+    target_profile <- data_ave[which(data_ave$id == protein_profile),]
+    if(nrow(target_profile) == 0){
+      stop("You must select a  protein present in your data")
+    }
+    idx_cond <- get_treat_level(target_profile)[(get_treat_level(target_profile) %in% treatmentlevel)]
+    target_profile <- as.numeric(target_profile[,str_which(names(target_profile), idx_cond)])
 
-  if(sum(is.na(target_profile)) == length(target_profile)){
-    g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
-      geom_text(x=0.5, y=0.5, label = "The profile you selected
+    if(sum(is.na(target_profile)) == length(target_profile)){
+      g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+        geom_text(x=0.5, y=0.5, label = "The profile you selected
                                        \ncontains only missing values !", size = 6) +
-      theme_cowplot() +
-      theme(axis.text.x = element_blank(),
-            axis.title.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            axis.text.y = element_blank(),
-            axis.title.y = element_blank(),
-            axis.ticks.y = element_blank())
+        theme_cowplot() +
+        theme(axis.text.x = element_blank(),
+              axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.ticks.y = element_blank())
 
-    return(g)
+      return(g)
+    }
+
+    message("Getting similar profile")
+    data_simi <- ms_2D_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
+                                      reference = target_profile,
+                                      use_score = use_score,
+                                      score_threshold = score_threshold,
+                                      max_na = max_na_prow)
+
+    if(class(data_simi) != "data.frame"){
+      return(data_simi)
+    }
+
+    data <- ms_subsetting(data, isfile = F, hitidlist = c(data_simi$id), allisoform = FALSE)
+    tr_data <- get_treat_level(data)[!(get_treat_level(data) %in% treatmentlevel)]
+    tr_data <- paste(tr_data, collapse = "|")
+    data <- data[,-str_which(names(data), tr_data)]
+    data$score <- data_simi$score
+    message("Filtering done !")
   }
 
-  message("Getting similar profile")
-  data_simi <- ms_2D_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
-                                    reference = target_profile,
-                                    use_score = use_score,
-                                    score_threshold = score_threshold,
-                                    max_na = max_na_prow)
-
-  if(class(data_simi) != "data.frame"){
-    return(data_simi)
-  }
-
-  data <- ms_subsetting(data, isfile = F, hitidlist = c(data_simi$id), allisoform = FALSE)
-  tr_data <- get_treat_level(data)[!(get_treat_level(data) %in% treatmentlevel)]
-  tr_data <- paste(tr_data, collapse = "|")
-  data <- data[,-str_which(names(data), tr_data)]
-  data$score <- data_simi$score
-  message("Filtering done !")
 
 
   barplotting <- function(d1, withset = FALSE) {
@@ -266,7 +279,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
   nrowdata <- nrow(data)
 
 
-  if(withprompt){
+  if(!withpopup){
     go <- ''
     while(!(go %in% c('YES','NO','Y','N')) ){
       go <- toupper(readline(prompt =
@@ -293,18 +306,72 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       }
     }
   }
+  else if(!continue){
+    popupModal <- function() {
+      modalDialog(
+        HTML(paste("<h3>", nrowdata - 1, "proteins with similar profiles with a score of", score_threshold,
+                        "have been found. <br>
+                   You can continue by clicking on 'OK' or cancel and change the paramater.</h3>")),
+
+        footer = tagList(
+          actionButton("cancel", "Cancel"),
+          actionButton("ok", "OK")
+        )
+      )
+    }
+    if (modvar %in% c('YES','Y')){
+      message("Let's get this profiles then !")
+
+      res <- ms_2D_barplotting_simprof(data, data_average = data_ave,
+                                       treatmentlevel = treatmentlevel, protein_profile = protein_profile,
+                                       setlevel = setlevel, corrtable = corrtable, plotseq = plotseq,
+                                       printBothName = printBothName, printGeneName = printGeneName,
+                                       score_threshold = score_threshold, max_na_prow = max_na_prow,
+                                       use_score = use_score,
+                                       pfdatabase = pfdatabase, witherrorbar = witherrorbar, layout = layout,
+                                       colorpanel = colorpanel,
+                                       usegradient = usegradient, colorgradient = colorgradient,
+                                       linegraph = linegraph, log2scale = log2scale, ratio = ratio,
+                                       ret_plot = ret_plot,
+                                       withpopup = TRUE, continue = TRUE, modvar = "", got_it = TRUE,
+                                       save_pdf = save_pdf, toplabel = toplabel,
+                                       leftlabel = leftlabel, bottomlabel = bottomlabel, pdfname = pdfname,
+                                       pdfheight = pdfheight, pdfwidth = pdfwidth)
+
+      return(res)
+    }
+    else if (modvar %in% c('NO','N')) {
+      g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+        geom_text(x=0.5, y=0.5, label = "Try to change the threshold or
+                                         \nthe score method then", size = 6) +
+        theme_cowplot() +
+        theme(axis.text.x = element_blank(),
+              axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.ticks.y = element_blank())
+
+      return(g)
+    }
+    else{
+      showModal(popupModal())
+      return(data)
+    }
+  }
 
 
+  if(continue){
     if (nrowdata == 0) {
       message("Make sure there are more than one experimental condition in dataset.")
       stop("Otherwise specify remsinglecondprot==FALSE !")
     }
     if (printBothName & !pfdatabase) {
       data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description,
-                                                                                      pfdatabase)) %>%
+                                                                                        pfdatabase)) %>%
         dplyr::mutate(description2 = getGeneName(description)) %>%
         dplyr::mutate(id = paste(id, description1, description2,
-                          sep = "\n"))
+                                 sep = "\n"))
       data$description1 <- NULL
       data$description2 <- NULL
     }
@@ -371,7 +438,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       stop("make sure the namings of the columns of the dasaset are correct.")
     }
     cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
-                                                              treatment, sep = "_"))
+                                                                            treatment, sep = "_"))
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
     }
@@ -411,7 +478,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     subt <- NULL
     main_prof <- cdata[str_which(cdata$id, protein_profile),]
     plotsmain <- plyr::dlply(main_prof, plyr::.(id), .fun = barplotting,
-                         withset = withset)
+                             withset = withset)
 
     if(save_pdf){
       message("Start saving plot")
@@ -424,7 +491,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                         c(plotsmain[groups[[i]]], list(nrow = 1, ncol = 1),
                                           top = toplabel, left = leftlabel,
                                           bottom = bottomlabel)))
-        })
+      })
 
 
       params <- list(nrow = layout[1], ncol = layout[2])
@@ -438,7 +505,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                         c(plots[groups[[i]]], params,
                                           top = toplabel, left = leftlabel,
                                           bottom = bottomlabel)))
-        })
+      })
 
       class(pl[["main"]]) <- c("arrangelist", "ggplot", class(pl[["main"]]))
       class(pl[["all"]]) <- c("arrangelist", "ggplot", class(pl[["all"]]))
@@ -477,6 +544,8 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
 
       return(g)
     }
+  }
+
 }
 
 

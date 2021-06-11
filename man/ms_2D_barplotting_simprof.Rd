@@ -27,7 +27,10 @@ ms_2D_barplotting_simprof(
   log2scale = TRUE,
   ratio = 0.6,
   ret_plot = FALSE,
-  withprompt = TRUE,
+  withpopup = FALSE,
+  continue = TRUE,
+  modvar = "",
+  got_it = FALSE,
   save_pdf = TRUE,
   toplabel = "IMPRINTS-CETSA bar plotting",
   leftlabel = "",
@@ -84,8 +87,16 @@ default value is c(2,3) for set containing data, otherwise c(4,3), use when save
 
 \item{ret_plot}{Logical to tell if you want to return the bar plot from the protein selected}
 
-\item{withprompt}{A logical to tell if you want to use the prompt. If TRUE, will ask if you want to continue and save the plots
-considering the number of proteins with similar profiles which have been found.}
+\item{withpopup}{A logical, only use in shiny context. If TRUE, will call a modal dialog in a shiny app;
+else, it will ask a question directly in the R console (readline function)}
+
+\item{continue}{A logical to tell if you wanna continue and get the bar plots after getting the similar profile.
+This was thought when withpopup is TRUE. If continue is FALSE will only stop after getting similar profiles.}
+
+\item{modvar}{A character used when withpopup is TRUE, so in shiny context. Y or YES and the function goes on;
+N or NO and the function stop (doesn't save and return the similar protein profiles)}
+
+\item{got_it}{A logical to tell if you already have your data filtered. If TRUE, will directly starting to get the bar plot.}
 
 \item{save_pdf}{A logical to tell if you want to save plots in a pdf file}
 

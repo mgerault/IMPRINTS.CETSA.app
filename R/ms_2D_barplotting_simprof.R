@@ -67,7 +67,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                        leftlabel = "", bottomlabel = "", pdfname = "barplot",
                                        pdfheight = 12, pdfwidth = 12)
 {
-  if(is.null(getDefaultReactiveDomain()) & withpopup){
+  if(is.null(shiny::getDefaultReactiveDomain()) & withpopup){
     stop("withpopup is for a shiny context only. Please set it to FALSE.")
   }
 

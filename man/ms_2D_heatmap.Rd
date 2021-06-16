@@ -6,8 +6,9 @@
 \usage{
 ms_2D_heatmap(
   data,
-  hit_summary,
+  hit_summary = NULL,
   NN_data = NULL,
+  PRcomplex_data = NULL,
   treatment,
   max_na = 0,
   response = c("S", "D", "both"),
@@ -23,7 +24,7 @@ ms_2D_heatmap(
 )
 }
 \arguments{
-\item{data}{Output data from ms_2D_average}
+\item{data}{Output data from ms_2D_average_sh}
 
 \item{hit_summary}{The summary file from the hitlist output}
 
@@ -33,7 +34,7 @@ ms_2D_heatmap(
 
 \item{max_na}{An integer indicating the maximum number of missing values per row (per protein)}
 
-\item{response}{A character to tell if you want to the destabilized proteins, stabilized or both. 
+\item{response}{A character to tell if you want to the destabilized proteins, stabilized or both.
 Accepted value are 'D' for destabilize, 'S' for stabilized or 'both'.}
 
 \item{select_cat}{A character vector indicating the categories from which you want to see the heatmap}
@@ -59,4 +60,7 @@ A grob object, the heatmap.
 }
 \description{
 Function to get the heatmap from your data.
+}
+\seealso{
+\code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh.}}
 }

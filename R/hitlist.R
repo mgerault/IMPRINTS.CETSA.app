@@ -375,9 +375,6 @@ hitlist <- function(inputdata,
     CN <- dplyr::anti_join(hitlist,CC, by = c('id','Condition')) %>%
       dplyr::group_by(category = 'CN')
 
-
-
-
   }
   else{
     CC <- as.data.frame(matrix(ncol = ncol(ND), nrow = 0))

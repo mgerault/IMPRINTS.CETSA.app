@@ -529,78 +529,166 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "heat",
-              h2(tags$u("Get heatmaps from your data")),
-              tags$hr(),
-              
-              fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
-                           solidHeader = TRUE, collapsible = TRUE, width = 12,
-                           fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output 
+              tabsetPanel(type = "tabs", 
+                          tabPanel("Heatmap",
+                                   h2(tags$u("Get heatmaps from your data")),
+                                   tags$hr(),
+                                   
+                                   fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
+                                                solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output 
                                                                          (will calculate and save it)", TRUE),
-                                           conditionalPanel(condition = "input.gave_heat",
-                                                            fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
-                                                            ),
-                                           conditionalPanel(condition = "!input.gave_heat",
-                                                            fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
-                                                            )
-                                           ),  
-                                    column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
-                                    column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
-                                           conditionalPanel(condition = "input.impNN_heat",
-                                                            fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
-                                                            )
-                                           )
-                                    ),
-                           
-                           tags$hr(),
-                           
-                           conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
-                                            fluidRow(column(3, selectInput("cond_heat", "Select a condition", choices = NULL)),
-                                                     column(3, selectInput("resp_heat", "Select a response to the drug", 
-                                                                           choices = c("Stabilization" = "S",
-                                                                                       "Destabilization" = "D",
-                                                                                       "Both" = "both"), selected = "both")),
-                                                     column(3, selectInput("catego_heat", "Select some categories", choices = NULL, multiple = TRUE)),
-                                                     column(3, sliderInput("maxna_heat", "Choose a maximum number of
+                                                                conditionalPanel(condition = "input.gave_heat",
+                                                                                 fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
+                                                                                 ),
+                                                                conditionalPanel(condition = "!input.gave_heat",
+                                                                                 fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
+                                                                                 )
+                                                                ), 
+                                                         column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
+                                                         column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
+                                                                conditionalPanel(condition = "input.impNN_heat",
+                                                                                 fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
+                                                                                 )
+                                                                )
+                                                         ),
+                                                
+                                                tags$hr(),
+                                                
+                                                conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                                                                 fluidRow(column(3, selectInput("cond_heat", "Select a condition", choices = NULL)),
+                                                                          column(3, selectInput("resp_heat", "Select a response to the drug", 
+                                                                                                choices = c("Stabilization" = "S",
+                                                                                                            "Destabilization" = "D",
+                                                                                                            "Both" = "both"), selected = "both")),
+                                                                          column(3, selectInput("catego_heat", "Select some categories", choices = NULL, multiple = TRUE)),
+                                                                          column(3, sliderInput("maxna_heat", "Choose a maximum number of
                                                                                          missing values per rows", value = 0, min = 0, max = 7, step = 1))
-                                                     ),
-                                            
-                                            fluidRow(column(3, textInput("titleH_heat", "Type a title for your heatmap", "Heatmap")),
-                                                     column(3, colourInput("backcol_heat", "Choose a background color", "#FFFFFF",
-                                                                           allowTransparent = TRUE, closeOnClick = TRUE)),
-                                                     column(3, colourInput("bordercol_heat", "Choose a border color (can be NULL)", NULL,
-                                                                           allowTransparent = TRUE, closeOnClick = TRUE)),
-                                                     column(3, 
-                                                            colourInput("grad1col_heat", "Choose the low gradient color", "#005EFF",
-                                                                           allowTransparent = TRUE, closeOnClick = TRUE),
-                                                            colourInput("grad2col_heat", "Choose the middle gradient color", "#FFFFFF",
-                                                                        allowTransparent = TRUE, closeOnClick = TRUE),
-                                                            colourInput("grad3col_heat", "Choose the high gradient color", "#FF0000",
-                                                                        allowTransparent = TRUE, closeOnClick = TRUE)),
-                                                     
-                                                     ),
-                                            
-                                            fluidRow(column(4, checkboxInput("saveH_heat", "Save the heatmap", TRUE)),
-                                                     conditionalPanel(condition = "input.saveH_heat",
-                                                                      column(4, textInput("fnameH_heat", "Type a your file name", "My_heatmap")),
-                                                                      column(4, selectInput("formatH_heat", "Choose a format for your file", 
-                                                                                            choices = c("png", "pdf"), selected = "png"))
-                                                                      )
-                                                     )
-                                            
-                                            )
-                           )
-                       ),
-                       
-                 
-              conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
-                               actionButton("getH_heat", "See heatmap"),
-                               tags$hr(),
-                               
-                               textOutput("diagl_heat"),
-                               tags$hr(),
-                               
-                               withSpinner(plotOutput("H_heat"), type = 6)
-                               )
+                                                                          ),
+                                                                 
+                                                                 fluidRow(column(3, textInput("titleH_heat", "Type a title for your heatmap", "Heatmap")),
+                                                                          column(3, colourInput("backcol_heat", "Choose a background color", "#FFFFFF",
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, colourInput("bordercol_heat", "Choose a border color (can be NULL)", NULL,
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, 
+                                                                                 colourInput("grad1col_heat", "Choose the low gradient color", "#005EFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad2col_heat", "Choose the middle gradient color", "#FFFFFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad3col_heat", "Choose the high gradient color", "#FF0000",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE))
+                                                                          ),
+                                                                 
+                                                                 fluidRow(column(4, checkboxInput("saveH_heat", "Save the heatmap", TRUE)),
+                                                                          conditionalPanel(condition = "input.saveH_heat",
+                                                                                           column(4, textInput("fnameH_heat", "Type a your file name", "My_heatmap")),
+                                                                                           column(4, selectInput("formatH_heat", "Choose a format for your file", 
+                                                                                                                 choices = c("png", "pdf"), selected = "png"))
+                                                                                           )
+                                                                          )
+                                                                 )
+                                                )
+                                            ),
+                                   
+                                   
+                                   conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                                                    actionButton("getH_heat", "See heatmap"),
+                                                    tags$hr(),
+                                                    
+                                                    textOutput("diagl_heat"),
+                                                    tags$hr(),
+                                                    
+                                                    withSpinner(plotOutput("H_heat"), type = 6)
+                                                    )
+                                   ),
+                          
+                          tabPanel("Protein complex",
+                                   h2(tags$u("Protein complex and heatmap")),
+                                   tags$hr(),
+                                   
+                                   fluidRow(box(title = "Map proteins to known protein complex", status = "primary", 
+                                                solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                
+                                                fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the ms_2D_average output 
+                                                                         (will calculate and save it)", TRUE)),
+                                                         column(4,
+                                                                conditionalPanel(condition = "input.gave_heatcom",
+                                                                                 fileInput("filedif_heatcom", "Choose a ms_2D_caldiff output")
+                                                                                 ),
+                                                                conditionalPanel(condition = "!input.gave_heatcom",
+                                                                                 fileInput("fileave_heatcom", "Choose a ms_2D_average_sh output")
+                                                                                 )
+                                                                )
+                                                         ),
+                                                
+                                                tags$hr(),
+                                                
+                                                conditionalPanel(condition = "output.heatcom_fileup",
+                                                                 fluidRow(column(4, selectInput("cond_heatcom", "Select a condition", choices = NULL)),
+                                                                          column(4, selectInput("organism_heatcom", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                          ),
+                                                                 
+                                                                 actionButton("ave_map_heatcom", "Map proteins to known protein complex"),
+                                                                 textOutput("diagmapping_heatcom"),
+                                                                 
+                                                                 tags$hr(),
+                                                                 
+                                                                 conditionalPanel(condition = "output.resmappingheatcom_fileup",
+                                                                                  DT::dataTableOutput("tabmap_heatcom"),
+                                                                                  downloadButton("downrestab_heatcom")
+                                                                                  )
+                                                                 )
+                                                )
+                                            ),
+                                   
+                                   conditionalPanel(condition = "output.resmappingheatcom_fileup",
+                                                    fluidRow(box(title = "Heatmap parameter", status = "primary",
+                                                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                                 
+                                                                 fluidRow(column(4,selectInput("allcomplex_heatcom", "Select some protein complex", choices = NULL, multiple = TRUE)),
+                                                                          column(4, selectInput("resp_heatcom", "Select a response to the drug", 
+                                                                                                choices = c("Stabilization" = "S",
+                                                                                                            "Destabilization" = "D",
+                                                                                                            "Both" = "both"), selected = "both")),
+                                                                          column(4, sliderInput("maxna_heatcom", "Choose a maximum number of
+                                                                                    missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                                          ),
+                                                                 
+                                                                 fluidRow(column(3, textInput("titleH_heatcom", "Type a title for your heatmap", "Heatmap")),
+                                                                          column(3, colourInput("backcol_heatcom", "Choose a background color", "#FFFFFF",
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, colourInput("bordercol_heatcom", "Choose a border color (can be NULL)", NULL,
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, 
+                                                                                 colourInput("grad1col_heatcom", "Choose the low gradient color", "#005EFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad2col_heatcom", "Choose the middle gradient color", "#FFFFFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad3col_heatcom", "Choose the high gradient color", "#FF0000",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE))
+                                                                          ),
+                                                                 
+                                                                 fluidRow(column(4, checkboxInput("saveH_heatcom", "Save the heatmap", TRUE)),
+                                                                          conditionalPanel(condition = "input.saveH_heatcom",
+                                                                                           column(4, textInput("fnameH_heatcom", "Type a your file name", "My_heatmap")),
+                                                                                           column(4, selectInput("formatH_heatcom", "Choose a format for your file",
+                                                                                                                 choices = c("png", "pdf"), selected = "png"))
+                                                                                           )
+                                                                          )
+                                                                 )
+                                                             ),
+                                                    
+                                                    actionButton("getH_heatcom", "See heatmap"),
+                                                    tags$hr(),
+                                                    
+                                                    textOutput("diagl_heatcom"),
+                                                    tags$hr(),
+                                                    
+                                                    withSpinner(plotOutput("H_heatcom"), type = 6)
+                                                    )
+                                   )
+                          )
               ),
               
               
@@ -1006,16 +1094,22 @@ server <- function(input, output, session){
   observeEvent(input$CAL_DIF, {
     showNotification("Start difference calculation, this may take a while. Please wait a few minutes",
                      type = "message", duration = 5)
-
-    d <- ms_2D_caldiff(cetsa_isoform$norm,
-                       treatmentlevel = str_remove(unlist(str_split(input$treat_name2, ",")), " "),
-                       withinrep = input$wit_rep
-                       )
-
-    cetsa_isoform$dif <- d
-    message("Done to calculate the pair-wise (per replicate and temperature)
+    ytr_level <- str_remove(unlist(str_split(input$treat_name2, ",")), " ")
+    tr_level <- get_treat_level(cetsa_isoform$norm)
+    if(sum(str_detect(tr_level, paste(ytr_level, collapse = "|"))) != length(tr_level)){
+      showNotification("The treatments you typed doesn't match the treatments from your data !", type = "error")
+    }
+    else{
+      d <- ms_2D_caldiff(cetsa_isoform$norm,
+                         treatmentlevel = ytr_level,
+                         withinrep = input$wit_rep
+      )
+      
+      cetsa_isoform$dif <- d
+      message("Done to calculate the pair-wise (per replicate and temperature)
             protein abundance differences")
-    showNotification("Difference calculation succeed !", type = "message", duration = 5)
+      showNotification("Difference calculation succeed !", type = "message", duration = 5)
+    }
   })
   #check if a file is upload
   output$cetsa_difup <- reactive({
@@ -1777,7 +1871,7 @@ server <- function(input, output, session){
                                  "id", "description", "gene", "category")]
      
       if(nrow(map_compl) !=0){
-        map_compl$description <- mineCETSA:::getProteinName(map_compl$description)
+        map_compl$description <- getProteinName(map_compl$description)
       }
       
       
@@ -1869,14 +1963,10 @@ server <- function(input, output, session){
       
     }
     else{
-      ad <<- data
       data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar_compl)
       
-      ad1 <<- data
       data <- data[,-str_which(names(data), notsel_cond)]
-      ad2 <<- data
       data$category <- cate$category[which(!is.na(match(cate$id, data$id)))]
-      ad3 <<- data
     }
     
     data
@@ -2277,6 +2367,190 @@ server <- function(input, output, session){
       NULL
   })
   
+  
+  
+  ### HEATMAP PROTEIN COMPLEX
+  
+  DIF_heatcom <- reactive({
+    File <- input$filedif_heatcom
+    if (is.null(File) | !input$gave_heatcom)
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  
+  AVE_heatcom <- reactive({
+    File <- input$fileave_heatcom
+    if (is.null(File)  | input$gave_heatcom)
+      return(NULL)
+    
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$heatcom_fileup <- reactive({
+    return(!is.null(AVE_heatcom()) | !is.null(DIF_heatcom()))
+  })
+  outputOptions(output, "heatcom_fileup", suspendWhenHidden = FALSE)
+  
+  
+  observe({
+    if(!is.null(DIF_heatcom()) | !is.null(AVE_heatcom())){
+      tr <- get_treat_level(DIF_heatcom())
+      if(is.null(tr)){
+        tr <- get_treat_level(AVE_heatcom())
+      }
+      
+      updateSelectInput(session, "cond_heatcom", choices = tr)
+    }
+  })
+  
+  
+  resmapping_heatcom <- reactiveValues(
+    ch = NULL
+  )
+  resAVE_heatcom <- reactiveValues(
+    d = NULL
+  )
+  observeEvent(input$ave_map_heatcom, {
+     showNotification("Start mapping proteins, this may take a while", type = "message")
+      
+      if(input$gave_heatcom){
+        data_ave <- ms_2D_average_sh(DIF_heatcom())
+        resAVE_heatcom$d <- data_ave
+        showNotification("Average calculation succeed !", type = "message")
+      }
+      else{
+        data_ave <- AVE_heatcom()
+      }
+      
+      withCallingHandlers({
+        shinyjs::html("diagmapping_heatcom", "")
+        map_heatcom <- ms_2D_complex_mapping_sh(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
+                                              targetcategory = NULL, 
+                                              organism = input$organism_heatcom)
+      },
+      message = function(m) {
+        shinyjs::html(id = "diagmapping_heatcom", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      }
+      )
+      
+      map_heatcom <- map_heatcom[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",
+                                 "id", "description", "gene")]
+      
+      if(nrow(map_heatcom) !=0){
+        map_heatcom$description <- getProteinName(map_heatcom$description)
+      }
+      
+      
+      resmapping_heatcom$ch <- map_heatcom
+      output$tabmap_heatcom <- DT::renderDataTable({
+        DT::datatable(resmapping_heatcom$ch,
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Mapping proteins results")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))
+      })
+      
+      if(nrow(map_heatcom) != 0){
+        showNotification("Mapping protein succeed !", type = "message")
+      }
+      else{
+        showNotification("No proteins could be mapped ! 
+                         Try to add more category in order to have more proteins", type = "error")
+      }
+      
+      
+      updateSelectInput(session, "allcomplex_heatcom", choices = unique(resmapping_heatcom$ch$ComplexName))
+  })
+  #check if a file is upload
+  output$resmappingheatcom_fileup <- reactive({
+    return(!is.null(resmapping_heatcom$ch))
+  })
+  outputOptions(output, "resmappingheatcom_fileup", suspendWhenHidden = FALSE)
+  
+  output$downrestab_heatcom <- downloadHandler(
+    filename = function() {
+      paste0("ProteinComplexMapping_", Sys.Date(), ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(resmapping_heatcom$ch, file, row.names = FALSE)
+    }
+  )
+  
+  
+  observe({
+    if(!is.null(DIF_heatcom())){
+      nc <- str_subset(names(DIF_heatcom()), paste0("_", input$cond_heatcom, "$"))
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_heatcom", max = nc)
+    }
+    if(!is.null(AVE_heatcom())){
+      nc <- str_subset(names(AVE_heatcom()), paste0("_", input$cond_heatcom, "$"))
+      nc <- length(unique(nc))
+      updateSliderInput(session, "maxna_heatcom", max = nc)
+    }
+  })
+  
+  pH_heatcom <- reactiveValues(
+    g = NULL
+  )
+  
+  plotH_heatcom <- reactive({
+    dat <- NULL
+    if(!is.null(AVE_heatcom())){
+      dat <- AVE_heatcom()
+    }
+    else if(!is.null(resAVE_heatcom$d)){
+      dat <- resAVE_heatcom$d
+    }
+    
+    pr <- NULL
+    if(!is.null(resmapping_heatcom$ch)){
+      pr <- resmapping_heatcom$ch$id[which(!is.na(match(resmapping_heatcom$ch$ComplexName, input$allcomplex_heatcom)))]
+      pr <- unique(pr)
+    }
+    
+    dat <- ms_subsetting(dat, isfile = F, hitidlist = c(pr), allisoform = FALSE)
+    PRcompl <- resmapping_heatcom$ch[which(!is.na(match(resmapping_heatcom$ch$ComplexName, input$allcomplex_heatcom))),]
+    
+    withCallingHandlers({
+      shinyjs::html("diagl_heatcom", "")
+      h <- ms_2D_heatmap(dat, NULL, NN_data = NULL, PRcomplex_data = PRcompl,
+                         treatment = input$cond_heatcom, max_na = input$maxna_heatcom,
+                         response = input$resp_heatcom, 
+                         gradient_color = c(input$grad1col_heatcom, input$grad2col_heatcom, input$grad3col_heatcom),
+                         titleH = input$titleH_heatcom,
+                         saveHeat = input$saveH_heatcom, file_type = input$formatH_heatcom, file_name = input$fnameH_heatcom,
+                         cat_color = NULL, back_color = input$backcol_heatcom, border_color = input$bordercol_heatcom)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagl_heatcom", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      
+    }
+    )
+    
+  })
+  
+  observeEvent(input$getH_heatcom, {
+    if(is.null(input$allcomplex_heatcom)){
+      showNotification("Don't forget to select a complex !", type = "error")
+    }
+    else{
+      showNotification("Getting heatmap", type = "message")
+      pH_heatcom$g <- plotH_heatcom()
+    }
+  })
+  
+  output$H_heatcom <- renderPlot({
+    if(!is.null(pH_heatcom$g))
+      return(plot(pH_heatcom$g))
+    else
+      NULL
+  })
   
   
   ### STRINGdb

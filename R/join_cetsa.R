@@ -20,6 +20,9 @@
 #' join_cetsa(list(test, test2))
 
 join_cetsa <- function(list_data, new_names = c("1h", "6h")){
+  if(sum(class(list_data) == "data.frame") >= 1){
+    list_data <- list(list_data)
+  }
   n <- length(list_data)
 
   if(length(new_names) != n){

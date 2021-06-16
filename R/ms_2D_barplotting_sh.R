@@ -581,7 +581,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
 
 
 ### PaletteWithoutGrey function ###
-#generates a color list depending on the number of different treatment
+#generates a color list depending on the number of element of a character vector
 PaletteWithoutGrey <- function(treatment){
 
   n = length(unique(treatment))

@@ -1871,7 +1871,7 @@ server <- function(input, output, session){
                                  "id", "description", "gene", "category")]
      
       if(nrow(map_compl) !=0){
-        map_compl$description <- getProteinName(map_compl$description)
+        map_compl$description <- mineCETSAapp:::getProteinName(map_compl$description)
       }
       
       
@@ -2438,7 +2438,7 @@ server <- function(input, output, session){
                                  "id", "description", "gene")]
       
       if(nrow(map_heatcom) !=0){
-        map_heatcom$description <- getProteinName(map_heatcom$description)
+        map_heatcom$description <- mineCETSAapp:::getProteinName(map_heatcom$description)
       }
       
       

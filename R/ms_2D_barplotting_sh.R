@@ -236,23 +236,37 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         }
 
         if(!purrr::is_empty(grep("^category", names(data)))){
-          subt <- data[, c(1, grep("^category", names(data)))]
-          subt <- as.data.frame(subt)
-          colnames(subt) <- c("id", "category")
-          subt$category <- paste("Category :", subt$category)
-          rownames(subt) <- subt$id
+          if(!purrr::is_empty(grep("^score", names(data)))){
+            subt <- data[, c(1, grep("^category", names(data)), grep("^score", names(data)))]
+            subt <- as.data.frame(subt)
+            colnames(subt) <- c("id", "category", "score")
+            subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,4))
+            subt$score <- NULL
+            rownames(subt) <- subt$id
+            data <- data[,-grep("^score", names(data))]
+            data[grep("^category", names(data))] <- subt$category
+          }
+          else{
+            subt <- data[, c(1, grep("^category", names(data)))]
+            subt <- as.data.frame(subt)
+            colnames(subt) <- c("id", "category")
+            subt$category <- paste("Category :", subt$category)
+            rownames(subt) <- subt$id
+            data[grep("^category", names(data))] <- subt$category
+          }
 
-          catego <- data[,grep("^category", names(data))]
-          id_cc <- which(catego == "CC")
-          id_nc <- which(catego == "NC")
-          id_cn <- which(catego == "CN")
-          id_nd <- which(catego == "ND")
-          id_nn <- which(catego == "NN")
+          ord_data <- data[NULL,]
+          for(i in c("CN", "NC", "CC", "ND", "NN")){
+            cat_idx <- str_which(data$category, paste0("^Category : ", i))
+            if(length(cat_idx) > 0){
+              cat_idx <- data[cat_idx,]
+              w <- cat_idx[order(cat_idx$category, decreasing = TRUE),]
+              ord_data <- rbind(ord_data, w)
+            }
+          }
 
-          catego_order <- c(id_cn, id_nc, id_cc, id_nd, id_nn)
-
-          if(!purrr::is_empty(catego_order))
-            data <- data[catego_order, ]
+          if(nrow(ord_data) != 0)
+            data <- ord_data
         }
         else{
           subt <- NULL
@@ -420,23 +434,37 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     }
 
     if(!purrr::is_empty(grep("^category", names(data)))){
-      subt <- data[, c(1, grep("^category", names(data)))]
-      subt <- as.data.frame(subt)
-      colnames(subt) <- c("id", "category")
-      subt$category <- paste("Category :", subt$category)
-      rownames(subt) <- subt$id
+      if(!purrr::is_empty(grep("^score", names(data)))){
+        subt <- data[, c(1, grep("^category", names(data)), grep("^score", names(data)))]
+        subt <- as.data.frame(subt)
+        colnames(subt) <- c("id", "category", "score")
+        subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,4))
+        subt$score <- NULL
+        rownames(subt) <- subt$id
+        data <- data[,-grep("^score", names(data))]
+        data[grep("^category", names(data))] <- subt$category
+      }
+      else{
+        subt <- data[, c(1, grep("^category", names(data)))]
+        subt <- as.data.frame(subt)
+        colnames(subt) <- c("id", "category")
+        subt$category <- paste("Category :", subt$category)
+        rownames(subt) <- subt$id
+        data[grep("^category", names(data))] <- subt$category
+      }
 
-      catego <- data[,grep("^category", names(data))]
-      id_cc <- which(catego == "CC")
-      id_nc <- which(catego == "NC")
-      id_cn <- which(catego == "CN")
-      id_nd <- which(catego == "ND")
-      id_nn <- which(catego == "NN")
+      ord_data <- data[NULL,]
+      for(i in c("CN", "NC", "CC", "ND", "NN")){
+        cat_idx <- str_which(data$category, paste0("^Category : ", i))
+        if(length(cat_idx) > 0){
+          cat_idx <- data[cat_idx,]
+          w <- cat_idx[order(cat_idx$category, decreasing = TRUE),]
+          ord_data <- rbind(ord_data, w)
+        }
+      }
 
-      catego_order <- c(id_cn, id_nc, id_cc, id_nd, id_nn)
-
-      if(!purrr::is_empty(catego_order))
-        data <- data[catego_order, ]
+      if(nrow(ord_data) != 0)
+        data <- ord_data
     }
     else{
       subt <- NULL

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hitlist.R
 \name{hitlist}
 \alias{hitlist}
-\title{Hitlist}
+\title{hitlist}
 \usage{
 hitlist(
   inputdata,

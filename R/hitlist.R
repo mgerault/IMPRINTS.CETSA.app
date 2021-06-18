@@ -1,4 +1,4 @@
-#' Hitlist
+#' hitlist
 #'
 #' Function to categorize protein according to their Expression/Stability change
 #' based on two treatment conditions and characteristic conditions for fold change.

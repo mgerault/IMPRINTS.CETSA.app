@@ -66,7 +66,7 @@ hitlist_outliers <- function (data = NULL, control = NULL,
         data <- mineCETSA::ms_fileread(data)
       }
       else if(extension == "xlsx"){
-        data <- dplyr::as_tibble(import(data))
+        data <- dplyr::as_tibble(openxlsx::read.xlsx(data))
       }
       else if(extension == "csv"){
         no_comma <- ''

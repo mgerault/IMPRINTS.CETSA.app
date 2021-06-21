@@ -1,7 +1,7 @@
 # mineCETSAapp
-This is a package to complete the mineCETSA package from Lingyun Dai (https://github.com/nkdailingyun/mineCETSA). 
+This is a package to complete the mineCETSA package from Dai Lingyun (https://github.com/nkdailingyun/mineCETSA). 
 The goal of this package is to provide a user friendly interface of this package. With this shiny app, you can do the complete CETSA 2D analysis; visualize the 2D bar plot
-of many proteins from drug experiement available in the database; add new dataset or remove old ones from this database; start a PubMed search based on the protein names or
+of many proteins from drug experiment available in the database; add new dataset or remove old ones from this database; get STRING network and heatmap from your data; start a PubMed search based on the protein names or
 any character you want and save the results in word files; etc.
 
 The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell

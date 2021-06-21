@@ -417,7 +417,7 @@ hitlist_outliers <- function (data = NULL, control = NULL,
     }
   }
 
-  hitlist <- myhits_pi3k$hitlist %>% dplyr::group_by(Condition) %>%
+  hitlist <- hitlist %>% dplyr::group_by(Condition) %>%
       dplyr::mutate(nb_hits = length(Condition)/length(unique(temperature)))
 
   hitlist <- hitlist %>% dplyr::group_by(id, Condition) %>%

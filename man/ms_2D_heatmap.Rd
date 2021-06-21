@@ -62,5 +62,5 @@ A grob object, the heatmap.
 Function to get the heatmap from your data.
 }
 \seealso{
-\code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh.}}
+\code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh}}
 }

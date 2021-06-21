@@ -23,7 +23,7 @@
 #'
 #' @return A grob object, the heatmap.
 #'
-#' @seealso \code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh.}}
+#' @seealso \code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh}}
 #'
 #' @export
 #'

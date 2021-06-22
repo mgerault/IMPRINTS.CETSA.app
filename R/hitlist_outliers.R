@@ -66,7 +66,7 @@ hitlist_outliers <- function (data = NULL, control = NULL,
         data <- mineCETSA::ms_fileread(data)
       }
       else if(extension == "xlsx"){
-        data <- dplyr::as_tibble(openxlsx::read.xlsx(data))
+        data <- dplyr::as_tibble(openxlsx::read.xlsx(data))  #with import and xlsx, interpret numeric as character (write in scientific, with E and not e), don't know why...
       }
       else if(extension == "csv"){
         no_comma <- ''
@@ -74,7 +74,7 @@ hitlist_outliers <- function (data = NULL, control = NULL,
           no_comma <- toupper(readline(prompt = "Are you sure there is no comma in your description column? Otherwise, it can lead to a misreading of your data (Yes/No): "))
           if (no_comma %in% c('YES','Y')){
             message("Let's get this hits then !")
-            data <- dplyr::as_tibble(import(data))
+            data <- dplyr::as_tibble(rio::import(data))
           }
           else if (no_comma %in% c('NO','N')) {
             message("Go check your file then and re-run the function after. I recommend you to use txt or xlsx files so.")
@@ -436,14 +436,7 @@ hitlist_outliers <- function (data = NULL, control = NULL,
   results$summary <- hit_summary
   results$NN <- NN
 
-  g <- ggplot(hitlist %>% filter(temperature == "37C"),
-              aes(mean, error.score, color = category)) + geom_point() +
-    labs(x = "Abundance difference at 37C", y = "Error score",
-         color = "category") +
-    ylim(c(0,1)) +
-    scale_color_manual(values = c("CN" = "#0FAEB9", "NC" = "#E7B700", "CC" = "#FB4F0B",
-                                  "ND" = "#8F3A8461")) +
-    facet_grid(~Condition)
+
 
   if(exported){
     message("Start saving your results")
@@ -455,7 +448,35 @@ hitlist_outliers <- function (data = NULL, control = NULL,
                       sep = "_")
     filename <- file.path(paste0(dname, "_Hits"), filename)
 
+    g <- ggplot(hitlist %>% filter(temperature == basetemp),
+                aes(mean, error.score, color = category)) + geom_point() +
+      labs(x = paste("Abundance difference at", basetemp), y = "Error score",
+           color = "category") +
+      ylim(c(0,1)) +
+      scale_color_manual(values = c("CN" = "#0FAEB9", "NC" = "#E7B700", "CC" = "#FB4F0B",
+                                    "ND" = "#8F3A8461")) +
+      facet_grid(~Condition)
+
+    hit_nn <- hitlist
+    hit_nn <- hit_nn[, names(NN)]
+    hit_nn <- rbind(hit_nn, NN)
+    hit_nn <- hit_nn %>% dplyr::filter(temperature == basetemp)
+    gNN <- ggplot(hit_nn,aes(mean, error.score, color = category,
+                         shape = category, alpha = category)) + geom_point() +
+      labs(x = paste("Abundance difference at", basetemp), y = "Global score",
+           color = "category") +
+      ylim(c(0,1)) +
+      scale_color_manual(values = c("CN" = "#0FAEB9", "NC" = "#E7B700", "CC" = "#FB4F0B", "ND" = "#8F3A8461",
+                                    "NN" = "grey")) +
+      scale_shape_manual(values = c("CN" = 19, "NC" = 19, "CC" = 19, "ND" = 19,
+                                    "NN" = 13)) +
+      scale_alpha_manual(values = c("CN" = 1, "NC" = 1, "CC" = 1, "ND" = 1,
+                                    "NN" = 0.4)) +
+      facet_grid(~Condition)
+
     ggsave(paste(filename, "_summaryPlots.png"), g)
+    ggsave(paste(filename, "_summaryPlots_withNN.png"), gNN)
+
     if(format == "xlsx"){
       openxlsx::write.xlsx(hitlist, paste(filename, "_Hitlist.xlsx"))
       openxlsx::write.xlsx(hit_summary, paste(filename, "_Summary.xlsx"))
@@ -496,5 +517,4 @@ hitlist_outliers <- function (data = NULL, control = NULL,
 
   return(results)
 }
-
 

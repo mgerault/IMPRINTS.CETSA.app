@@ -1962,8 +1962,9 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_bar", "")
       if(input$ch_own_col){
+        nbc <- ifelse(input$cond_sel == "all_cond", length(get_treat_level(data())), length(input$cond))
         COL <- OWN_color$ch
-        if(length(input$cond) == length(COL)){
+        if(nbc == length(COL)){
           ms_2D_barplotting_sh(data(), witherrorbar = input$werb,
                                usegradient = input$grad, linegraph = input$line,
                                save_pdf = input$save_bar, colorpanel = COL,

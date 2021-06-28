@@ -249,13 +249,19 @@ ui <- dashboardPage(
                               ),
 
                          fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                             fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff")),
+                             fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff"),
+                                             checkboxInput("gave_daba", "Don't have the ms_2D_average output 
+                                                                         (will calculate and save it)", TRUE),
+                                             conditionalPanel(condition = "!input.gave_daba",
+                                                              fileInput("AVE_dabafile", "Import the output from ms_2D_average_sh")
+                                                              )
+                                             ),
                                       column(4, fileInput("hitsum_daba", "Import the summary file from the hitlist outputs")),
                                       column(4, fileInput("NN_daba", "Import the NN file from the hitlist outputs")),
                                       ),
-                             conditionalPanel(condition = "output.DIFdaba_fileup & output.HITdaba_fileup & output.NNdaba_fileup",
+                             conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup & output.NNdaba_fileup",
                                               fluidRow(column(4, textInput("name_daba", "Type a name for your new dataset")),
-                                                       column(4, actionButton("add_daba", "Add dataset"))
+                                                       column(4, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"))
                                                        )
                                               )
 
@@ -263,12 +269,13 @@ ui <- dashboardPage(
 
                          fluidRow(box(title = "Remove dataset", status = "danger", solidHeader = TRUE, collapsible = TRUE, width = 12,
                              fluidRow(column(4, uiOutput("davai_daba_ui")),
-                                      column(6, actionButton("rem_daba", "Remove dataset"))
+                                      column(6, actionButton("rem_daba", "Remove dataset", class = "btn-danger btn-lg"))
                                       )
-                             ),
+                             )),
 
-                         fluidRow(actionButton("up_daba", "Reload the database"))
-                         )),
+                         actionButton("up_daba", "Reload the database", class = "btn-primary btn-lg")
+                         
+                         ),
 
                 tabPanel("2D Bar plot",
                          h2(tags$u(class = "main-1", "Get the 2D bar plot")),
@@ -385,7 +392,7 @@ ui <- dashboardPage(
                                    downloadButton("downtabidentif_barplot", "Download the identification comparison tab")),
 
                   tags$hr(),
-                  actionButton("barp", "See bar plot"),
+                  actionButton("barp", "See bar plot", class = "btn-primary btn-lg"),
                   tags$hr(),
                   textOutput("diag_bar"),
                   tags$hr(),
@@ -429,7 +436,7 @@ ui <- dashboardPage(
                                                                 column(4, selectInput("organism_compl", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                 ),
                                                        
-                                                       actionButton("ave_map_compl", "Map proteins to known protein complex"),
+                                                       actionButton("ave_map_compl", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
                                                        textOutput("diagmapping_compl"),
                                                        
                                                        tags$hr(),
@@ -484,7 +491,7 @@ ui <- dashboardPage(
                                                                 ),
                                                        
                                                        tags$hr(),
-                                                       actionButton("barp_compl", "See bar plot"),
+                                                       actionButton("barp_compl", "See bar plot", class = "btn-primary btn-lg"),
                                                        tags$hr(),
                                                        textOutput("diag_bar_compl"),
                                                        tags$hr(),
@@ -595,7 +602,7 @@ ui <- dashboardPage(
                                                        
                                                        tags$hr(),
                                                        
-                                                       actionButton("getsimi_simpf", "Get similar profile !"),
+                                                       actionButton("getsimi_simpf", "Get similar profile !", class = "btn-primary btn-lg"),
                                                        tags$hr(),
                                                        textOutput("diag_bar_simpf"),
                                                        tags$hr(),
@@ -691,7 +698,7 @@ ui <- dashboardPage(
                                    
                                    
                                    conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
-                                                    actionButton("getH_heat", "See heatmap"),
+                                                    actionButton("getH_heat", "See heatmap", class = "btn-primary btn-lg"),
                                                     tags$hr(),
                                                     
                                                     textOutput("diagl_heat"),
@@ -737,7 +744,7 @@ ui <- dashboardPage(
                                                                           column(4, selectInput("organism_heatcom", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                           ),
                                                                  
-                                                                 actionButton("ave_map_heatcom", "Map proteins to known protein complex"),
+                                                                 actionButton("ave_map_heatcom", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
                                                                  textOutput("diagmapping_heatcom"),
                                                                  
                                                                  tags$hr(),
@@ -787,7 +794,7 @@ ui <- dashboardPage(
                                                                  )
                                                              ),
                                                     
-                                                    actionButton("getH_heatcom", "See heatmap"),
+                                                    actionButton("getH_heatcom", "See heatmap", class = "btn-primary btn-lg"),
                                                     tags$hr(),
                                                     
                                                     textOutput("diagl_heatcom"),
@@ -847,19 +854,19 @@ ui <- dashboardPage(
                                                                               "Mouse" = 10090,
                                                                               "Rat" = 10116), selected = 9606)),
                                             
-                                            column(4,  actionButton("start_string", "Start to map genes"))
+                                            column(4,  actionButton("start_string", "Start to map genes", class = "btn-primary btn-lg"))
                                             )
                                    ),
 
                   conditionalPanel(condition = "output.data_stri_up",
                                    tags$hr(),
                                    fluidRow(column(3, checkboxInput("intnet_stri", "Interactive network", FALSE)),
-                                            column(3, actionButton("netbase_stri", "See network")),
+                                            column(3, actionButton("netbase_stri", "See network", class = "btn-primary btn-lg")),
 
                                             column(3, checkboxInput("hidnet1_stri", "Hide network", FALSE))
                                             ),
                                    tags$hr(),
-                                   actionButton("go_enrich", "Start the enrichment analysis"),
+                                   actionButton("go_enrich", "Start the enrichment analysis", class = "btn-primary btn-lg"),
                                    tags$hr(),
 
                                    conditionalPanel(condition = "!input.hidnet1_stri",
@@ -895,7 +902,7 @@ ui <- dashboardPage(
                                                     tags$hr(),
                                                     fluidRow(
                                                       column(3, selectInput("descri_stri", "Select a description to filter proteins", choices = NULL)),
-                                                      column(3, actionButton("netfilt_stri", "See new network")),
+                                                      column(3, actionButton("netfilt_stri", "See new network", class = "btn-primary btn-lg")),
                                                       column(3, checkboxInput("hidnet2_stri", "Hide new network", FALSE))
                                                       ),
                                                     tags$hr(),
@@ -942,7 +949,7 @@ ui <- dashboardPage(
                   conditionalPanel(condition = "output.hitdata_cell_up",
                                    fluidRow(column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
                                             column(4, selectInput("cathit_cell", "Select some categories (if NULL, will select all)", choices = NULL, multiple = TRUE)),
-                                            column(4, actionButton("goloca_cell", "Get subcellular location"))
+                                            column(4, actionButton("goloca_cell", "Get subcellular location", class = "btn-primary btn-lg"))
                                             )
                                    ),
                   
@@ -963,7 +970,7 @@ ui <- dashboardPage(
                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
                                    fluidRow(column(4, textInput("titp_cell", "Type a title for the plot", "PI3K data in the cell")),
                                             column(4, selectInput("condp_cell", "Select some conditions", multiple = TRUE, choices = NULL)),
-                                            column(4, actionButton("gop_cell", "See the plot"))
+                                            column(4, actionButton("gop_cell", "See the plot", class = "btn-primary btn-lg"))
                                             ),
                                    tags$hr(),
 
@@ -1046,7 +1053,7 @@ ui <- dashboardPage(
 
                                    tags$hr(),
 
-                                   actionButton("barp_cell", "See bar plot"),
+                                   actionButton("barp_cell", "See bar plot", class = "btn-primary btn-lg"),
                                    tags$hr(),
                                    textOutput("diag_bar_cell"),
                                    tags$hr(),
@@ -1091,7 +1098,7 @@ ui <- dashboardPage(
 
                   shinyjs::useShinyjs(),
                   conditionalPanel(condition = "output.pubmed_fileup | !input.impc_pubmed",
-                                   actionButton("go_pub", "Start searching"),
+                                   actionButton("go_pub", "Start searching", class = "btn-primary btn-lg"),
                                    tags$hr()
                                    ),
 
@@ -1450,6 +1457,24 @@ server <- function(input, output, session){
     return(!is.null(DIF_daba()))
   })
   outputOptions(output, "DIFdaba_fileup", suspendWhenHidden = FALSE)
+  
+  AVE_daba <- reactive({
+    if(!input$gave_daba){
+      File <- input$AVE_dabafile
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else{
+      1  #simplify condition is.null
+    }
+  }) 
+  #check if a file is upload
+  output$AVEdaba_fileup <- reactive({
+    return(!is.null(AVE_daba()))
+  })
+  outputOptions(output, "AVEdaba_fileup", suspendWhenHidden = FALSE)
 
   HIT_daba <- reactive({
     File <- input$hitsum_daba
@@ -1495,11 +1520,21 @@ server <- function(input, output, session){
       showNotification("This name is already taken ! Please, choose anoter one.", type = "error")
     }
     else{
+      ave_data <- NULL
+      if(!input$gave_daba & !is.null(AVE_daba())){
+        ave_data <- AVE_daba()
+      }
+      else{
+        showNotification("Getting average dataset, this may take a while.", type = "message")
+        ave_data <- ms_2D_average_sh(DIF_daba())
+        showNotification("Average calculation succeed !", type = "message")
+      }
       showNotification("Start saving dataset, this may take a while.", type = "message")
       saveData(drug_data_sh$y, new_add = list("data" = DIF_daba(),
-                                         "hitlist" = HIT_daba(),
-                                         "NN" = NN_daba(),
-                                         "treat_level" = get_treat_level(DIF_daba())),
+                                              "data_ave" = ave_data,
+                                              "hitlist" = HIT_daba(),
+                                              "NN" = NN_daba(),
+                                              "treat_level" = get_treat_level(DIF_daba())),
                input$name_daba)
 
 

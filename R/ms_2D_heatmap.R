@@ -199,7 +199,8 @@ ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
         fills[[i]] <- cat_color[[i]]
       }
     }
-    fills <- fills[select_cat]
+    fills_ord <- c("CN" = 1, "NC" = 2, "CC" = 3, "ND" = 4, "NN" = 5)
+    fills <- fills[select_cat][order(fills_ord[select_cat])]
   }
   else if(!is.null(PRcomplex_data)){
     stripr <- which(grepl('strip-r', H$layout$name)) #strip-r correspond to the right facet label

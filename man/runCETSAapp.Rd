@@ -7,5 +7,5 @@
 runCETSAapp()
 }
 \description{
-\code{runGUI} works exactly the same as runExample from \code{\link{shiny}} package.
+\code{runCETSAapp} works exactly the same as runExample from \code{\link{shiny}} package.
 }

@@ -50,17 +50,19 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
   outdir <- mineCETSA:::ms_directory(data, dataname)$outdir
   data <- mineCETSA:::ms_directory(data, dataname)$data
 
+  if(length(grep("Condition", names(categorytable)))){
+    names(categorytable)[grep("Condition", names(categorytable))] <- "treatment"
+  }
+
   if (length(treatment) == 1) {
     treat = treatment
-    message(paste0("To check the data under the treatment of ",
-                   treat))
+    message(paste0("To check the data under the treatment of ", treat))
     data <- subset(data, treatment == treat)
     sel <- grep(treatment, names(data))
     if (length(set) == 1) {
-      message(paste0("To check the data within the set of ",
-                     set))
+      message(paste0("To check the data within the set of ", set))
       sel1 <- grep(set, names(data))
-      sel <- intersect(sel, sel1)
+      sel <- dplyr::intersect(sel, sel1)
     }
     if (length(sel)) {
       data <- data[, c(1, 2, sel, (ncol(data) - 2):ncol(data))] #take the id descr, next treat, next sumUni, etc.
@@ -69,20 +71,16 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
   else {
     stop("Need to specify a single character to indicate the condition name")
   }
-  if (length(categorytable) > 0 & length(grep("category",  #check if category label is not null anf if it contains a columns 'category' (cc, cn, nc, ...)
-                                              names(categorytable)))) {
+  if (length(categorytable) > 0 & length(grep("category", names(categorytable)))) {
     if (length(targetcategory) > 0) {
-      categorytable <- subset(categorytable, category %in%
-                                targetcategory)             #filter the prot with catego selected
+      categorytable <- subset(categorytable, category %in%  targetcategory)             #filter the prot with catego selected
     }
-    categorytable <- subset(categorytable, treatment ==
-                              treat)
+    categorytable <- subset(categorytable, treatment == treat)
     if (length(set) & length(grep("category", names(categorytable)))) {
       setname = set
       categorytable <- subset(categorytable, set == setname)
     }
-    data <- merge(data, categorytable[, c("id", "category")],
-                  by = "id")
+    data <- merge(data, categorytable[, c("id", "category")], by = "id")
   }
   if (nrow(data) != 0) {
     message(paste0(nrow(data), " protein entries to be assigned to Corum database..."))
@@ -95,15 +93,13 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
   data2 <- data[F, ]
   for (h in 1:nrow(complexdb)) {
     subunitNames <- complexdb[h, "subunitsUniProt_IDs"]
-    subunitname <- unique(unlist(strsplit(as.character(subunitNames),
-                                          ";")))
+    subunitname <- unique(unlist(str_split(as.character(subunitNames),";")))
     for (s in subunitname) {
       pos <- grep(s, data$id, value = FALSE)
       if (length(pos) > 0) {
         data2 <- rbind(data2, data[pos, ])
         for (i in 1:length(pos)) {
-          comps <- rbind(comps, complexdb[h, c(1, 2,
-                                               6, 21)])
+          comps <- rbind(comps, complexdb[h, c(1, 2, 6, 21)])
         }
       }
     }
@@ -111,7 +107,7 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
   if (nrow(data2) == 0) {
     stop("No protein complex found...")
   }
-  data2 <- data2 %>% dplyr::rowwise() %>% dplyr::mutate(gene = getGeneName(description))
+  data2 <- data2 %>% dplyr::rowwise() %>% dplyr::mutate(gene = mineCETSAapp:::getGeneName(description))
   comps3 <- cbind(comps, data2)
   comp_table <- comps3 %>% dplyr::add_count(ComplexID, gene)
   cleariso <- FALSE
@@ -142,3 +138,6 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
                  minsubunitsIdentified, " subunits is: ", length(unique(comps3$ComplexID))))
   return(comps3)
 }
+
+
+

@@ -1,7 +1,7 @@
 #' @title Run the app to use MSstatsTMT package
 #'
 #' @description
-#'  \code{runGUI} works exactly the same as runExample from \code{\link{shiny}} package.
+#'  \code{runCETSAapp} works exactly the same as runExample from \code{\link{shiny}} package.
 #'
 #' @export
 runCETSAapp <- function() {

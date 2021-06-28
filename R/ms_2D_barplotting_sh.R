@@ -209,6 +209,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       sav_data <- data
       for(k in names(data)){
         data <- sav_data[[k]]
+        treatmentlevel <- get_treat_level(data)
 
         nrowdata <- nrow(data)
         if (nrowdata == 0) {
@@ -275,6 +276,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         data$description <- NULL
         data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^category")],
                                condition, reading, -id)
+
         if (!log2scale) {
           data1 <- dplyr::mutate(data1, reading = 2^reading)
         }
@@ -284,6 +286,10 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
           data1 <- tidyr::separate(data1, condition, into = c("set",
                                                               "temperature", "replicate", "treatment"), sep = "_")
           temperature <- sort(unique(data1$temperature))
+          temp_idx <- stringr::str_which(temperature, "^[0-9]")
+          if(length(temp_idx) != length(temperature)){
+            temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
+          }
           data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
           cdata <- plyr::ddply(data1, c("id", "set", "temperature",
                                         "treatment"),
@@ -300,6 +306,10 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
           data1 <- tidyr::separate(data1, condition, into = c("temperature",
                                                               "replicate", "treatment"), sep = "_")
           temperature <- sort(unique(data1$temperature))
+          temp_idx <- stringr::str_which(temperature, "^[0-9]")
+          if(length(temp_idx) != length(temperature)){
+            temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
+          }
           data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
           cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
                                summarise, N = length(na.omit(reading)), mean = mean(reading,na.rm = T),
@@ -348,12 +358,9 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         message("Generating fitted plot, pls wait.")
 
 
+
         plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
                              withset = withset)
-
-
-
-
 
         params <- list(nrow = layout[1], ncol = layout[2])
         n <- with(params, nrow * ncol)
@@ -482,6 +489,10 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       data1 <- tidyr::separate(data1, condition, into = c("set",
                                                           "temperature", "replicate", "treatment"), sep = "_")
       temperature <- sort(unique(data1$temperature))
+      temp_idx <- stringr::str_which(temperature, "^[0-9]")
+      if(length(temp_idx) != length(temperature)){
+        temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
+      }
       data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
       cdata <- plyr::ddply(data1, c("id", "set", "temperature",
                                     "treatment"),
@@ -498,7 +509,10 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       data1 <- tidyr::separate(data1, condition, into = c("temperature",
                                                           "replicate", "treatment"), sep = "_")
       temperature <- sort(unique(data1$temperature))
-
+      temp_idx <- stringr::str_which(temperature, "^[0-9]")
+      if(length(temp_idx) != length(temperature)){
+        temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
+      }
       data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
       cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
                            summarise, N = length(na.omit(reading)), mean = mean(reading,na.rm = T),

@@ -54,19 +54,22 @@ ui <- dashboardPage(
     tags$style(HTML(".tabbable > .nav > li > a                  {background-color: #A1BAC8;  color:#FFFFFF}
                      .tabbable > .nav > li[class=active]    > a {background-color: #3C8DBC; color:#FFFFFF}
                      .tabbable > .nav > li    > a:hover {background-color: #3BAAE6; color:#FFFFFF}
-                    .tabbable > .nav > li[class=active]    > a:hover {background-color: #3C8DBC; color:#FFFFFF}"
+                     .tabbable > .nav > li[class=active]    > a:hover {background-color: #3C8DBC; color:#FFFFFF}
+                     .main-1 {font-size: 24px;}"
                     ) 
                ),
     tags$head(tags$style(HTML('.main-header .logo {
                                font-family: "Georgia", Times, "Times New Roman", serif;
                                font-weight: bold;
                                font-size: 24px;
-                               }')
+                               }'
+                              )
                          )
               ),
     tabItems(
       tabItem(tabName = "analysis",
-              h2(tags$u("The mineCETSA analysis")),
+              h2(tags$u(class = "main-1", "The mineCETSA analysis")),
+              
               tags$br(),
               
               radioButtons("step_cetsa", "At which step do you want to start your analysis ?", 
@@ -227,7 +230,7 @@ ui <- dashboardPage(
               tabsetPanel(type = "tabs", selected = "2D Bar plot",
 
                 tabPanel("Database",
-                         h2(tags$u("Add new dataset and remove old ones")),
+                         h2(tags$u(class = "main-1", "Add new dataset and remove old ones")),
                          tags$hr(),
 
                          htmlOutput("info_daba"),
@@ -264,11 +267,11 @@ ui <- dashboardPage(
                                       )
                              ),
 
-                         actionButton("up_daba", "Reload the database")
+                         fluidRow(actionButton("up_daba", "Reload the database"))
                          )),
 
                 tabPanel("2D Bar plot",
-                         h2(tags$u("Get the 2D bar plot")),
+                         h2(tags$u(class = "main-1", "Get the 2D bar plot")),
                          tags$hr(),
 
                          fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
@@ -392,22 +395,32 @@ ui <- dashboardPage(
                   ),
                 
                 tabPanel("Protein complex",
-                         h2(tags$u("Protein complex and 2D bar plot")),
+                         h2(tags$u(class = "main-1", "Protein complex and 2D bar plot")),
                          tags$hr(),
                          
                          fluidRow(box(title = "Map proteins to known protein complex", status = "primary", 
                                       solidHeader = TRUE, collapsible = TRUE, width = 12,
                                       
-                                      fluidRow(column(4, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
-                                               column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
-                                               column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
-                                               ),
-                                      fluidRow(column(4, checkboxInput("gave_compl", "Don't have the ms_2D_average output 
+                                      radioButtons("drug_compl", h3("Choose a dataset"),
+                                                   choices = c("Database" = "base",
+                                                               "Your data" = "dat"),
+                                                   selected = "base", inline = TRUE),
+                                      conditionalPanel(condition = "input.drug_compl == 'base'",
+                                                       uiOutput("drug2ui_compl")
+                                                       ),
+                                      
+                                      conditionalPanel(condition = "input.drug_compl == 'dat' ",
+                                                       fluidRow(column(4, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
+                                                                column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
+                                                                column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
+                                                                ),
+                                                       fluidRow(column(4, checkboxInput("gave_compl", "Don't have the ms_2D_average output 
                                                                                      (will calculate and save it)", TRUE)),
-                                               conditionalPanel(condition = "!input.gave_compl",
-                                                                column(4, fileInput("avef_compl", "Import the output from ms_2D_average"))
+                                                                conditionalPanel(condition = "!input.gave_compl",
+                                                                                 column(4, fileInput("avef_compl", "Import the output from ms_2D_average"))
+                                                                                 )
                                                                 )
-                                               ),
+                                                       ),
                                       tags$hr(),
                                       
                                       conditionalPanel(condition = "output.DIFcompl_fileup & output.HITcompl_fileup & output.NNcompl_fileup & output.AVEcompl_fileup",
@@ -486,17 +499,29 @@ ui <- dashboardPage(
                          ),
                 
                 tabPanel("Similar profiles",
-                         h2(tags$u("Find similar profiles")),
+                         h2(tags$u(class = "main-1", "Find similar profiles")),
                          tags$hr(),
                          
                          fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                      fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from ms_2D_caldiff")),
-                                               column(4, checkboxInput("gave_simpf", "Don't have the ms_2D_average output 
+                                      
+                                      radioButtons("drug_simpf", h3("Choose a dataset"),
+                                                   choices = c("Database" = "base",
+                                                               "Your data" = "dat"),
+                                                   selected = "base", inline = TRUE),
+                                      conditionalPanel(condition = "input.drug_simpf == 'base'",
+                                                       uiOutput("drug2ui_simpf")
+                                                       ),
+                                      
+                                      conditionalPanel(condition = "input.drug_simpf == 'dat' ",
+                                                       fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from ms_2D_caldiff")),
+                                                                column(4, checkboxInput("gave_simpf", "Don't have the ms_2D_average output 
                                                                                      (will calculate and save it)", TRUE)),
-                                               conditionalPanel(condition = "!input.gave_simpf",
-                                                                column(4, fileInput("avef_simpf", "Import the output from ms_2D_average"))
+                                                                conditionalPanel(condition = "!input.gave_simpf",
+                                                                                 column(4, fileInput("avef_simpf", "Import the output from ms_2D_average"))
+                                                                                 )
                                                                 )
-                                               ),
+                                                       )
+                                      ,
                                       
                                       conditionalPanel(condition = "output.AVEsimpf_fileup & output.DIFsimpf_fileup",
                                                        fluidRow(column(3, selectInput("treat_simpf", "Select a condition", choices = NULL)),
@@ -593,27 +618,38 @@ ui <- dashboardPage(
       tabItem(tabName = "heat",
               tabsetPanel(type = "tabs", 
                           tabPanel("Heatmap",
-                                   h2(tags$u("Get heatmaps from your data")),
+                                   h2(tags$u(class = "main-1", "Get heatmaps from your data")),
                                    tags$hr(),
                                    
                                    fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
                                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output 
-                                                                         (will calculate and save it)", TRUE),
-                                                                conditionalPanel(condition = "input.gave_heat",
-                                                                                 fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
-                                                                                 ),
-                                                                conditionalPanel(condition = "!input.gave_heat",
-                                                                                 fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
+                                                
+                                                radioButtons("drug_heat", h3("Choose a dataset"),
+                                                             choices = c("Database" = "base",
+                                                                         "Your data" = "dat"),
+                                                             selected = "base", inline = TRUE),
+                                                conditionalPanel(condition = "input.drug_heat == 'base'",
+                                                                 uiOutput("drug2ui_heat")
+                                                                 ),
+                                                
+                                                conditionalPanel(condition = "input.drug_heat == 'dat' ",
+                                                                 fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output 
+                                                                                                  (will calculate and save it)", TRUE),
+                                                                                 conditionalPanel(condition = "input.gave_heat",
+                                                                                                  fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
+                                                                                                  ),
+                                                                                 conditionalPanel(condition = "!input.gave_heat",
+                                                                                                  fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
+                                                                                                  )
+                                                                                 ), 
+                                                                          column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
+                                                                          column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
+                                                                                 conditionalPanel(condition = "input.impNN_heat",
+                                                                                                  fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
+                                                                                                  )
                                                                                  )
-                                                                ), 
-                                                         column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
-                                                         column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
-                                                                conditionalPanel(condition = "input.impNN_heat",
-                                                                                 fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
-                                                                                 )
-                                                                )
-                                                         ),
+                                                                          )
+                                                                 ),
                                                 
                                                 tags$hr(),
                                                 
@@ -661,28 +697,38 @@ ui <- dashboardPage(
                                                     textOutput("diagl_heat"),
                                                     tags$hr(),
                                                     
-                                                    withSpinner(plotOutput("H_heat"), type = 6)
+                                                    withSpinner(plotOutput("H_heat", height = "800px"), type = 6)
                                                     )
                                    ),
                           
                           tabPanel("Protein complex",
-                                   h2(tags$u("Protein complex and heatmap")),
+                                   h2(tags$u(class = "main-1", "Protein complex and heatmap")),
                                    tags$hr(),
                                    
                                    fluidRow(box(title = "Map proteins to known protein complex", status = "primary", 
                                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                 
-                                                fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the ms_2D_average output 
-                                                                         (will calculate and save it)", TRUE)),
-                                                         column(4,
-                                                                conditionalPanel(condition = "input.gave_heatcom",
-                                                                                 fileInput("filedif_heatcom", "Choose a ms_2D_caldiff output")
-                                                                                 ),
-                                                                conditionalPanel(condition = "!input.gave_heatcom",
-                                                                                 fileInput("fileave_heatcom", "Choose a ms_2D_average_sh output")
+                                                radioButtons("drug_heatcom", h3("Choose a dataset"),
+                                                             choices = c("Database" = "base",
+                                                                         "Your data" = "dat"),
+                                                             selected = "base", inline = TRUE),
+                                                conditionalPanel(condition = "input.drug_heatcom == 'base'",
+                                                                 uiOutput("drug2ui_heatcom")
+                                                                 ),
+                                                
+                                                conditionalPanel(condition = "input.drug_heatcom == 'dat' ",
+                                                                 fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the ms_2D_average output 
+                                                                                                  (will calculate and save it)", TRUE)),
+                                                                          column(4,
+                                                                                 conditionalPanel(condition = "input.gave_heatcom",
+                                                                                                  fileInput("filedif_heatcom", "Choose a ms_2D_caldiff output")
+                                                                                                  ),
+                                                                                 conditionalPanel(condition = "!input.gave_heatcom",
+                                                                                                  fileInput("fileave_heatcom", "Choose a ms_2D_average_sh output")
+                                                                                                  )
                                                                                  )
-                                                                )
-                                                         ),
+                                                                          )
+                                                                 ),
                                                 
                                                 tags$hr(),
                                                 
@@ -747,7 +793,7 @@ ui <- dashboardPage(
                                                     textOutput("diagl_heatcom"),
                                                     tags$hr(),
                                                     
-                                                    withSpinner(plotOutput("H_heatcom"), type = 6)
+                                                    withSpinner(plotOutput("H_heatcom", height = "800px"), type = 6)
                                                     )
                                    )
                           )
@@ -755,28 +801,46 @@ ui <- dashboardPage(
               
               
       tabItem(tabName = "string",
-              h2(tags$u("Network and enrichment analysis")),
+              h2(tags$u(class = "main-1", "Network and enrichment analysis")),
               tags$hr(),
 
               fluidRow(box(title = "Import your data and start the analysis", status = "primary",
                   solidHeader = TRUE, collapsible = TRUE, width = 12,
-                  checkboxInput("impfile_stri", "Import a file", TRUE),
-                  conditionalPanel(condition = "input.impfile_stri",
-                                   fluidRow(column(3, fileInput("file_stri", "Choose a file")),
-                                            column(3, checkboxInput("ishit_stri", "Do you import a hitlist ?", TRUE),
-                                                   conditionalPanel(condition = "!input.ishit_stri",
-                                                                    textInput("idfile_stri", "What is the name of the column of
-                                                                                              your file which contains the proteins ID ?"))
-                                                   ),
-                                            conditionalPanel(condition = "input.ishit_stri",
-                                                             column(3, selectInput("cond_fhit_stri", "Select some condition for filtering your hits",
-                                                                                   choices = NULL, multiple = TRUE))
-                                                             )
+                  
+                  radioButtons("drug_stri", h3("Choose a dataset"),
+                               choices = c("Database" = "base",
+                                           "Your data" = "dat"),
+                               selected = "base", inline = TRUE),
+                  conditionalPanel(condition = "input.drug_stri == 'base'",
+                                   uiOutput("drug2ui_stri"),
+                                   fluidRow(column(3, selectInput("cond_fhitB_stri", "Select some conditions for filtering your proteins",
+                                                                  choices = NULL, multiple = TRUE)),
+                                            column(3, selectInput("cat_fhitB_stri", "Select some categories for filtering your proteins (If NULL, will select all)",
+                                                                  choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
                                             )
                                    ),
-                  conditionalPanel(condition = "!input.impfile_stri",
-                                   textInput("txt_stri", "Type some protein ID separated by a comma")
+                  
+                  conditionalPanel(condition = "input.drug_stri == 'dat' ",
+                                   checkboxInput("impfile_stri", "Import a file", TRUE),
+                                   conditionalPanel(condition = "input.impfile_stri",
+                                                    fluidRow(column(3, fileInput("file_stri", "Choose a file")),
+                                                             column(3, checkboxInput("ishit_stri", "Do you import a hitlist ?", TRUE),
+                                                                    conditionalPanel(condition = "!input.ishit_stri",
+                                                                                     textInput("idfile_stri", "What is the name of the column of
+                                                                                                your file which contains the proteins ID ?")
+                                                                                     )
+                                                                    ),
+                                                             conditionalPanel(condition = "input.ishit_stri",
+                                                                              column(3, selectInput("cond_fhit_stri", "Select some condition for filtering your hits",
+                                                                                                    choices = NULL, multiple = TRUE))
+                                                                              )
+                                                             )
+                                                    ),
+                                   conditionalPanel(condition = "!input.impfile_stri",
+                                                    textInput("txt_stri", "Type some protein ID separated by a comma")
+                                                    )
                                    ),
+                  
                   conditionalPanel(condition = "output.file_stri_up | !input.impfile_stri",
                                    fluidRow(column(4, selectInput("species_string", "Choose an organism", 
                                                                   choices = c("Human" = 9606,
@@ -854,26 +918,41 @@ ui <- dashboardPage(
               ),
 
       tabItem(tabName = "cell",
-              h2(tags$u("Proteins localization")),
+              h2(tags$u(class = "main-1", "Proteins localization")),
               tags$hr(),
               fluidRow(
                 box(title = "Get subcellular location from your hitlist", status = "primary",
                   solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                  fluidRow(column(4, fileInput("hitl_cell", "Import the summary file from the hitlist output")),
-                           column(4, selectInput("organism_cell", "Choose an organism", choices = c("Human" = "HUMAN",
-                                                                                                    "Mouse" = "MOUSE"), selected = "HUMAN")),
-                           conditionalPanel(condition = "output.hitdata_cell_up",
-                                            column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
-                                            column(4, actionButton("goloca_cell", "Get subcellular location")))
+                  radioButtons("drug_cell", h3("Choose a dataset"),
+                               choices = c("Database" = "base",
+                                           "Your data" = "dat"),
+                               selected = "base", inline = TRUE),
+                  conditionalPanel(condition = "input.drug_cell == 'base'",
+                                   uiOutput("drug2ui_cell")
+                                   ),
+                  fluidRow(column(4, selectInput("organism_cell", "Choose an organism", 
+                                                 choices = c("Human" = "HUMAN",
+                                                             "Mouse" = "MOUSE"), selected = "HUMAN")),
+                           conditionalPanel(condition = "input.drug_cell == 'dat' ",
+                                            column(3, fileInput("hitl_cell", "Import the summary file from the hitlist output"))
+                                            )
                            ),
+                  
+                  conditionalPanel(condition = "output.hitdata_cell_up",
+                                   fluidRow(column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
+                                            column(4, selectInput("cathit_cell", "Select some categories (if NULL, will select all)", choices = NULL, multiple = TRUE)),
+                                            column(4, actionButton("goloca_cell", "Get subcellular location"))
+                                            )
+                                   ),
+                  
                   textOutput("diagl_cell"),
 
                   tags$hr(),
                   conditionalPanel(condition = "output.resdata_cell_up",
-                                   DT::dataTableOutput("locatab_cell"),
-
-                                   downloadButton("down_prl_cell"))
+                                   fluidRow(DT::dataTableOutput("locatab_cell")),
+                                   fluidRow(downloadButton("down_prl_cell"))
+                                   )
 
                   )
                 ),
@@ -899,13 +978,15 @@ ui <- dashboardPage(
               fluidRow(
                 box(title = "Bar plot", status = "primary",
                   solidHeader = TRUE, collapsible = TRUE, width = 12,
-                  fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
-                                              please import the cal_diff output file which correspond to your hitlist."),
+                  conditionalPanel(condition = "input.drug_cell == 'dat'", 
+                                   fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
+                                              please import the cal_diff output file which correspond to your hitlist.")
+                                   ),
                   conditionalPanel(condition = "!input.selpr_loca_cell",
                                    textOutput("prsel_p_cell")
                                    ),
 
-                  conditionalPanel(condition = "output.barpdata_cell_up",
+                  conditionalPanel(condition = "output.barpdata_cell_up | input.drug_cell == 'base'",
                                    fluidRow(column(4, checkboxInput("selpr_loca_cell", "Select proteins according to their subcellular location", FALSE)),
                                             conditionalPanel(condition = "input.selpr_loca_cell",
                                                              column(4, selectInput("selorga_cell", "Select some organelle", multiple = TRUE, choices = NULL)),
@@ -981,7 +1062,7 @@ ui <- dashboardPage(
               ),
 
       tabItem(tabName = "pubmed",
-              h2(tags$u("Search publications in PubMed")),
+              h2(tags$u(class = "main-1", "Search publications in PubMed")),
               tags$hr(),
 
               fluidRow(box(title = "Search parameters", status = "primary",
@@ -1937,13 +2018,25 @@ server <- function(input, output, session){
   
   
   ### PROTEIN COMPLEX
+  output$drug2ui_compl <- renderUI({
+    selectInput("drug2_compl", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
   
   DIF_compl <- reactive({
-    File <- input$caldif_compl
-    if (is.null(File))
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_compl == "dat"){
+      File <- input$caldif_compl
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_compl], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$DIFcompl_fileup <- reactive({
@@ -1952,17 +2045,24 @@ server <- function(input, output, session){
   outputOptions(output, "DIFcompl_fileup", suspendWhenHidden = FALSE)
   
   HIT_compl <- reactive({
-    File <- input$hitsum_compl
-    if (is.null(File))
-      return(NULL)
-    
-    dat <- import(File$datapath, header = TRUE)
-    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
-      dat <- dat[, !(names(dat) %in% nv_nam)]
+    if(input$drug_compl == "dat"){
+      File <- input$hitsum_compl
+      if (is.null(File))
+        return(NULL)
+      
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
     }
-    dat
-    
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_compl])
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$HITcompl_fileup <- reactive({
@@ -1971,16 +2071,24 @@ server <- function(input, output, session){
   outputOptions(output, "HITcompl_fileup", suspendWhenHidden = FALSE)
   
   NN_compl <- reactive({
-    File <- input$NN_compl
-    if (is.null(File))
-      return(NULL)
-    
-    dat <- import(File$datapath, header = TRUE)
-    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
-      dat <- dat[, !(names(dat) %in% nv_nam)]
+    if(input$drug_compl == "dat"){
+      File <- input$NN_compl
+      if (is.null(File))
+        return(NULL)
+      
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
     }
-    dat
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      do.call(rbind, drug_data_sh$y$NN[input$drug2_compl])
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$NNcompl_fileup <- reactive({
@@ -1989,11 +2097,19 @@ server <- function(input, output, session){
   outputOptions(output, "NNcompl_fileup", suspendWhenHidden = FALSE)
   
   AVE_compl <- reactive({
-    File <- input$avef_compl
-    if (is.null(File))
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_compl == "dat"){
+      File <- input$avef_compl
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_compl], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$AVEcompl_fileup <- reactive({
@@ -2024,7 +2140,7 @@ server <- function(input, output, session){
     else {
       showNotification("Start mapping proteins, this may take a while", type = "message")
       
-      if(input$gave_compl){
+      if(input$gave_compl & input$drug_compl == "dat"){
         data_ave <- ms_2D_average_sh(DIF_compl())
         showNotification("Average calculation succeed !", type = "message")
       }
@@ -2212,13 +2328,25 @@ server <- function(input, output, session){
   
   
   ### SIMILAR PROFILE
+  output$drug2ui_simpf <- renderUI({
+    selectInput("drug2_simpf", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
   
   DIF_simpf <- reactive({
-    File <- input$cdiff_simpf
-    if (is.null(File))
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_simpf == "dat"){
+      File <- input$cdiff_simpf
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_simpf], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$DIFsimpf_fileup <- reactive({
@@ -2227,11 +2355,19 @@ server <- function(input, output, session){
   outputOptions(output, "DIFsimpf_fileup", suspendWhenHidden = FALSE)
   
   AVE_simpf <- reactive({
-    File <- input$avef_simpf
-    if (is.null(File))
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_simpf == "dat"){
+      File <- input$avef_simpf
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_simpf], by = c("id", "description")) 
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$AVEsimpf_fileup <- reactive({
@@ -2266,7 +2402,7 @@ server <- function(input, output, session){
   )
   
   Bar_one_simpf <- reactive({
-    if(input$gave_simpf){
+    if(input$gave_simpf & input$drug_simpf == "dat"){
       average <- NULL
     }
     else{
@@ -2306,7 +2442,7 @@ server <- function(input, output, session){
   observeEvent(input$getsimi_simpf, {
     showNotification("Getting similar profiles, this may take a while.", type = "message")
     
-    if(input$gave_simpf){
+    if(input$gave_simpf & input$drug_simpf == "dat"){
       average <- NULL
     }
     else{
@@ -2406,21 +2542,41 @@ server <- function(input, output, session){
   
   
   ### HEATMAP
+  output$drug2ui_heat <- renderUI({
+    selectInput("drug2_heat", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
   
   DIF_heat <- reactive({
-    File <- input$filedif_heat
-    if (is.null(File) | !input$gave_heat)
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_heat == "dat"){
+      File <- input$filedif_heat
+      if (is.null(File) | !input$gave_heat)
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_heat], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   
   AVE_heat <- reactive({
-    File <- input$fileave_heat
-    if (is.null(File)  | input$gave_heat)
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_heat == "dat"){
+      File <- input$fileave_heat
+      if (is.null(File)  | input$gave_heat)
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_heat], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$heat_fileup <- reactive({
@@ -2429,16 +2585,24 @@ server <- function(input, output, session){
   outputOptions(output, "heat_fileup", suspendWhenHidden = FALSE)
   
   HIT_heat <- reactive({
-    File <- input$summary_heat
-    if (is.null(File))
-      return(NULL)
-    
-    dat <- import(File$datapath, header = TRUE)
-    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
-      dat <- dat[, !(names(dat) %in% nv_nam)]
+    if(input$drug_heat == "dat"){
+      File <- input$summary_heat
+      if (is.null(File))
+        return(NULL)
+      
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
     }
-    dat
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_heat])
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$HITheat_fileup <- reactive({
@@ -2447,20 +2611,33 @@ server <- function(input, output, session){
   outputOptions(output, "HITheat_fileup", suspendWhenHidden = FALSE)
   
   NN_heat <- reactive({
-    File <- input$NNfile_heat
-    if (is.null(File) | !input$impNN_heat)
-      return(NULL)
-    
-    dat <- import(File$datapath, header = TRUE)
-    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
-      dat <- dat[, !(names(dat) %in% nv_nam)]
+    if(input$drug_heat == "dat"){
+      File <- input$NNfile_heat
+      if (is.null(File) | !input$impNN_heat)
+        return(NULL)
+      
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
     }
-    dat
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      do.call(rbind, drug_data_sh$y$NN[input$drug2_heat])
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$NNheat_fileup <- reactive({
-    return(!is.null(NN_heat()) | !input$impNN_heat)
+    if(input$drug_heat == "dat"){
+      return(!is.null(NN_heat()) | !input$impNN_heat)
+    }
+    else{
+      return(!is.null(NN_heat()))
+    }
   })
   outputOptions(output, "NNheat_fileup", suspendWhenHidden = FALSE)
   
@@ -2488,7 +2665,7 @@ server <- function(input, output, session){
     }
   })
   observe({
-    if(!is.null(DIF_heat())){
+    if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
       nc <- str_subset(names(DIF_heat()), paste0("_", input$cond_heat, "$"))
       nc <- str_split(nc, "B\\d{1}_")
       nc <- lapply(nc, function(x) paste(x, collapse = ""))
@@ -2511,7 +2688,7 @@ server <- function(input, output, session){
     if(!is.null(AVE_heat())){
       dat <- AVE_heat()
     }
-    else if(!is.null(DIF_heat())){
+    else if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
       showNotification("Start average calculation, this mays take a while.", type = "message")
       dat <- ms_2D_average_sh(DIF_heat())
     }
@@ -2554,21 +2731,41 @@ server <- function(input, output, session){
   
   
   ### HEATMAP PROTEIN COMPLEX
+  output$drug2ui_heatcom <- renderUI({
+    selectInput("drug2_heatcom", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
   
   DIF_heatcom <- reactive({
-    File <- input$filedif_heatcom
-    if (is.null(File) | !input$gave_heatcom)
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_heatcom == "dat"){
+      File <- input$filedif_heatcom
+      if (is.null(File) | !input$gave_heatcom)
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_heatcom], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   
   AVE_heatcom <- reactive({
-    File <- input$fileave_heatcom
-    if (is.null(File)  | input$gave_heatcom)
-      return(NULL)
-    
-    ms_fileread(File$datapath)
+    if(input$drug_heatcom == "dat"){
+      File <- input$fileave_heatcom
+      if (is.null(File)  | input$gave_heatcom)
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_heatcom], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   #check if a file is upload
   output$heatcom_fileup <- reactive({
@@ -2598,7 +2795,7 @@ server <- function(input, output, session){
   observeEvent(input$ave_map_heatcom, {
      showNotification("Start mapping proteins, this may take a while", type = "message")
       
-      if(input$gave_heatcom){
+      if(input$gave_heatcom  & input$drug_heatcom == "dat"){
         data_ave <- ms_2D_average_sh(DIF_heatcom())
         resAVE_heatcom$d <- data_ave
         showNotification("Average calculation succeed !", type = "message")
@@ -2665,7 +2862,7 @@ server <- function(input, output, session){
   
   
   observe({
-    if(!is.null(DIF_heatcom())){
+    if(!is.null(DIF_heatcom()) & input$drug_heatcom == "dat"){
       nc <- str_subset(names(DIF_heatcom()), paste0("_", input$cond_heatcom, "$"))
       nc <- str_split(nc, "B\\d{1}_")
       nc <- lapply(nc, function(x) paste(x, collapse = ""))
@@ -2738,22 +2935,39 @@ server <- function(input, output, session){
   
   
   ### STRINGdb
+  output$drug2ui_stri <- renderUI({
+    selectInput("drug2_stri", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
+  
   stri_data <- reactive({
-    if(input$impfile_stri){
-      File <- input$file_stri
-      if (is.null(File))
-        return(NULL)
-
-      import_list(File$datapath, header = TRUE)[[1]]
+    if(input$drug_stri == "dat"){
+      if(input$impfile_stri){
+        File <- input$file_stri
+        if (is.null(File))
+          return(NULL)
+        
+        import_list(File$datapath, header = TRUE)[[1]]
+      }
+      else{
+        if (str_length(input$txt_stri) == 0)
+          return(NULL)
+        
+        i <- str_remove_all(i, " ")
+        i <- str_split(input$txt_stri, ",")[[1]]
+        
+        data.frame(id = i)
+      }
+    }
+    else if(input$drug_stri == "base" & length(input$drug2_stri) >= 1){
+      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_stri])
+      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_stri])
+      n <- unique(n[,c("id", "Condition", "category")])
+      
+      rbind(h,n)
     }
     else{
-      if (str_length(input$txt_stri) == 0)
-        return(NULL)
-
-      i <- str_remove_all(i, " ")
-      i <- str_split(input$txt_stri, ",")[[1]]
-
-      data.frame(id = i)
+      NULL
     }
   })
   #check if a file is upload
@@ -2765,7 +2979,7 @@ server <- function(input, output, session){
   Sel_cond_fhit_stri <- reactive({
     tr <- NULL
     
-    if(input$ishit_stri & input$impfile_stri){
+    if((input$ishit_stri & input$impfile_stri) | input$drug_stri == "base"){
       HIT <- stri_data()
      
       c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
@@ -2780,7 +2994,12 @@ server <- function(input, output, session){
   })
   
   observe({
-    updateSelectInput(session, "cond_fhit_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+    if(input$drug_stri =="dat"){
+      updateSelectInput(session, "cond_fhit_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+    }
+    else if(input$drug_stri =="base"){
+      updateSelectInput(session, "cond_fhitB_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+    }
   })
 
   string_res <- reactiveValues(
@@ -2822,26 +3041,40 @@ server <- function(input, output, session){
     string_res$x <- NULL
 
     if (!is.null(stri_data())){
-      if(input$impfile_stri){
-        if(input$ishit_stri){
-          if(!is.null(input$cond_fhit_stri)){
+      if(input$drug_stri == "dat"){
+        if(input$impfile_stri){
+          if(input$ishit_stri){
             dat <- stri_data()
-            dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_stri))
-            
-            a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+            if(!is.null(input$cond_fhit_stri)){
+              dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_stri))
+              a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+            }
+            else{
+              showNotification("Don't forget to select some conditions !", type = "error")
+              a <- NULL
+            }
           }
           else{
-            showNotification("Don't forget to select some conditions !", type = "error")
-            a <- NULL
+            a <- string_db$map(stri_data(), input$idfile_stri, removeUnmappedRows = TRUE)
           }
-          
         }
         else{
-          a <- string_db$map(stri_data(), input$idfile_stri, removeUnmappedRows = TRUE)
+          a <- string_db$map(stri_data(), "id", removeUnmappedRows = TRUE)
         }
       }
-      else{
-        a <- string_db$map(stri_data(), "id", removeUnmappedRows = TRUE)
+      else if(input$drug_stri == "base"){
+        dat <- stri_data()
+        if(!is.null(input$cond_fhitB_stri)){
+          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_stri))
+          if(!is.null(input$cat_fhitB_stri)){
+            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
+          }
+          a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+        }
+        else{
+          showNotification("Don't forget to select some conditions !", type = "error")
+          a <- NULL
+        }
       }
     }
 
@@ -3013,13 +3246,29 @@ server <- function(input, output, session){
 
 
   ### CELL
-
+  output$drug2ui_cell <- renderUI({
+    selectInput("drug2_cell", "Choose a drug", choices = names(drug_data_sh$y$data), 
+                multiple = TRUE, selected = "PI3K")
+  })
+  
   hitdata_cell <- reactive({
-    File <- input$hitl_cell
-    if (is.null(File))
-      return(NULL)
-
-    import_list(File$datapath, header = TRUE)[[1]]
+    if(input$drug_cell == "dat"){
+      File <- input$hitl_cell
+      if (is.null(File))
+        return(NULL)
+      
+      import_list(File$datapath, header = TRUE)[[1]]
+    }
+    else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
+      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_cell])
+      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_cell])
+      n <- unique(n[,c("id", "Condition", "category")])
+      
+      rbind(h,n)
+    }
+    else{
+      NULL
+    }
   })
   output$hitdata_cell_up <- reactive({
     return(!is.null(hitdata_cell()))
@@ -3029,6 +3278,7 @@ server <- function(input, output, session){
   observe({
     if(!is.null(hitdata_cell())){
       updateSelectInput(session, "condhit_cell", choices = unique(hitdata_cell()$Condition), selected = unique(hitdata_cell()$Condition)[1])
+      updateSelectInput(session, "cathit_cell", choices = unique(hitdata_cell()$category), selected = unique(hitdata_cell()$category)[1])
     }
   })
 
@@ -3042,6 +3292,10 @@ server <- function(input, output, session){
     data_hit <- hitdata_cell() %>%
       dplyr::filter(Condition == input$condhit_cell)
     
+    if(!is.null(input$cathit_cell)){
+      data_hit <- data_hit %>% dplyr::filter(!is.na(match(category, input$cathit_cell)))
+    }
+    
     withCallingHandlers({
       shinyjs::html("diagl_cell", "")
       resdata_cell$ch <- hit_for_cell(data_hit, input$organism_cell)
@@ -3051,7 +3305,6 @@ server <- function(input, output, session){
 
     }
     )
-
 
     output$locatab_cell <- DT::renderDataTable({
       DT::datatable(resdata_cell$ch,
@@ -3145,11 +3398,19 @@ server <- function(input, output, session){
   })
 
   barpdata_cell <- reactive({
-    File <- input$filebarp_cell
-    if (is.null(File))
-      return(NULL)
-
-    ms_fileread(File$datapath)
+    if(input$drug_cell == "dat"){
+      File <- input$filebarp_cell
+      if (is.null(File))
+        return(NULL)
+      
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_cell], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
   })
   output$barpdata_cell_up <- reactive({
     return(!is.null(barpdata_cell()))

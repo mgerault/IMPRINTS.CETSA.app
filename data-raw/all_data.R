@@ -1,3 +1,4 @@
+library(mineCETSAapp)
 library(mineCETSA)
 library(stringr)
 
@@ -25,10 +26,12 @@ NN_TNF13 <- read.csv("./Data/TNF/210409_1223_MOLM13_s1_1328_9-04-21_NN.csv",
 hitlist_TNF <- rbind(hitlist_TNF13, hitlist_TNF16)
 NN_TNF <- rbind(NN_TNF13, NN_TNF16)
 
-
+PI3K1h6h_ave <- ms_2D_average_sh(PI3K1h6h_file, FALSE)
+TNF_MOLM1316_ave <- ms_2D_average_sh(TNF_MOLM1316, FALSE)
 
 #the list named drug_data
 drug_data <- list("data" = list("PI3K" = PI3K1h6h_file, "TNF" = TNF_MOLM1316),
+                  "data_ave" = list("PI3K" = PI3K1h6h_ave, "TNF" = TNF_MOLM1316_ave),
                   "treat_level" = list("PI3K" = get_treat_level(PI3K1h6h_file), "TNF" = get_treat_level(TNF_MOLM1316)),
                   "hitlist" = list("PI3K" = hitlist_PI3K1h6h, "TNF" = hitlist_TNF),
                   "NN" = list("PI3K" = NN_PI3K1h6h, "TNF" = NN_TNF))
@@ -126,9 +129,11 @@ for(i in levels(loca_orga$organelle)){
 rg_list
 
 usethis::use_data(PI3K1h6h_file, overwrite = TRUE)
+usethis::use_data(PI3K1h6h_ave, overwrite = TRUE)
 usethis::use_data(hitlist_PI3K1h6h, overwrite = TRUE)
 usethis::use_data(NN_PI3K1h6h, overwrite = TRUE)
 usethis::use_data(TNF_MOLM1316, overwrite = TRUE)
+usethis::use_data(TNF_MOLM1316_ave, overwrite = TRUE)
 usethis::use_data(hitlist_TNF, overwrite = TRUE)
 usethis::use_data(NN_TNF, overwrite = TRUE)
 usethis::use_data(drug_data, overwrite = TRUE)

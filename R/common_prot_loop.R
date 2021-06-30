@@ -13,7 +13,7 @@
 #'
 #' # with character, here these are proteins
 #' x <- mineCETSAapp::drug_data
-#' com_protein_loop(lapply(x$data, function(x) x$id))
+#' com_protein_loop(lapply(x$data, function(l) l$id))
 #'
 #' @export
 
@@ -74,7 +74,16 @@ all_inter <- function(data){  #here the data are duplicates but not common in al
     for (k in 1:(length(l) - 1)){
       for(i in 1:(length(l) - k)){
         if(!purrr::is_empty(unname(unlist(l[[(length(l) - k + 1)]])))){
-          l[[i]] <- lapply(l[[i]], function(x) x[-which(!is.na(match(x, unname(unlist(l[[(length(l) - k + 1)]])))))])
+          l[[i]] <- lapply(l[[i]], function(x){
+            pr_grp <- which(!is.na(match(x, unname(unlist(l[[(length(l) - k + 1)]])))))
+            if(!purrr::is_empty(pr_grp)){
+              x <- x[-pr_grp]
+            }
+            else{
+              x <- x
+            };
+            x
+          })
         }
       #if duplicated in three groups, remove the information that is duplicated in two groups
       }

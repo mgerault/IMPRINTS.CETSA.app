@@ -40,7 +40,7 @@
 #'
 #
 
-hitlist_outliers <- function (data = NULL, control = NULL,
+hitlist_outliers <- function(data = NULL, control = NULL,
                           rem_proteomic = NULL,
                           basetemp = "37C", RSS_cutoff = 0.985,
                           ErrScore = NULL,

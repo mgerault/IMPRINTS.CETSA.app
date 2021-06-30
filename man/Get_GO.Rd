@@ -9,7 +9,7 @@ Get_GO(anno, enrich = FALSE, all_cat = TRUE, sing_cat = "Component")
 \arguments{
 \item{anno}{The output data from  get_annotations or get_enrichment functions from STRINGdb package.}
 
-\item{enrich}{A logical to tell wether your data is the out put from
+\item{enrich}{A logical to tell whether your data is the output from
 get_enrichment function from STRINGdb package or not}
 
 \item{all_cat}{A logical to tell if you want the results from all the database or not}

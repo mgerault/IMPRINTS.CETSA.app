@@ -35,4 +35,6 @@
   message(
     paste0("Your working directory has been save to the variable WD as ", WD, " Please don't change this variable unless you want to change your saving directory when using the app.")
   )
+  message("")
+  message("To access the documentation type browseVignettes(package = 'mineCETSAapp') or with vignette('mineCETSAapp_doc', package = 'mineCETSAapp')")
 }

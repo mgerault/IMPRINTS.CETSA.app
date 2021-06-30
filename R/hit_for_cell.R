@@ -15,10 +15,10 @@
 
 hit_for_cell <- function(HIT, organism = c("HUMAN", "MOUSE")){
   if(organism == "HUMAN"){
-    loca_hit <- pr_atlas[which(!is.na(match(pr_atlas$Uniprot, unique(HIT$id)))),]
+    loca_hit <- mineCETSAapp::pr_atlas[which(!is.na(match(mineCETSAapp::pr_atlas$Uniprot, unique(HIT$id)))),]
   }
   else if(organism == "MOUSE"){
-    loca_hit <- pr_atlas_mouse[which(!is.na(match(pr_atlas_mouse$Uniprot, unique(HIT$id)))),]
+    loca_hit <- mineCETSAapp::pr_atlas_mouse[which(!is.na(match(mineCETSAapp::pr_atlas_mouse$Uniprot, unique(HIT$id)))),]
   }
   else{
     stop("Please, choose a valid organism name : 'HUMAN' or 'MOUSE'")

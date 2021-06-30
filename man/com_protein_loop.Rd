@@ -22,6 +22,6 @@ com_protein_loop(x)
 
 # with character, here these are proteins
 x <- mineCETSAapp::drug_data
-com_protein_loop(lapply(x$data, function(x) x$id))
+com_protein_loop(lapply(x$data, function(l) l$id))
 
 }

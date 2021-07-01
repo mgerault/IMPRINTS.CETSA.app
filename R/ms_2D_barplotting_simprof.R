@@ -63,6 +63,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                        linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
                                        ret_plot = FALSE,
                                        withpopup = FALSE, continue = TRUE, modvar = "", got_it = FALSE,
+                                       save_prlist = TRUE,
                                        save_pdf = TRUE, toplabel = "IMPRINTS-CETSA bar plotting",
                                        leftlabel = "", bottomlabel = "", pdfname = "barplot",
                                        pdfheight = 12, pdfwidth = 12)
@@ -334,6 +335,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                        linegraph = linegraph, log2scale = log2scale, ratio = ratio,
                                        ret_plot = ret_plot,
                                        withpopup = TRUE, continue = TRUE, modvar = "", got_it = TRUE,
+                                       save_prlist = save_prlist,
                                        save_pdf = save_pdf, toplabel = toplabel,
                                        leftlabel = leftlabel, bottomlabel = bottomlabel, pdfname = pdfname,
                                        pdfheight = pdfheight, pdfwidth = pdfwidth)
@@ -362,6 +364,20 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
 
 
   if(continue){
+    if(save_prlist){
+      tab_sim <- data[,c("id", "description")]
+      tab_sim$Gene.name <- as.character(lapply(tab_sim$description, getGeneName))
+      tab_sim$Protein.name <- as.character(lapply(tab_sim$description, function(x) getProteinName(x, pfdatabase)))
+      tab_sim$description <- NULL
+      colnames(tab_sim)[1] <- "UniprotID"
+
+      if (length(outdir)) {
+        openxlsx::write.xlsx(tab_sim, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_ProteinList.xlsx"))
+      }
+      else {
+        openxlsx::write.xlsx(tab_sim, paste0(format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_ProteinList.xlsx"))
+      }
+    }
     if (nrowdata == 0) {
       message("Make sure there are more than one experimental condition in dataset.")
       stop("Otherwise specify remsinglecondprot==FALSE !")

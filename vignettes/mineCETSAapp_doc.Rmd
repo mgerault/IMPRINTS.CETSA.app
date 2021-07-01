@@ -97,7 +97,7 @@ library("mineCETSAapp")
 runCETSAapp()      #this function will directly start the app
 ```
 
-If you want more informations on how to use the app, I recommend you to watch the  [tutorial](https://youtu.be/6r-KpeIoMQo).
+If you want more informations on how to use the app, I recommend you to watch the  [tutorial](https://youtu.be/cOlOzU7-S3A).
 
 ### Use the functions from mineCETSAapp package
 

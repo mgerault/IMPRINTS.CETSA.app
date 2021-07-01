@@ -31,6 +31,7 @@ ms_2D_barplotting_simprof(
   continue = TRUE,
   modvar = "",
   got_it = FALSE,
+  save_prlist = TRUE,
   save_pdf = TRUE,
   toplabel = "IMPRINTS-CETSA bar plotting",
   leftlabel = "",

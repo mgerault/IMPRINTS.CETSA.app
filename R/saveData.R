@@ -29,6 +29,9 @@ saveData <- function(data, new_add = NULL, new_drug = NULL) {
         f <- file.path(getwd(), "drug_data", paste0(i, ".xlsx"))
         OUT <- openxlsx::loadWorkbook(f)
 
+        if(new_drug %in% OUT$sheet_names){ #overwrite
+          openxlsx::removeWorksheet(OUT, new_drug)
+        }
         openxlsx::addWorksheet(OUT, new_drug)
         openxlsx::writeData(OUT, sheet = new_drug, new_add[[i]])
 

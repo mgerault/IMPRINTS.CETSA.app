@@ -33,6 +33,7 @@
 #' @param continue A logical to tell if you wanna continue and get the bar plots after getting the similar profile.
 #'                 This was thought when withpopup is TRUE. If continue is FALSE will only stop after getting similar profiles.
 #' @param got_it A logical to tell if you already have your data filtered. If TRUE, will directly starting to get the bar plot.
+#' @param save_prlist A logical to tell if you want to save or not the protein list with a similar profile
 #' @param save_pdf A logical to tell if you want to save plots in a pdf file
 #' @param layout a vector indicating the panel layout for multi-panel plots per page,
 #'               default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE

@@ -99,6 +99,8 @@ N or NO and the function stop (doesn't save and return the similar protein profi
 
 \item{got_it}{A logical to tell if you already have your data filtered. If TRUE, will directly starting to get the bar plot.}
 
+\item{save_prlist}{A logical to tell if you want to save or not the protein list with a similar profile}
+
 \item{save_pdf}{A logical to tell if you want to save plots in a pdf file}
 
 \item{toplabel}{textual label at the top part of the page}

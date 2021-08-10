@@ -5,7 +5,7 @@
 #' @param data Output data from ms_2D_average_sh
 #' @param hit_summary The summary file from the hitlist output
 #' @param NN_data The NN file from the hitlist output
-#' @PRcomplex_data Output data from ms_2D_complex_mapping_sh. If not NULL and hit_summary NULL, will
+#' @param PRcomplex_data Output data from ms_2D_complex_mapping_sh. If not NULL and hit_summary NULL, will
 #'                 print different heatmaps according to the protein complex.
 #' @param treatment A character telling the condition from which you want to see the heatmap
 #' @param max_na An integer indicating the maximum number of missing values per row (per protein)

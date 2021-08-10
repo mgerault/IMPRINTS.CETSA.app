@@ -26,7 +26,11 @@
 
 
 join_drugdata <- function (dfs, by = NULL){
-  if (length(dfs) == 1)
+  if(length(dfs) == 0){
+    message("dfs length is 0, NULL has been returned.")
+    return(NULL)
+  }
+  else if (length(dfs) == 1)
     return(dfs[[1]])
 
   joined <- dfs[[1]]

@@ -66,6 +66,35 @@ ui <- dashboardPage(
                               )
                          )
               ),
+    tags$style(type = 'text/css',
+               '#modal1 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal1 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal2 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal2 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal3 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal3 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal4 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal4 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal5 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal5 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal6 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal6 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal7 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    
     tabItems(
       tabItem(tabName = "analysis",
               h2(tags$u(class = "main-1", "The mineCETSA analysis")),
@@ -98,6 +127,7 @@ ui <- dashboardPage(
 
 
                   conditionalPanel(condition = "output.cetsa_fileup",
+                                   actionButton("see1_cetsa", "View data uploaded"),
                                    tags$hr(),
                                    h3("Rename your conditions and clean your data"),
                                    tags$hr(),
@@ -107,7 +137,8 @@ ui <- dashboardPage(
                                                                 "37C,47C,50C,52C,54C,57C,36C"),
                                                    checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
                                                    checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
-                                            column(2, actionButton("str_ren", "Rename the conditions"))
+                                            column(2, actionButton("str_ren", "Rename the conditions")),
+                                            column(2, actionButton("see2_cetsa", "View data renamed"))
                                             )
                                    )
                   )),
@@ -130,6 +161,7 @@ ui <- dashboardPage(
 
                                    conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
                                                     tags$hr(),
+                                                    actionButton("see3_cetsa", "View data with isoform resolved"),
                                                     checkboxInput("got_rearr_cetsa", h3("Do you already have the file data_pre_normalization 
                                                                                         (output after rarranging your data) ?"), FALSE),
                                                     conditionalPanel(condition = "!input.got_rearr_cetsa",
@@ -156,6 +188,9 @@ ui <- dashboardPage(
                                                     conditionalPanel(condition = "input.got_rearr_cetsa",
                                                                      fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
                                                                      ),
+                                                    tags$hr(),
+                                                    fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
+                                                             column(3, actionButton("see5_cetsa", "View rearranged data"))),
                                                     
                                                     tags$hr(),
 
@@ -179,6 +214,8 @@ ui <- dashboardPage(
                                conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
                                                 fluidRow(box(title = "Abundance difference calculation and hitlist", status = "primary",
                                                     solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                    actionButton("see6_cetsa", "View normalized data"),
+                                                    tags$hr(),
                                                     h3("Calculate the pair-wise protein abundance differences"),
                                                     tags$hr(),
                                                     
@@ -199,6 +236,8 @@ ui <- dashboardPage(
                                                     tags$hr(),
 
                                                     conditionalPanel(condition = "output.cetsa_difup | input.step_cetsa > '5' ",
+                                                                     actionButton("see7_cetsa", "View caldiff output"),
+                                                                     tags$hr(),
                                                                      h3("Get the protein hitlist"),
                                                                      tags$hr(),
 
@@ -1154,6 +1193,26 @@ server <- function(input, output, session){
   })
   outputOptions(output, "cetsa_fileup", suspendWhenHidden = FALSE)
 
+  observeEvent(input$see1_cetsa,{
+    if(!is.null(cetsa_data())){
+     showModal(tags$div(id="modal1", modalDialog(
+       DT::renderDataTable({DT::datatable(cetsa_data(),
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Base data")
+                        ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10)
+                      )}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+  
   output$incond_name <- renderText({
     if(!is.null(cetsa_data())){
       paste("The current condition name are :", paste(unique(cetsa_data()$condition), collapse = "  "))
@@ -1186,6 +1245,24 @@ server <- function(input, output, session){
   })
   outputOptions(output, "cetsa_cleanup", suspendWhenHidden = FALSE)
 
+  observeEvent(input$see2_cetsa,{
+    if(!is.null(cetsa_data_clean())){
+      showModal(tags$div(id="modal2", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_data_clean(),
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Base data")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
   
   observe({
     if(input$step_cetsa > 2){
@@ -1218,7 +1295,9 @@ server <- function(input, output, session){
     x = NULL,
     y = NULL,
     norm = NULL,
-    dif = NULL
+    dif = NULL,
+    conso = NULL,
+    rearr = NULL
   )
   observeEvent(input$ISO, {
     showNotification("Start resolving isoform, this may take a while. Please wait a few minutes",
@@ -1244,6 +1323,25 @@ server <- function(input, output, session){
     return(!is.null(cetsa_isoform$x))
   })
   outputOptions(output, "cetsa_isoup", suspendWhenHidden = FALSE)
+  
+  observeEvent(input$see3_cetsa,{
+    if(!is.null(cetsa_isoform$x)){
+      showModal(tags$div(id="modal3", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$x,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
 
   observeEvent(input$ISO2, {
     d2 <- cetsa_isoform$x
@@ -1258,7 +1356,7 @@ server <- function(input, output, session){
         d2 <- ms_isoform_consolidate(d2,
                                      nread = input$n_chan2,
                                      matchtable = File$datapath)
-        
+        cetsa_isoform$conso <- d2
         showNotification("Consolidating succeed !", type = "message", duration = 5)
       }
       
@@ -1267,6 +1365,7 @@ server <- function(input, output, session){
         d2 <- ms_2D_rearrange(d2, nread = input$n_chan3,
                               repthreshold = input$rep_thr, countthreshold = input$count_thr,
                               with37Creading = input$wit_37)
+        cetsa_isoform$rearr <- d2
         showNotification("Rearranging succeed !", type = "message", duration = 5)
       }
       
@@ -1288,7 +1387,44 @@ server <- function(input, output, session){
       cetsa_isoform$y <- rearrdata_cetsa()
     }
   })
+  
+  observeEvent(input$see4_cetsa,{
+    if(!is.null(cetsa_isoform$conso)){
+      showModal(tags$div(id="modal4", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$conso,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
 
+  observeEvent(input$see5_cetsa,{
+    if(!is.null(cetsa_isoform$rearr)){
+      showModal(tags$div(id="modal5", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$rearr,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
   observeEvent(input$NORM, {
     if(is.null(cetsa_isoform$y)){
       d <- cetsa_isoform$x
@@ -1326,6 +1462,25 @@ server <- function(input, output, session){
     return(!is.null(cetsa_isoform$norm))
   })
   outputOptions(output, "cetsa_normup", suspendWhenHidden = FALSE)
+  
+  observeEvent(input$see6_cetsa,{
+    if(!is.null(cetsa_isoform$norm)){
+      showModal(tags$div(id="modal6", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$norm,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
 
   observeEvent(input$CAL_DIF, {
     if(!is.null(cetsa_isoform$norm)){
@@ -1369,6 +1524,25 @@ server <- function(input, output, session){
     return(!is.null(cetsa_isoform$dif))
   })
   outputOptions(output, "cetsa_difup", suspendWhenHidden = FALSE)
+  
+  observeEvent(input$see7_cetsa,{
+    if(!is.null(cetsa_isoform$dif)){
+      showModal(tags$div(id="modal7",modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$dif,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
 
   hit_pr <- reactiveValues(
     hitlist = NULL,

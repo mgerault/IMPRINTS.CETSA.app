@@ -30,6 +30,9 @@ ms_2D_heatmap(
 
 \item{NN_data}{The NN file from the hitlist output}
 
+\item{PRcomplex_data}{Output data from ms_2D_complex_mapping_sh. If not NULL and hit_summary NULL, will
+print different heatmaps according to the protein complex.}
+
 \item{treatment}{A character telling the condition from which you want to see the heatmap}
 
 \item{max_na}{An integer indicating the maximum number of missing values per row (per protein)}

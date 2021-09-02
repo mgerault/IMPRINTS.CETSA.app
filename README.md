@@ -7,6 +7,8 @@ any character you want and save the results in word files; etc.
 The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell
 and get information on it when clicking one. The subcellular location is obtained thanks to the protein Atlas data base.
 
+Some data are available in the package so that you can play with when you first try the app. The data are from the [The cell cycle paper (2018)](https://www-sciencedirect-com.proxy.insermbiblio.inist.fr/science/article/pii/S0092867418303970?via%3Dihub) from Dai Lingyun and al.
+
 ## What is CETSA?
 The Cellular Thermal Shift Assay (CETSA) (orginially described in [Science 341(6141):84-87 (2013)](http://www.sciencemag.org/lookup/doi/10.1126/science.1233606)) is a 
 biophysical assay based on the principle of ligand-induced thermal stabilization of target proteins, meaning that a protein's melting temperature will change upon 

@@ -16,7 +16,7 @@ ms_2D_heatmap(
   saveHeat = FALSE,
   file_type = c("png", "pdf"),
   file_name = "Heatmap",
-  titleH = "PI3K heatmap",
+  titleH = "Elutriation heatmap",
   gradient_color = c("#005EFF", "#FFFFFF", "#FF0000"),
   cat_color = list(CC = "#FB4F0B", CN = "#0FAEB9", NC = "#E7B700"),
   back_color = "#FFFFFF",

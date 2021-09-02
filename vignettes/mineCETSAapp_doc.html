@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2021-07-01" />
+<meta name="date" content="2021-09-02" />
 
 <title>Analyze IMPRINTS or 2D MS-CETSA datasets in a user friendly way</title>
 
@@ -325,7 +325,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Analyze IMPRINTS or 2D MS-CETSA datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2021-07-01</h4>
+<h4 class="date">2021-09-02</h4>
 
 </div>
 
@@ -410,7 +410,7 @@ When you will use the package and/or the app inside this directory, all your res
 <hr />
 <div id="underline1.space-thespace-dataspace" class="section level4">
 <h4><span class="math inline">\(\underline{1.\space The\space data\space}\)</span></h4>
-<p>The package contains also som data that you can play with. Let’s take a look at the data called “drug_data”. “drug_data” is list that contains datasets : “PI3K” and “TNF”.</p>
+<p>The package contains also some data that you can play with. The are from the paper “Modulation of Protein-Interaction States through the Cell Cycle” from Dai Lingyun and al. 2018. Let’s take a look at the data called “drug_data”. “drug_data” is list that contains datasets : “elutriation” and “chemarrest”.</p>
 <p>For each dataset, you will find :</p>
 <ul>
 <li>The caldiff output (the protein abundance difference); access it with ‘$data’</li>
@@ -419,25 +419,25 @@ When you will use the package and/or the app inside this directory, all your res
 <li>The proteins categorized as “NN”; access it with ‘$NN’</li>
 <li>The trement level; access it with ‘$treat_level’</li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mydata_caldiff <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>PI3K  <span class="co">#save your data    </span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mydata_ave <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data_ave<span class="sc">$</span>PI3K</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mydata_caldiff <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>elutriation  <span class="co">#save your data    </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mydata_ave <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data_ave<span class="sc">$</span>elutriation</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_caldiff)  <span class="co">#take a look at the data</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_ave)</span></code></pre></div>
 </div>
 <div id="underline2.space-seesavespace-thespace-barplot" class="section level4">
 <h4><span class="math inline">\(\underline{2.\space See/save\space the\space barplot}\)</span></h4>
-<p>The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle; use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.</p>
+<p>The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named “category” and “score”); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ms_2D_barplotting_sh</span>(mydata_caldiff, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>mydata_caldiff_TNF <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>TNF</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>all_drug <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;PI3K&quot;</span> <span class="ot">=</span> mydata_caldiff, <span class="st">&quot;TNF&quot;</span> <span class="ot">=</span> mydata_caldiff_TNF)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>mydata_caldiff_chemarrest <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>chemarrest</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>all_drug <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> mydata_caldiff, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> mydata_caldiff_chemarrest)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ms_2D_barplotting_sh</span>(all_drug, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#here, it will &quot;join&quot; the two pdf in one</span></span></code></pre></div>
 <p>Instead of doing a list of all our data, we could also get list of our data according to the protein complex. For this, you’ll need the function ms_2D_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>PI3K</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in Buparlisib6h condition to some protein complex (core Corum database)</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">ms_2D_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;Buparlisib6h&quot;</span>,  </span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>elutriation</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">ms_2D_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">targetcategory =</span> <span class="fu">c</span>(<span class="st">&quot;CN&quot;</span>, <span class="st">&quot;CC&quot;</span>, <span class="st">&quot;NC&quot;</span>))</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(map_compl) <span class="co">#if you want to check the data</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
@@ -471,8 +471,8 @@ When you will use the package and/or the app inside this directory, all your res
 <p>The euclidean distance score will directly take the distance between the values, so the similar profiles will have a similar shape AND similar values. This is not the case with the Peasron correlation score since you divide the covariance by the standard deviation. Indeed the value are all scaled by this division, so you will find more similar profiles and not necessarily with similar values.</p>
 <p>For more informations on this scores : <a href="https://nakkaya.com/2009/11/11/euclidean-distance-score/">Euclidean</a> ; <a href="https://www.questionpro.com/blog/pearson-correlation-coefficient/">Pearson</a></p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ms_2D_barplotting_simprof</span>(mydata_caldiff, mydata_ave, <span class="co">#here we have the average data, but if it wasn&#39;t the case we would have let it NULL and let the function calculate it for us</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">treatmentlevel =</span> <span class="st">&quot;Buparlisib6h&quot;</span>, <span class="at">protein_profile =</span> <span class="st">&quot;P85037&quot;</span>,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">pdfname =</span> <span class="st">&quot;similar_P85037&quot;</span>,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">treatmentlevel =</span> <span class="st">&quot;S&quot;</span>, <span class="at">protein_profile =</span> <span class="st">&quot;O43776&quot;</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">pdfname =</span> <span class="st">&quot;similar_O43776&quot;</span>,</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">use_score =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">score_threshold =</span> <span class="fl">0.65</span>, <span class="at">max_na_prow =</span> <span class="dv">0</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                          )</span>
@@ -485,11 +485,11 @@ When you will use the package and/or the app inside this directory, all your res
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># According their category</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#here we need the average data</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ms_2D_heatmap</span>(mydata_ave, <span class="at">hit_summary =</span> mydata_hit,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;Buparlisib6h&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">select_cat =</span> <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>),  </span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition Buparlisib6h</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># According to their protein complex</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
@@ -500,23 +500,22 @@ When you will use the package and/or the app inside this directory, all your res
 <span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_ave, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
 <span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>   </span>
 <span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">ms_2D_heatmap</span>(data, <span class="at">PRcomplex_data =</span> cate_,</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;Buparlisib6h&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>, </span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition Buparlisib6h</span></span></code></pre></div>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S</span></span></code></pre></div>
 </div>
 <div id="underline4.space-hitlistspace-space-getspace-yourspace-hitsspace-basedspace-onspace-thespace-outliers" class="section level4">
 <h4><span class="math inline">\(\underline{4.\space Hitlist\space :\space get\space your\space hits\space based\space on\space the\space outliers}\)</span></h4>
 <p>You can find the hited proteins with the hitlist function (not written by me) according to your thresholds. But you can also use the hitlist_outliers function which define hits if a proteins has at least one outlier among the temperatures.</p>
-<p>This function depends on two thresholds, including one that can be choos automatically.</p>
+<p>This function depends on two thresholds, including one that can be choose automatically.</p>
 <p>The first is the Error score cutoff. The function will compute a score between 0 and 1 accord to the SEM. The more it is close to one, the more the error is small. It can be choose by the user or choose automatically for each condition. If so, it will take the maximum error score for which you have the maximum of outlier (plot the histogramm).</p>
-<p>The second is the RSS score cutoff between 0 and 1, which has to be chosen by the user. It will differentiate the CN and the CC. The more it is close to one, the more you will consider a small variation between the temperature for thermal shift (catorized as a CC). Since the data are close to 0, you’ll maybe need a high cutoff, default is 0.985.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">hitlist_outliers</span>(mydata_caldiff, <span class="at">control =</span> <span class="st">&quot;Vehicle1h|Vehicle6h&quot;</span>, <span class="co">#two controls --&gt; separate them by |</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">rem_proteomic =</span> <span class="st">&quot;36C&quot;</span>,   <span class="co">#here we have a quantiative proteomice column --&gt; remove it</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">basetemp =</span> <span class="st">&quot;37C&quot;</span>,        <span class="co">#categorization based on the lowest tempearature</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">format =</span> <span class="st">&quot;xlsx&quot;</span>) <span class="co">#will save in xlsx format</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#will ask you if you want to save or not the results</span></span></code></pre></div>
-<p>Here we put data from our global environnment, but you could choose a file. For this, you just need to type the file path instead of your data. The current accepted format are xlsx, txt and csv.</p>
+<p>The second is the RSS score cutoff between 0 and 1, which has to be chosen by the user. It will differentiate the CN and the CC. The more it is close to one, the more you will consider a small variation between the temperature for thermal shift (categorized as a CC). Since the data are close to 0, you’ll maybe need a high cutoff, default is 0.985.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">hitlist_outliers</span>(mydata_caldiff, <span class="at">control =</span> <span class="st">&quot;G1&quot;</span>, <span class="co">#the control</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">basetemp =</span> <span class="st">&quot;37C&quot;</span>,        <span class="co">#categorization based on the lowest tempearature</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">format =</span> <span class="st">&quot;xlsx&quot;</span>) <span class="co">#will save in xlsx format</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#will ask you if you want to save or not the results</span></span></code></pre></div>
+<p>Here we put data from our global environment, but you could choose a file. For this, you just need to type the file path instead of your data. The current accepted format are xlsx, txt and csv.</p>
 </div>
 <div id="underline5.space-stringspace-network" class="section level4">
 <h4><span class="math inline">\(\underline{5.\space STRING\space network}\)</span></h4>
@@ -525,8 +524,8 @@ When you will use the package and/or the app inside this directory, all your res
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>string_db <span class="ot">&lt;-</span> STRINGdb<span class="sc">$</span><span class="fu">new</span>(<span class="at">version=</span><span class="st">&quot;11&quot;</span>, <span class="at">species=</span><span class="dv">9606</span>,               <span class="co">#ID 9606 correspond to human</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
-<p>Now we can start the analysis on a group of protein. Let’s take the hits from the Buparlisib6h condition.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;Buparlisib6h&quot;</span>)</span>
+<p>Now we can start the analysis on a group of protein. Let’s take the hits from the S condition.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>network_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">map</span>(data, <span class="st">&quot;id&quot;</span>, <span class="at">removeUnmappedRows =</span> <span class="cn">TRUE</span>)         <span class="co">#will map the proteins to the string ID</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(network_hit<span class="sc">$</span>STRING_id , <span class="at">inter =</span> <span class="cn">FALSE</span>) <span class="co">#will plot the network</span></span></code></pre></div>
@@ -569,8 +568,8 @@ When you will use the package and/or the app inside this directory, all your res
 <h4><span class="math inline">\(\underline{6.\space The\space interactive\space cell}\)</span></h4>
 <p>Now, if you want to check where your hits could be located, you may want to use the ‘hit_for_cell’ function. This function will check if you proteins are in the Protein Atlas database and will map them to their main location.</p>
 <p>Then, it will generate random coordinates for each proteins <strong>according to their cellular location</strong> on the cell image already present in the package. It will return a data frame containing the protein ID, the condition, the category, the gene name, the main location, the number of location found and the coordinates generated.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the Buparlisib6h condition</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;Buparlisib6h&quot;</span>)</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the S condition</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(category, <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>)))) <span class="co">#filter the category, but you could have take them all, even add also the NN</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>cell_result <span class="ot">&lt;-</span> <span class="fu">hit_for_cell</span>(data, <span class="at">organism =</span> <span class="st">&quot;HUMAN&quot;</span>)</span>
@@ -585,10 +584,10 @@ When you will use the package and/or the app inside this directory, all your res
 <div id="underline7.space-pubmedspace-search" class="section level4">
 <h4><span class="math inline">\(\underline{7.\space PubMed\space search}\)</span></h4>
 <p>Let’s say you just finish to analyzed your data and now you want to check if there are already papers published in PubMed talking about the drug you used and the proteins you found. For this, you can use the ‘find_in_pubmed’ function. Here’s how you can can use it :</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;PI3K&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">condition =</span> <span class="st">&quot;Buparlisib6h&quot;</span>,</span>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">condition =</span> <span class="st">&quot;S&quot;</span>,</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2000:2021&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;PI3K_pubmed_search&quot;</span>)</span></code></pre></div>
-<p>This will save the results in the folder named “PI3K_pubmed_search”. For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set ‘imp_by_hitlist’ to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. In this example, we match every protein name found under the condition Buparlisib6h with the word “PI3K”. Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2000 and 2021. If condition was set to &quot;“, then it would have taken all the protein names from your hitlist. You can also set ‘language’ and ‘year_rg’ to NULL to not filter on those criterias; same if you set ‘feat’ to”&quot;. Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set ‘imp_by_hitlist’ to FALSE.</p>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
+<p>This will save the results in the folder named “elutriation_pubmed_search”. For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set ‘imp_by_hitlist’ to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. In this example, we match every protein name found under the condition S with the word “cell”. Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2000 and 2021. If condition was set to &quot;“, then it would have taken all the protein names from your hitlist. You can also set ‘language’ and ‘year_rg’ to NULL to not filter on those criterias; same if you set ‘feat’ to”&quot;. Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set ‘imp_by_hitlist’ to FALSE.</p>
 <p>‘your_API’ is your API key from NCBI. By default, the access to NCBI API system is free and does not necessarily require an “API key”. In this case, NCBI limits users to making only 3 requests per second. Users who register for an “API key” are able to make up to ten requests per second. Obtaing a key is very simple, you just need to register for <a href="https://www.ncbi.nlm.nih.gov/account/">“my ncbi account”</a> then click on a button in the <a href="https://www.ncbi.nlm.nih.gov/account/?back_url=https://www.ncbi.nlm.nih.gov/account/settings/">“account settings page”</a>.</p>
 </div>
 <div id="underline8.space-otherspace-functions" class="section level4">
@@ -600,12 +599,12 @@ When you will use the package and/or the app inside this directory, all your res
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_ave)</span></code></pre></div>
 <p><strong>join_cetsa</strong> function</p>
 <p>This function take a list of data frame and join them. It also allow you to add character at the end of the column names.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dl <span class="ot">&lt;-</span> <span class="fu">list</span>(PI3K1h6h_file, TNF_MOLM1316)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;PI3K&quot;</span>, <span class="st">&quot;TNF&quot;</span>))</span>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dl <span class="ot">&lt;-</span> <span class="fu">list</span>(elutriation, chemarrest)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;elutriation&quot;</span>, <span class="st">&quot;chemarrest&quot;</span>))</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>new_data_nosuffix <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)) <span class="co">#without new names</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#just rename conditions</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>TNF_new_name <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(TNF_MOLM1316, <span class="st">&quot;new&quot;</span>)</span></code></pre></div>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>chemarrest_new_name <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(chemarrest, <span class="st">&quot;new&quot;</span>)</span></code></pre></div>
 <p>Remember you’ll always need to add the same number of new names as you have data frames in your list. Also, to avoid any problems in the other function, the character ’_’ and ‘/’ are not allowed.</p>
 <p><strong>join_drugdata</strong> function</p>
 <p>As join_cetsa, this function will simply joined a list of data frame but without renaming. It is the same as the ‘join_all’ function from the ‘plyr’ package but allow to use the ‘full_join’ function from the ‘dplyr’ package and so to add suffixes to duplicated names not selecting by the argument ‘by.’</p>
@@ -614,15 +613,15 @@ When you will use the package and/or the app inside this directory, all your res
 <p>Let’s say you have several data frames or a hitlist with many conditions and you want to check for each protein if it has been identified in one, two or n conditions.</p>
 <p>This is the goal of this function. In order to use it, you’ll a named list which contains numeric or character elements. In our case a list of the proteins identified in each drug experiment/condition.</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check between two data frames</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pr_PI3K <span class="ot">&lt;-</span> <span class="fu">unique</span>(PI3K1h6h_file<span class="sc">$</span>id)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pr_TNF <span class="ot">&lt;-</span> <span class="fu">unique</span>(TNF_MOLM1316<span class="sc">$</span>id)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;PI3K&quot;</span> <span class="ot">=</span> pr_PI3K, <span class="st">&quot;TNF&quot;</span> <span class="ot">=</span> pr_TNF)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pr_elutriation <span class="ot">&lt;-</span> <span class="fu">unique</span>(elutriation<span class="sc">$</span>id)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pr_chemarrest <span class="ot">&lt;-</span> <span class="fu">unique</span>(chemarrest<span class="sc">$</span>id)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> pr_elutriation, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> pr_chemarrest)</span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>result_common <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>result_common <span class="co">#A list which contains the proteins only identified in the PI3K experiment, the TNF experiment and both</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>result_common <span class="co">#A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both</span></span>
 <span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">#check hits between conditions</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>all_hits <span class="ot">&lt;-</span> <span class="fu">rbind</span>(hitlist_PI3K1h6h, hitlist_TNF)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>all_hits <span class="ot">&lt;-</span> <span class="fu">rbind</span>(hitlist_elutriation, hitlist_chemarrest)</span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(all_hits<span class="sc">$</span>Condition)){</span>
 <span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  pr_list[[i]] <span class="ot">&lt;-</span> (all_hits <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> i))<span class="sc">$</span>id  <span class="co">#get hits for each condition in a hit</span></span>
@@ -702,6 +701,9 @@ $(document).ready(function () {
 
 <script>
 $(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
 
     // move toc-ignore selectors from section div to header
     $('div.section.toc-ignore')

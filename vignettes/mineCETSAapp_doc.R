@@ -18,8 +18,8 @@
 #  runCETSAapp()      #this function will directly start the app
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  mydata_caldiff <- drug_data$data$PI3K  #save your data
-#  mydata_ave <- drug_data$data_ave$PI3K
+#  mydata_caldiff <- drug_data$data$elutriation  #save your data
+#  mydata_ave <- drug_data$data_ave$elutriation
 #  
 #  View(mydata_caldiff)  #take a look at the data
 #  View(mydata_ave)
@@ -27,15 +27,15 @@
 ## ---- eval=FALSE--------------------------------------------------------------
 #  ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  
-#  mydata_caldiff_TNF <- drug_data$data$TNF
-#  all_drug <- list("PI3K" = mydata_caldiff, "TNF" = mydata_caldiff_TNF)
+#  mydata_caldiff_chemarrest <- drug_data$data$chemarrest
+#  all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
 #  ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  #here, it will "join" the two pdf in one
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  mydata_hit <- drug_data$hitlist$PI3K
-#  #will map the proteins categorized as CN, CC and NC in Buparlisib6h condition to some protein complex (core Corum database)
-#  map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "Buparlisib6h",
+#  mydata_hit <- drug_data$hitlist$elutriation
+#  #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
+#  map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
 #                                        targetcategory = c("CN", "CC", "NC"))
 #  View(map_compl) #if you want to check the data
 #  
@@ -69,8 +69,8 @@
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
-#                            treatmentlevel = "Buparlisib6h", protein_profile = "P85037",
-#                            pdfname = "similar_P85037",
+#                            treatmentlevel = "S", protein_profile = "O43776",
+#                            pdfname = "similar_O43776",
 #                            use_score = "euclidean",
 #                            score_threshold = 0.65, max_na_prow = 0
 #                            )
@@ -80,11 +80,11 @@
 #  # According their category
 #  #here we need the average data
 #  ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
-#                treatment = "Buparlisib6h", max_na = 0,
+#                treatment = "S", max_na = 0,
 #                response = "both",
 #                select_cat = c("CC", "CN", "NC"),
 #                saveHeat = TRUE, file_type = "png")
-#  #Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition Buparlisib6h
+#  #Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S
 #  
 #  # According to their protein complex
 #  some_complex <- unique(map_compl$ComplexName)
@@ -95,16 +95,15 @@
 #  data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
 #  
 #  ms_2D_heatmap(data, PRcomplex_data = cate_,
-#                treatment = "Buparlisib6h", max_na = 0,
+#                treatment = "S", max_na = 0,
 #                response = "both",
 #                saveHeat = TRUE, file_type = "png")
-#  #Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition Buparlisib6h
+#  #Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  new_hits <- hitlist_outliers(mydata_caldiff, control = "Vehicle1h|Vehicle6h", #two controls --> separate them by |
-#                            rem_proteomic = "36C",   #here we have a quantiative proteomice column --> remove it
-#                            basetemp = "37C",        #categorization based on the lowest tempearature
-#                            format = "xlsx") #will save in xlsx format
+#  new_hits <- hitlist_outliers(mydata_caldiff, control = "G1", #the control
+#                               basetemp = "37C",        #categorization based on the lowest tempearature
+#                               format = "xlsx") #will save in xlsx format
 #  #will ask you if you want to save or not the results
 
 ## ---- eval=FALSE--------------------------------------------------------------
@@ -114,7 +113,7 @@
 #                             input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  data <- mydata_hit %>% dplyr::filter(Condition == "Buparlisib6h")
+#  data <- mydata_hit %>% dplyr::filter(Condition == "S")
 #  network_hit <- string_db$map(data, "id", removeUnmappedRows = TRUE)         #will map the proteins to the string ID
 #  
 #  My_net(network_hit$STRING_id , inter = FALSE) #will plot the network
@@ -152,8 +151,8 @@
 #  My_net(ribosome_net , inter = FALSE)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  # Let's test it on the Buparlisib6h condition
-#  data <- mydata_hit %>% dplyr::filter(Condition == "Buparlisib6h")
+#  # Let's test it on the S condition
+#  data <- mydata_hit %>% dplyr::filter(Condition == "S")
 #  data <- data %>% dplyr::filter(!is.na(match(category, c("CC", "CN", "NC")))) #filter the category, but you could have take them all, even add also the NN
 #  
 #  cell_result <- hit_for_cell(data, organism = "HUMAN")
@@ -167,36 +166,36 @@
 #  #it takes some time to run, since the plot contains a lot of information
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  find_in_pubmed(mydata_hit, feat = "PI3K", imp_by_hitlist = TRUE, condition = "Buparlisib6h",
+#  find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
 #                 language = "english", year_rg = "2000:2021", your_API = NULL,
-#                 newfolder_name = "PI3K_pubmed_search")
+#                 newfolder_name = "elutriation_pubmed_search")
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  get_treat_level(mydata_caldiff)
 #  get_treat_level(mydata_ave)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  dl <- list(PI3K1h6h_file, TNF_MOLM1316)
-#  new_data <- join_cetsa(dl, new_names = c("PI3K", "TNF"))
+#  dl <- list(elutriation, chemarrest)
+#  new_data <- join_cetsa(dl, new_names = c("elutriation", "chemarrest"))
 #  new_data_nosuffix <- join_cetsa(dl, new_names = c("", "")) #without new names
 #  
 #  #just rename conditions
-#  TNF_new_name <- join_cetsa(TNF_MOLM1316, "new")
+#  chemarrest_new_name <- join_cetsa(chemarrest, "new")
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  join_drugdata(drug_data$data, by = c("id", "description"))
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  #check between two data frames
-#  pr_PI3K <- unique(PI3K1h6h_file$id)
-#  pr_TNF <- unique(TNF_MOLM1316$id)
-#  pr_list <- list("PI3K" = pr_PI3K, "TNF" = pr_TNF)
+#  pr_elutriation <- unique(elutriation$id)
+#  pr_chemarrest <- unique(chemarrest$id)
+#  pr_list <- list("elutriation" = pr_elutriation, "chemarrest" = pr_chemarrest)
 #  
 #  result_common <- com_protein_loop(pr_list)
-#  result_common #A list which contains the proteins only identified in the PI3K experiment, the TNF experiment and both
+#  result_common #A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both
 #  
 #  #check hits between conditions
-#  all_hits <- rbind(hitlist_PI3K1h6h, hitlist_TNF)
+#  all_hits <- rbind(hitlist_elutriation, hitlist_chemarrest)
 #  pr_list <- list()
 #  for(i in unique(all_hits$Condition)){
 #    pr_list[[i]] <- (all_hits %>% dplyr::filter(Condition == i))$id  #get hits for each condition in a hit

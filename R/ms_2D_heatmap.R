@@ -34,7 +34,7 @@ ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
                           response = c("S", "D", "both"),
                           select_cat = c("CC", "CN", "NC"),
                           saveHeat = FALSE, file_type = c("png", "pdf"), file_name = "Heatmap",
-                          titleH = "PI3K heatmap", gradient_color = c("#005EFF", "#FFFFFF", "#FF0000"),
+                          titleH = "Elutriation heatmap", gradient_color = c("#005EFF", "#FFFFFF", "#FF0000"),
                           cat_color = list("CC" = "#FB4F0B", "CN" = "#0FAEB9", "NC" = "#E7B700"),
                           back_color = "#FFFFFF", border_color = NULL){
   if (length(treatment) != 1) {

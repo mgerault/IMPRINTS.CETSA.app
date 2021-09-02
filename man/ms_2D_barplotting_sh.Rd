@@ -95,9 +95,9 @@ It was retaken for easier use in the shiny app.
 library(mineCETSA)
 library(mineCETSAapp)
 
-PI3K1h6h_wVeh <- PI3K1h6h_file[,-grep("Vehicle",names(PI3K1h6h_file))]
-P85037_1h6h <- ms_subsetting(PI3K1h6h_wVeh, isfile = FALSE, hitidlist = c("P85037"))
-ms_2D_barplotting_sh(P85037_1h6h)
+elutriation_wVeh <- elutriation[,-grep("G1",names(elutriation))]
+O43776_elu <- ms_subsetting(elutriation_wVeh, isfile = FALSE, hitidlist = c("O43776"))
+ms_2D_barplotting_sh(O43776_elu)
 
 }
 \seealso{

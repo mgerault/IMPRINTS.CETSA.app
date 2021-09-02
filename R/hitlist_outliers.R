@@ -31,9 +31,9 @@
 #'
 #' @examples \dontrun{
 #' library(mineCETSAapp)
-#' PI3K_data <- mineCETSAapp::PI3K1h6h_file
-#' HITS <- hitlist_stat(PI3K_data, control = "Vehicle1h|Vehicle6h",
-#'                      rem_proteomic = "36C", format = "xlsx")
+#' elutriation_data <- mineCETSAapp::elutriation
+#' HITS <- hitlist_outliers(elutriation_data, control = "G1",
+#'                          format = "xlsx")
 #' }
 #'
 #' @export

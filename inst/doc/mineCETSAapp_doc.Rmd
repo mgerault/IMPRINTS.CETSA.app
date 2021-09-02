@@ -106,8 +106,8 @@ If you want more informations on how to use the app, I recommend you to watch th
     
 #### $\underline{1.\space The\space data\space}$
   
-The package contains also som data that you can play with. Let's take a look at the data called "drug_data".
-         "drug_data" is list that contains datasets : "PI3K" and "TNF". 
+The package contains also some data that you can play with. The are from the paper "Modulation of Protein-Interaction States through the Cell Cycle" from Dai Lingyun and al. 2018. Let's take a look at the data called "drug_data".
+         "drug_data" is list that contains datasets : "elutriation" and "chemarrest". 
          
 For each dataset, you will find :
 
@@ -118,8 +118,8 @@ For each dataset, you will find :
 * The trement level; access it with '$treat_level'
          
 ```{r, eval=FALSE}
-mydata_caldiff <- drug_data$data$PI3K  #save your data    
-mydata_ave <- drug_data$data_ave$PI3K
+mydata_caldiff <- drug_data$data$elutriation  #save your data    
+mydata_ave <- drug_data$data_ave$elutriation
 
 View(mydata_caldiff)  #take a look at the data
 View(mydata_ave)
@@ -128,13 +128,13 @@ View(mydata_ave)
  
 ####  $\underline{2.\space See/save\space the\space barplot}$
       
-The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle; use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
+The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
          
 ```{r, eval=FALSE}
 ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 
-mydata_caldiff_TNF <- drug_data$data$TNF
-all_drug <- list("PI3K" = mydata_caldiff, "TNF" = mydata_caldiff_TNF)
+mydata_caldiff_chemarrest <- drug_data$data$chemarrest
+all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
 ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #here, it will "join" the two pdf in one
 ```
@@ -143,9 +143,9 @@ Instead of doing a list of all our data, we could also get list of our data acco
 For this, you'll need the function ms_2D_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).
          
 ```{r, eval=FALSE}
-mydata_hit <- drug_data$hitlist$PI3K
-#will map the proteins categorized as CN, CC and NC in Buparlisib6h condition to some protein complex (core Corum database)
-map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "Buparlisib6h",  
+mydata_hit <- drug_data$hitlist$elutriation
+#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
+map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
                                       targetcategory = c("CN", "CC", "NC"))
 View(map_compl) #if you want to check the data
 
@@ -189,8 +189,8 @@ For more informations on this scores : [Euclidean](https://nakkaya.com/2009/11/1
          
 ```{r, eval=FALSE}
 ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
-                          treatmentlevel = "Buparlisib6h", protein_profile = "P85037",
-                          pdfname = "similar_P85037",
+                          treatmentlevel = "S", protein_profile = "O43776",
+                          pdfname = "similar_O43776",
                           use_score = "euclidean",
                           score_threshold = 0.65, max_na_prow = 0
                           )
@@ -208,11 +208,11 @@ You can also get heatmap of your data according to their categories or their pro
 # According their category
 #here we need the average data
 ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
-              treatment = "Buparlisib6h", max_na = 0,
+              treatment = "S", max_na = 0,
               response = "both",
               select_cat = c("CC", "CN", "NC"),  
               saveHeat = TRUE, file_type = "png")
-#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition Buparlisib6h
+#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S
 
 # According to their protein complex
 some_complex <- unique(map_compl$ComplexName)
@@ -223,10 +223,10 @@ pr_comp <- cate_$id
 data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
    
 ms_2D_heatmap(data, PRcomplex_data = cate_,
-              treatment = "Buparlisib6h", max_na = 0,
+              treatment = "S", max_na = 0,
               response = "both", 
               saveHeat = TRUE, file_type = "png")
-#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition Buparlisib6h
+#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
 ```  
 
 
@@ -235,21 +235,20 @@ ms_2D_heatmap(data, PRcomplex_data = cate_,
 You can find the hited proteins with the hitlist function (not written by me) according to your thresholds.
 But you can also use the hitlist_outliers function which define hits if a proteins has at least one outlier among the temperatures.
 
-This function depends on two thresholds, including one that can be choos automatically. 
+This function depends on two thresholds, including one that can be choose automatically. 
 
 The first is the Error score cutoff. The function will compute a score between 0 and 1  accord to the SEM. The more it is close to one, the more the error is small. It can be choose by the user or choose automatically for each condition. If so, it will take the maximum error score for which you have the maximum of outlier (plot the histogramm).
 
-The second is the RSS score cutoff between 0 and 1, which has to be chosen by the user. It will differentiate the CN and the CC. The more it is close to one, the more you will consider a small variation between the temperature for thermal shift (catorized as a CC). Since the data are close to 0, you'll maybe need a high cutoff, default is 0.985.
+The second is the RSS score cutoff between 0 and 1, which has to be chosen by the user. It will differentiate the CN and the CC. The more it is close to one, the more you will consider a small variation between the temperature for thermal shift (categorized as a CC). Since the data are close to 0, you'll maybe need a high cutoff, default is 0.985.
        
 ```{r, eval=FALSE}
-new_hits <- hitlist_outliers(mydata_caldiff, control = "Vehicle1h|Vehicle6h", #two controls --> separate them by |
-                          rem_proteomic = "36C",   #here we have a quantiative proteomice column --> remove it
-                          basetemp = "37C",        #categorization based on the lowest tempearature
-                          format = "xlsx") #will save in xlsx format
+new_hits <- hitlist_outliers(mydata_caldiff, control = "G1", #the control
+                             basetemp = "37C",        #categorization based on the lowest tempearature
+                             format = "xlsx") #will save in xlsx format
 #will ask you if you want to save or not the results
 ```    
    
-Here we put data from our global environnment, but you could choose a file. For this, you just need to type the file path instead of your data. The current accepted format are xlsx, txt and csv.
+Here we put data from our global environment, but you could choose a file. For this, you just need to type the file path instead of your data. The current accepted format are xlsx, txt and csv.
    
    
 ####  $\underline{5.\space STRING\space network}$
@@ -264,10 +263,10 @@ string_db <- STRINGdb$new(version="11", species=9606,               #ID 9606 cor
                            input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
 ```
    
-Now we can start the analysis on a group of protein. Let's take the hits from the Buparlisib6h condition.
+Now we can start the analysis on a group of protein. Let's take the hits from the S condition.
        
 ```{r, eval=FALSE}
-data <- mydata_hit %>% dplyr::filter(Condition == "Buparlisib6h")
+data <- mydata_hit %>% dplyr::filter(Condition == "S")
 network_hit <- string_db$map(data, "id", removeUnmappedRows = TRUE)         #will map the proteins to the string ID
 
 My_net(network_hit$STRING_id , inter = FALSE) #will plot the network
@@ -323,8 +322,8 @@ Now, if you want to check where your hits could be located, you may want to use 
 Then, it will generate random coordinates for each proteins __according to their cellular location__ on the cell image already present in the package. It will return a data frame containing the protein ID, the condition, the category, the gene name, the main location, the number of location found and the coordinates generated.
        
 ```{r, eval=FALSE}
-# Let's test it on the Buparlisib6h condition
-data <- mydata_hit %>% dplyr::filter(Condition == "Buparlisib6h")
+# Let's test it on the S condition
+data <- mydata_hit %>% dplyr::filter(Condition == "S")
 data <- data %>% dplyr::filter(!is.na(match(category, c("CC", "CN", "NC")))) #filter the category, but you could have take them all, even add also the NN
 
 cell_result <- hit_for_cell(data, organism = "HUMAN")
@@ -348,13 +347,13 @@ Let's say you just finish to analyzed your data and now you want to check if the
 Here's how you can can use it :
        
 ```{r, eval=FALSE}
-find_in_pubmed(mydata_hit, feat = "PI3K", imp_by_hitlist = TRUE, condition = "Buparlisib6h",
+find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
                language = "english", year_rg = "2000:2021", your_API = NULL,
-               newfolder_name = "PI3K_pubmed_search")
+               newfolder_name = "elutriation_pubmed_search")
 ```     
    
-This will save the results in the folder named "PI3K_pubmed_search". For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set 'imp_by_hitlist' to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. 
-In this example, we match every protein name found under the condition Buparlisib6h with the word "PI3K". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2000 and 2021. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
+This will save the results in the folder named "elutriation_pubmed_search". For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set 'imp_by_hitlist' to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. 
+In this example, we match every protein name found under the condition S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2000 and 2021. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
 Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set 'imp_by_hitlist' to FALSE.
    
 'your_API' is your API key from NCBI. By default, the access to NCBI API system is free and does not necessarily require an "API key". In this case, NCBI limits users to making only 3 requests per second. Users who register for an “API key” are able to make up to ten requests per second.
@@ -381,12 +380,12 @@ get_treat_level(mydata_ave)
    This function take a list of data frame and join them. It also allow you to add character at the end of the column names.
    
 ```{r, eval=FALSE}
-dl <- list(PI3K1h6h_file, TNF_MOLM1316)
-new_data <- join_cetsa(dl, new_names = c("PI3K", "TNF"))
+dl <- list(elutriation, chemarrest)
+new_data <- join_cetsa(dl, new_names = c("elutriation", "chemarrest"))
 new_data_nosuffix <- join_cetsa(dl, new_names = c("", "")) #without new names
 
 #just rename conditions
-TNF_new_name <- join_cetsa(TNF_MOLM1316, "new")
+chemarrest_new_name <- join_cetsa(chemarrest, "new")
 ```
  
   Remember you'll always need to add the same number of new names as you have data frames in your list. Also, to avoid any problems in the other function, the character '_' and '/' are not allowed.
@@ -409,15 +408,15 @@ join_drugdata(drug_data$data, by = c("id", "description"))
    
 ```{r, eval=FALSE}
 #check between two data frames
-pr_PI3K <- unique(PI3K1h6h_file$id)
-pr_TNF <- unique(TNF_MOLM1316$id)
-pr_list <- list("PI3K" = pr_PI3K, "TNF" = pr_TNF)
+pr_elutriation <- unique(elutriation$id)
+pr_chemarrest <- unique(chemarrest$id)
+pr_list <- list("elutriation" = pr_elutriation, "chemarrest" = pr_chemarrest)
 
 result_common <- com_protein_loop(pr_list)
-result_common #A list which contains the proteins only identified in the PI3K experiment, the TNF experiment and both
+result_common #A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both
 
 #check hits between conditions
-all_hits <- rbind(hitlist_PI3K1h6h, hitlist_TNF)
+all_hits <- rbind(hitlist_elutriation, hitlist_chemarrest)
 pr_list <- list()
 for(i in unique(all_hits$Condition)){
   pr_list[[i]] <- (all_hits %>% dplyr::filter(Condition == i))$id  #get hits for each condition in a hit

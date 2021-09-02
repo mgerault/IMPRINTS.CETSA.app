@@ -2,39 +2,26 @@ library(mineCETSAapp)
 library(mineCETSA)
 library(stringr)
 
-#the PI3K file
-PI3K1h6h_file <- ms_fileread("210503_1729_PI3K1h6h.txt")
-names(PI3K1h6h_file) <- str_replace(names(PI3K1h6h_file), ".x", "1h") #change condition name to fit the treatmentlevel
-names(PI3K1h6h_file) <- str_replace(names(PI3K1h6h_file), ".y", "6h")
+#add data from cell cyle paper from Dai Lingyun 2018
+#elutriation file
+elutriation <- ms_fileread("210827_1735_elutriation_imprints_caldiff.txt")
+hitlist_elutriation <- openxlsx::read.xlsx("elutriation_Summary.xlsx")
+NN_elutriation <- openxlsx::read.xlsx("elutriation_NN.xlsx")
 
-hitlist_PI3K1h6h <- read.csv("./Data/PI3K/PI3K1h6h_ForHitGeneration_1722_30-03-21_Summary.csv",
-                             row.names = 1)
-NN_PI3K1h6h <- read.csv("./Data/PI3K/PI3K1h6h_ForHitGeneration_1722_30-03-21_NN.csv",
-                        row.names = 1)
+#the chemarrest file
+chemarrest <- ms_fileread("210827_1739_chemarrest_imprints_caldiff.txt")
+hitlist_chemarrest <- openxlsx::read.xlsx("chemarrest_Summary.xlsx")
+NN_chemarrest <- openxlsx::read.xlsx("chemarrest_NN.xlsx")
 
-#the TNF file
-TNF_MOLM1316 <- ms_fileread("210519_1416_TNF_MOLM1316.txt")
-
-hitlist_TNF16 <- read.csv("./Data/TNF/210409_1222_MOLM16_s1_1327_9-04-21_Summary.csv",
-                          row.names = 1)
-NN_TNF16 <- read.csv("./Data/TNF/210409_1222_MOLM16_s1_1327_9-04-21_NN.csv",
-                     row.names = 1)
-hitlist_TNF13 <- read.csv("./Data/TNF/210409_1223_MOLM13_s1_1328_9-04-21_Summary.csv",
-                          row.names = 1)
-NN_TNF13 <- read.csv("./Data/TNF/210409_1223_MOLM13_s1_1328_9-04-21_NN.csv",
-                     row.names = 1)
-hitlist_TNF <- rbind(hitlist_TNF13, hitlist_TNF16)
-NN_TNF <- rbind(NN_TNF13, NN_TNF16)
-
-PI3K1h6h_ave <- ms_2D_average_sh(PI3K1h6h_file, FALSE)
-TNF_MOLM1316_ave <- ms_2D_average_sh(TNF_MOLM1316, FALSE)
+elutriation_ave <- ms_2D_average_sh(elutriation, FALSE)
+chemarrest_ave <- ms_2D_average_sh(chemarrest, FALSE)
 
 #the list named drug_data
-drug_data <- list("data" = list("PI3K" = PI3K1h6h_file, "TNF" = TNF_MOLM1316),
-                  "data_ave" = list("PI3K" = PI3K1h6h_ave, "TNF" = TNF_MOLM1316_ave),
-                  "treat_level" = list("PI3K" = get_treat_level(PI3K1h6h_file), "TNF" = get_treat_level(TNF_MOLM1316)),
-                  "hitlist" = list("PI3K" = hitlist_PI3K1h6h, "TNF" = hitlist_TNF),
-                  "NN" = list("PI3K" = NN_PI3K1h6h, "TNF" = NN_TNF))
+drug_data <- list("data" = list("elutriation" = elutriation, "chemarrest" = chemarrest),
+                  "data_ave" = list("elutriation" = elutriation_ave, "chemarrest" = chemarrest_ave),
+                  "treat_level" = list("elutriation" = get_treat_level(elutriation), "chemarrest" = get_treat_level(chemarrest)),
+                  "hitlist" = list("elutriation" = hitlist_elutriation, "chemarrest" = hitlist_chemarrest),
+                  "NN" = list("elutriation" = NN_elutriation, "chemarrest" = NN_chemarrest))
 
 #a graph to print on the tab interactive cell of the app
 library(ggplot2)
@@ -128,14 +115,14 @@ for(i in levels(loca_orga$organelle)){
 }
 rg_list
 
-usethis::use_data(PI3K1h6h_file, overwrite = TRUE)
-usethis::use_data(PI3K1h6h_ave, overwrite = TRUE)
-usethis::use_data(hitlist_PI3K1h6h, overwrite = TRUE)
-usethis::use_data(NN_PI3K1h6h, overwrite = TRUE)
-usethis::use_data(TNF_MOLM1316, overwrite = TRUE)
-usethis::use_data(TNF_MOLM1316_ave, overwrite = TRUE)
-usethis::use_data(hitlist_TNF, overwrite = TRUE)
-usethis::use_data(NN_TNF, overwrite = TRUE)
+usethis::use_data(elutriation, overwrite = TRUE)
+usethis::use_data(elutriation_ave, overwrite = TRUE)
+usethis::use_data(hitlist_elutriation, overwrite = TRUE)
+usethis::use_data(NN_elutriation, overwrite = TRUE)
+usethis::use_data(chemarrest, overwrite = TRUE)
+usethis::use_data(chemarrest_ave, overwrite = TRUE)
+usethis::use_data(hitlist_chemarrest, overwrite = TRUE)
+usethis::use_data(NN_chemarrest, overwrite = TRUE)
 usethis::use_data(drug_data, overwrite = TRUE)
 usethis::use_data(ev_null_print, overwrite = TRUE)
 usethis::use_data(img2, overwrite = TRUE)

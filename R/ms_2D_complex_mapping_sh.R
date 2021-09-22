@@ -105,7 +105,11 @@ ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, tr
     }
   }
   if (nrow(data2) == 0) {
-    stop("No protein complex found...")
+    tab_name <- c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",
+                  "id", "description", "gene", "category")
+    data2 <- as.data.frame(matrix(nrow = 0, ncol = length(tab_name)))
+    colnames(data2) <- tab_name
+    return(data2)
   }
   data2 <- data2 %>% dplyr::rowwise() %>% dplyr::mutate(gene = mineCETSAapp:::getGeneName(description))
   comps3 <- cbind(comps, data2)

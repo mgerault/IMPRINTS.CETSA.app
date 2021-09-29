@@ -142,7 +142,7 @@ hitlist_outliers <- function(data = NULL, control = NULL,
   if (length(unlist(strsplit(a, "_"))) == 4) {
     data1 <- tidyr::separate(data1, condition, into = c("set",
                                                         "temperature", "replicate", "treatment"), sep = "_")
-    if(length(str_subset(basetemp, unique(data1$temperature))) != 1){
+    if(length(str_which(basetemp, unique(data1$temperature))) != 1){
       stop(paste("Please provide only one of this temperature :", paste(unique(data1$temperature), collapse = ", ")))
     }
 
@@ -158,7 +158,7 @@ hitlist_outliers <- function(data = NULL, control = NULL,
     data1 <- tidyr::separate(data1, condition, into = c("temperature",
                                                         "replicate", "treatment"), sep = "_")
 
-    if(length(str_subset(basetemp, unique(data1$temperature))) != 1){
+    if(length(str_which(basetemp, unique(data1$temperature))) != 1){
       stop(paste("Please provide only one of this temperature :", paste(unique(data1$temperature), collapse = ", ")))
     }
 

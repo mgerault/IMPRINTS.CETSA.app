@@ -1512,7 +1512,7 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_diff_cetsa)
       return(NULL)
 
-    ms_fileread(File$datapath)
+    read.delim(File$datapath)
   })
   observe({
     if(input$got_diff_cetsa){

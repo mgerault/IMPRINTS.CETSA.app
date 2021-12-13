@@ -1,4 +1,4 @@
-#' @title Run the app to use MSstatsTMT package
+#' @title Run the app to use mineCETSAapp package
 #'
 #' @description
 #'  \code{runCETSAapp} works exactly the same as runExample from \code{\link{shiny}} package.

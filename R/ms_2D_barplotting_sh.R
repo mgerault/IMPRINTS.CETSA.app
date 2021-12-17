@@ -605,7 +605,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     }
     else{
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
-        geom_text(x=0.5, y=0.5, label = "All the barplots has been saved succesfully !
+        geom_text(x=0.5, y=0.5, label = "All the barplots have been saved succesfully !
                                          \nGo check your files", size = 6) +
         theme_cowplot() +
         theme(axis.text.x = element_blank(),

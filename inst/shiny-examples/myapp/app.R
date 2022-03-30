@@ -1,1400 +1,4131 @@
+library(mineCETSA)
+library(stringr)
+library(rio)
+library(DT)
+library(cowplot)
+library(plotly)
+
+library(pubmedR)
+library(bibliometrix)
+library(officer)
+library(magrittr)
+library(STRINGdb)
+
 library(shiny)
 library(shinydashboard)
 library(shinycssloaders)
-library(shinyWidgets)
-library(shinyFiles)
-library(data.table)
-library(dplyr)
-library(plotly)
-library(stringr)
-library(Rcpp)
-library(RcppEigen)
-library(iq)
+library(colourpicker)
 
 
 #increase the max request size for uploading files
-options(shiny.maxRequestSize = 5000*1024^2)
+options(shiny.maxRequestSize = 1000*1024^2)
 #set options for the spinner when things are loading
-options(spinner.color = "#1CAA5E", spinner.color.background = "000000", spinner.size = 2)
+options(spinner.color = "#518CE2", spinner.color.background = "000000", spinner.size = 2)
 
-ui <- fluidPage(
-  useShinydashboard(), #allow to use box without dashboard
+ui <- dashboardPage(
+  skin = "blue",
 
-  tags$head(tags$style(HTML(".navbar-default {background-color: #1CAA5E !important; color = #ffffff}
-                             .navbar-default > .container-fluid > .navbar-nav > li > a {color: #ffffff; font-size: 18px}
-                             .navbar-default > .container-fluid > .navbar-nav > li > a:hover {background-color: #1CAA39; color: #ffffff}
-                             .navbar-default > .container-fluid > .navbar-nav > li[class=active] > a {background-color: #30D14F; color: #ffffff}
-                             .navbar-default > .container-fluid > .navbar-nav > li[class=active] > a:hover {background-color: #30D14F; color: #ffffff}
-                             .navbar-default > .container-fluid > .navbar-header > .navbar-brand {color: #ffffff; font-size: 22px}
-                             * {font-family: 'Rockwell'}
-                             body {background-color: #C8FFC8}
-                             .nav-tabs > li > a {background-color: #1CAA5E; color: #ffffff}
-                             .nav-tabs > li > a:hover {background-color: #1CAA39; color: #ffffff}
-                             .nav-tabs > li[class=active] > a {background-color: #30D14F; color: #ffffff}
-                             .nav-tabs > li[class=active] > a:hover {background-color: #30D14F; color: #ffffff}
-                             .datatables {background-color: #ffffff")
-                       )
-            ),
+  dashboardHeader(title = "mineCETSA app", titleWidth = 300,
+                  tags$li(a(href = "https://youtu.be/cOlOzU7-S3A",
+                            icon("question-circle"),
+                            title = "See the video tutorial of the app"),
+                          class = "dropdown"),
+                  tags$li(a(href = "https://github.com/mgerault/mineCETSAapp",
+                            icon("github"),
+                            title = "See source code to the github repository"),
+                          class = "dropdown"),
+                  tags$li(a(href = "mailto:marco.gerault@gmail.com",
+                            icon("envelope"),
+                            title = "Any questions, suggestions or bug report ? Feel free to send me an e-mail !"),
+                          class = "dropdown")
+                  ),
 
-  navbarPage(
-    title = "DIA-NN R routine",
-    tabPanel("Process",
-             sidebarLayout(
-               sidebarPanel(
-                 conditionalPanel(condition = "input.tab1 != 'Import your data' & output.reportdata_up",
-                                  HTML("<p><h3>General info</h3><br>
-                                           All quantities are based on the column named 'Precursor.Normalized' from the report file.<br>
-                                           Each threshold you can select correspond to a q-value (look in the report your imported).
-                                           If you set a value to 1, it will not apply any filter according to this value.<br>
-                                           All generated files can be saved in txt, csv or xlsx format.
-                                        <p><h3>The MaxLFQ algorithm</h3><br>
-                                               This algorithm is another way to determine intensity and to normalize data
-                                               in Label-Free quantification.  Quickly, the aim is to perfom a 'delayed normalization'
-                                               by determining normalization coefficients for each fraction, and then
-                                               extracts the maximum ratio information from peptide signals in arbitrary
-                                               numbers of samples to achieve the highest possible accuracy of quantification.<br>
-                                               For more information, see this <a href=https://pubmed.ncbi.nlm.nih.gov/24942700/>article</a>
-                                               from Jurgen Cox and al.
-                                        </p>"
-                                       )
-                                  ),
-                 conditionalPanel(condition = "input.tab1 == 'Import your data'",
-                                  HTML("<p>After your analysis with the DIA-nn software, you can find the file 'report.tsv' in your results.
-                                           From this file, you can filter your data according to your criterias, use the MaxLFQ algorithm
-                                           for quantification and normalization, get the number of peptides used for the quantification,
-                                           get the Top3 absolute quantification and then save the files you want to keep. <br>
-                                           The aim of this app is to provide you a 'user-friendly' interface in order to use the diann R routine
-                                           and adding some other usefull informations.
-                                        </p>"
-                                       )
-                                  ),
-                 width = 3
-                 ),
-               mainPanel(
-                 tabsetPanel(type = "tabs", id = "tab1",
-                             tabPanel("Import your data",
-                                      tags$hr(),
-                                      fluidRow(box(title = "DIA data", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                   fluidRow(column(6, shinyFilesButton("rep_tsv", label = "Select your report file", title = "Please select a file",
-                                                                                       icon = icon("file"),
-                                                                                       multiple = TRUE, viewtype = "detail", buttonType = "success", class = "btn-lg"))
-                                                            ),
-                                                   tags$hr(),
-                                                   conditionalPanel(condition = "output.reportdata_up",
-                                                                    tags$u(h2("Your data")),
-                                                                    fluidRow(column(12, DT::dataTableOutput("df_report"))
-                                                                             ),
-                                                                    tags$hr(),
-                                                                    tags$u(h2("Rename your fractions")),
-                                                                    htmlOutput("frac_dat"),
-                                                                    tags$hr(),
-                                                                    radioButtons("chorename_dat", "Choose how to rename your fractions",
-                                                                                 choices = c("Remove path", "New names"), selected = "Remove path", inline = TRUE),
-                                                                    fluidRow(conditionalPanel(condition = "input.chorename_dat == 'New names'",
-                                                                                              column(6, textInput("newfrac_dat", "Type the new name of your fraction,
-                                                                                                  separated with a comma, in the same order.
-                                                                                                  (if empty between comma, no changes)"))
-                                                                                              ),
-                                                                             conditionalPanel(condition = "input.chorename_dat == 'Remove path'",
-                                                                                              column(6, radioButtons("whattorm_dat", "Choose what to remove",
-                                                                                                                     choices = list("Only keep what's different" = 1,
-                                                                                                                                    "Only keep file name with extension" = 2,
-                                                                                                                                    "Only keep file name without extension" = 3),
-                                                                                                                     selected = 3, inline = TRUE
-                                                                                                                     )
-                                                                                                     )
-                                                                                              ),
-                                                                             column(4, actionButton("change_dat", "Rename your fraction", class = "btn-success"))
-                                                                             )
-                                                                    ),
-                                                   tags$hr()
-                                                   )
-                                               )
+  dashboardSidebar(width = 300,
+                   sidebarMenu(menuItem("mineCETSA analysis", tabName = "analysis", icon = icon("chart-bar")),
+                               menuItem("Hit proteins and bar plots", tabName = "main", icon = icon("clipboard-list"), selected = TRUE),
+                               menuItem("Heatmap", tabName = "heat", icon = icon("h-square")),
+                               menuItem("Network", tabName = "string", icon = icon("project-diagram")),
+                               menuItem("Interactive cell", tabName = "cell", icon = icon("magic")),
+                               menuItem("PubMed Search", tabName = "pubmed", icon = icon("search"))
+                               )
+    ),
 
-                                      ),
-                             tabPanel("Peptides and precursors",
-                                      conditionalPanel(condition = "!output.reportdata_up",
-                                                       h2("Import a report file in the tab 'Import your data' first !")
-                                                       ),
-                                      conditionalPanel(condition = "output.reportdata_up",
-                                                       tags$hr(),
-                                                       fluidRow(box(title = "Precursors", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Get your precursor file")),
-                                                                    tags$hr(),
-
-                                                                    fluidRow(column(3, numericInput("qv_prec", "Choose the q-value to filter the precursors",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvprot_prec", "Choose the protein.q-value to filter the precursors",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1)),
-                                                                             column(3, numericInput("qvpg_prec", "Choose the protein-group q-value to filter the precursors",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvgg_prec", "Choose the gene-groupe q-value to filter the precursors",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1))
-                                                                             ),
-                                                                    checkboxInput("protypiconly_prec", "Proteotypic only", TRUE),
-                                                                    actionButton("go_prec", "Start calculation", class = "btn-success"),
-                                                                    tags$hr(),
-                                                                    conditionalPanel(condition = "output.precursor_up",
-                                                                                     DT::dataTableOutput("res_prec"),
-                                                                                     tags$hr(),
-                                                                                     fluidRow(column(3, downloadButton("down_prec", "Download results")),
-                                                                                              column(3, selectInput("format_prec", "Select a format",
-                                                                                                                    choices = c("txt", "csv", "xlsx"),
-                                                                                                                    selected = "txt"))
-                                                                                              )
-                                                                                     )
-                                                                    )
-                                                                ),
-                                                       fluidRow(box(title = "Peptides", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Get your peptide file")),
-                                                                    tags$hr(),
-
-                                                                    fluidRow(column(3, numericInput("qv_pep", "Choose the q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvprot_pep", "Choose the protein.q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1)),
-                                                                             column(3, numericInput("qvpg_pep", "Choose the protein-group q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvgg_pep", "Choose the gene-groupe q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1))
-                                                                             ),
-                                                                    checkboxInput("protypiconly_pep", "Proteotypic only", TRUE),
-                                                                    actionButton("go_pep", "Start calculation", class = "btn-success"),
-                                                                    tags$hr(),
-                                                                    conditionalPanel(condition = "output.peptide_up",
-                                                                                     DT::dataTableOutput("res_pep"),
-                                                                                     tags$hr(),
-                                                                                     fluidRow(column(3, downloadButton("down_pep", "Download results")),
-                                                                                              column(3, selectInput("format_pep", "Select a format",
-                                                                                                                    choices = c("txt", "csv", "xlsx"),
-                                                                                                                    selected = "txt"))
-                                                                                              )
-                                                                                     ),
-
-                                                                    tags$u(h3("Get your peptide file using the MaxLFQ algorithm")),
-                                                                    tags$hr(),
-
-                                                                    fluidRow(column(3, numericInput("qv_peplfq", "Choose the q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvprot_peplfq", "Choose the protein.q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1)),
-                                                                             column(3, numericInput("qvpg_peplfq", "Choose the protein-group q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvgg_peplfq", "Choose the gene-groupe q-value to filter the peptides",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1))
-                                                                             ),
-                                                                    radioButtons("wLFQ_peplfq", "",
-                                                                                 choices = c("Use MaxLFQ from diann package" = "diann",
-                                                                                             "Use fast MaxLFQ from iq package (log2 transformed)" = "iq"),
-                                                                                 selected = "diann",
-                                                                                 inline = TRUE),
-                                                                    checkboxInput("protypiconly_peplfq", "Proteotypic only", TRUE),
-                                                                    actionButton("go_peplfq", "Start calculation", class = "btn-success"),
-                                                                    tags$hr(),
-                                                                    conditionalPanel(condition = "output.peptideLFQ_up",
-                                                                                     DT::dataTableOutput("res_peplfq"),
-                                                                                     tags$hr(),
-                                                                                     fluidRow(column(3, downloadButton("down_peplfq", "Download results")),
-                                                                                              column(3, selectInput("format_peplfq", "Select a format",
-                                                                                                                    choices = c("txt", "csv", "xlsx"),
-                                                                                                                    selected = "txt"))
-                                                                                              )
-                                                                                     )
-                                                                    )
-                                                                )
-                                                       )
-                                      ),
-                             tabPanel("Protein group and genes",
-                                      conditionalPanel(condition = "!output.reportdata_up",
-                                                       h2("Import a report file in the tab 'Import your data' first !")
-                                                       ),
-                                      conditionalPanel(condition = "output.reportdata_up",
-                                                       tags$hr(),
-                                                       fluidRow(box(title = "Protein group", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Get your protein group file (will use the MaxLFQ algorithm)")),
-                                                                    tags$hr(),
-
-                                                                    fluidRow(column(3, numericInput("qv_pg", "Choose the q-value to filter the proteins",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvprot_pg", "Choose the protein.q-value to filter the proteins",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1)),
-                                                                             column(3, numericInput("qvpg_pg", "Choose the protein-group q-value to filter the proteins",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvgg_pg", "Choose the gene-groupe q-value to filter the proteins",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1))
-                                                                             ),
-                                                                    radioButtons("wLFQ_pg", "",
-                                                                                 choices = c("Use MaxLFQ from diann package" = "diann",
-                                                                                             "Use fast MaxLFQ from iq package (log2 transformed)" = "iq"),
-                                                                                 selected = "diann",
-                                                                                 inline = TRUE),
-                                                                    fluidRow(column(3, checkboxInput("onlycountall_pg", "Only keep peptides counts all", TRUE)),
-                                                                             column(3, checkboxInput("protypiconly_pg", "Proteotypic only", TRUE)),
-                                                                             column(3, checkboxInput("Top3_pg", "Get Top3 quantification", TRUE)),
-                                                                             column(3, checkboxInput("iBAQ_pg", "Get iBAQ quantification", TRUE))
-                                                                             ),
-                                                                    conditionalPanel(condition = "input.iBAQ_pg",
-                                                                                     fluidRow(column(4, checkboxInput("fasta_pg", "Import you own FASTA files; if not, search on swissprot.", TRUE),
-                                                                                                     conditionalPanel(condition = "input.fasta_pg",
-                                                                                                                      fileInput("fastafile_pg", "Import your FATSA files", multiple = TRUE),
-                                                                                                                      ),
-                                                                                                     conditionalPanel(condition = "!input.fasta_pg",
-                                                                                                                      selectizeInput("species_pg", "Choose a species",
-                                                                                                                                     choices = DIAgui::all_species,
-                                                                                                                                     selected = "HOMO SAPIENS")
-                                                                                                                      )
-                                                                                                     ),
-                                                                                              column(4, sliderInput("peplen_pg", "Choose the min and max peptide length",
-                                                                                                                    min = 0, max = 100, value = c(5,36), step = 1)
-                                                                                                     ),
-                                                                                              column(4, selectInput("enzyme_pg", "Choose an enzyme", choices = c("trypsin", "lys-c"), selected = "trypsin")
-                                                                                                     )
-                                                                                              ),
-                                                                                     tags$hr(),
-                                                                                     textOutput("diag_getseq"),
-                                                                                     tags$hr(),
-                                                                                     ),
-                                                                    actionButton("go_pg", "Start calculation", class = "btn-success"),
-                                                                    tags$hr(),
-                                                                    conditionalPanel(condition = "output.proteins_up",
-                                                                                     DT::dataTableOutput("res_pg"),
-                                                                                     tags$hr(),
-                                                                                     fluidRow(column(3, downloadButton("down_pg", "Download results")),
-                                                                                              column(3, selectInput("format_pg", "Select a format",
-                                                                                                                    choices = c("txt", "csv", "xlsx"),
-                                                                                                                    selected = "txt"))
-                                                                                              )
-                                                                                     )
-                                                                    ),
-                                                                shinyjs::useShinyjs()
-                                                                ),
-                                                       fluidRow(box(title = "Unique genes", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Get your unique genes file")),
-                                                                    tags$hr(),
-
-                                                                    fluidRow(column(3, numericInput("qv_gg", "Choose the q-value to filter the genes",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvprot_gg", "Choose the protein.q-value to filter the genes",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1)),
-                                                                             column(3, numericInput("qvpg_gg", "Choose the protein-group q-value to filter the genes",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 0.01)),
-                                                                             column(3, numericInput("qvgg_gg", "Choose the gene-groupe q-value to filter the genes",
-                                                                                                    min = 0, max = 1, step = 0.01, value = 1))
-                                                                             ),
-                                                                    fluidRow(column(3, checkboxInput("onlycountall_gg", "Only keep peptides counts all", TRUE)),
-                                                                             column(3, checkboxInput("protypiconly_gg", "Proteotypic only", TRUE)),
-                                                                             column(3, checkboxInput("Top3_gg", "Get Top3 quantification", TRUE))
-                                                                             ),
-                                                                    actionButton("go_gg", "Start calculation", class = "btn-success"),
-                                                                    tags$hr(),
-                                                                    conditionalPanel(condition = "output.genes_up",
-                                                                                     DT::dataTableOutput("res_gg"),
-                                                                                     tags$hr(),
-                                                                                     fluidRow(column(3, downloadButton("down_gg", "Download results")),
-                                                                                              column(3, selectInput("format_gg", "Select a format",
-                                                                                                                    choices = c("txt", "csv", "xlsx"),
-                                                                                                                    selected = "txt"))
-                                                                                              )
-                                                                                     )
-                                                                    )
-                                                                )
-                                                       )
-                                      ),
-                             tabPanel("Data visualization",
-                                      tags$hr(),
-                                      tabsetPanel(type = "tabs",
-                                                  tabPanel("Check results",
-                                                           tags$hr(),
-                                                            fluidRow(box(title = "Data choice", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                         conditionalPanel(condition = "output.reportdata_up",
-                                                                                          radioButtons("choice_visu", "",
-                                                                                                       choices = c("Visualize imported data" = "base",
-                                                                                                                   "Import your own data" = "dat"),
-                                                                                                       selected = "dat",
-                                                                                                       inline = TRUE),
-                                                                                          conditionalPanel(condition = "input.choice_visu == 'base'",
-                                                                                                           radioButtons("bdata_visu", "",
-                                                                                                                        choices = c("Protein group",
-                                                                                                                                    "Unique genes",
-                                                                                                                                    "Peptides",
-                                                                                                                                    "Peptides.MaxLFQ",
-                                                                                                                                    "Precursors"),
-                                                                                                                        selected = "Protein group",
-                                                                                                                        inline = TRUE)
-                                                                                                           )
-                                                                                          ),
-                                                                         conditionalPanel(condition = "!output.reportdata_up | input.choice_visu == 'dat'",
-                                                                                          fileInput("ydata_visu", "Import your data. The protein group file, for example.")
-                                                                                          )
-                                                                         )
-                                                                     ),
-
-                                                            conditionalPanel(condition = "output.visudata_up",
-                                                                             fluidRow(box(title = "Visualiation", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                                          tabsetPanel(type = "tabs",
-                                                                                                      tabPanel("Heatmap",
-                                                                                                               tags$hr(),
-                                                                                                               fluidRow(column(3, selectInput("transfo_visu", "Choose a data transformation",
-                                                                                                                                              choices = c("Log2" = "log2",
-                                                                                                                                                          "Z-score on the proteins" = "z.score_protein",
-                                                                                                                                                          "Z-score on the fractions" = "z.score_fraction",
-                                                                                                                                                          "None" = "none"), selected = "none")),
-                                                                                                                        column(3, checkboxInput("prval_visu", "Print values on blocks", TRUE),
-                                                                                                                               sliderInput("maxna", "Choose the maximum number of missing values per rows",
-                                                                                                                                           value = 0, min = 0, step = 1, max = 3)),
-                                                                                                                        conditionalPanel(condition = "!output.reportdata_up | input.choice_visu == 'dat'",
-                                                                                                                                         column(3, textInput("nmid_visu", "Type the name of the column that conatain
-                                                                                                                                        the IDs"))
-                                                                                                                                         ),
-                                                                                                                        column(3, actionButton("seeheat_visu", "See heatmap", class = "btn-success"))
-                                                                                                                        ),
-                                                                                                               tags$hr(),
-                                                                                                               withSpinner(plotlyOutput("heat_visu", height = "800px"), type = 6)
-                                                                                                               ),
-                                                                                                      tabPanel("Density",
-                                                                                                               tags$hr(),
-                                                                                                               fluidRow(column(3, selectInput("transfoD_visu", "Choose a data transformation",
-                                                                                                                                              choices = c("Log2" = "log2",
-                                                                                                                                                          "None" = "none"), selected = "none")),
-                                                                                                                        column(3, checkboxInput("area_visu", "Print area of the density curves", TRUE)),
-                                                                                                                        column(3, textInput("titD_visu", "Choose a title for your plot (can be NULL)")),
-                                                                                                                        column(3, actionButton("seedens_visu", "See density plot", class = "btn-success"))
-                                                                                                               ),
-                                                                                                               tags$hr(),
-                                                                                                               withSpinner(plotOutput("dens_visu", height = "800px"), type = 6),
-                                                                                                               downloadButton("down_dens", "Download density plot")
-                                                                                                               ),
-                                                                                                      tabPanel("MDS",
-                                                                                                               tags$hr(),
-                                                                                                               fluidRow(column(4, selectInput("transfoM_visu", "Choose a data transformation",
-                                                                                                                                              choices = c("Log2" = "log2",
-                                                                                                                                                          "None" = "none"), selected = "none")),
-                                                                                                                        column(4, textInput("titM_visu", "Choose a title for your plot (can be NULL)")),
-                                                                                                                        column(4, actionButton("seemds_visu", "See MDS plot", class = "btn-success"))
-                                                                                                               ),
-                                                                                                               tags$hr(),
-                                                                                                               withSpinner(plotOutput("mds_visu", height = "800px"), type = 6),
-                                                                                                               downloadButton("down_mds", "Download MDS plot")
-                                                                                                               ),
-                                                                                                      tabPanel("Retention time",
-                                                                                                               conditionalPanel(condition = "input.choice_visu == 'base'",
-                                                                                                                                tags$hr(),
-                                                                                                                                fluidRow(column(4, actionButton("seert_visu", "See RT vs iRT", class = "btn-success"))
-                                                                                                                                         ),
-                                                                                                                                tags$hr(),
-                                                                                                                                withSpinner(plotlyOutput("rt1_visu", height = "800px"), type = 6),
-                                                                                                                                withSpinner(plotlyOutput("rt2_visu", height = "800px"), type = 6)
-                                                                                                                                ),
-                                                                                                               conditionalPanel(condition = "input.choice_visu == 'dat'",
-                                                                                                                                h3("You need to import the report file from DIA nn to use this tab.
-                                                                                                                                    For this, go back to the first tab 'Import your data'"))
-                                                                                                               ),
-                                                                                                      tabPanel("Proteotypic",
-                                                                                                               conditionalPanel(condition = "input.choice_visu == 'base'",
-                                                                                                                                tags$hr(),
-                                                                                                                                fluidRow(column(4, actionButton("seeptyp_visu", "See proteotypic proportion", class = "btn-success"))
-                                                                                                                                ),
-                                                                                                                                tags$hr(),
-                                                                                                                                withSpinner(plotOutput("ptyp1_visu", height = "600px"), type = 6),
-                                                                                                                                withSpinner(plotOutput("ptyp2_visu", height = "600px"), type = 6)
-                                                                                                               ),
-                                                                                                               conditionalPanel(condition = "input.choice_visu == 'dat'",
-                                                                                                                                h3("You need to import the report file from DIA nn to use this tab.
-                                                                                                                                    For this, go back to the first tab 'Import your data'"))
-                                                                                                               )
-                                                                                                      )
-                                                                                          )
-                                                                                      )
-                                                                             )
-                                                            ),
-                                                  tabPanel("Check other reports",
-                                                           tags$hr(),
-                                                           fluidRow(box(title = "Window selection", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                        fluidRow(column(6, shinyFilesButton("replib_wsel", label = "Select your report file", title = "Please select a file",
-                                                                                                            icon = icon("file"),
-                                                                                                            multiple = TRUE, viewtype = "detail", buttonType = "success", class = "btn-lg"))
-                                                                        ),
-                                                                        conditionalPanel(condition = "output.libdata_up",
-                                                                                         tags$hr(),
-                                                                                         fluidRow(column(4, numericInput("bins_wsel", "Select the number of windows you want to have",
-                                                                                                                         25, min = 5, step = 1)),
-                                                                                                  column(4, checkboxInput("perfrac_wsel", "Average the best windows from each fraction", FALSE))
-                                                                                         ),
-                                                                                         fluidRow(column(4, actionButton("go_wsel", "Get best windows", class = "btn-success")),
-                                                                                                  column(6, radioButtons("whichplot_wsel", "", choices = c("Visualize global distribution" = "all",
-                                                                                                                                                           "Visualize distribution from each fraction" = "frac"),
-                                                                                                                         selected = "all",
-                                                                                                                         inline = TRUE)),
-                                                                                                  ),
-                                                                                         tags$hr(),
-                                                                                         textOutput("bstw_wsel"),
-                                                                                         tags$hr(),
-                                                                                         conditionalPanel(condition = "input.whichplot_wsel == 'all'",
-                                                                                                          withSpinner(plotOutput("hist_wsel", height = "800px"), type = 6),
-                                                                                                          downloadButton("downhist_wsel", "Download plot")),
-                                                                                         conditionalPanel(condition = "input.whichplot_wsel == 'frac'",
-                                                                                                          withSpinner(plotOutput("hist_wsel_frac", height = "800px"), type = 6),
-                                                                                                          downloadButton("downhist_wsel_frac", "Download plot")),
-                                                                                         shinyjs::useShinyjs()
-                                                                                         )
-                                                                        )
-                                                                    )
-                                                           )
-                                                  )
-                                      )
-                             )
-                 )
-               )
-             ),
-
-    bslib::nav_item(a(href = "mailto:marco.gerault@gmail.com",
-                      icon("envelope"),
-                      title = "Any questions, suggestions or bug report ? Feel free to send me an e-mail !")
+  dashboardBody(
+    tags$style(HTML(".tabbable > .nav > li > a                  {background-color: #A1BAC8;  color:#FFFFFF}
+                     .tabbable > .nav > li[class=active]    > a {background-color: #3C8DBC; color:#FFFFFF}
+                     .tabbable > .nav > li    > a:hover {background-color: #3BAAE6; color:#FFFFFF}
+                     .tabbable > .nav > li[class=active]    > a:hover {background-color: #3C8DBC; color:#FFFFFF}
+                     .main-1 {font-size: 24px;}"
                     )
-    )
+               ),
+    tags$head(tags$style(HTML('.main-header .logo {
+                               font-family: "Georgia", Times, "Times New Roman", serif;
+                               font-weight: bold;
+                               font-size: 24px;
+                               }'
+                              )
+                         )
+              ),
+    tags$style(type = 'text/css',
+               '#modal1 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal1 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal2 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal2 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal3 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal3 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal4 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal4 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal5 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal5 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal6 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal6 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+    tags$style(type = 'text/css',
+               '#modal7 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
+               ),
+
+    tabItems(
+      tabItem(tabName = "analysis",
+              h2(tags$u(class = "main-1", "The mineCETSA analysis")),
+
+              tags$br(),
+
+              radioButtons("step_cetsa", "At which step do you want to start your analysis ?",
+                           choices = c("From the beginning" = "1begin",
+                                       "Consolidate isoforms and rearrange your data" = "2conso_ISO",
+                                       "Normalize your data" = "3NORM",
+                                       "Get the protein abundance difference" = "4DIFF",
+                                       "Get your hitlist" = "5HIT"),
+                           inline = TRUE),
+
+              fluidRow(box(title = "Upload and clean your data", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+                  h3("Upload your data"),
+                  fluidRow(column(4, textInput("treat_name", "Type the treatment name, spaced by a comma",
+                                               "B1_Vehicle, B1_Alpelisib,B1_Buparlisib,B2_Vehicle,B2_Alpelisib,B2_Buparlisib,B3_Vehicle,B3_Alpelisib,B3_Buparlisib,Mix")),
+
+                           column(4, numericInput("n_chan", "Type the numeber of channels", value = 10, min = 1)),
+
+                           column(4, textInput("chan_name", "Type the channels names, spaced by a comma",
+                                               "126,127N,127C,128N,128C,129N,129C,130N,130C,131"))
+                           ),
+
+
+                  fileInput("PD_data", "Select txt files for your analysis",
+                            accept = ".txt", multiple = TRUE),
+
+
+                  conditionalPanel(condition = "output.cetsa_fileup",
+                                   actionButton("see1_cetsa", "View data uploaded"),
+                                   tags$hr(),
+                                   h3("Rename your conditions and clean your data"),
+                                   tags$hr(),
+
+                                   fluidRow(column(4, textOutput("incond_name")),
+                                            column(4, textInput("outcond", "Type the new condition naming, spaced by a comma",
+                                                                "37C,47C,50C,52C,54C,57C,36C"),
+                                                   checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
+                                                   checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
+                                            column(2, actionButton("str_ren", "Rename the conditions")),
+                                            column(2, actionButton("see2_cetsa", "View data renamed"))
+                                            )
+                                   )
+                  )),
+              tags$hr(),
+
+              conditionalPanel(condition = "output.cetsa_cleanup | input.step_cetsa > '2' ",
+                               fluidRow(box(title = "Isoform ambiguity cleanup, rearrange and normalization", status = "primary",
+                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                   h3("Isoform ambiguity cleanup and rearrange"),
+                                   tags$hr(),
+
+                                   checkboxInput("got_ISO_cetsa", h3("Do you already have the file isoform_resolved ?"), FALSE),
+                                   conditionalPanel(condition = "!input.got_ISO_cetsa",
+                                                    actionButton("ISO", "Resolve isoform")
+                                                    ),
+                                   conditionalPanel(condition = "input.got_ISO_cetsa",
+                                                    fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt")
+                                                    ),
+
+
+                                   conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
+                                                    tags$hr(),
+                                                    actionButton("see3_cetsa", "View data with isoform resolved"),
+                                                    checkboxInput("got_rearr_cetsa", h3("Do you already have the file data_pre_normalization
+                                                                                        (output after rarranging your data) ?"), FALSE),
+                                                    conditionalPanel(condition = "!input.got_rearr_cetsa",
+                                                                     fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
+                                                                                     conditionalPanel(condition = "input.iso_conso",
+                                                                                                      numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                      fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
+                                                                                                                accept = ".txt")
+                                                                                                      )
+                                                                                     ),
+                                                                              column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
+                                                                                     conditionalPanel(condition = "input.iso_rearr",
+                                                                                                      numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                      numericInput("rep_thr", "Type the minimal percentage threshold of
+                                                                                                                               protein being sampled from multiple runs", value = 0.1, min = 0, max = 1, step = 0.01),
+                                                                                                                               numericInput("count_thr", "Type the minimal threshold number
+                                                                                                                                                          of associated abundance count of proteins", value = 1, min = 0, step = 0.5),
+                                                                                                      checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
+                                                                                                      )
+                                                                                     )
+                                                                              ),
+                                                                     actionButton("ISO2", "Consolidate isoform and/or rearrange")
+                                                                     ),
+                                                    conditionalPanel(condition = "input.got_rearr_cetsa",
+                                                                     fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
+                                                                     ),
+                                                    tags$hr(),
+                                                    fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
+                                                             column(3, actionButton("see5_cetsa", "View rearranged data"))),
+
+                                                    tags$hr(),
+
+                                                    h3("Normalize your data"),
+                                                    tags$hr(),
+
+                                                    fluidRow(column(6, checkboxInput("got_norm_cetsa", h3("Do you already have the file data_post_normalization ?"))),
+                                                             column(6, conditionalPanel(condition = "!input.got_norm_cetsa",
+                                                                                        actionButton("NORM", "Start Normalization")
+                                                                                        ),
+                                                                    conditionalPanel(condition = "input.got_norm_cetsa",
+                                                                                     fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt")
+                                                                                     )
+                                                                    )
+                                                             )
+                                                    )
+                                   )
+                                   ),
+
+                               tags$hr(),
+                               conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
+                                                fluidRow(box(title = "Abundance difference calculation and hitlist", status = "primary",
+                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                    actionButton("see6_cetsa", "View normalized data"),
+                                                    tags$hr(),
+                                                    h3("Calculate the pair-wise protein abundance differences"),
+                                                    tags$hr(),
+
+                                                    checkboxInput("got_diff_cetsa", h3("Do you already have the file imprints_caldiff ?"), FALSE),
+                                                    conditionalPanel(condition = "!input.got_diff_cetsa",
+                                                                     fluidRow(column(4, textInput("treat_name2", "Type the treatment name, spaced by a comma",
+                                                                                                  "Vehicle,Alpelisib,Buparlisib")),
+
+                                                                              column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
+                                                                                                  abundance difference should still within the same biorep", TRUE)),
+
+                                                                              column(4, actionButton("CAL_DIF", "Start difference calculation"))
+                                                                              )
+                                                                     ),
+                                                    conditionalPanel(condition = "input.got_diff_cetsa",
+                                                                     fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt")),
+
+                                                    tags$hr(),
+
+                                                    conditionalPanel(condition = "output.cetsa_difup | input.step_cetsa > '5' ",
+                                                                     actionButton("see7_cetsa", "View caldiff output"),
+                                                                     tags$hr(),
+                                                                     h3("Get the protein hitlist"),
+                                                                     tags$hr(),
+
+                                                                     conditionalPanel(condition = "!input.calc_diff",
+                                                                                      fluidRow(column(4, numericInput("meancut_cetsa", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                               column(4, numericInput("bound_cetsa", "Choose the boundedness", value = 4)),
+                                                                                               column(4, checkboxInput("save_hit", "Save the hitlist", TRUE))
+                                                                                               ),
+                                                                                      actionButton("str_calchitlist", "Start calculation"),
+                                                                                      tags$hr(),
+
+                                                                                      radioButtons("HIT", h3("Choose a result to print"),
+                                                                                                   choices = c("hitlist", "CC", "CN", "NC", "ND", "NN"),
+                                                                                                   selected = "hitlist", inline = TRUE),
+
+                                                                                      DT::dataTableOutput("hit_out")
+                                                                                      )
+                                                                     )
+                                                    )
+                                                    ),
+
+                                                    h3("Go check your file in your working directory,
+                                                        all the results from your analysis should be saved !")
+                                                )
+                               )
+              ),
+
+      tabItem(tabName = "main",
+              tabsetPanel(type = "tabs", selected = "2D Bar plot",
+
+                tabPanel("Database",
+                         h2(tags$u(class = "main-1", "Add new dataset and remove old ones")),
+                         tags$hr(),
+
+                         htmlOutput("info_daba"),
+                         tags$hr(),
+
+                         HTML("<p><h6>In order to add new dataset, you need to import three files.<br>
+                              This files are : <br>
+                              - The output from the ms_2D_caldiff function from the mineCETSA package <br>
+                              - The file named 'Summary', from the hitlist function output <br>
+                              - The file named 'NN', from the hitlist function output <br>
+                              Once you uploaded this three files, choose a name for your dataset (like 'elutriation' for example),
+                              click on the button 'Add dataset', and you're good to go !</h6></p>
+                              <p><h6>If you want to remove a dataset, select one of the dataset available from the database,
+                              and click on the button 'Remove dataset', in the box below. Beware, this operation cannot be undone !</h6></p>
+                              <br><h5>Once you made your changements, don't forget to click on the button 'Reload the database' to use directly.</h5>"
+                              ),
+
+                         fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                             fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff"),
+                                             checkboxInput("gave_daba", "Don't have the ms_2D_average output
+                                                                         (will calculate and save it)", TRUE),
+                                             conditionalPanel(condition = "!input.gave_daba",
+                                                              fileInput("AVE_dabafile", "Import the output from ms_2D_average_sh")
+                                                              )
+                                             ),
+                                      column(4, fileInput("hitsum_daba", "Import the summary file from the hitlist outputs")),
+                                      column(4, fileInput("NN_daba", "Import the NN file from the hitlist outputs")),
+                                      ),
+                             conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup & output.NNdaba_fileup",
+                                              fluidRow(column(4, textInput("name_daba", "Type a name for your new dataset")),
+                                                       column(4, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"))
+                                                       )
+                                              )
+
+                             )),
+
+                         fluidRow(box(title = "Rename your conditions", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                      fluidRow(column(6, uiOutput("davai2_daba_ui")),
+                                               column(6, htmlOutput("condfrom_daba"),
+                                                         textInput("condnew_daba", "Type the new names of the conditions
+                                                                   (same order; separated by a comma; if empty, no changement)"))
+                                               ),
+                                      actionButton("changename_daba", "Change the name of your conditions", class = "btn-primary btn-lg")
+                                      )
+                                  ),
+
+                         fluidRow(box(title = "Remove dataset", status = "danger", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                             fluidRow(column(4, uiOutput("davai_daba_ui")),
+                                      column(6, actionButton("rem_daba", "Remove dataset", class = "btn-danger btn-lg"))
+                                      )
+                             )),
+
+                         actionButton("up_daba", "Reload the database", class = "btn-primary btn-lg")
+
+                         ),
+
+                tabPanel("2D Bar plot",
+                         h2(tags$u(class = "main-1", "Get the 2D bar plot")),
+                         tags$hr(),
+
+                         fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                             radioButtons("drug", h3("Choose a dataset"),
+                                          choices = c("Database" = "base",
+                                                      "Your data" = "dat"),
+                                          selected = "base", inline = TRUE),
+                             conditionalPanel(condition = "input.drug == 'base'",
+                                              uiOutput("drug2_ui")
+                                              ),
+
+
+                             tags$hr(),
+
+                             conditionalPanel(condition = "input.drug == 'dat' ",
+
+                                              fluidRow(column(4, fileInput("data_barplot", "Upload your own data (output from mineCETSA package)",
+                                                                           accept = c(".txt", ".csv", ".xlsx"))
+                                                              ),
+                                                       column(8, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
+                                                              conditionalPanel(condition = "!input.calc_hitlist",
+                                                                               fileInput("data_hitlist", "Upload your own hitlist (summary and NN file from hitlist function)",
+                                                                                         accept = c(".txt", ".csv", ".xlsx"), multiple = TRUE)),
+                                                              conditionalPanel(condition = "input.calc_hitlist",
+                                                                               fluidRow(column(3, numericInput("meancut_bar", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                        column(3, numericInput("bound_bar", "Choose the boundedness", value = 4)),
+                                                                                        column(2, checkboxInput("save_hit_bar", "Save the hitlist", FALSE))
+                                                                                        ),
+                                                                               actionButton("str_calchit", "Start calculation"))
+                                                              )
+                                                       ),
+
+                                              tags$hr()
+                                              ),
+
+                             fluidRow(
+                               column(4, checkboxInput("protlist_bar", "Import a protein list", FALSE),
+                                      conditionalPanel(condition = "!input.protlist_bar",
+                                                       checkboxInput("hit", "Only take the hited proteins", FALSE),
+                                                       conditionalPanel(condition = "input.hit",
+                                                                        selectInput("cond_fhit", "Select hits condition", choices = NULL, multiple = TRUE))
+                                                       ),
+                                      conditionalPanel(condition = "input.protlist_bar",
+                                                       fileInput("prlist_file_bar", "Import your protein list (txt file)", accept = ".txt"),
+                                                       ),
+                                      checkboxInput("ALL_prot", "Select all the proteins", FALSE),
+                                      checkboxInput("alliso_bar", "Take all isoform", FALSE),
+                                      conditionalPanel(condition = "!input.ALL_prot",
+                                                       selectizeInput("prot", "Select a protein", choices = NULL, multiple = TRUE))
+
+                                      ),
+                               column(4, radioButtons("cond_sel", "Selection type",
+                                                      choices = c("Select the treatment level" = "treat",
+                                                                  "Select treatment level by category" = "cat",
+                                                                  "Select all the treatment level" = "all_cond"),
+                                                      selected = "treat"),
+
+                                      conditionalPanel(condition = "input.cond_sel != 'all_cond' ",
+                                                       selectInput("cond", "Select one or more conditions",
+                                                                   choices = NULL,
+                                                                   multiple = TRUE)
+                                                       )
+                                      ),
+                               column(4, conditionalPanel(condition = "input.cond_sel != 'cat' ",
+                                                          checkboxInput("rem_con", "Remove the controls", FALSE),
+                                                          conditionalPanel(condition = "input.rem_con",
+                                                                           textInput("con_name", "Type the name of your controls (if sevral names, separate them by |)", "G1")
+                                                                           )
+                                                          )
+                                      )
+                               ),
+
+                             tags$hr(),
+                             fluidRow(column(4, checkboxInput("ch_own_col", "Choose your own color", FALSE)),
+                                      column(4, conditionalPanel(condition = "input.ch_own_col",
+                                                                 textOutput("n_cond_sel"),
+                                                                 colourInput("own_color_pick", NULL, "#FF2B00",
+                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                 textOutput("own_color")
+                                                                 )
+                                             ),
+                                      conditionalPanel(condition = "input.ch_own_col",
+                                                       column(4, actionButton("add_col", "Add the color"),
+                                                              actionButton("rem_col", "Remove the last color"))
+                                                       )
+                                      ),
+
+                             tags$hr(),
+
+                             fluidRow(column(4, checkboxInput("save_bar", "Save the bar plots in a pdf file", FALSE)),
+                                      conditionalPanel(condition = "input.save_bar",
+                                                       column(4, numericInput("lay_bar1", "Type the number of plot per row",
+                                                                              min = 1, max = 10, step = 1, value = 4),
+                                                              numericInput("lay_bar2", "Type the number of plot per column",
+                                                                           min = 1, max = 10, step = 1, value = 3)),
+                                                       column(4, textInput("pdftit", "Choose a name for your pdf file", "barplot"))
+                                                       )
+                                      ),
+
+                             tags$hr(),
+
+                             fluidRow(column(4, checkboxInput("werb", "Print error bar", TRUE)),
+                                      column(4, checkboxInput("grad", "Use color gradient", FALSE)),
+                                      column(4, checkboxInput("line", "Use line instead of bar", FALSE))
+                                      )
+                             )),
+
+                  DT::dataTableOutput("pr_info"),
+                  conditionalPanel(condition = "output.identifcomp_barup",
+                                   downloadButton("downtabidentif_barplot", "Download the identification comparison tab")),
+
+                  tags$hr(),
+                  actionButton("barp", "See bar plot", class = "btn-primary btn-lg"),
+                  tags$hr(),
+                  textOutput("diag_bar"),
+                  tags$hr(),
+
+                  withSpinner(plotOutput("bar_plot", height = "800px"), type = 6),
+                  downloadButton("downbar", "Download the plot as png file")
+                  ),
+
+                tabPanel("Protein complex",
+                         h2(tags$u(class = "main-1", "Protein complex and 2D bar plot")),
+                         tags$hr(),
+
+                         fluidRow(box(title = "Map proteins to known protein complex", status = "primary",
+                                      solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                      radioButtons("drug_compl", h3("Choose a dataset"),
+                                                   choices = c("Database" = "base",
+                                                               "Your data" = "dat"),
+                                                   selected = "base", inline = TRUE),
+                                      conditionalPanel(condition = "input.drug_compl == 'base'",
+                                                       uiOutput("drug2ui_compl")
+                                                       ),
+
+                                      conditionalPanel(condition = "input.drug_compl == 'dat' ",
+                                                       fluidRow(column(4, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
+                                                                column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
+                                                                column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
+                                                                ),
+                                                       fluidRow(column(4, checkboxInput("gave_compl", "Don't have the ms_2D_average output
+                                                                                     (will calculate and save it)", TRUE)),
+                                                                conditionalPanel(condition = "!input.gave_compl",
+                                                                                 column(4, fileInput("avef_compl", "Import the output from ms_2D_average"))
+                                                                                 )
+                                                                )
+                                                       ),
+                                      tags$hr(),
+
+                                      conditionalPanel(condition = "output.DIFcompl_fileup & output.HITcompl_fileup & output.NNcompl_fileup & output.AVEcompl_fileup",
+                                                       fluidRow(column(4, selectInput("condsel_compl", "Select a condition", choices = NULL)),
+                                                                column(4, selectInput("catego_compl", "Select some categories", choices = NULL, multiple = TRUE)),
+                                                                column(4, selectInput("organism_compl", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                ),
+
+                                                       actionButton("ave_map_compl", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
+                                                       textOutput("diagmapping_compl"),
+
+                                                       tags$hr(),
+
+                                                       conditionalPanel(condition = "output.resmappingcompl_fileup",
+                                                                        DT::dataTableOutput("tabmap_compl"),
+                                                                        downloadButton("downrestab_compl")
+                                                                        )
+                                                       )
+
+                                      )
+                                  ),
+
+                         conditionalPanel(condition = "output.resmappingcompl_fileup",
+                                          fluidRow(box(title = "2D bar plot paramter", status = "primary",
+                                                       solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                                       fluidRow(column(4,selectInput("allcomplex_compl", "Select some protein complex", choices = NULL, multiple = TRUE)),
+                                                                column(4, checkboxInput("ALL_prot_compl", "Select all the proteins", FALSE),
+                                                                       checkboxInput("alliso_bar_compl", "Take all isoform", FALSE)),
+                                                                conditionalPanel(condition = "!input.ALL_prot_compl",
+                                                                                 column(4,selectizeInput("prot_compl", "Select a protein", choices = NULL, multiple = TRUE))
+                                                                                 )
+                                                                ),
+
+                                                       tags$hr(),
+                                                       fluidRow(column(4, checkboxInput("ch_own_col_compl", "Choose your own color", FALSE)),
+                                                                column(4, conditionalPanel(condition = "input.ch_own_col_compl",
+                                                                                           colourInput("own_color_pick_compl", NULL, "#FF2B00",
+                                                                                                       allowTransparent = TRUE, closeOnClick = TRUE)
+                                                                                           )
+                                                                       )
+                                                                ),
+
+                                                       tags$hr(),
+
+                                                       fluidRow(column(4, checkboxInput("save_bar_compl", "Save the bar plots in a pdf file", FALSE)),
+                                                                conditionalPanel(condition = "input.save_bar_compl",
+                                                                                 column(4, numericInput("lay_bar1_compl", "Type the number of plot per row",
+                                                                                                        min = 1, max = 10, step = 1, value = 4),
+                                                                                        numericInput("lay_bar2_compl", "Type the number of plot per column",
+                                                                                                     min = 1, max = 10, step = 1, value = 3)),
+                                                                                 column(4, textInput("pdftit_compl", "Choose a name for your pdf file", "barplot"))
+                                                                                 )
+                                                                ),
+
+                                                       tags$hr(),
+
+                                                       fluidRow(column(4, checkboxInput("werb_compl", "Print error bar", TRUE)),
+                                                                column(4, checkboxInput("grad_compl", "Use color gradient", FALSE)),
+                                                                column(4, checkboxInput("line_compl", "Use line instead of bar", FALSE))
+                                                                ),
+
+                                                       tags$hr(),
+                                                       actionButton("barp_compl", "See bar plot", class = "btn-primary btn-lg"),
+                                                       tags$hr(),
+                                                       textOutput("diag_bar_compl"),
+                                                       tags$hr(),
+
+                                                       withSpinner(plotOutput("bar_plot_compl", height = "800px"), type = 6),
+                                                       downloadButton("downbar_compl", "Download the plot as png file")
+                                                       )
+                                                   ),
+
+                                          )
+
+                         ),
+
+                tabPanel("Similar profiles",
+                         h2(tags$u(class = "main-1", "Find similar profiles")),
+                         tags$hr(),
+
+                         fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                      radioButtons("drug_simpf", h3("Choose a dataset"),
+                                                   choices = c("Database" = "base",
+                                                               "Your data" = "dat"),
+                                                   selected = "base", inline = TRUE),
+                                      conditionalPanel(condition = "input.drug_simpf == 'base'",
+                                                       uiOutput("drug2ui_simpf")
+                                                       ),
+
+                                      conditionalPanel(condition = "input.drug_simpf == 'dat' ",
+                                                       fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from ms_2D_caldiff")),
+                                                                column(4, checkboxInput("gave_simpf", "Don't have the ms_2D_average output
+                                                                                     (will calculate and save it)", TRUE)),
+                                                                conditionalPanel(condition = "!input.gave_simpf",
+                                                                                 column(4, fileInput("avef_simpf", "Import the output from ms_2D_average"))
+                                                                                 )
+                                                                )
+                                                       )
+                                      ,
+
+                                      conditionalPanel(condition = "output.AVEsimpf_fileup & output.DIFsimpf_fileup",
+                                                       fluidRow(column(3, selectInput("treat_simpf", "Select a condition", choices = NULL)),
+                                                                column(3, selectizeInput("prot_simpf", "Select a protein from which you want to get
+                                                                                          the similar profiles", choices = NULL)),
+                                                                column(3, sliderInput("maxna_simpf", "Choose a maximum number of
+                                                                                                      missing values per rows", value = 0, min = 0, max = 10, step = 1)),
+                                                                column(3, selectInput("scoremeth_simpf", "Select a method for calculating the similarity score",
+                                                                                      choices = c("Euclidean distance score" = "euclidean",
+                                                                                                  "Pearson correlation" = "pearson"), selected = "euclidean"),
+                                                                       numericInput("scothr_simpf", "Choose a threshold for the similarity score",
+                                                                                    value = 0.9, min = 0, max = 1, step = 0.01))
+                                                                ),
+                                                       tags$hr(),
+
+                                                       checkboxInput("infoscmeth_simpf", h4("See some informations about the method for calculating the similarity score"), FALSE),
+                                                       conditionalPanel(condition = "input.infoscmeth_simpf",
+                                                                        HTML("<p><h5>You have actually two methods for calculating the similarity score : <br>
+                                                                                     - The euclidean distance score <br>
+                                                                                     - The Pearson correlation <br>
+                                                                                     This score will determine which proteins got a similar profile from the one you selected. <br>
+                                                                                     The euclidean distance score : <br>
+                                                                                     With this method, every euclidean distance between the value from each protein profile and the
+                                                                                     selected will be calculate. Then for each distance we calculate a score between 0 and 1
+                                                                                     by dividing 1 by 1 + d, where d is the euclidean distance. <br>
+                                                                                     This score means that you will search for protein profile with similar values from the the one you selected.
+                                                                                     So the profile with a similar shape but with lower or higher values will not have a good score.
+                                                                                     It also means that with a high score (~0.9) you're not very likely to find a lot of proteins.<br>
+                                                                                     <br>
+                                                                                     This is not the case with Pearson correlation. For this score, each covariance and standard deviation
+                                                                                     between the protein you selected and all the other proteins will be calculated. Then, the covariance is divided
+                                                                                     by the product of the two standard devation. It gives you score between -1 and 1. -1 means the data are negatively
+                                                                                     correlated, 1 positively correlated and 0 not correlated. <br>
+                                                                                     Because you calculate a correlation score, you will search for all proteins profile with a similar shape from the one
+                                                                                     you selected, not matter their values. It's like searching mountains with similar shapes, no matter their height.
+                                                                                     It also means that with a high score (~0.95) you may find a lot of proteins.
+                                                                             </h5></p>")),
+
+
+                                                       tags$hr(),
+
+                                                       fluidRow(column(4, checkboxInput("ch_own_col_simpf", "Choose your own color", FALSE)),
+                                                                conditionalPanel(condition = "input.ch_own_col_simpf",
+                                                                                 column(4, colourInput("own_color_pick_simpf", NULL, "#FF2B00",
+                                                                                                       allowTransparent = TRUE, closeOnClick = TRUE)
+                                                                                        )
+                                                                                 )
+                                                                ),
+
+                                                       tags$hr(),
+
+                                                       fluidRow(column(4, checkboxInput("save_bar_simpf", "Save the bar plots in a pdf file", TRUE),
+                                                                       checkboxInput("save_prot_simpf", "Save the list of proteins ID with similar profile (will save in a xlsx file)", TRUE)),
+                                                                conditionalPanel(condition = "input.save_bar_simpf",
+                                                                                 column(4, numericInput("lay_bar1_simpf", "Type the number of plot per row",
+                                                                                                        min = 1, max = 10, step = 1, value = 4),
+                                                                                           numericInput("lay_bar2_simpf", "Type the number of plot per column",
+                                                                                                        min = 1, max = 10, step = 1, value = 3)
+                                                                                        ),
+                                                                                 column(4, textInput("pdftit_simpf", "Choose a name for your pdf file", "barplot"))
+                                                                                 )
+                                                                ),
+
+                                                       checkboxInput("seeprsel_simpf", "See barplot from the selected protein", FALSE),
+
+                                                       tags$hr(),
+
+                                                       fluidRow(column(4, checkboxInput("werb_simpf", "Print error bar", TRUE)),
+                                                                column(4, checkboxInput("grad_simpf", "Use color gradient", FALSE)),
+                                                                column(4, checkboxInput("line_simpf", "Use line instead of bar", FALSE))
+                                                                ),
+
+                                                       tags$hr(),
+
+                                                       actionButton("getsimi_simpf", "Get similar profile !", class = "btn-primary btn-lg"),
+                                                       tags$hr(),
+                                                       textOutput("diag_bar_simpf"),
+                                                       tags$hr(),
+
+
+
+
+                                                       withSpinner(plotOutput("bar_plot_simpf", height = "800px"), type = 6),
+                                                       downloadButton("downbar_simpf", "Download the plot as png file")
+                                                       )
+
+                                      )
+                                  )
+                         )
+                )
+              ),
+
+
+
+      tabItem(tabName = "heat",
+              tabsetPanel(type = "tabs",
+                          tabPanel("Heatmap",
+                                   h2(tags$u(class = "main-1", "Get heatmaps from your data")),
+                                   tags$hr(),
+
+                                   fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
+                                                solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                                radioButtons("drug_heat", h3("Choose a dataset"),
+                                                             choices = c("Database" = "base",
+                                                                         "Your data" = "dat"),
+                                                             selected = "base", inline = TRUE),
+                                                conditionalPanel(condition = "input.drug_heat == 'base'",
+                                                                 uiOutput("drug2ui_heat")
+                                                                 ),
+
+                                                conditionalPanel(condition = "input.drug_heat == 'dat' ",
+                                                                 fluidRow(column(4, checkboxInput("gave_heat", "Don't have the ms_2D_average output
+                                                                                                  (will calculate and save it)", TRUE),
+                                                                                 conditionalPanel(condition = "input.gave_heat",
+                                                                                                  fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
+                                                                                                  ),
+                                                                                 conditionalPanel(condition = "!input.gave_heat",
+                                                                                                  fileInput("fileave_heat", "Choose a ms_2D_average_sh output")
+                                                                                                  )
+                                                                                 ),
+                                                                          column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
+                                                                          column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
+                                                                                 conditionalPanel(condition = "input.impNN_heat",
+                                                                                                  fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
+                                                                                                  )
+                                                                                 )
+                                                                          )
+                                                                 ),
+
+                                                tags$hr(),
+
+                                                conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                                                                 fluidRow(column(3, selectInput("cond_heat", "Select a condition", choices = NULL)),
+                                                                          column(3, selectInput("resp_heat", "Select a response to the drug",
+                                                                                                choices = c("Stabilization" = "S",
+                                                                                                            "Destabilization" = "D",
+                                                                                                            "Both" = "both"), selected = "both")),
+                                                                          column(3, selectInput("catego_heat", "Select some categories", choices = NULL, multiple = TRUE)),
+                                                                          column(3, sliderInput("maxna_heat", "Choose a maximum number of
+                                                                                         missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                                          ),
+
+                                                                 fluidRow(column(3, textInput("titleH_heat", "Type a title for your heatmap", "Heatmap")),
+                                                                          column(3, colourInput("backcol_heat", "Choose a background color", "#FFFFFF",
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, colourInput("bordercol_heat", "Choose a border color (can be NULL)", NULL,
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3,
+                                                                                 colourInput("grad1col_heat", "Choose the low gradient color", "#005EFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad2col_heat", "Choose the middle gradient color", "#FFFFFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad3col_heat", "Choose the high gradient color", "#FF0000",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE))
+                                                                          ),
+
+                                                                 fluidRow(column(4, checkboxInput("saveH_heat", "Save the heatmap", TRUE)),
+                                                                          conditionalPanel(condition = "input.saveH_heat",
+                                                                                           column(4, textInput("fnameH_heat", "Type a your file name", "My_heatmap")),
+                                                                                           column(4, selectInput("formatH_heat", "Choose a format for your file",
+                                                                                                                 choices = c("png", "pdf"), selected = "png"))
+                                                                                           )
+                                                                          )
+                                                                 )
+                                                )
+                                            ),
+
+
+                                   conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
+                                                    actionButton("getH_heat", "See heatmap", class = "btn-primary btn-lg"),
+                                                    tags$hr(),
+
+                                                    textOutput("diagl_heat"),
+                                                    tags$hr(),
+
+                                                    withSpinner(plotOutput("H_heat", height = "800px"), type = 6)
+                                                    )
+                                   ),
+
+                          tabPanel("Protein complex",
+                                   h2(tags$u(class = "main-1", "Protein complex and heatmap")),
+                                   tags$hr(),
+
+                                   fluidRow(box(title = "Map proteins to known protein complex", status = "primary",
+                                                solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                                radioButtons("drug_heatcom", h3("Choose a dataset"),
+                                                             choices = c("Database" = "base",
+                                                                         "Your data" = "dat"),
+                                                             selected = "base", inline = TRUE),
+                                                conditionalPanel(condition = "input.drug_heatcom == 'base'",
+                                                                 uiOutput("drug2ui_heatcom")
+                                                                 ),
+
+                                                conditionalPanel(condition = "input.drug_heatcom == 'dat' ",
+                                                                 fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the ms_2D_average output
+                                                                                                  (will calculate and save it)", TRUE)),
+                                                                          column(4,
+                                                                                 conditionalPanel(condition = "input.gave_heatcom",
+                                                                                                  fileInput("filedif_heatcom", "Choose a ms_2D_caldiff output")
+                                                                                                  ),
+                                                                                 conditionalPanel(condition = "!input.gave_heatcom",
+                                                                                                  fileInput("fileave_heatcom", "Choose a ms_2D_average_sh output")
+                                                                                                  )
+                                                                                 )
+                                                                          )
+                                                                 ),
+
+                                                tags$hr(),
+
+                                                conditionalPanel(condition = "output.heatcom_fileup",
+                                                                 fluidRow(column(4, selectInput("cond_heatcom", "Select a condition", choices = NULL)),
+                                                                          column(4, selectInput("organism_heatcom", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                          ),
+
+                                                                 actionButton("ave_map_heatcom", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
+                                                                 textOutput("diagmapping_heatcom"),
+
+                                                                 tags$hr(),
+
+                                                                 conditionalPanel(condition = "output.resmappingheatcom_fileup",
+                                                                                  DT::dataTableOutput("tabmap_heatcom"),
+                                                                                  downloadButton("downrestab_heatcom")
+                                                                                  )
+                                                                 )
+                                                )
+                                            ),
+
+                                   conditionalPanel(condition = "output.resmappingheatcom_fileup",
+                                                    fluidRow(box(title = "Heatmap parameter", status = "primary",
+                                                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                                                 fluidRow(column(4,selectInput("allcomplex_heatcom", "Select some protein complex", choices = NULL, multiple = TRUE)),
+                                                                          column(4, selectInput("resp_heatcom", "Select a response to the drug",
+                                                                                                choices = c("Stabilization" = "S",
+                                                                                                            "Destabilization" = "D",
+                                                                                                            "Both" = "both"), selected = "both")),
+                                                                          column(4, sliderInput("maxna_heatcom", "Choose a maximum number of
+                                                                                    missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                                          ),
+
+                                                                 fluidRow(column(3, textInput("titleH_heatcom", "Type a title for your heatmap", "Heatmap")),
+                                                                          column(3, colourInput("backcol_heatcom", "Choose a background color", "#FFFFFF",
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3, colourInput("bordercol_heatcom", "Choose a border color (can be NULL)", NULL,
+                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                          column(3,
+                                                                                 colourInput("grad1col_heatcom", "Choose the low gradient color", "#005EFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad2col_heatcom", "Choose the middle gradient color", "#FFFFFF",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                 colourInput("grad3col_heatcom", "Choose the high gradient color", "#FF0000",
+                                                                                             allowTransparent = TRUE, closeOnClick = TRUE))
+                                                                          ),
+
+                                                                 fluidRow(column(4, checkboxInput("saveH_heatcom", "Save the heatmap", TRUE)),
+                                                                          conditionalPanel(condition = "input.saveH_heatcom",
+                                                                                           column(4, textInput("fnameH_heatcom", "Type a your file name", "My_heatmap")),
+                                                                                           column(4, selectInput("formatH_heatcom", "Choose a format for your file",
+                                                                                                                 choices = c("png", "pdf"), selected = "png"))
+                                                                                           )
+                                                                          )
+                                                                 )
+                                                             ),
+
+                                                    actionButton("getH_heatcom", "See heatmap", class = "btn-primary btn-lg"),
+                                                    tags$hr(),
+
+                                                    textOutput("diagl_heatcom"),
+                                                    tags$hr(),
+
+                                                    withSpinner(plotOutput("H_heatcom", height = "800px"), type = 6)
+                                                    )
+                                   )
+                          )
+              ),
+
+
+      tabItem(tabName = "string",
+              h2(tags$u(class = "main-1", "Network and enrichment analysis")),
+              tags$hr(),
+
+              fluidRow(box(title = "Import your data and start the analysis", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                  radioButtons("drug_stri", h3("Choose a dataset"),
+                               choices = c("Database" = "base",
+                                           "Your data" = "dat"),
+                               selected = "base", inline = TRUE),
+                  conditionalPanel(condition = "input.drug_stri == 'base'",
+                                   uiOutput("drug2ui_stri"),
+                                   fluidRow(column(3, selectInput("cond_fhitB_stri", "Select some conditions for filtering your proteins",
+                                                                  choices = NULL, multiple = TRUE)),
+                                            column(3, selectInput("cat_fhitB_stri", "Select some categories for filtering your proteins (If NULL, will select all)",
+                                                                  choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
+                                            )
+                                   ),
+
+                  conditionalPanel(condition = "input.drug_stri == 'dat' ",
+                                   checkboxInput("impfile_stri", "Import a file", TRUE),
+                                   conditionalPanel(condition = "input.impfile_stri",
+                                                    fluidRow(column(3, fileInput("file_stri", "Choose a file")),
+                                                             column(3, checkboxInput("ishit_stri", "Do you import a hitlist ?", TRUE),
+                                                                    conditionalPanel(condition = "!input.ishit_stri",
+                                                                                     textInput("idfile_stri", "What is the name of the column of
+                                                                                                your file which contains the proteins ID ?")
+                                                                                     )
+                                                                    ),
+                                                             conditionalPanel(condition = "input.ishit_stri",
+                                                                              column(3, selectInput("cond_fhit_stri", "Select some condition for filtering your hits",
+                                                                                                    choices = NULL, multiple = TRUE))
+                                                                              )
+                                                             )
+                                                    ),
+                                   conditionalPanel(condition = "!input.impfile_stri",
+                                                    textInput("txt_stri", "Type some protein ID separated by a comma")
+                                                    )
+                                   ),
+
+                  conditionalPanel(condition = "output.file_stri_up | !input.impfile_stri",
+                                   fluidRow(column(4, selectInput("species_string", "Choose an organism",
+                                                                  choices = c("Human" = 9606,
+                                                                              "Mouse" = 10090,
+                                                                              "Rat" = 10116), selected = 9606)),
+
+                                            column(4,  actionButton("start_string", "Start to map genes", class = "btn-primary btn-lg"))
+                                            )
+                                   ),
+
+                  conditionalPanel(condition = "output.data_stri_up",
+                                   tags$hr(),
+                                   fluidRow(column(3, checkboxInput("intnet_stri", "Interactive network", FALSE)),
+                                            column(3, actionButton("netbase_stri", "See network", class = "btn-primary btn-lg")),
+
+                                            column(3, checkboxInput("hidnet1_stri", "Hide network", FALSE))
+                                            ),
+                                   tags$hr(),
+                                   actionButton("go_enrich", "Start the enrichment analysis", class = "btn-primary btn-lg"),
+                                   tags$hr(),
+
+                                   conditionalPanel(condition = "!input.hidnet1_stri",
+                                                    conditionalPanel(condition = "input.intnet_stri",
+                                                                     withSpinner(plotlyOutput("netInt_stri", height = "800px"), type = 6)
+                                                                     ),
+                                                    conditionalPanel(condition = "!input.intnet_stri",
+                                                                     withSpinner(plotOutput("net_stri", height = "800px"), type = 6),
+                                                                     downloadButton("downnet_stri", "Download the plot as png file")
+                                                                     )
+                                                    )
+                                   )
+                  )),
+
+
+              tags$hr(),
+
+              conditionalPanel(condition = "output.enrich_stri_up",
+                               fluidRow(box(title = "Results from enrichment analysis", status = "primary",
+                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                                   fluidRow(
+                                     column(3, selectInput("catego_stri", "Select a category for enrichment", choices = NULL)),
+                                     column(3, checkboxInput("hidtab_stri", "Hide the enrichment tab", FALSE))
+                                     ),
+
+                                   conditionalPanel(condition = "!input.hidtab_stri",
+                                                    DT::dataTableOutput("enrich_table_stri"),
+                                                    tags$hr(),
+                                                    downloadButton("downenrich_stri", "Download the tab as xlsx file")
+                                                    ),
+                                   conditionalPanel(condition = "output.enrich_res_tab_up",
+                                                    tags$hr(),
+                                                    fluidRow(
+                                                      column(3, selectInput("descri_stri", "Select a description to filter proteins", choices = NULL)),
+                                                      column(3, actionButton("netfilt_stri", "See new network", class = "btn-primary btn-lg")),
+                                                      column(3, checkboxInput("hidnet2_stri", "Hide new network", FALSE))
+                                                      ),
+                                                    tags$hr(),
+
+                                                    conditionalPanel(condition = "output.enrich_res_tab_up",
+                                                                     conditionalPanel(condition = "!input.hidnet2_stri",
+                                                                                      conditionalPanel(condition = "input.intnet_stri",
+                                                                                                       withSpinner(plotlyOutput("netInt2_stri", height = "800px"), type = 6)
+                                                                                                       ),
+                                                                                      conditionalPanel(condition = "!input.intnet_stri",
+                                                                                                       withSpinner(plotOutput("net2_stri", height = "800px"), type = 6),
+                                                                                                       downloadButton("downnetfilt_stri", "Download the plot as png file")
+                                                                                                       )
+                                                                                      )
+                                                                     )
+                                                    )
+                                   ))
+                               )
+
+              ),
+
+      tabItem(tabName = "cell",
+              h2(tags$u(class = "main-1", "Proteins localization")),
+              tags$hr(),
+              fluidRow(
+                box(title = "Get subcellular location from your hitlist", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+
+                  radioButtons("drug_cell", h3("Choose a dataset"),
+                               choices = c("Database" = "base",
+                                           "Your data" = "dat"),
+                               selected = "base", inline = TRUE),
+                  conditionalPanel(condition = "input.drug_cell == 'base'",
+                                   uiOutput("drug2ui_cell")
+                                   ),
+                  fluidRow(column(4, selectInput("organism_cell", "Choose an organism",
+                                                 choices = c("Human" = "HUMAN",
+                                                             "Mouse" = "MOUSE"), selected = "HUMAN")),
+                           conditionalPanel(condition = "input.drug_cell == 'dat' ",
+                                            column(3, fileInput("hitl_cell", "Import the summary file from the hitlist output"))
+                                            )
+                           ),
+
+                  conditionalPanel(condition = "output.hitdata_cell_up",
+                                   fluidRow(column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
+                                            column(4, selectInput("cathit_cell", "Select some categories (if NULL, will select all)", choices = NULL, multiple = TRUE)),
+                                            column(4, actionButton("goloca_cell", "Get subcellular location", class = "btn-primary btn-lg"))
+                                            )
+                                   ),
+
+                  textOutput("diagl_cell"),
+
+                  tags$hr(),
+                  conditionalPanel(condition = "output.resdata_cell_up",
+                                   DT::dataTableOutput("locatab_cell"),
+                                   downloadButton("down_prl_cell")
+                                   )
+
+                  )
+                ),
+
+              conditionalPanel(condition = "output.resdata_cell_up",
+                               fluidRow(
+                                 box(title = "The cell", status = "primary",
+                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                   fluidRow(column(4, textInput("titp_cell", "Type a title for the plot", "elutriation data in the cell")),
+                                            column(4, selectInput("condp_cell", "Select some conditions", multiple = TRUE, choices = NULL)),
+                                            column(4, actionButton("gop_cell", "See the plot", class = "btn-primary btn-lg"))
+                                            ),
+                                   tags$hr(),
+
+                                   withSpinner(plotlyOutput("cell_p", height = "700px"), type = 6),
+                                   downloadButton("downthe_cell", "Download the plot as html file")
+                                   )
+                                 )
+                               ),
+
+              tags$hr(),
+
+              fluidRow(
+                box(title = "Bar plot", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+                  conditionalPanel(condition = "input.drug_cell == 'dat'",
+                                   fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
+                                              please import the cal_diff output file which correspond to your hitlist.")
+                                   ),
+                  conditionalPanel(condition = "!input.selpr_loca_cell",
+                                   htmlOutput("prsel_p_cell")
+                                   ),
+
+                  conditionalPanel(condition = "output.barpdata_cell_up | input.drug_cell == 'base'",
+                                   fluidRow(column(4, checkboxInput("selpr_loca_cell", "Select proteins according to their subcellular location", FALSE)),
+                                            conditionalPanel(condition = "input.selpr_loca_cell",
+                                                             column(4, selectInput("selorga_cell", "Select some organelle", multiple = TRUE, choices = NULL)),
+                                                             column(4, checkboxInput("allpr_cell", "Select all the proteins from the organelles you selected", FALSE),
+                                                                       conditionalPanel(condition = "!input.allpr_cell",
+                                                                                        selectizeInput("selectpr_cell", "Select some proteins", multiple = TRUE, choices = NULL)
+                                                                                        )
+                                                                    )
+                                                             )
+                                            ),
+
+                                   radioButtons("cond_sel_cell", "Selection type",
+                                                            choices = c("Select the treatment level" = "treat",
+                                                                        "Select treatment level by category" = "cat",
+                                                                        "Select all the treatment level" = "all_cond"),
+                                                            selected = "treat", inline = TRUE
+                                                ),
+
+                                   conditionalPanel(condition = "input.cond_sel_cell != 'all_cond' ",
+                                                                      selectInput("cond_cell", "Select one or more conditions",
+                                                                                  choices = NULL,
+                                                                                  multiple = TRUE)
+                                                                      ),
+
+                                   tags$hr(),
+
+                                   fluidRow(column(4, checkboxInput("save_bar_cell", "Save the bar plots in a pdf file", FALSE)),
+                                            conditionalPanel(condition = "input.save_bar_cell",
+                                                             column(4, numericInput("lay_bar1_cell", "Type the number of plot per row",
+                                                                                    min = 1, max = 10, step = 1, value = 4),
+                                                                    numericInput("lay_bar2_cell", "Type the number of plot per column",
+                                                                                 min = 1, max = 10, step = 1, value = 3)),
+                                                             column(4, textInput("pdftit_cell", "Choose a name for your pdf file", "barplot"))
+                                            )
+                                   ),
+
+                                   tags$hr(),
+                                   fluidRow(column(4, checkboxInput("ch_own_col_cell", "Choose your own color", FALSE)),
+                                            column(4, conditionalPanel(condition = "input.ch_own_col_cell",
+                                                                       textOutput("n_cond_sel_cell"),
+                                                                       colourInput("own_color_pick_cell", NULL, "#FF2B00",
+                                                                                   allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                       textOutput("own_color_cell")
+                                                                       )
+                                                   ),
+                                            conditionalPanel(condition = "input.ch_own_col_cell",
+                                                             column(4, actionButton("add_col_cell", "Add the color"),
+                                                                    actionButton("rem_col_cell", "Remove the last color"))
+                                                             )
+                                            ),
+                                   tags$hr(),
+
+                                   fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE)),
+                                            column(4, checkboxInput("grad_cell", "Use color gradient", FALSE)),
+                                            column(4, checkboxInput("line_cell", "Use line instead of bar", FALSE))
+                                            ),
+
+                                   tags$hr(),
+
+                                   actionButton("barp_cell", "See bar plot", class = "btn-primary btn-lg"),
+                                   tags$hr(),
+                                   textOutput("diag_bar_cell"),
+                                   tags$hr(),
+
+                                   withSpinner(plotOutput("bar_pr_cell", height = "800px"), type = 6),
+                                   downloadButton("downbar_cell", "Download the plot as png file")
+                                   )
+                  )
+                  )
+
+
+
+              ),
+
+      tabItem(tabName = "pubmed",
+              h2(tags$u(class = "main-1", "Search publications in PubMed")),
+              tags$hr(),
+
+              fluidRow(box(title = "Search parameters", status = "primary",
+                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+                  fluidRow(column(3, checkboxInput("impc_pubmed", "Import a file", TRUE),
+                                  conditionalPanel(condition = "input.impc_pubmed",
+                                                   fileInput("data_pubmed", "Import your data")),
+                                  conditionalPanel(condition = "!input.impc_pubmed",
+                                                   textInput("dtext_pubmed", "Type some protein names, separated by a comma", ""))
+                                  ),
+                           column(3, textInput("feat_pubmed", "Type your second research word", "cell cycle")),
+                           column(3, textInput("LA_pubmed", "Type a language to match (can be null)")),
+                           column(3, textInput("Y_pubmed", "Type a year range to match (can be null, format is Y1:Y2)"))
+                           ),
+
+                  fluidRow(column(3, textInput("api_pubmed", "Type your NCBI API if you have an account")),
+                           column(3, textInput("fname_pubmed", "Type the name of the folder that will be created", "Elutriation_pubmed_search")),
+                           column(3, conditionalPanel(condition = "input.impc_pubmed",
+                                                      checkboxInput("hit_pubmed", "Do you import a hitlist ? (need description column)", TRUE))
+                                  ),
+                           conditionalPanel(condition = "input.hit_pubmed",
+                                            column(3, textInput("cond_pubmed", "Type a condition from you hitlist (if null, will take all the conditions)"))
+                                            )
+                           ),
+                  tags$hr(),
+
+                  shinyjs::useShinyjs(),
+                  conditionalPanel(condition = "output.pubmed_fileup | !input.impc_pubmed",
+                                   actionButton("go_pub", "Start searching", class = "btn-primary btn-lg"),
+                                   tags$hr()
+                                   ),
+
+                  textOutput("diag")
+
+                  )),
+
+              DT::dataTableOutput("pubmed_out"),
+
+              downloadButton("down_pubmed")
+
+              )
+      )
+    ),
+
+  tags$head(tags$style(HTML('* {font-family: "Rockwell";
+                               font-size: 16px;
+                            }'))
+            )
 )
 
 server <- function(input, output, session){
-  ### REPORT FILE
-  pth <- str_split(WD, "/")[[1]]
-  pth <- paste(pth[1:4][!is.na(pth[1:4])], collapse = "/")
-  names(pth) <- pth
-  volumes <- c(Home = WD, "R Installation" = R.home(), getVolumes()(), pth)
-  shinyFileChoose(input, "rep_tsv", roots = volumes, session = session)
+  setwd(WD)
 
-  output$filepaths <- renderPrint({
-    if (is.integer(input$rep_tsv)) {
-      cat("No files have been selected (shinyFileChoose)")
-    } else {
-      parseFilePaths(volumes, input$rep_tsv)
+  ### analysis tab
+  cetsa_data <- reactive({
+    File <- input$PD_data
+    if (is.null(File))
+      return(NULL)
+
+    ms_2D_rawread(File$datapath,
+      #the name of each treatment
+      treatment = str_remove(unlist(str_split(input$treat_name, ",")), " "),
+      #number of channel and the name of it
+      nread = input$n_chan, channels = str_remove(unlist(str_split(input$chan_name, ",")), " ")
+      )
+  })
+
+  #check if a file is upload
+  output$cetsa_fileup <- reactive({
+    return(!is.null(cetsa_data()))
+  })
+  outputOptions(output, "cetsa_fileup", suspendWhenHidden = FALSE)
+
+  observeEvent(input$see1_cetsa,{
+    if(!is.null(cetsa_data())){
+     showModal(tags$div(id="modal1", modalDialog(
+       DT::renderDataTable({DT::datatable(cetsa_data(),
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Base data")
+                        ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10)
+                      )}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
     }
   })
 
-  report_data <- reactive({
-    if (is.integer(input$rep_tsv)) {
-      return(NULL)
+  output$incond_name <- renderText({
+    if(!is.null(cetsa_data())){
+      paste("The current condition name are :", paste(unique(cetsa_data()$condition), collapse = "  "))
     }
-    else {
-      File <- parseFilePaths(volumes, input$rep_tsv)
+    else{
+      NULL
     }
-    File <- parseFilePaths(volumes, input$rep_tsv)
-    if(is.null(File))
-      return(NULL)
-
-    showNotification("Getting your data, this may take a while.", type = "message")
-    diann_load(File$datapath)
   })
-  Report_data <- reactiveValues(
-    d = NULL
-  )
+
+  cetsa_data_clean <- eventReactive(input$str_ren, {
+    d1 <- ms_conditionrename(cetsa_data(),
+                             incondition = unique(cetsa_data()$condition),
+                             outcondition = str_remove(unlist(str_split(input$outcond, ",")), " ")
+                             )
+
+    if(input$rem_mix){
+      d1 <- d1[, !(names(d1) %in% "Mix")]
+    }
+    if(input$clean_data){
+      d1 <- ms_clean(d1, nread = input$n_chan)
+    }
+    showNotification("Calculation done !", type = "message", duration = 3)
+
+
+    d1
+  })
+  #check if a file is upload
+  output$cetsa_cleanup <- reactive({
+    return(!is.null(cetsa_data_clean()))
+  })
+  outputOptions(output, "cetsa_cleanup", suspendWhenHidden = FALSE)
+
+  observeEvent(input$see2_cetsa,{
+    if(!is.null(cetsa_data_clean())){
+      showModal(tags$div(id="modal2", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_data_clean(),
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Base data")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
   observe({
-    Report_data$d <- report_data()
+    if(input$step_cetsa > 2){
+      updateCheckboxInput(session, "got_ISO_cetsa", value = TRUE)
+    }
+    if(input$step_cetsa > 3){
+      updateCheckboxInput(session, "got_rearr_cetsa", value = TRUE)
+    }
+    if(input$step_cetsa > 4){
+      updateCheckboxInput(session, "got_norm_cetsa", value = TRUE)
+    }
+    if(input$step_cetsa > 5){
+      updateCheckboxInput(session, "got_diff_cetsa", value = TRUE)
+    }
+    if(input$step_cetsa < 2){
+      updateCheckboxInput(session, "got_ISO_cetsa", value = FALSE)
+    }
+    if(input$step_cetsa < 3){
+      updateCheckboxInput(session, "got_rearr_cetsa", value = FALSE)
+    }
+    if(input$step_cetsa < 4){
+      updateCheckboxInput(session, "got_norm_cetsa", value = FALSE)
+    }
+    if(input$step_cetsa < 5){
+      updateCheckboxInput(session, "got_diff_cetsa", value = FALSE)
+    }
   })
-  output$reportdata_up <- reactive({
-    return(!is.null(Report_data$d))
-  })
-  outputOptions(output, "reportdata_up", suspendWhenHidden = FALSE)
 
-  output$df_report <- DT::renderDataTable({
-    DT::datatable(Report_data$d,
+  cetsa_isoform <- reactiveValues(
+    x = NULL,
+    y = NULL,
+    norm = NULL,
+    dif = NULL,
+    conso = NULL,
+    rearr = NULL
+  )
+  observeEvent(input$ISO, {
+    showNotification("Start resolving isoform, this may take a while. Please wait a few minutes",
+                     type = "message", duration = 5)
+    x <- ms_isoform_resolve(cetsa_data_clean())
+
+    cetsa_isoform$x <- x
+  })
+  ISOresdata_cetsa <- reactive({
+    File <- input$ISOresfile_cetsa
+    if (is.null(File) | !input$got_ISO_cetsa)
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  observe({
+    if(input$got_ISO_cetsa){
+      cetsa_isoform$x <- ISOresdata_cetsa()
+    }
+  })
+  #check if a file is upload
+  output$cetsa_isoup <- reactive({
+    return(!is.null(cetsa_isoform$x))
+  })
+  outputOptions(output, "cetsa_isoup", suspendWhenHidden = FALSE)
+
+  observeEvent(input$see3_cetsa,{
+    if(!is.null(cetsa_isoform$x)){
+      showModal(tags$div(id="modal3", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$x,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+  observeEvent(input$ISO2, {
+    d2 <- cetsa_isoform$x
+    if(!is.null(d2)){
+      if(input$iso_conso){
+        showNotification("Start consolidating isoform, this may take a while. Please wait a few minutes",
+                         type = "message", duration = 5)
+        File <- input$tab_conso
+        if (is.null(File))
+          return(NULL)
+
+        d2 <- ms_isoform_consolidate(d2,
+                                     nread = input$n_chan2,
+                                     matchtable = File$datapath)
+        cetsa_isoform$conso <- d2
+        showNotification("Consolidating succeed !", type = "message", duration = 5)
+      }
+
+      if(input$iso_rearr){
+        showNotification("Start rearrange data", type = "message", duration = 3)
+        d2 <- ms_2D_rearrange(d2, nread = input$n_chan3,
+                              repthreshold = input$rep_thr, countthreshold = input$count_thr,
+                              with37Creading = input$wit_37)
+        cetsa_isoform$rearr <- d2
+        showNotification("Rearranging succeed !", type = "message", duration = 5)
+      }
+
+      cetsa_isoform$y <- d2
+    }
+    else{
+      showNotification("Don't forget to import a file or start the analysis", type = "error")
+    }
+  })
+  rearrdata_cetsa <- reactive({
+    File <- input$rearrfile_cetsa
+    if (is.null(File) | !input$got_rearr_cetsa)
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  observe({
+    if(input$got_rearr_cetsa){
+      cetsa_isoform$y <- rearrdata_cetsa()
+    }
+  })
+
+  observeEvent(input$see4_cetsa,{
+    if(!is.null(cetsa_isoform$conso)){
+      showModal(tags$div(id="modal4", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$conso,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+  observeEvent(input$see5_cetsa,{
+    if(!is.null(cetsa_isoform$rearr)){
+      showModal(tags$div(id="modal5", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$rearr,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+  observeEvent(input$NORM, {
+    if(is.null(cetsa_isoform$y)){
+      d <- cetsa_isoform$x
+    }
+    else{
+      d <- cetsa_isoform$y
+    }
+
+    if(!is.null(d)){
+      showNotification("Start Normalization, this may take a while. Please wait a few minutes",
+                       type = "message", duration = 5)
+      d <- ms_2D_normalization(d)
+      cetsa_isoform$norm <- d
+      showNotification("Normalization succeed !", type = "message", duration = 5)
+    }
+    else{
+      showNotification("Don't forget to import a file or start the analysis", type = "error")
+    }
+
+  })
+  normdata_cetsa <- reactive({
+    File <- input$normfile_cetsa
+    if (is.null(File) | !input$got_norm_cetsa)
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  observe({
+    if(input$got_norm_cetsa){
+      cetsa_isoform$norm <- normdata_cetsa()
+    }
+  })
+  #check if a file is upload
+  output$cetsa_normup <- reactive({
+    return(!is.null(cetsa_isoform$norm))
+  })
+  outputOptions(output, "cetsa_normup", suspendWhenHidden = FALSE)
+
+  observeEvent(input$see6_cetsa,{
+    if(!is.null(cetsa_isoform$norm)){
+      showModal(tags$div(id="modal6", modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$norm,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+  observeEvent(input$CAL_DIF, {
+    if(!is.null(cetsa_isoform$norm)){
+      showNotification("Start difference calculation, this may take a while. Please wait a few minutes",
+                       type = "message", duration = 5)
+      ytr_level <- str_remove(unlist(str_split(input$treat_name2, ",")), " ")
+      tr_level <- get_treat_level(cetsa_isoform$norm)
+      if(sum(str_detect(tr_level, paste(ytr_level, collapse = "|"))) != length(tr_level)){
+        showNotification("The treatments you typed doesn't match the treatments from your data !", type = "error")
+      }
+      else{
+        d <- ms_2D_caldiff(cetsa_isoform$norm,
+                           treatmentlevel = ytr_level,
+                           withinrep = input$wit_rep
+        )
+
+        cetsa_isoform$dif <- d
+        message("Done to calculate the pair-wise (per replicate and temperature)
+            protein abundance differences")
+        showNotification("Difference calculation succeed !", type = "message", duration = 5)
+      }
+    }
+    else{
+      showNotification("Don't forget to import a file or start the analysis", type = "error")
+    }
+  })
+  diffdata_cetsa <- reactive({
+    File <- input$difffile_cetsa
+    if (is.null(File) | !input$got_diff_cetsa)
+      return(NULL)
+
+    read.delim(File$datapath)
+  })
+  observe({
+    if(input$got_diff_cetsa){
+      cetsa_isoform$dif <- diffdata_cetsa()
+    }
+  })
+  #check if a file is upload
+  output$cetsa_difup <- reactive({
+    return(!is.null(cetsa_isoform$dif))
+  })
+  outputOptions(output, "cetsa_difup", suspendWhenHidden = FALSE)
+
+  observeEvent(input$see7_cetsa,{
+    if(!is.null(cetsa_isoform$dif)){
+      showModal(tags$div(id="modal7",modalDialog(
+        DT::renderDataTable({DT::datatable(cetsa_isoform$dif,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Base data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10))}),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+  hit_pr <- reactiveValues(
+    hitlist = NULL,
+    ND = NULL,
+    NC = NULL,
+    CN = NULL,
+    CC = NULL,
+    NN = NULL
+  )
+  observeEvent(input$str_calchitlist, {
+    if(!is.null(cetsa_isoform$dif)){
+      showNotification("Calculation started, this may take a while. Please wait a few minutes !",
+                       type = "message", duration = 5)
+
+      h <- hitlist(cetsa_isoform$dif, meancutoff = input$meancut_cetsa, boundedness = input$bound_cetsa,
+                   use_prompt = FALSE, exported = input$save_hit)
+
+      hit_pr$hitlist <- h$hitlist
+      hit_pr$ND <- h$ND
+      hit_pr$NC <- h$NC
+      hit_pr$CN <- h$CN
+      hit_pr$CC <- h$CC
+      hit_pr$NN <- h$NN
+    }
+    else{
+      showNotification("Don't forget to import a file or start the analysis", type = "error")
+    }
+  })
+
+  output$hit_out <- DT::renderDataTable({
+    DT::datatable(hit_pr[[input$HIT]],
                   caption = htmltools::tags$caption(
                     style = 'caption-side: top; text-align: left;',
-                    htmltools::strong('Report from DIA-nn')
-                    ),
+                    htmltools::strong(input$HIT)
+                  ),
                   rownames = FALSE,
-                  options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                 scrollX = TRUE)
-                  )
-    })
+                  options = list(lengthMenu = c(10,20,30), pageLength = 10))
+  })
 
 
-  output$frac_dat <-  renderUI({
-    if(!is.null(Report_data$d)){
-      fr <- unique(Report_data$d$File.Name)
+
+  ### Data base ###
+  drug_data_sh <- reactiveValues()
+  if(exists("drug_data2")){
+    drug_data_sh$y <- drug_data2
+  }
+  else{
+    if(file.exists("drug_data")){
+      drug_data_sh$y <- loadData()
     }
     else{
-      fr <- unique(report_data()$File.Name)
+      drug_data_sh$y <- drug_data
     }
-    if(length(fr) == 1){
-      HTML(paste0("<h3><u>The current fraction name is :</u> ", fr, ".</h3>"
-                  )
-           )
+  }
+
+  output$davai_daba_ui <- renderUI({
+    selectInput("davai_daba", "Choose a dataset to remove", choices = names(drug_data_sh$y$data),
+                selected = "elutriation")
+  })
+  output$davai2_daba_ui <- renderUI({
+    selectInput("davai2_daba", "Choose a dataset to remove", choices = names(drug_data_sh$y$data),
+                selected = "elutriation")
+  })
+  output$drug2_ui <- renderUI({
+    selectInput("drug2", "Choose a drug", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "elutriation")
+  })
+
+  observeEvent(input$up_daba,{
+    showNotification("Start loading the data, this may take a while", type = "message")
+    a <- loadData()
+    drug_data_sh$y <- a
+    drug_data2 <<- drug_data_sh$y
+
+    updateSelectInput(session, "davai_daba", choices = names(a$data), selected = names(a$data)[1])
+    updateSelectInput(session, "drug2", choices = names(a$data), selected = names(a$data)[1])
+
+    showNotification("Data loaded !", type = "message")
+  })
+
+  output$info_daba <- renderText({
+    dn <- length(drug_data_sh$y$data)
+    d <- names(drug_data_sh$y$data)
+
+    if(dn > 1){
+      d <- paste(c(paste(d[1:(dn-1)], collapse = ", "), d[dn]), collapse = " and ")
+    }
+
+    HTML(paste("<p><h4>Your dataset contains at the moment", dn, "drugs :", d, ".</h4></p>"))
+  })
+
+
+  DIF_daba <- reactive({
+    File <- input$caldif_daba
+    if (is.null(File))
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$DIFdaba_fileup <- reactive({
+    return(!is.null(DIF_daba()))
+  })
+  outputOptions(output, "DIFdaba_fileup", suspendWhenHidden = FALSE)
+
+  AVE_daba <- reactive({
+    if(!input$gave_daba){
+      File <- input$AVE_dabafile
+      if (is.null(File))
+        return(NULL)
+
+      ms_fileread(File$datapath)
     }
     else{
-      HTML(paste0("<h3><u>The current fraction names are :</u> ", paste(paste(fr[1:(length(fr)-1)], collapse = ", "),
-                                                                        "and", fr[length(fr)]), ".</h3>")
-           )
+      1  #simplify condition is.null
     }
+  })
+  #check if a file is upload
+  output$AVEdaba_fileup <- reactive({
+    return(!is.null(AVE_daba()))
+  })
+  outputOptions(output, "AVEdaba_fileup", suspendWhenHidden = FALSE)
+
+  HIT_daba <- reactive({
+    File <- input$hitsum_daba
+    if (is.null(File))
+      return(NULL)
+
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
+
+  })
+  #check if a file is upload
+  output$HITdaba_fileup <- reactive({
+    return(!is.null(HIT_daba()))
+  })
+  outputOptions(output, "HITdaba_fileup", suspendWhenHidden = FALSE)
+
+  NN_daba <- reactive({
+    File <- input$NN_daba
+    if (is.null(File))
+      return(NULL)
+
+    dat <- import(File$datapath, header = TRUE)
+    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+    if(!purrr::is_empty(nv_nam)){
+      dat <- dat[, !(names(dat) %in% nv_nam)]
+    }
+    dat
+  })
+  #check if a file is upload
+  output$NNdaba_fileup <- reactive({
+    return(!is.null(NN_daba()))
+  })
+  outputOptions(output, "NNdaba_fileup", suspendWhenHidden = FALSE)
+
+
+
+  observeEvent(input$add_daba, {
+    if(input$name_daba %in% names(drug_data_sh$y$data)){
+      showNotification("This name is already taken ! Please, choose anoter one.", type = "error")
+    }
+    else{
+      ave_data <- NULL
+      if(!input$gave_daba & !is.null(AVE_daba())){
+        ave_data <- AVE_daba()
+      }
+      else{
+        showNotification("Getting average dataset, this may take a while.", type = "message")
+        ave_data <- ms_2D_average_sh(DIF_daba())
+        showNotification("Average calculation succeed !", type = "message")
+      }
+      showNotification("Start saving dataset, this may take a while.", type = "message")
+      saveData(drug_data_sh$y, new_add = list("data" = DIF_daba(),
+                                              "data_ave" = ave_data,
+                                              "hitlist" = HIT_daba(),
+                                              "NN" = NN_daba(),
+                                              "treat_level" = get_treat_level(DIF_daba())),
+               input$name_daba)
+
+
+      showNotification("New dataset added !", type = "message")
+    }
+  })
+
+  output$condfrom_daba <- renderUI({
+    cd_info <- NULL
+    df <- NULL
+    if(!is.null(input$davai2_daba)){
+      df <- drug_data_sh$y$data[[input$davai2_daba]]
+    }
+
+    if(!is.null(df) & !purrr::is_empty(df)){
+      cd <- get_treat_level(df)
+      cd_1 <- cd[-length(cd)]
+      cd_e <- cd[length(cd)]
+
+      cd_info <- paste(paste(cd_1, collapse = ", "), cd_e, sep = " and ")
+    }
+    HTML(paste("<p>Your current condtion names for the drug", input$davai2_daba, "are :", paste0("<b>", cd_info, "</b>"), "</p>"))
+  })
+
+  observeEvent(input$changename_daba, {
+    showNotification("Checking new names", type = "message", duration = 2)
+    nm <- input$condnew_daba
+    nm <- str_split(nm, ",")[[1]]
+    nm <- str_remove_all(nm, " ")
+    if(sum(str_detect(nm, "_|/")) > 0){
+      showNotification("The character '_' and '/' are not alllowed. Please, verify your new names.", type = "error")
+    }
+    else{
+      if(!is.null(input$davai2_daba)){
+        cd <- get_treat_level(drug_data_sh$y$data[[input$davai2_daba]])
+      }
+
+      for(i in 1:length(cd)){
+        if(str_length(nm[i]) == 0){
+          nm[i] <- cd[i]
+        }
+      }
+      change <- cd[!(nm %in% cd)]
+      if(!purrr::is_empty(change) & !is.null(change)){
+        new <- nm[!(nm %in% cd)]
+        showNotification(paste("You decided to change :", paste(change, collapse = ", "),
+                               "In :", paste(new, collapse = ", ")), type = "message")
+
+        df <- drug_data_sh$y$data[[input$davai2_daba]]
+        df_ave <- drug_data_sh$y$data_ave[[input$davai2_daba]]
+        dh <- drug_data_sh$y$hitlist[[input$davai2_daba]]
+        dnn <- drug_data_sh$y$NN[[input$davai2_daba]]
+
+        n_df <- names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))]
+        n_df_ave <- names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))]
+        n_dh <- dh$Condition
+        n_dnn <- dnn$Condition
+
+        for(i in 1:length(change)){
+          n_df <- str_replace_all(n_df, paste0("_", change[i], "$"), paste0("_", new[i]))
+          n_df_ave <- str_replace_all(n_df_ave, paste0("_", change[i], "$"), paste0("_", new[i]))
+          n_dh <- str_replace_all(n_dh, paste0("^", change[i], "$"), new[i])
+          n_dnn <- str_replace_all(n_dnn, paste0("^", change[i], "$"), new[i])
+        }
+
+        names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df
+        names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df_ave
+        dh$Condition <- n_dh
+        dnn$Condition <- n_dnn
+        dt <- get_treat_level(df)
+
+        showNotification("Start saving changes, this may take a while.", type = "message")
+        saveData(drug_data_sh$y, new_add = list("data" = df,
+                                                "data_ave" = df_ave,
+                                                "hitlist" = dh,
+                                                "NN" = dnn,
+                                                "treat_level" = dt),
+                 input$davai2_daba)
+
+
+        showNotification("Names changed !", type = "message")
+
+      }
+      else{
+        showNotification("You didn't make any changement !", type = "error")
+      }
+    }
+
 
   })
 
-  observeEvent(input$change_dat, {
-    if(!is.null(Report_data$d)){
-      report <- Report_data$d
-      cd <- unique(report$File.Name)
-    }
+  observeEvent(input$rem_daba, {
+    showModal(
+      modalDialog(
+      title="Are you sur you want to remove this dataset ?",
+      footer = tagList(actionButton("confirmRem", "Remove"),
+                       modalButton("Cancel")
+                       )
+             )
+      )
+  })
+  observeEvent(input$confirmRem, {
+    showNotification("Start removing dataset", type = "message")
+    remData(drug_data_sh$y, input$davai_daba)
 
-    if(input$chorename_dat == "New names"){
-      if(str_length(str_remove_all(input$newfrac_dat, " ")) == 0){
-        showNotification("Type something !", type = "error", duration = 2)
+    removeModal()
+
+    showNotification("Dataset removed !", type = "message")
+  })
+
+
+  ### BAR PLOT TAB ###
+
+  barplot_data <- reactive({
+    File <- input$data_barplot
+    if (is.null(File))
+      return(NULL)
+
+    ms_fileread(File$datapath)
+  })
+  #check if a file is upload
+  output$barplot_dataup <- reactive({
+    return(!is.null(barplot_data()))
+  })
+  outputOptions(output, "barplot_dataup", suspendWhenHidden = FALSE)
+
+  barhit_data <- reactive({
+    File <- input$data_hitlist
+    if (is.null(File))
+      return(NULL)
+
+    d <- import_list(File$datapath, header = TRUE)
+    names(d) <- File$name
+
+    d
+  })
+  #check if a file is upload
+  output$barhit_dataup <- reactive({
+    return(!is.null(barhit_data()))
+  })
+  outputOptions(output, "barhit_dataup", suspendWhenHidden = FALSE)
+
+  hit_bar <- reactiveValues(
+    summa = NULL,
+    NN = NULL
+  )
+
+  observeEvent(input$str_calchit, {
+    showNotification("Calculation started, this may take a while. Please wait a few minutes !",
+                     type = "message", duration = 5)
+
+    h <- hitlist(barplot_data(), meancutoff = input$meancut_bar, boundedness = input$bound_bar,
+                 use_prompt = FALSE, exported = input$save_hit_bar)
+    h_s <- rbind(h$CC, h$CN, h$NC, h$ND)
+
+    hit_bar$summa <- h_s %>% group_by(id,Condition,category) %>%  summarize()
+    hit_bar$NN <- h$NN
+  })
+
+
+  Sel_cond_fhit_SUMMA <- reactiveValues(
+    choice = NULL,
+    hit = NULL
+  )
+  Sel_cond_fhit <- reactive({
+    HIT <- NULL
+
+    if(input$hit){
+      if(input$drug == "base" & length(input$drug2) >= 1){
+        HIT <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
       }
-      else if(str_count(input$newfrac_dat, ",") != (length(cd) - 1)){
-        showNotification("You need to type the same number of new names as you have fractions,
-                        even if it's empty", type = "error", duration = 4)
-      }
-      else{
-        showNotification("Checking new names", type = "message", duration = 2)
-        nm <- input$newfrac_dat
-        nm <- str_split(nm, ",")[[1]]
-        nm <- str_remove_all(nm, " ")
-        if(sum(str_detect(nm, "/")) > 0){
-          showNotification("The character '/' is not alllowed. Please, verify your new names.", type = "error")
+      else if(input$drug == "dat"){
+        if(is.null(hit_bar$summa)){
+          idx <- grep("Summary", names(barhit_data()))
+
+          HIT <- barhit_data()[idx][[1]]
         }
         else{
-          showNotification("Start changing names", type = "message", duration = 3)
-          for(i in 1:length(cd)){
-            if(str_length(nm[i]) == 0){
-              nm[i] <- cd[i]
-            }
+          HIT <- hit_bar$summa
+        }
+      }
+      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      if(!purrr::is_empty(c_idx)){
+        HIT_summup <- list()
+        for(i in unique(HIT[, c_idx])){
+          HIT_summup[[i]] <- (HIT %>% dplyr::filter(Condition == i))$id
+        }
+        HIT_summup <- com_protein_loop(HIT_summup)
+
+        for (i in names(HIT_summup)){
+          HIT[which(!is.na(match(HIT$id, HIT_summup[[i]]))), c_idx] <- i
+        }
+        HIT <- unique(HIT)
+      }
+    }
+
+    HIT
+  })
+
+  observe({
+    if(!is.null(Sel_cond_fhit())){
+      c_idx <- str_which(colnames(Sel_cond_fhit()), "^[C|c]ondition")
+      Sel_cond_fhit_SUMMA$hit <- Sel_cond_fhit()
+      if(!purrr::is_empty(c_idx)){
+        Sel_cond_fhit_SUMMA$choice <- unique(Sel_cond_fhit()[,c_idx])
+      }
+      updateSelectInput(session, "cond_fhit", choices = Sel_cond_fhit_SUMMA$choice, selected = Sel_cond_fhit_SUMMA$choice[1])
+    }
+  })
+
+  sel_prot <- reactive({
+    pr <- NULL
+    if(input$drug == "base"){
+      if(input$protlist_bar){
+        File <- input$prlist_file_bar
+        if (is.null(File)){
+          pr <- NULL
+        }
+        else{
+          pr <- unique(read.delim(File$datapath, header = FALSE)[[1]])
+
+          prcheck <- ""
+          if(length(input$drug2) == 1){
+            prcheck <- drug_data_sh$y$data[[input$drug2]]$id
           }
-          change <- cd[!(nm %in% cd)]
-          if(!purrr::is_empty(change) & !is.null(change)){
-            new <- nm[!(nm %in% cd)]
-            showNotification(paste("You decided to change :", paste(change, collapse = ", "),
-                                   "In :", paste(new, collapse = ", ")), type = "message", duration = 7)
+          else if(length(input$drug2) > 1){
+            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
+          }
 
-            for(i in 1:length(change)){
-              report$File.Name[which(report$File.Name == change[i])] <- new[i]
-            }
-            Report_data$d <- report
-
-            showNotification("Names changed !", type = "message", duration = 3)
+          a <- pr[!(pr %in% prcheck)]
+          if(!purrr::is_empty(a)){
+            pr <- pr[(pr %in% prcheck)]
+            showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
+                             type = "error")
+          }
+        }
+      }
+      else{
+        if(length(input$drug2) == 1){
+          if(input$hit & !is.null(input$cond_fhit)){
+            pr <- Sel_cond_fhit_SUMMA$hit
+            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+            pr <- pr$id
+            pr <- unique(pr)
           }
           else{
-            showNotification("You didn't make any changement !", type = "error")
+            pr <- drug_data_sh$y$data[[input$drug2]]$id
+          }
+        }
+        else if(length(input$drug2) > 1){
+          if(input$hit & !is.null(input$cond_fhit)){
+            pr <- Sel_cond_fhit_SUMMA$hit
+            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+            pr <- pr$id
+            pr <- unique(pr)
+          }
+          else{
+            pr <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
           }
         }
       }
     }
-    else if(input$chorename_dat == "Remove path"){
-      showNotification("Start changing names", type = "message", duration = 3)
-      if(input$whattorm_dat == 1){
-        nm <- lapply(cd, function(x) as.data.frame(t(str_split_fixed(x, "", str_length(x)))))
-        N <- max(as.numeric(lapply(nm, nrow)))
-        nm <- lapply(nm, function(x) {x <- rbind(x, t(t(rep("", N - nrow(x))))); x})
-        nm <- do.call(cbind, nm)
-        names(nm) <- paste0("F", 1:length(nm))
-        nm$keep <- apply(nm, 1, function(x) length(unique(x)) != 1)
-        nm <- as.list(nm[nm$keep, -ncol(nm)])
-        nm <- lapply(nm, function(x) paste(x, collapse = ""))
 
-        for(i in 1:length(nm)){
-          report$File.Name[which(report$File.Name == cd[i])] <- nm[[i]]
+    else if(input$drug == "dat"){
+      if(input$hit  & !is.null(input$cond_fhit)){
+        if(is.null(hit_bar$summa)){
+          idx <- grep("Summary", names(barhit_data()))
+          pr <- barhit_data()[idx][[1]]
+          pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+          pr <- pr$id
+          pr <- unique(pr)
+        }
+        else{
+          pr <- unique(hit_bar$summa$id)
+        }
+
+      }
+      else{
+        pr <- barplot_data()$id
+      }
+    }
+
+    pr
+  })
+
+  observe({
+    updateSelectizeInput(session, "prot", choices = sel_prot(), server = TRUE)
+
+  })
+
+  Sel_cond <- reactive({
+    if(input$ALL_prot){
+      PROT <- sel_prot()
+    }
+    else{
+      PROT <- input$prot
+    }
+
+    if(input$drug == "base" & length(input$drug2) >= 1){
+      HIT <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
+      NN <- do.call(rbind, drug_data_sh$y$NN[input$drug2])
+    }
+    else if(input$drug == "dat"){
+      if(is.null(hit_bar$summa)){
+        idx <- grep("Summary", names(barhit_data()))
+
+        HIT <- barhit_data()[idx][[1]]
+        NN <- barhit_data()[!(1:length(names(barhit_data())) %in% idx)][[1]]
+      }
+      else{
+        HIT <- hit_bar$summa
+        NN <- hit_bar$NN
+      }
+    }
+
+
+    tr <- NULL
+    if(input$cond_sel == "cat"){
+      if(length(input$drug2) >= 1){
+        trh <- HIT[which(!is.na(match(HIT$id, PROT))),c("Condition", "category")]
+        tr <- NN[which(!is.na(match(NN$id, PROT))), c("Condition", "category")]
+        tr <- tr[!duplicated(tr),]
+        tr <- rbind(trh, tr)
+      }
+
+
+    }
+    else if(input$cond_sel == "treat"){
+      if(input$drug == "base" & length(input$drug2) >= 1){
+        a <- join_drugdata(drug_data_sh$y$data[input$drug2], by = c("id", "description"))
+        TRE <- get_treat_level(a)
+
+        if(input$rem_con){
+          tr <- TRE[-grep(input$con_name, TRE)]
+        }
+        else{
+          tr <- TRE
         }
       }
-      else if(input$whattorm_dat == 2){
-        report$File.Name <- str_remove_all(report$File.Name, ".{1,}\\\\")
+      else if(input$drug == "dat"){
+        if(input$rem_con){
+          tr <- get_treat_level(barplot_data())[-grep(input$con_name, get_treat_level(barplot_data()))]
+        }
+        else{
+          tr <- get_treat_level(barplot_data())
+        }
       }
-      else if(input$whattorm_dat == 3){
-        report$File.Name <- str_remove_all(report$File.Name, ".{1,}\\\\")
-        report$File.Name <- str_remove_all(report$File.Name, "\\..{1,}")
-      }
-      Report_data$d <- report
+    }
+    else{
+      tr <- NULL
+    }
 
-      showNotification("Names changed !", type = "message", duration = 3)
+    tr
+  })
+
+  observe({
+    updateSelectInput(session, "cond", choices = Sel_cond())
+  })
+
+  observe({
+    if(input$cond_sel == "cat"){
+      updateSelectInput(session, "cond", choices = unique(Sel_cond()$category))
+    }
+    else{
+      updateSelectInput(session, "cond", choices = Sel_cond())
+    }
+  })
+
+  data <- reactive({
+    if(input$ALL_prot){
+      PROT <- sel_prot()
+    }
+    else{
+      PROT <- input$prot
+    }
+
+    if (input$drug == "base"){
+      data <- join_drugdata(drug_data_sh$y$data[input$drug2], by = c("id", "description"))
+      TREAT <- get_treat_level(data)
+    }
+
+    else if(input$drug == "dat"){
+      data <- barplot_data()
+      TREAT <- get_treat_level(barplot_data())
+    }
+
+    if(input$rem_con){
+      data <- data[,-grep(input$con_name,  names(data))]
+    }
+
+    data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar)
+
+
+
+    if(input$cond_sel == "treat"){
+      notsel_cond <- TREAT[!(TREAT %in% input$cond)]
+      notsel_cond <- paste0("_", notsel_cond, "$")
+      notsel_cond <- paste(notsel_cond, collapse = "|")
+
+      if(str_length(notsel_cond) != 0){
+        data <- data[,-str_which(names(data), notsel_cond)]
+      }
+
+      id_sel <- str_which(names(data), paste(input$cond, collapse = "|"))
+      w <- 1:ncol(data)
+      w <- w[!(w %in% id_sel)]
+
+      ord <- unlist(lapply(input$cond, function(x) str_which(names(data), paste0("_", x, "$"))))
+
+      data <- data[,c(w,ord)]
+    }
+    else if(input$cond_sel == "cat"){
+      sele_cond <- Sel_cond()$Condition[which(!is.na(match(Sel_cond()$category, input$cond)))]
+      notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
+      notsel_cond <- paste(notsel_cond, collapse = "|")
+
+      data <- data[,-str_which(names(data), notsel_cond)]
+    }
+
+    data
+  })
+
+  DAT_text <- reactive({
+    DAT <- NULL
+    if(input$drug == "base" & length(input$drug2) > 1){
+      only_dat <- drug_data_sh$y$data[input$drug2]
+
+      DAT <- join_drugdata(only_dat, by = c("id", "description"))
+      DAT$drug <- rep(paste(input$drug2, collapse = " and "), nrow(DAT))
+      DAT_id <- lapply(only_dat, function(x) x$id)
+
+      com_pr <- com_protein_loop(DAT_id)
+
+      for (i in names(com_pr)){
+        DAT$drug[which(!is.na(match(DAT$id, com_pr[[i]])))] <- i
+      }
+
+      DAT <- DAT[,c("id", "drug")]
     }
 
   })
-    ### PRECURSORS
-    precu_ev <- reactiveValues(
-      x = NULL
-    )
-    precu <- reactive({
-      df <- Report_data$d
-      d <- diann_matrix(df,
-                        proteotypic.only = input$protypiconly_prec,
-                        q = input$qv_prec,
-                        protein.q = input$qvprot_prec,
-                        pg.q = input$qvpg_prec,
-                        gg.q = input$qvgg_prec)
-      d <- as.data.frame(d)
-      nc <- ncol(d)
-      d$Precursor.Id <- rownames(d)
-      d <- d[order(d$Precursor.Id),]
-      rownames(d) <- 1:nrow(d)
-      df <- df[df$Q.Value <= input$qv_prec & df$PG.Q.Value <= input$qvpg_prec & df$GG.Q.Value <= input$qvgg_prec & df$PG.Q.Value <= input$qvpg_prec,]
-      df <- df[(df$Precursor.Id %in% d$Precursor.Id),]
-      df <- df[order(df$Precursor.Id),]
-      d$Precursor.Charge <- unique(df[,c("Precursor.Id", "Precursor.Charge")])$Precursor.Charge
-      d$Stripped.Sequence <- unique(df[,c("Precursor.Id", "Stripped.Sequence")])$Stripped.Sequence
-      d$Modified.Sequence <- unique(df[,c("Precursor.Id", "Modified.Sequence")])$Modified.Sequence
-
-      d <- d[,c((nc+1):ncol(d), 1:nc)]
-    })
-    observeEvent(input$go_prec, {
-      showNotification("Getting the precursors tab", type = "message", duration = 2)
-      precu_ev$x <- precu()
-    })
-    output$precursor_up <- reactive({
-      return(!is.null(precu_ev$x))
-    })
-    outputOptions(output, "precursor_up", suspendWhenHidden = FALSE)
-
-    output$res_prec <- DT::renderDataTable({
-      DT::datatable(precu_ev$x,
-                    caption = htmltools::tags$caption(
-                      style = 'caption-side: top; text-align: left;',
-                      htmltools::strong('Precursors')
-                    ),
-                    rownames = FALSE,
-                    options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                   scrollX = TRUE)
-      )
-    })
-    output$down_prec <- downloadHandler(
-      filename = function() {
-        paste0("Precursors_dia_", Sys.Date(), ".", input$format_prec)
-      },
-      content = function(file){
-        if(input$format_prec == "xlsx"){
-          openxlsx::write.xlsx(precu_ev$x, file, rowNames = FALSE)
-        }
-        else if(input$format_prec == "csv"){
-          write.csv(precu_ev$x, file, row.names =  FALSE, quote = FALSE)
-        }
-        else if(input$format_prec == "txt"){
-          write.table(precu_ev$x, file, row.names = FALSE, sep = "\t", quote = FALSE)
-        }
-      }
-    )
-
-    ### PEPTIDE
-    pep_ev <- reactiveValues(
-      x = NULL
-    )
-    pep <- reactive({
-      df <- Report_data$d
-      d <- diann_matrix(df,
-                        id.header="Stripped.Sequence",
-                        proteotypic.only = input$protypiconly_pep,
-                        q = input$qv_pep,
-                        protein.q = input$qvprot_pep,
-                        pg.q = input$qvpg_pep,
-                        gg.q = input$qvgg_pep)
-      d <- as.data.frame(d)
-      nc <- ncol(d)
-      d$Stripped.Sequence <- rownames(d)
-      d <- d[order(d$Stripped.Sequence),]
-      rownames(d) <- 1:nrow(d)
-      df <- df[df$Q.Value <= input$qv_pep & df$PG.Q.Value <= input$qvpg_pep & df$GG.Q.Value <= input$qvgg_pep & df$PG.Q.Value <= input$qvpg_pep,]
-      df <- df[(df$Stripped.Sequence %in% d$Stripped.Sequence),]
-      df <- df[order(df$Stripped.Sequence),]
-      m <- unique(df[,c("Stripped.Sequence", "Modified.Sequence")])
-      d$Modified.Sequence <- m[!duplicated(m$Stripped.Sequence),]$Modified.Sequence
-      d <- d[,c((nc+1):ncol(d), 1:nc)]
-
-    })
-    observeEvent(input$go_pep, {
-      showNotification("Getting the peptides tab", type = "message", duration = 2)
-      pep_ev$x <- pep()
-    })
-    output$peptide_up <- reactive({
-      return(!is.null(pep_ev$x))
-    })
-    outputOptions(output, "peptide_up", suspendWhenHidden = FALSE)
-
-    output$res_pep <- DT::renderDataTable({
-      DT::datatable(pep_ev$x,
-                    caption = htmltools::tags$caption(
-                      style = 'caption-side: top; text-align: left;',
-                      htmltools::strong('Peptides')
-                    ),
-                    rownames = FALSE,
-                    options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                   scrollX = TRUE)
-      )
-    })
-    output$down_pep <- downloadHandler(
-      filename = function() {
-        paste0("Peptides_dia_", Sys.Date(), ".", input$format_pep)
-      },
-      content = function(file){
-        if(input$format_pep == "xlsx"){
-          openxlsx::write.xlsx(pep_ev$x, file, rowNames = FALSE)
-        }
-        else if(input$format_pep == "csv"){
-          write.csv(pep_ev$x, file, row.names =  FALSE, quote = FALSE)
-        }
-        else if(input$format_pep == "txt"){
-          write.table(pep_ev$x, file, row.names = FALSE, sep = "\t", quote = FALSE)
-        }
-      }
-    )
-
-    ### PEPTIDE MaxLFQ
-    peplfq_ev <- reactiveValues(
-      x = NULL
-    )
-    peplfq <- reactive({
-      df <- Report_data$d
-      if(input$protypiconly_peplfq){
-        df <- df[which(df[["Proteotypic"]] != 0), ]
-      }
-      df <- df %>% dplyr::filter(Q.Value <= input$qv_peplfq & PG.Q.Value <= input$qvpg_peplfq & Protein.Q.Value <= input$qvprot_peplfq & GG.Q.Value <= input$qvgg_peplfq)
-      if(input$wLFQ_peplfq == "diann"){
-        d <- diann_maxlfq(df,
-                          group.header="Stripped.Sequence",
-                          id.header = "Precursor.Id",
-                          quantity.header = "Precursor.Normalised",
-                          count_pep = FALSE
-        )
-      }
-      else if(input$wLFQ_peplfq == "iq"){
-        d <- iq::preprocess(df,
-                            intensity_col = "Precursor.Normalised",
-                            primary_id = "Stripped.Sequence",
-                            sample_id  = "File.Name",
-                            secondary_id = "Precursor.Id",
-                            median_normalization = FALSE,
-                            pdf_out = NULL)
-        d <- iq::fast_MaxLFQ(d)
-        d <- d$estimate
-        d <- as.data.frame(d)
-      }
-      nc <- ncol(d)
-      d$Stripped.Sequence <- rownames(d)
-      d <- d[order(d$Stripped.Sequence),]
-      rownames(d) <- 1:nrow(d)
-      df <- df[(df$Stripped.Sequence %in% d$Stripped.Sequence),]
-      df <- df[order(df$Stripped.Sequence),]
-      m <- unique(df[,c("Stripped.Sequence", "Modified.Sequence")])
-      d$Modified.Sequence <- m[!duplicated(m$Stripped.Sequence),]$Modified.Sequence
-      d <- d[,c((nc+1):ncol(d), 1:nc)]
-    })
-    observeEvent(input$go_peplfq, {
-      showNotification(paste("Getting the peptides tab using the MaxLFQ algorithm from", input$wLFQ_peplfq, "package"), type = "message")
-      peplfq_ev$x <- peplfq()
-    })
-    output$peptideLFQ_up <- reactive({
-      return(!is.null(peplfq_ev$x))
-    })
-    outputOptions(output, "peptideLFQ_up", suspendWhenHidden = FALSE)
-
-    output$res_peplfq <- DT::renderDataTable({
-      DT::datatable(peplfq_ev$x,
-                    caption = htmltools::tags$caption(
-                      style = 'caption-side: top; text-align: left;',
-                      htmltools::strong('Peptides, using the MaxLFQ algorithm')
-                    ),
-                    rownames = FALSE,
-                    options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                   scrollX = TRUE)
-      )
-    })
-    output$down_peplfq <- downloadHandler(
-      filename = function() {
-        paste0("PeptidesMaxLFQ_dia_", Sys.Date(), ".", input$format_peplfq)
-      },
-      content = function(file){
-        if(input$format_peplfq == "xlsx"){
-          openxlsx::write.xlsx(peplfq_ev$x, file, rowNames = FALSE)
-        }
-        else if(input$format_peplfq == "csv"){
-          write.csv(peplfq_ev$x, file, row.names =  FALSE, quote = FALSE)
-        }
-        else if(input$format_peplfq == "txt"){
-          write.table(peplfq_ev$x, file, row.names = FALSE, sep = "\t", quote = FALSE)
-        }
-      }
-    )
-
-    ### PROTEINS
-    fasta <- visu_data <- reactive({
-      fts <- NULL
-      if(input$fasta_pg){
-        File <- input$fastafile_pg
-        if(is.null(File))
-          return(NULL)
-
-        fts <- File$datapath
+  tabident_bar <- reactiveValues(
+    r = NULL
+  )
+  tabidentreac_bar <- reactive({
+    if(input$ALL_prot){
+      PROT <- sel_prot()
+    }
+    else{
+      PROT <- input$prot
+    }
+    DR <- NULL
+    if(input$drug == "base" & !is.null(PROT)){
+      if(length(input$drug2) > 1){
+        DR <- DAT_text()[which(!is.na(match(DAT_text()$id, PROT))),]  #lost this column with ms_subsetting
+        DR$drug <- paste("has been identified in the experiment", DR$drug)
       }
       else{
-        fts <- NULLL
+        DR <- data.frame(id = PROT)
       }
-      print(fts)
-      fts
+    }
+    else{
+      NULL
+    }
+    if(!is.null(DR) & !is.null(Sel_cond_fhit_SUMMA$hit)){
+      hit_info <- Sel_cond_fhit_SUMMA$hit
+      hit_info <- hit_info[, !(names(hit_info) %in% "category")]
+      names(hit_info)[!(names(hit_info) %in% "id")] <- "Hits_Info"
+
+      DR <-left_join(DR, hit_info, by = "id")
+    }
+    if(!is.null(DR)){
+      if(ncol(DR) <= 1){
+        DR <- NULL
+      }
+    }
+    unique(DR)
+  })
+  observe({
+    tabident_bar$r <- tabidentreac_bar()
+  })
+  output$pr_info <- DT::renderDataTable({
+     DT::datatable(tabident_bar$r,
+                    caption = htmltools::tags$caption(
+                      style = 'caption-side: top; text-align: left;',
+                      htmltools::strong("Identification comparison")
+                    ),
+                    rownames = FALSE,
+                    options = list(lengthMenu = c(10,20,30), pageLength = 10))
+  })
+  output$identifcomp_barup <- reactive({
+    return(!is.null(tabident_bar$r))
+  })
+  outputOptions(output, "identifcomp_barup", suspendWhenHidden = FALSE)
+
+  output$downtabidentif_barplot <- downloadHandler(
+    filename = function() {
+      paste0("Identification_comparison_", Sys.Date(), ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(tabident_bar$r, file, row.names = FALSE)
+    }
+  )
+
+  output$n_cond_sel <- renderText({
+    if(input$ch_own_col){
+      if (input$cond_sel  == "all_cond"){
+        paste("You selected", length(get_treat_level(data())), "conditions, please enter the same number of colors")
+      }
+      else{
+        paste("You selected", length(input$cond), "conditions, please enter the same number of colors")
+      }
+    }
+    else{
+      NULL
+    }
+  })
+
+  OWN_color <- reactiveValues(
+    ch = c()
+  )
+  observeEvent(input$add_col, {
+    OWN_color$ch <- append(OWN_color$ch, input$own_color_pick)
+  })
+  observeEvent(input$rem_col, {
+    if(length(OWN_color$ch) <= 1){
+      OWN_color$ch <- c()
+    }
+    else{
+      OWN_color$ch <- OWN_color$ch[1:(length(OWN_color$ch)-1)]
+    }
+  })
+  output$own_color <- renderText({
+    paste("You selected this colors :", paste(OWN_color$ch, collapse = ", "))
+  })
+
+  BAR <- reactiveValues(
+    ch = NULL
+  )
+
+  Bar_one <- reactive({
+    withCallingHandlers({
+      shinyjs::html("diag_bar", "")
+      if(input$ch_own_col){
+        nbc <- ifelse(input$cond_sel == "all_cond", length(get_treat_level(data())), length(input$cond))
+        COL <- OWN_color$ch
+        if(nbc == length(COL)){
+          ms_2D_barplotting_sh(data(), witherrorbar = input$werb,
+                               usegradient = input$grad, linegraph = input$line,
+                               save_pdf = input$save_bar, colorpanel = COL,
+                               layout = c(input$lay_bar1, input$lay_bar2),
+                               pdfname = input$pdftit)
+        }
+        else{
+          showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+        }
+
+      }
+      else{
+        ms_2D_barplotting_sh(data(), witherrorbar = input$werb,
+                             usegradient = input$grad, linegraph = input$line,
+                             save_pdf = input$save_bar,
+                             layout = c(input$lay_bar1, input$lay_bar2),
+                             pdfname = input$pdftit)
+      }
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
+  })
+
+
+  observeEvent(input$barp, {
+    if(input$cond_sel == "cat"){
+      if (length(unique(Sel_cond()$category)) > 1){
+        che <- length(input$cond) == length(unique(Sel_cond()$category))
+      }
+      else{
+        che <- FALSE
+        }
+    }
+    else if(input$cond_sel == "all_cond"){
+      che <- FALSE
+    }
+
+    che2 <- FALSE
+    if (is.null(input$cond)){
+      if(input$cond_sel != "all_cond"){
+        che2 <- TRUE
+      }
+      else{
+        che2 <- FALSE
+      }
+    }
+
+    if(input$drug == "base" & length(input$drug2) < 1){
+      showNotification("Don't forget to select a drug !", type = "error")
+    }
+    if(length(input$prot) == 0 & !input$ALL_prot){
+      showNotification("Don't forget to select a protein !", type = "error")
+    }
+    else if (che2){
+      showNotification("Don't forget to select a condition !", type = "error")
+
+    }
+    #else if(che){
+     # showNotification("If you want to select all conditions,
+    #                   please select the option 'Select all the treatment level'", type = "error")
+    #}
+    else{
+      BAR$ch <- Bar_one()
+    }
+
+  })
+
+  output$bar_plot <- renderPlot({
+    BAR$ch
+  })
+
+  output$downbar <- downloadHandler(
+    filename = function() {
+      paste("2D_barplot_", Sys.Date(), "_", input$prot, ".png", sep = "")
+    },
+    content = function(file){
+      ggsave(file, BAR$ch[[1]], device = "png")
+    }
+  )
+
+
+
+
+  ### PROTEIN COMPLEX
+  output$drug2ui_compl <- renderUI({
+    selectInput("drug2_compl", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  DIF_compl <- reactive({
+    if(input$drug_compl == "dat"){
+      File <- input$caldif_compl
+      if (is.null(File))
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_compl], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$DIFcompl_fileup <- reactive({
+    return(!is.null(DIF_compl()))
+  })
+  outputOptions(output, "DIFcompl_fileup", suspendWhenHidden = FALSE)
+
+  HIT_compl <- reactive({
+    if(input$drug_compl == "dat"){
+      File <- input$hitsum_compl
+      if (is.null(File))
+        return(NULL)
+
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_compl])
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$HITcompl_fileup <- reactive({
+    return(!is.null(HIT_compl()))
+  })
+  outputOptions(output, "HITcompl_fileup", suspendWhenHidden = FALSE)
+
+  NN_compl <- reactive({
+    if(input$drug_compl == "dat"){
+      File <- input$NN_compl
+      if (is.null(File))
+        return(NULL)
+
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      do.call(rbind, drug_data_sh$y$NN[input$drug2_compl])
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$NNcompl_fileup <- reactive({
+    return(!is.null(NN_compl()))
+  })
+  outputOptions(output, "NNcompl_fileup", suspendWhenHidden = FALSE)
+
+  AVE_compl <- reactive({
+    if(input$drug_compl == "dat"){
+      File <- input$avef_compl
+      if (is.null(File))
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_compl], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$AVEcompl_fileup <- reactive({
+    if(input$gave_compl){
+      return(TRUE)
+    }
+    else{
+      return(!is.null(AVE_compl()))
+    }
+  })
+  outputOptions(output, "AVEcompl_fileup", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!is.null(HIT_compl()) & !is.null(NN_compl())){
+      updateSelectInput(session, "condsel_compl", choices = unique(HIT_compl()$Condition))
+      updateSelectInput(session, "catego_compl", choices = append(unique(HIT_compl()$category),  "NN"),
+                        selected = unique(HIT_compl()$category)[1])
+    }
+  })
+
+  resmapping_compl <- reactiveValues(
+    ch = NULL
+  )
+  observeEvent(input$ave_map_compl, {
+    if(length(input$catego_compl) == 0){
+      showNotification("Don't forget to select a category !", type = "error")
+    }
+    else {
+      showNotification("Start mapping proteins, this may take a while", type = "message")
+
+      if(input$gave_compl & input$drug_compl == "dat"){
+        data_ave <- ms_2D_average_sh(DIF_compl())
+        showNotification("Average calculation succeed !", type = "message")
+      }
+      else{
+        data_ave <- AVE_compl()
+      }
+
+      cat_tab <- HIT_compl()
+      colnames(cat_tab)[str_which(colnames(cat_tab), "^[C|c]ondition")] <- "treatment"
+
+      cat_tabNN <- NN_compl()
+      colnames(cat_tabNN)[str_which(colnames(cat_tabNN), "^[C|c]ondition")] <- "treatment"
+      cat_tabNN <- cat_tabNN %>% dplyr::group_by(id, treatment, category) %>% dplyr::summarise()
+
+      cat_tab <- rbind(cat_tab, cat_tabNN)
+
+      withCallingHandlers({
+        shinyjs::html("diagmapping_compl", "")
+        map_compl <- ms_2D_complex_mapping_sh(data_ave, cat_tab, treatment = input$condsel_compl,
+                                              targetcategory = input$catego_compl,
+                                              organism = input$organism_compl)
+      },
+      message = function(m) {
+        shinyjs::html(id = "diagmapping_compl", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+      }
+      )
+
+      map_compl <- map_compl[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",
+                                 "id", "description", "gene", "category")]
+
+      if(nrow(map_compl) !=0){
+        map_compl$description <- mineCETSAapp:::getProteinName(map_compl$description)
+      }
+
+
+      resmapping_compl$ch <- map_compl
+      output$tabmap_compl <- DT::renderDataTable({
+        DT::datatable(resmapping_compl$ch,
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Mapping proteins results")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))
+      })
+
+      if(nrow(map_compl) !=0){
+        showNotification("Mapping protein succeed !", type = "message")
+      }
+      else{
+        showNotification("No proteins could be mapped !
+                         Try to add more category in order to have more proteins", type = "error")
+      }
+
+
+      updateSelectInput(session, "allcomplex_compl", choices = unique(resmapping_compl$ch$ComplexName))
+
+    }
+
+  })
+  #check if a file is upload
+  output$resmappingcompl_fileup <- reactive({
+    return(!is.null(resmapping_compl$ch))
+  })
+  outputOptions(output, "resmappingcompl_fileup", suspendWhenHidden = FALSE)
+
+  output$downrestab_compl <- downloadHandler(
+    filename = function() {
+      paste0("ProteinComplexMapping_", Sys.Date(), ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(resmapping_compl$ch, file, row.names = FALSE)
+    }
+  )
+
+
+  sel_prot_compl <- reactive({
+    pr <- NULL
+    if(!is.null(resmapping_compl$ch)){
+        pr <- resmapping_compl$ch$id[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl)))]
+        pr <- unique(pr)
+      }
+
+  })
+  observe({
+    updateSelectizeInput(session, "prot_compl", choices = sel_prot_compl(), server = TRUE)
+
+  })
+
+  data_compl <- reactive({
+    if(input$ALL_prot_compl){
+      PROT <- sel_prot_compl()
+    }
+    else{
+      PROT <- input$prot_compl
+    }
+
+    data <- DIF_compl()
+    TREAT <- get_treat_level(data)
+
+    cate <- resmapping_compl$ch[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl))),]
+    notsel_cond <- TREAT[!(TREAT %in% input$condsel_compl)]
+    notsel_cond <- paste(notsel_cond, collapse = "|")
+
+    if(input$save_bar_compl){
+      data_l <- list()
+      for(i in input$allcomplex_compl){
+        cate_ <- cate[which(cate$ComplexName == i), ]
+
+        pr_comp <- cate_$id
+        pr_comp <- pr_comp[which(!is.na(match(pr_comp, PROT)))]
+
+        data_l[[i]] <- ms_subsetting(data, isfile = F, hitidlist = c(pr_comp), allisoform = input$alliso_bar_compl)
+
+        data_l[[i]] <- data_l[[i]][,-str_which(names(data_l[[i]]), notsel_cond)]
+        data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))]
+      }
+
+      data <- data_l
+
+    }
+    else{
+      data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar_compl)
+
+      data <- data[,-str_which(names(data), notsel_cond)]
+      data$category <- cate$category[which(!is.na(match(cate$id, data$id)))]
+    }
+
+    data
+  })
+
+  BAR_compl <- reactiveValues(
+    ch = NULL
+  )
+
+  Bar_one_compl <- reactive({
+    withCallingHandlers({
+      shinyjs::html("diag_bar_compl", "")
+
+      COL <- ifelse(input$ch_own_col_compl, input$own_color_pick_compl, "#18FF00")
+
+
+      ms_2D_barplotting_sh(data_compl(), witherrorbar = input$werb_compl,
+                           usegradient = input$grad_compl, linegraph = input$line_compl,
+                           save_pdf = input$save_bar_compl, colorpanel = COL,
+                           layout = c(input$lay_bar1_compl, input$lay_bar2_compl),
+                           toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",
+                           pdfname = input$pdftit_compl
+                           )
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_compl", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
+  })
+
+
+  observeEvent(input$barp_compl, {
+    if(length(input$prot_compl) == 0 & !input$ALL_prot_compl){
+      showNotification("Don't forget to select a protein !", type = "error")
+    }
+    else{
+      BAR_compl$ch <- Bar_one_compl()
+    }
+
+  })
+
+  output$bar_plot_compl <- renderPlot({
+    BAR_compl$ch
+  })
+
+  output$downbar_compl <- downloadHandler(
+    filename = function() {
+      paste0("2D_barplot_", Sys.Date(), "_", paste(str_remove_all(input$allcomplex_compl, " "), sep = "_"), ".png")
+    },
+    content = function(file){
+      ggsave(file, BAR_compl$ch[[1]], device = "png")
+    }
+  )
+
+
+
+
+  ### SIMILAR PROFILE
+  output$drug2ui_simpf <- renderUI({
+    selectInput("drug2_simpf", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  DIF_simpf <- reactive({
+    if(input$drug_simpf == "dat"){
+      File <- input$cdiff_simpf
+      if (is.null(File))
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_simpf], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$DIFsimpf_fileup <- reactive({
+    return(!is.null(DIF_simpf()))
+  })
+  outputOptions(output, "DIFsimpf_fileup", suspendWhenHidden = FALSE)
+
+  AVE_simpf <- reactive({
+    if(input$drug_simpf == "dat"){
+      File <- input$avef_simpf
+      if (is.null(File))
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_simpf], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$AVEsimpf_fileup <- reactive({
+    if(input$gave_simpf){
+      return(TRUE)
+    }
+    else{
+      return(!is.null(AVE_simpf()))
+    }
+  })
+  outputOptions(output, "AVEsimpf_fileup", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!is.null(DIF_simpf())){
+      updateSelectInput(session, "treat_simpf", choices = get_treat_level(DIF_simpf()))
+      updateSelectizeInput(session, "prot_simpf", choices = DIF_simpf()$id, server = TRUE)
+    }
+  })
+  observe({
+    if(!is.null(DIF_simpf())){
+      nc <- str_subset(names(DIF_simpf()), paste0("_", input$treat_simpf, "$"))
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_simpf", max = nc)
+    }
     })
 
 
-    pg_ev <- reactiveValues(
-      x = NULL
+  BAR_simpf <- reactiveValues(
+    ch = NULL
+  )
+
+  Bar_one_simpf <- reactive({
+    if(input$gave_simpf & input$drug_simpf == "dat"){
+      average <- NULL
+    }
+    else{
+      average <- AVE_simpf()
+    }
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+        ms_2D_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+                                  treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                  usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                  use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                  max_na_prow = input$maxna_simpf,
+                                  ret_plot = input$seeprsel_simpf, save_pdf = input$save_bar_simpf,
+                                  colorpanel = COL, withprompt = FALSE, save_prlist = input$save_prot_simpf,
+                                  layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                  toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                  pdfname = input$pdftit_simpf)
+
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
     )
-    pg <- reactive({
+
+
+  })
+
+
+  geting_data_simpf <- reactiveValues(
+    ch = NULL
+  )
+
+  observeEvent(input$getsimi_simpf, {
+    showNotification("Getting similar profiles, this may take a while.", type = "message")
+
+    if(input$gave_simpf & input$drug_simpf == "dat"){
+      average <- NULL
+    }
+    else{
+      average <- AVE_simpf()
+    }
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      geting_data_simpf$ch <- ms_2D_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+                                                        treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                        usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                        use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                        max_na_prow = input$maxna_simpf,
+                                                        ret_plot = input$seeprsel_simpf, save_pdf = FALSE,
+                                                        withpopup = TRUE, continue = FALSE, modvar = "",
+                                                        colorpanel = COL,  save_prlist = FALSE,
+                                                        layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                        toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                        pdfname = input$pdftit_simpf)
+
+
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
+
+
+  })
+
+  observeEvent(input$ok, {
+    removeModal()
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      BAR_simpf$ch <- ms_2D_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                max_na_prow = input$maxna_simpf,
+                                                ret_plot = input$seeprsel_simpf, save_pdf = input$save_bar_simpf,
+                                                withpopup = TRUE, continue = FALSE, modvar = "Y", got_it = TRUE,
+                                                colorpanel = COL, save_prlist = input$save_prot_simpf,
+                                                layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                pdfname = input$pdftit_simpf)
+      },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+  })
+  observeEvent(input$cancel, {
+    removeModal()
+    COL <- ifelse(input$ch_own_col_simpf, input$own_color_pick_simpf, "#18FF00")
+
+    withCallingHandlers({
+      shinyjs::html("diag_bar_simpf", "")
+      BAR_simpf$ch <- ms_2D_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                usegradient = input$grad_simpf, linegraph = input$line_simpf,
+                                                use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
+                                                max_na_prow = input$maxna_simpf,
+                                                ret_plot = input$seeprsel_simpf, save_pdf = FALSE,
+                                                withpopup = TRUE, continue = FALSE, modvar = "N", got_it = TRUE,
+                                                colorpanel = COL, save_prlist = FALSE,
+                                                layout = c(input$lay_bar1_simpf, input$lay_bar2_simpf),
+                                                toplabel = paste0("IMPRINTS-CETSA bar plotting \nMethod :", input$scoremeth_simpf),
+                                                pdfname = input$pdftit_simpf)
+      },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_simpf", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+  })
+
+  output$bar_plot_simpf <- renderPlot({
+    BAR_simpf$ch
+  })
+
+  output$downbar_simpf <- downloadHandler(
+    filename = function() {
+      paste0("2D_barplot_", Sys.Date(), "_", paste0("similar_", input$prot_simpf), ".png")
+    },
+    content = function(file){
+      ggsave(file, BAR_simpf$ch[[1]], device = "png")
+    }
+  )
+
+
+
+  ### HEATMAP
+  output$drug2ui_heat <- renderUI({
+    selectInput("drug2_heat", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  DIF_heat <- reactive({
+    if(input$drug_heat == "dat"){
+      File <- input$filedif_heat
+      if (is.null(File) | !input$gave_heat)
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_heat], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+
+  AVE_heat <- reactive({
+    if(input$drug_heat == "dat"){
+      File <- input$fileave_heat
+      if (is.null(File)  | input$gave_heat)
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_heat], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$heat_fileup <- reactive({
+     return(!is.null(AVE_heat()) | !is.null(DIF_heat()))
+  })
+  outputOptions(output, "heat_fileup", suspendWhenHidden = FALSE)
+
+  HIT_heat <- reactive({
+    if(input$drug_heat == "dat"){
+      File <- input$summary_heat
+      if (is.null(File))
+        return(NULL)
+
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_heat])
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$HITheat_fileup <- reactive({
+    return(!is.null(HIT_heat()))
+  })
+  outputOptions(output, "HITheat_fileup", suspendWhenHidden = FALSE)
+
+  NN_heat <- reactive({
+    if(input$drug_heat == "dat"){
+      File <- input$NNfile_heat
+      if (is.null(File) | !input$impNN_heat)
+        return(NULL)
+
+      dat <- import(File$datapath, header = TRUE)
+      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
+      if(!purrr::is_empty(nv_nam)){
+        dat <- dat[, !(names(dat) %in% nv_nam)]
+      }
+      dat
+    }
+    else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
+      do.call(rbind, drug_data_sh$y$NN[input$drug2_heat])
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$NNheat_fileup <- reactive({
+    if(input$drug_heat == "dat"){
+      return(!is.null(NN_heat()) | !input$impNN_heat)
+    }
+    else{
+      return(!is.null(NN_heat()))
+    }
+  })
+  outputOptions(output, "NNheat_fileup", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!is.null(HIT_heat())){
+      c_idx <- str_which(colnames(HIT_heat()), "^[C|c]ondition")
+      cat_idx <- str_which(colnames(HIT_heat()), "^[C|c]ategory")
+
+      tr <- NULL
+      if(!purrr::is_empty(c_idx)){
+        tr <- HIT_heat()[, c_idx]
+        tr <- unique(tr)
+      }
+      cat <- c()
+      if(!purrr::is_empty(cat_idx)){
+        cat <- HIT_heat()[, cat_idx]
+        cat <- unique(cat)
+      }
+      if(!is.null(NN_heat())){
+        cat <- append(cat, "NN")
+      }
+
+      updateSelectInput(session, "cond_heat", choices = tr)
+      updateSelectInput(session, "catego_heat", choices = cat, selected = cat[1])
+    }
+  })
+  observe({
+    if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
+      nc <- str_subset(names(DIF_heat()), paste0("_", input$cond_heat, "$"))
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_heat", max = nc)
+    }
+    if(!is.null(AVE_heat())){
+      nc <- str_subset(names(AVE_heat()), paste0("_", input$cond_heat, "$"))
+      nc <- length(unique(nc))
+      updateSliderInput(session, "maxna_heat", max = nc)
+    }
+  })
+
+  pH_heat <- reactiveValues(
+    g = NULL
+  )
+
+  plotH_heat <- reactive({
+    dat <- NULL
+    if(!is.null(AVE_heat())){
+      dat <- AVE_heat()
+    }
+    else if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
+      showNotification("Start average calculation, this mays take a while.", type = "message")
+      dat <- ms_2D_average_sh(DIF_heat())
+    }
+
+    withCallingHandlers({
+      shinyjs::html("diagl_heat", "")
+      h <- ms_2D_heatmap(dat, HIT_heat(), NN_data = NN_heat(),
+                         treatment = input$cond_heat, max_na = input$maxna_heat,
+                         response = input$resp_heat, select_cat = input$catego_heat,
+                         gradient_color = c(input$grad1col_heat, input$grad2col_heat, input$grad3col_heat),
+                         titleH = input$titleH_heat,
+                         saveHeat = input$saveH_heat, file_type = input$formatH_heat, file_name = input$fnameH_heat,
+                         cat_color = NULL, back_color = input$backcol_heat, border_color = input$bordercol_heat)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagl_heat", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+    }
+    )
+
+  })
+
+  observeEvent(input$getH_heat, {
+    if(is.null(input$catego_heat)){
+      showNotification("Don't forget to select a category !", type = "error")
+    }
+    else{
+      showNotification("Getting heatmap", type = "message")
+      pH_heat$g <- plotH_heat()
+    }
+  })
+
+  output$H_heat <- renderPlot({
+    if(!is.null(pH_heat$g))
+      return(plot(pH_heat$g))
+    else
+      NULL
+  })
+
+
+
+  ### HEATMAP PROTEIN COMPLEX
+  output$drug2ui_heatcom <- renderUI({
+    selectInput("drug2_heatcom", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  DIF_heatcom <- reactive({
+    if(input$drug_heatcom == "dat"){
+      File <- input$filedif_heatcom
+      if (is.null(File) | !input$gave_heatcom)
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_heatcom], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+
+  AVE_heatcom <- reactive({
+    if(input$drug_heatcom == "dat"){
+      File <- input$fileave_heatcom
+      if (is.null(File)  | input$gave_heatcom)
+        return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
+      join_drugdata(drug_data_sh$y$data_ave[input$drug2_heatcom], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$heatcom_fileup <- reactive({
+    return(!is.null(AVE_heatcom()) | !is.null(DIF_heatcom()))
+  })
+  outputOptions(output, "heatcom_fileup", suspendWhenHidden = FALSE)
+
+
+  observe({
+    if(!is.null(DIF_heatcom()) | !is.null(AVE_heatcom())){
+      tr <- get_treat_level(DIF_heatcom())
+      if(is.null(tr)){
+        tr <- get_treat_level(AVE_heatcom())
+      }
+
+      updateSelectInput(session, "cond_heatcom", choices = tr)
+    }
+  })
+
+
+  resmapping_heatcom <- reactiveValues(
+    ch = NULL
+  )
+  resAVE_heatcom <- reactiveValues(
+    d = NULL
+  )
+  observeEvent(input$ave_map_heatcom, {
+     showNotification("Start mapping proteins, this may take a while", type = "message")
+
+      if(input$gave_heatcom  & input$drug_heatcom == "dat"){
+        data_ave <- ms_2D_average_sh(DIF_heatcom())
+        resAVE_heatcom$d <- data_ave
+        showNotification("Average calculation succeed !", type = "message")
+      }
+      else{
+        data_ave <- AVE_heatcom()
+      }
+
       withCallingHandlers({
-        shinyjs::html("diag_getseq", "")
-
-      df <- Report_data$d
-      if(input$protypiconly_pg){
-        df <- df[which(df[["Proteotypic"]] != 0), ]
+        shinyjs::html("diagmapping_heatcom", "")
+        map_heatcom <- ms_2D_complex_mapping_sh(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
+                                              targetcategory = NULL,
+                                              organism = input$organism_heatcom)
+      },
+      message = function(m) {
+        shinyjs::html(id = "diagmapping_heatcom", html = paste(m$message, "<br>", sep = ""), add = TRUE)
       }
-      df <- df %>% dplyr::filter(Q.Value <= input$qv_pg & PG.Q.Value <= input$qvpg_pg & Protein.Q.Value <= input$qvprot_pg & GG.Q.Value <= input$qvgg_pg)
-      n_cond <- length(unique(df$File.Name))
-      if(input$wLFQ_pg == "diann"){
-        d <- diann_maxlfq(df,
-                          group.header="Protein.Group",
-                          id.header = "Precursor.Id",
-                          quantity.header = "Precursor.Normalised",
-                          only_countsall = input$onlycountall_pg,
-                          Top3 = input$Top3_pg
-                          )
+      )
+
+      map_heatcom <- map_heatcom[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",
+                                 "id", "description", "gene")]
+
+      if(nrow(map_heatcom) !=0){
+        map_heatcom$description <- mineCETSAapp:::getProteinName(map_heatcom$description)
       }
-      else if(input$wLFQ_pg == "iq"){
-        d <- iq::preprocess(df,
-                            intensity_col = "Precursor.Normalised",
-                            primary_id = "Protein.Group",
-                            sample_id  = "File.Name",
-                            secondary_id = "Precursor.Id",
-                            median_normalization = FALSE,
-                            pdf_out = NULL)
 
-        pc <- d %>% dplyr::group_by(protein_list, sample_list) %>%
-          dplyr::mutate("countpep" = length(unique(id)))
-        pc <- unique(pc[,c("protein_list", "sample_list", "countpep")])
-        pc <- tidyr::spread(pc, sample_list, countpep)
-        pc[is.na(pc)] <- 0
-        pc <- as.data.frame(pc)
-        rownames(pc) <- pc$protein_list
-        pc$protein_list <- NULL
-        pc <- pc[order(rownames(pc)),]
-        colnames(pc) <- paste0("pep_count_", colnames(pc))
-        pc$peptides_counts_all <- unname(apply(pc, 1, max))
-        pc <- pc[,c(ncol(pc), 1:(ncol(pc)-1))]
 
-        if(input$Top3_pg){
-          Top3 <- d %>% dplyr::group_by(protein_list) %>%
-            tidyr::spread(sample_list, quant)
-          Top3$id <- NULL
-          top3_f <- function(x){
-            if(sum(!is.na(x)) < 3){
-              x <- NA
+      resmapping_heatcom$ch <- map_heatcom
+      output$tabmap_heatcom <- DT::renderDataTable({
+        DT::datatable(resmapping_heatcom$ch,
+                      caption = htmltools::tags$caption(
+                        style = 'caption-side: top; text-align: left;',
+                        htmltools::strong("Mapping proteins results")
+                      ),
+                      rownames = FALSE,
+                      options = list(lengthMenu = c(10,20,30), pageLength = 10))
+      })
+
+      if(nrow(map_heatcom) != 0){
+        showNotification("Mapping protein succeed !", type = "message")
+      }
+      else{
+        showNotification("No proteins could be mapped !
+                         Try to add more category in order to have more proteins", type = "error")
+      }
+
+
+      updateSelectInput(session, "allcomplex_heatcom", choices = unique(resmapping_heatcom$ch$ComplexName))
+  })
+  #check if a file is upload
+  output$resmappingheatcom_fileup <- reactive({
+    return(!is.null(resmapping_heatcom$ch))
+  })
+  outputOptions(output, "resmappingheatcom_fileup", suspendWhenHidden = FALSE)
+
+  output$downrestab_heatcom <- downloadHandler(
+    filename = function() {
+      paste0("ProteinComplexMapping_", Sys.Date(), ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(resmapping_heatcom$ch, file, row.names = FALSE)
+    }
+  )
+
+
+  observe({
+    if(!is.null(DIF_heatcom()) & input$drug_heatcom == "dat"){
+      nc <- str_subset(names(DIF_heatcom()), paste0("_", input$cond_heatcom, "$"))
+      nc <- str_split(nc, "B\\d{1}_")
+      nc <- lapply(nc, function(x) paste(x, collapse = ""))
+      nc <- length(unique(as.character(nc)))
+      updateSliderInput(session, "maxna_heatcom", max = nc)
+    }
+    if(!is.null(AVE_heatcom())){
+      nc <- str_subset(names(AVE_heatcom()), paste0("_", input$cond_heatcom, "$"))
+      nc <- length(unique(nc))
+      updateSliderInput(session, "maxna_heatcom", max = nc)
+    }
+  })
+
+  pH_heatcom <- reactiveValues(
+    g = NULL
+  )
+
+  plotH_heatcom <- reactive({
+    dat <- NULL
+    if(!is.null(AVE_heatcom())){
+      dat <- AVE_heatcom()
+    }
+    else if(!is.null(resAVE_heatcom$d)){
+      dat <- resAVE_heatcom$d
+    }
+
+    pr <- NULL
+    if(!is.null(resmapping_heatcom$ch)){
+      pr <- resmapping_heatcom$ch$id[which(!is.na(match(resmapping_heatcom$ch$ComplexName, input$allcomplex_heatcom)))]
+      pr <- unique(pr)
+    }
+
+    dat <- ms_subsetting(dat, isfile = F, hitidlist = c(pr), allisoform = FALSE)
+    PRcompl <- resmapping_heatcom$ch[which(!is.na(match(resmapping_heatcom$ch$ComplexName, input$allcomplex_heatcom))),]
+
+    withCallingHandlers({
+      shinyjs::html("diagl_heatcom", "")
+      h <- ms_2D_heatmap(dat, NULL, NN_data = NULL, PRcomplex_data = PRcompl,
+                         treatment = input$cond_heatcom, max_na = input$maxna_heatcom,
+                         response = input$resp_heatcom,
+                         gradient_color = c(input$grad1col_heatcom, input$grad2col_heatcom, input$grad3col_heatcom),
+                         titleH = input$titleH_heatcom,
+                         saveHeat = input$saveH_heatcom, file_type = input$formatH_heatcom, file_name = input$fnameH_heatcom,
+                         cat_color = NULL, back_color = input$backcol_heatcom, border_color = input$bordercol_heatcom)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagl_heatcom", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+    }
+    )
+
+  })
+
+  observeEvent(input$getH_heatcom, {
+    if(is.null(input$allcomplex_heatcom)){
+      showNotification("Don't forget to select a complex !", type = "error")
+    }
+    else{
+      showNotification("Getting heatmap", type = "message")
+      pH_heatcom$g <- plotH_heatcom()
+    }
+  })
+
+  output$H_heatcom <- renderPlot({
+    if(!is.null(pH_heatcom$g))
+      return(plot(pH_heatcom$g))
+    else
+      NULL
+  })
+
+
+  ### STRINGdb
+  output$drug2ui_stri <- renderUI({
+    selectInput("drug2_stri", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  stri_data <- reactive({
+    if(input$drug_stri == "dat"){
+      if(input$impfile_stri){
+        File <- input$file_stri
+        if (is.null(File))
+          return(NULL)
+
+        import_list(File$datapath, header = TRUE)[[1]]
+      }
+      else{
+        if (str_length(input$txt_stri) == 0)
+          return(NULL)
+
+        i <- str_remove_all(i, " ")
+        i <- str_split(input$txt_stri, ",")[[1]]
+
+        data.frame(id = i)
+      }
+    }
+    else if(input$drug_stri == "base" & length(input$drug2_stri) >= 1){
+      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_stri])
+      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_stri])
+      n <- unique(n[,c("id", "Condition", "category")])
+
+      rbind(h,n)
+    }
+    else{
+      NULL
+    }
+  })
+  #check if a file is upload
+  output$file_stri_up <- reactive({
+    return(!is.null(stri_data()))
+  })
+  outputOptions(output, "file_stri_up", suspendWhenHidden = FALSE)
+
+  Sel_cond_fhit_stri <- reactive({
+    tr <- NULL
+
+    if((input$ishit_stri & input$impfile_stri) | input$drug_stri == "base"){
+      HIT <- stri_data()
+
+      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+
+      if(!purrr::is_empty(c_idx)){
+        tr <- HIT[, c_idx]
+        tr <- unique(tr)
+      }
+    }
+
+    tr
+  })
+
+  observe({
+    if(input$drug_stri =="dat"){
+      updateSelectInput(session, "cond_fhit_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+    }
+    else if(input$drug_stri =="base"){
+      updateSelectInput(session, "cond_fhitB_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+    }
+  })
+
+  string_res <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$start_string, {
+    showNotification("Getting the STRING id, this may take a while", type = "message")
+
+    if(!file.exists("STRING_data")){
+      dir.create("STRING_data")
+    }
+
+    if(input$species_string == 9606){
+      if(!exists("string_db_human")){
+        string_db_human <<- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
+                                         score_threshold=200,
+                                         input_directory=  file.path(getwd(), "STRING_data"))
+      }
+      string_db <<- string_db_human
+    }
+    else if(input$species_string == 10090){
+      if(!exists("string_db_mouse")){
+        string_db_mouse <<- STRINGdb$new(version="11", species=10090,               #ID 10090 correspond to mouse
+                                         score_threshold=200,
+                                         input_directory=  file.path(getwd(), "STRING_data"))
+      }
+      string_db <<- string_db_mouse
+    }
+    else if(input$species_string == 10116){
+      if(!exists("string_db_rat")){
+        string_db_rat <<- STRINGdb$new(version="11", species=10116,               #ID 10116 correspond to rat
+                                         score_threshold=200,
+                                         input_directory=  file.path(getwd(), "STRING_data"))
+      }
+      string_db <<- string_db_rat
+    }
+
+
+    string_res$x <- NULL
+
+    if (!is.null(stri_data())){
+      if(input$drug_stri == "dat"){
+        if(input$impfile_stri){
+          if(input$ishit_stri){
+            dat <- stri_data()
+            if(!is.null(input$cond_fhit_stri)){
+              dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_stri))
+              a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
             }
             else{
-              x <- x[order(x, decreasing = TRUE)][1:3]
-              x <- mean(x)
+              showNotification("Don't forget to select some conditions !", type = "error")
+              a <- NULL
             }
           }
-          Top3 <- Top3 %>% dplyr::group_by(protein_list) %>%
-            dplyr::summarise(dplyr::across(dplyr::everything(), top3_f))
-
-          Top3 <- as.data.frame(Top3)
-          rownames(Top3) <- Top3$protein_list
-          Top3$protein_list <- NULL
-          colnames(Top3) <- paste0("Top3_", colnames(Top3))
-          Top3 <- Top3[order(rownames(Top3)),]
-        }
-
-        d <- iq::fast_MaxLFQ(d)
-        d <- d$estimate
-        d <- as.data.frame(d)
-        d <- d[order(rownames(d)),]
-        if(input$Top3_pg){
-          d <- cbind(d, Top3)
-        }
-        if(input$onlycountall_pg){
-          d$peptides_counts_all <- pc$peptides_counts_all
+          else{
+            a <- string_db$map(stri_data(), input$idfile_stri, removeUnmappedRows = TRUE)
+          }
         }
         else{
-          d <- cbind(d, pc)
+          a <- string_db$map(stri_data(), "id", removeUnmappedRows = TRUE)
         }
       }
-      nc <- ncol(d)
-      d$Protein.Group <- rownames(d)
-      rownames(d) <- 1:nrow(d)
-      df <- df[(df$Protein.Group %in% d$Protein.Group),]
-      df <- df[order(df$Protein.Group),]
-      d$Protein.Names <- unique(df[,c("Protein.Group", "Protein.Names")])$Protein.Names
-      d$First.Protein.Description <- unique(df[,c("Protein.Group", "First.Protein.Description")])$First.Protein.Description
-      d$Genes <- unique(df[,c("Protein.Group", "Genes")])$Genes
-      d <- d[,c((nc+1):ncol(d), 1:nc)]
-
-      if(input$iBAQ_pg){
-        if(input$wLFQ_pg == "iq"){
-          d[,5:(n_cond+4)] <- 2**d[,5:(n_cond+4)]
-        }
-        if(input$fasta_pg){
-          d_seq <- getallseq(pr_id = d$Protein.Group,
-                             fasta_file = TRUE,
-                             bank_name = fasta())
+      else if(input$drug_stri == "base"){
+        dat <- stri_data()
+        if(!is.null(input$cond_fhitB_stri)){
+          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_stri))
+          if(!is.null(input$cat_fhitB_stri)){
+            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
+          }
+          a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
         }
         else{
-          d_seq <- getallseq(pr_id = d$Protein.Group,
-                             spec = input$species_pg)
-        }
-
-
-        d <- get_iBAQ(d, proteinDB = d_seq,
-                      id_name = "Protein.Group",
-                      ecol = 5:(n_cond+4),
-                      peptideLength = input$peplen_pg,
-                      proteaseRegExp = DIAgui:::getProtease(input$enzyme_pg),
-                      log2_transformed = input$wLFQ_pg == "iq")
-      }
-      d},
-      message = function(m) {
-        shinyjs::html(id = "diag_getseq", html = paste(m$message, "<br>", sep = ""), add = FALSE)
-      }
-      )
-    })
-    observeEvent(input$go_pg, {
-      showNotification(paste("Getting the protein group tab using the MaxLFQ algorithm from", input$wLFQ_peplfq, "package"), type = "message")
-      pg_ev$x <- pg()
-    })
-    output$proteins_up <- reactive({
-      return(!is.null(pg_ev$x))
-    })
-    outputOptions(output, "proteins_up", suspendWhenHidden = FALSE)
-
-    output$res_pg <- DT::renderDataTable({
-      DT::datatable(pg_ev$x,
-                    caption = htmltools::tags$caption(
-                      style = 'caption-side: top; text-align: left;',
-                      htmltools::strong('Protein group')
-                      ),
-                    rownames = FALSE,
-                    options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                   scrollX = TRUE)
-      )
-    })
-    output$down_pg <- downloadHandler(
-      filename = function() {
-        paste0("ProteinGroup_dia_", Sys.Date(), ".", input$format_pg)
-      },
-      content = function(file){
-        if(input$format_pg == "xlsx"){
-          openxlsx::write.xlsx(pg_ev$x, file, rowNames = FALSE)
-        }
-        else if(input$format_pg == "csv"){
-          write.csv(pg_ev$x, file, row.names =  FALSE, quote = FALSE)
-        }
-        else if(input$format_pg == "txt"){
-          write.table(pg_ev$x, file, row.names = FALSE, sep = "\t", quote = FALSE)
+          showNotification("Don't forget to select some conditions !", type = "error")
+          a <- NULL
         }
       }
+    }
+
+    string_res$x <- a
+
+    showNotification("Mapping succeed !", type = "message")
+  })
+  output$data_stri_up <- reactive({
+    return(!is.null(string_res$x))
+  })
+  outputOptions(output, "data_stri_up", suspendWhenHidden = FALSE)
+
+  OUT_plot <- reactiveValues(
+    g = NULL,
+    g_int = NULL
+  )
+
+  g_stri <- reactive({
+    if(input$intnet_stri){
+      My_net(string_res$x$STRING_id , inter = TRUE)
+    }
+    else{
+      My_net(string_res$x$STRING_id , inter = FALSE)
+    }
+  })
+
+  observeEvent(input$netbase_stri, {
+    if(length(string_res$x$STRING_id) > 2000){
+      showNotification(paste("Lists with more than 2000 genes are not supported yet. Your list contains now", length(string_res$x$STRING_id), "genes.",
+                       "Please, try to reduce the size of your input by choosing less categories and/or conditions."),
+                       type = "error", duration = 8)
+    }
+    else{
+      showNotification("Getting network, this may take a while", type = "message")
+      if(input$intnet_stri){
+        OUT_plot$g_int <- g_stri()
+        OUT_plot$g <- NULL
+      }
+      else{
+        OUT_plot$g <- g_stri()
+        OUT_plot$g_int <- NULL
+      }
+      showNotification("Done !", type = "message")
+    }
+
+  })
+
+  output$netInt_stri <- renderPlotly({
+    OUT_plot$g_int
+  })
+  output$net_stri <- renderPlot({
+    OUT_plot$g
+  })
+
+  output$downnet_stri <- downloadHandler(
+    filename = function() {
+      paste0("Network_", Sys.Date(), ".png")
+    },
+    content = function(file){
+      ggsave(file, OUT_plot$g, device = "png")
+    }
+  )
+
+
+  enrich_res <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$go_enrich, {
+    showNotification("Starting enrichment analysis, this may take a while", type = "message")
+    enrich_res$x <- string_db$get_enrichment(string_res$x$STRING_id)
+
+    updateSelectInput(session, "catego_stri", choices = unique(enrich_res$x$category))
+    showNotification("Done !", type = "message")
+  })
+  output$enrich_stri_up <- reactive({
+    return(!is.null(enrich_res$x))
+  })
+  outputOptions(output, "enrich_stri_up", suspendWhenHidden = FALSE)
+
+  enrich_res_tab <- reactive({
+    df <- NULL
+
+    if(!is.null(enrich_res$x)){
+      if(str_length(input$catego_stri) != 0){
+        df <- Get_GO(enrich_res$x, TRUE, FALSE, input$catego_stri)
+        d_n <- as.list(lapply(df, names)[[input$catego_stri]])
+        df <- mapply(function(x,y) {x$id <- rep(y, nrow(x)); x},
+                     df[[input$catego_stri]],
+                     d_n, SIMPLIFY = FALSE)
+        df <- do.call(rbind, df)
+        rownames(df) <- 1:nrow(df)
+
+        id_string <- do.call(rbind, str_split(df$id, ","))
+        colnames(id_string) <- c("gene.names", "STRING_id")
+
+        df <- cbind(id_string, df[,-ncol(df)])
+      }
+    }
+
+    df
+  })
+  output$enrich_res_tab_up <- reactive({
+    return(!is.null(enrich_res_tab()))
+  })
+  outputOptions(output, "enrich_res_tab_up", suspendWhenHidden = FALSE)
+
+  output$enrich_table_stri <- DT::renderDataTable({
+
+    DT::datatable(enrich_res_tab(),
+                  caption = htmltools::tags$caption(
+                    style = 'caption-side: top; text-align: left;',
+                    htmltools::strong(input$catego_stri)
+                  ),
+                  rownames = FALSE,
+                  options = list(lengthMenu = c(10,20,30), pageLength = 10))
+
+  })
+  output$downenrich_stri <- downloadHandler(
+    filename = function() {
+      paste0("Enrichment_tab_", Sys.Date(), "_", input$catego_stri, ".xlsx")
+    },
+    content = function(file){
+      openxlsx::write.xlsx(enrich_res_tab(), file, row.names = FALSE)
+    }
+  )
+
+
+  observe({
+    if(!is.null(enrich_res_tab())){
+      updateSelectInput(session, "descri_stri", choices = unique(enrich_res_tab()$description))
+    }
+  })
+
+  OUT_plot_filt <- reactiveValues(
+    g = NULL,
+    g_int = NULL
+  )
+
+  g_filt_stri <- reactive({
+    descr <- input$descri_stri
+    descr <- str_replace_all(descr, "\\(", "\\\\(")
+    descr <- str_replace_all(descr, "\\)", "\\\\)")
+    pr <- enrich_res_tab()$STRING_id[str_which(enrich_res_tab()$description, paste0("^", descr, "$"))]
+
+    if(!is.null(pr) & !purrr::is_empty(pr)){
+      if(input$intnet_stri){
+        My_net(pr , inter = TRUE)
+      }
+      else{
+        My_net(pr , inter = FALSE)
+      }
+    }
+    else{
+      showNotification("No match has been found. Try another description or contact me vie the e-mail button.", type = "error")
+    }
+  })
+
+  observeEvent(input$netfilt_stri, {
+    showNotification("Getting new network, this may take a while", type = "message")
+    if(input$intnet_stri){
+      OUT_plot_filt$g_int <- g_filt_stri()
+      OUT_plot_filt$g <- NULL
+    }
+    else{
+      OUT_plot_filt$g <- g_filt_stri()
+      OUT_plot_filt$g_int <- NULL
+    }
+    showNotification("Done !", type = "message")
+  })
+
+  output$netInt2_stri <- renderPlotly({
+    OUT_plot_filt$g_int
+  })
+  output$net2_stri <- renderPlot({
+    OUT_plot_filt$g
+  })
+
+  output$downnetfilt_stri <- downloadHandler(
+    filename = function() {
+      paste0("Network_", Sys.Date(), input$descri_stri, ".png")
+    },
+    content = function(file){
+      ggsave(file, OUT_plot_filt$g, device = "png")
+    }
+  )
+
+
+  ### CELL
+  output$drug2ui_cell <- renderUI({
+    selectInput("drug2_cell", "Choose a drug", choices = names(drug_data_sh$y$data),
+                multiple = TRUE, selected = "elutriation")
+  })
+
+  hitdata_cell <- reactive({
+    if(input$drug_cell == "dat"){
+      File <- input$hitl_cell
+      if (is.null(File))
+        return(NULL)
+
+      import_list(File$datapath, header = TRUE)[[1]]
+    }
+    else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
+      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_cell])
+      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_cell])
+      n <- unique(n[,c("id", "Condition", "category")])
+
+      rbind(h,n)
+    }
+    else{
+      NULL
+    }
+  })
+  output$hitdata_cell_up <- reactive({
+    return(!is.null(hitdata_cell()))
+  })
+  outputOptions(output, "hitdata_cell_up", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!is.null(hitdata_cell())){
+      updateSelectInput(session, "condhit_cell", choices = unique(hitdata_cell()$Condition), selected = unique(hitdata_cell()$Condition)[1])
+      updateSelectInput(session, "cathit_cell", choices = unique(hitdata_cell()$category), selected = unique(hitdata_cell()$category)[1])
+    }
+  })
+
+
+  resdata_cell <- reactiveValues(
+    ch = NULL
+  )
+  observeEvent(input$goloca_cell, {
+    showNotification("Getting subcellular locations", type = "message")
+
+    data_hit <- hitdata_cell() %>%
+      dplyr::filter(Condition == input$condhit_cell)
+
+    if(!is.null(input$cathit_cell)){
+      data_hit <- data_hit %>% dplyr::filter(!is.na(match(category, input$cathit_cell)))
+    }
+
+    withCallingHandlers({
+      shinyjs::html("diagl_cell", "")
+      resdata_cell$ch <- hit_for_cell(data_hit, input$organism_cell)
+     },
+     message = function(m) {
+      shinyjs::html(id = "diagl_cell", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+    }
     )
 
-    ### GENES
-    gg_ev <- reactiveValues(
-      x = NULL
-    )
-    gg <- reactive({
-      df <- Report_data$d
-      d <- diann_matrix(df,
-                   id.header="Genes",
-                   quantity.header="Genes.MaxLFQ.Unique",
-                   proteotypic.only = input$protypiconly_gg,
-                   q = input$qv_gg,
-                   protein.q = input$qvprot_gg,
-                   pg.q = input$qvpg_gg,
-                   gg.q = input$qvgg_gg,
-                   get_pep = TRUE, only_pepall = input$onlycountall_gg,
-                   Top3 = input$Top3_gg)
-      nc <- ncol(d)
-      d$Genes <- rownames(d)
-      rownames(d) <- 1:nrow(d)
-      d <- d[,c((nc+1):ncol(d), 1:nc)]
-      d <- d[order(d$Genes),]
-    })
-    observeEvent(input$go_gg, {
-      showNotification("Getting the unique genes tab", type = "message", duration = 2)
-      gg_ev$x <- gg()
-    })
-    output$genes_up <- reactive({
-      return(!is.null(gg_ev$x))
-    })
-    outputOptions(output, "genes_up", suspendWhenHidden = FALSE)
-
-    output$res_gg <- DT::renderDataTable({
-      DT::datatable(gg_ev$x,
+    output$locatab_cell <- DT::renderDataTable({
+      DT::datatable(resdata_cell$ch,
                     caption = htmltools::tags$caption(
                       style = 'caption-side: top; text-align: left;',
-                      htmltools::strong('Unique genes')
+                      htmltools::strong("Subcellular locations from your hitlist")
                     ),
                     rownames = FALSE,
-                    options = list(lenghtMenu = c(10,20,30), pageLength = 10,
-                                   scrollX = TRUE)
-      )
+                    options = list(lengthMenu = c(10,20,30), pageLength = 10))
     })
-    output$down_gg <- downloadHandler(
+
+    output$down_prl_cell <- downloadHandler(
       filename = function() {
-        paste0("UniqueGenes_dia_", Sys.Date(), ".", input$format_gg)
+        paste0("HIT_locations_", Sys.Date(), ".xlsx")
       },
       content = function(file){
-        if(input$format_gg == "xlsx"){
-          openxlsx::write.xlsx(gg_ev$x, file, rowNames = FALSE)
-        }
-        else if(input$format_gg == "csv"){
-          write.csv(gg_ev$x, file, row.names =  FALSE, quote = FALSE)
-        }
-        else if(input$format_gg == "txt"){
-          write.table(gg_ev$x, file, row.names = FALSE, sep = "\t", quote = FALSE)
-        }
+        openxlsx::write.xlsx(resdata_cell$ch, file, row.names = FALSE)
       }
     )
 
+    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$Condition), selected = input$condhit_cell)
+    updateSelectInput(session, "selorga_cell", choices = unique(resdata_cell$ch$main.location.cell))
+  })
+  output$resdata_cell_up <- reactive({
+    return(!is.null(resdata_cell$ch))
+  })
+  outputOptions(output, "resdata_cell_up", suspendWhenHidden = FALSE)
 
-    ### VISUALIZATION
-    observe({
-      if(!is.null(Report_data$d)){
-        updateRadioButtons(session, "choice_visu", selected = "base")
-      }
-    })
-    ## HEATMAP
-    visu_data <- reactive({
-      df <- NULL
-      if(is.null(Report_data$d) | input$choice_visu == "dat"){
-        File <- input$ydata_visu
-        if(is.null(File))
-          return(NULL)
 
-        df <- rio::import(File$datapath)
+  cell_p_Rv <- reactiveValues(
+    g = NULL
+  )
+
+  cell_p_R <- reactive({
+    hit_plotcell(resdata_cell$ch, tit = input$titp_cell,
+                 cond = input$condp_cell,
+                 cat_col_list = list("CC" = "#FB4F0B", "CN" = "#0FAEB9",
+                                     "NC" = "#E7B700", "ND" = "#747474",
+                                     "NN" = "#CCCCCC"))
+  })
+  observeEvent(input$gop_cell, {
+    showNotification("Getting plot, this can take a while. Please wait", type = "message")
+
+    cell_p_Rv$g <- cell_p_R()
+  })
+
+  output$cell_p <- renderPlotly({
+    cell_p_Rv$g
+  })
+  output$downthe_cell <- downloadHandler(
+    filename = function() {
+      paste("Int_cell_", Sys.Date(), ".html", sep = "")
+    },
+    content = function(file){
+      withr::with_dir(WD, htmlwidgets::saveWidget(partial_bundle(cell_p_Rv$g), file))
+    }
+  )
+
+  #handle selection of proteins
+  PR_event <- reactiveVal()
+  observeEvent(event_data("plotly_click", source = "M"), {
+    PR <- event_data("plotly_click", source = "M")$customdata
+    if(!is.null(PR_event)){
+      if(purrr::is_empty(which(PR_event() == PR))){
+        PR_old_new <- c(PR_event(), PR)
       }
       else{
-        if(input$bdata_visu == "Protein group"){
-          df <- pg_ev$x
-        }
-        else if(input$bdata_visu == "Unique genes"){
-          df <- gg_ev$x
-        }
-        else if(input$bdata_visu == "Peptides"){
-          df <- pep_ev$x
-        }
-        else if(input$bdata_visu == "Peptides.MaxLFQ"){
-          df <- peplfq_ev$x
-        }
-        else if(input$bdata_visu == "Precursors"){
-          df <- precu_ev$x
-        }
+        PR_old_new <- PR_event()[-which(PR_event() == PR)] #if already clicked, remove
       }
-      if(!is.null(df)){
-        df <- as.data.frame(df)
-        names(df)[1] <- "id"
-      }
-      df
-    })
-    output$visudata_up <- reactive({
-      return(!is.null(visu_data()))
-    })
-    outputOptions(output, "visudata_up", suspendWhenHidden = FALSE)
+    }
+    else{
+      PR_old_new <- c(PR_event(), PR)
+    }
 
-    observe({
-      if(!is.null(Report_data$d) & input$choice_visu == "base"){
-        updateTextInput(session, "nmid_visu", value = "")
-      }
-    })
-    observe({
-      if(!is.null(visu_data())){
-        n <- lapply(visu_data(), class)
-        n <- sum(n == "numeric")
-        updateSliderInput(session, "maxna", max = n)
-      }
-    })
+    PR_event(unique(PR_old_new))
+  })
+  # clear the set of cars when a double-click occurs
+  observeEvent(event_data("plotly_doubleclick", source = "M"), {
+    PR_event(NULL)
+  })
 
-    heat_ev <- reactiveValues(
-      h = NULL
-    )
-    heat <- reactive({
-      nm <- input$nmid_visu
-      if(str_length(nm) == 0){
-        nm <- NULL
-      }
-      heatmapDIA(visu_data(), input$transfo_visu, input$maxna, input$prval_visu, nm)
-    })
-    observeEvent(input$seeheat_visu, {
-      if(!is.null(visu_data())){
-        if(str_length(input$nmid_visu) != 0){
-          idx <- str_which(names(visu_data()), paste0("^", input$nmid_visu, "$"))
-          if(purrr::is_empty(idx)){
-            showNotification(paste("Please provide a valid column name. You enter :", input$nmid_visu,
-                                   "and the column names are :", paste(names(visu_data()), collapse = ", "), "."),
-                             type = "error", duration = 6)
-          }
-          else{
-            showNotification("Get interactive heatmap", type = "message", duration = 4)
-            heat_ev$h <- heat()
-          }
-        }
-        else if(is.null(Report_data$d) | input$choice_visu == "dat"){
-          showNotification("Don't forget to type a column name !", type = "error", duration = 5)
-        }
-        else{
-          showNotification("Get interactive heatmap", type = "message", duration = 4)
-          heat_ev$h <- heat()
-        }
-      }
-      else{
-        showNotification("Your data are NULL ! Start the calculation for the data you selected
-                         or import a file", type = "error")
-      }
-    })
-    output$heat_visu <- renderPlotly({
-      heat_ev$h
-    })
+  output$prsel_p_cell <- renderUI({
+    if(!is.null(PR_event())){
+      pr <- PR_event()
+      pr_link <- paste0("https://www.uniprot.org/uniprot/", pr, ">")
+      pr_html <- paste0("<a href=", pr_link, pr, "</a>")
+      HTML(paste("You clicked on", paste(pr_html, collapse = ", ")))
+    }
+    else{
+      NULL
+    }
+  })
 
-    ## DENSITY
-    dens_ev <- reactiveValues(
-      d = NULL
-    )
-    dens <- reactive({
-      densityDIA(visu_data(), input$transfoD_visu, input$area_visu, input$titD_visu)
-    })
-    observeEvent(input$seedens_visu, {
-      if(!is.null(visu_data())){
-        showNotification("Get density plot", type = "message", duration = 4)
-        dens_ev$d <- dens()
-      }
-      else{
-        showNotification("Your data are NULL ! Start the calculation for the data you selected
-                         or import a file", type = "error")
-      }
-    })
-    output$dens_visu <- renderPlot({
-      dens_ev$d
-    })
-    output$down_dens <- downloadHandler(
-      filename = function() {
-        paste0("DensityPlot_dia_", Sys.Date(), ".png")
-      },
-      content = function(file){
-        ggsave(file, plot = dens_ev$d, device = "png",
-               width = 10, height = 7)
-      }
-    )
-
-    ## MDS
-    mds_ev <- reactiveValues(
-      m = NULL
-    )
-    mds <- reactive({
-      MDS_DIA(visu_data(), input$transfoM_visu, input$titM_visu)
-    })
-    observeEvent(input$seemds_visu, {
-      if(!is.null(visu_data())){
-        cl <- lapply(visu_data(), class)
-        cl <- cl == "numeric"
-        if(sum(cl) >= 3){
-          showNotification("Get MDS plot", type = "message", duration = 4)
-          mds_ev$m <- mds()
-        }
-        else{
-          showNotification("You need at list 3 columns in your data !", type = "error")
-        }
-      }
-      else{
-        showNotification("Your data are NULL ! Start the calculation for the data you selected
-                         or import a file", type = "error")
-      }
-    })
-    output$mds_visu <- renderPlot({
-      mds_ev$m
-    })
-    output$down_mds <- downloadHandler(
-      filename = function() {
-        paste0("MDSPlot_dia_", Sys.Date(), ".png")
-      },
-      content = function(file){
-        ggsave(file, plot = mds_ev$m, device = "png",
-               width = 8, height = 8)
-      }
-    )
-
-    ## RT
-    rt_ev <- reactiveValues(
-      g = NULL,
-      f = NULL
-    )
-    rtg <- reactive({
-      g <- ggplot(Report_data$d, aes(iRT, RT, label1 = Precursor.Id, label2 = Protein.Ids, label3 = Genes, color = PG.Q.Value)) +
-        geom_point() + facet_wrap(~File.Name) + labs(title = "Report data") + theme(plot.title = element_text(hjust = 0.5))
-      ggplotly(g)
-    })
-    rtf <- reactive({
-      d <- Report_data$d
-      nm <- ""
-      if(input$bdata_visu == "Protein group"){
-        nm <- "Protein.Group"
-      }
-      else if(input$bdata_visu == "Unique genes"){
-        nm <- "Genes"
-      }
-      else if(input$bdata_visu == "Peptides" | input$bdata_visu == "Peptides.MaxLFQ"){
-        nm <- "Stripped.Sequence"
-      }
-      else if(input$bdata_visu == "Precursors"){
-        nm <- "Precursor.Id"
-      }
-      d <- d[d[[nm]] %in% visu_data()$id,]
-      g <- ggplot(d, aes(iRT, RT, label1 = Precursor.Id, label2 = Protein.Ids, label3 = Genes, color = PG.Q.Value)) +
-        geom_point() + facet_wrap(~File.Name) + labs(title = "Report data filtered") + theme(plot.title = element_text(hjust = 0.5))
-      ggplotly(g)
-    })
-    observeEvent(input$seert_visu, {
-       showNotification("Get rentention time plot", type = "message", duration = 4)
-       rt_ev$g <- rtg()
-       rt_ev$f <- rtf()
-    })
-    output$rt1_visu <- renderPlotly({
-      rt_ev$g
-    })
-    output$rt2_visu <- renderPlotly({
-      rt_ev$f
-    })
-
-    ## PROTEOTYPIC
-    ptyp_ev <- reactiveValues(
-      g = NULL,
-      f = NULL
-    )
-    ptypg <- reactive({
-      ptyp <- Report_data$d[, c("File.Name", "Proteotypic")]
-      ptyp$Proteotypic <- as.character(ptyp$Proteotypic)
-      ggplot(ptyp, aes(Proteotypic, fill = Proteotypic)) +
-        geom_bar() +
-        facet_wrap(~File.Name) +
-        labs(title = "Report data") +
-        theme(plot.title = element_text(hjust = 0.5))
-    })
-    ptypf <- reactive({
-      d <- Report_data$d
-      nm <- ""
-      if(input$bdata_visu == "Protein group"){
-        nm <- "Protein.Group"
-      }
-      else if(input$bdata_visu == "Unique genes"){
-        nm <- "Genes"
-      }
-      else if(input$bdata_visu == "Peptides" | input$bdata_visu == "Peptides.MaxLFQ"){
-        nm <- "Stripped.Sequence"
-      }
-      else if(input$bdata_visu == "Precursors"){
-        nm <- "Precursor.Id"
-      }
-      ptyp <- d[d[[nm]] %in% visu_data()$id,c("File.Name", "Proteotypic")]
-      ptyp$Proteotypic <- as.character(ptyp$Proteotypic)
-
-      ggplot(ptyp, aes(Proteotypic, fill = Proteotypic)) +
-        geom_bar() +
-        facet_wrap(~File.Name) +
-        labs(title = "Report data filtered") +
-        theme(plot.title = element_text(hjust = 0.5))
-    })
-    observeEvent(input$seeptyp_visu, {
-      showNotification("Get proteotypic proportion", type = "message", duration = 4)
-      ptyp_ev$g <- ptypg()
-      ptyp_ev$f <- ptypf()
-    })
-    output$ptyp1_visu <- renderPlot({
-      ptyp_ev$g
-    })
-    output$ptyp2_visu <- renderPlot({
-      ptyp_ev$f
-    })
-
-
-    ### SELECT BEST WINDOWS
-    shinyFileChoose(input, "replib_wsel", roots = volumes, session = session)
-    output$filepaths2 <- renderPrint({
-      if (is.integer(input$replib_wsel)) {
-        cat("No files have been selected (shinyFileChoose)")
-      } else {
-        parseFilePaths(volumes, input$replib_wsel)
-      }
-    })
-
-    Lib_data <- reactive({
-      if (is.integer(input$replib_wsel)) {
+  barpdata_cell <- reactive({
+    if(input$drug_cell == "dat"){
+      File <- input$filebarp_cell
+      if (is.null(File))
         return(NULL)
+
+      ms_fileread(File$datapath)
+    }
+    else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
+      join_drugdata(drug_data_sh$y$data[input$drug2_cell], by = c("id", "description"))
+    }
+    else{
+      NULL
+    }
+  })
+  output$barpdata_cell_up <- reactive({
+    return(!is.null(barpdata_cell()))
+  })
+  outputOptions(output, "barpdata_cell_up", suspendWhenHidden = FALSE)
+
+
+  sel_prot_cell <- reactive({
+    pr <- NULL
+    if(input$selpr_loca_cell){
+      if(!is.null(resdata_cell$ch)){
+        pr <- resdata_cell$ch$id[which(!is.na(match(resdata_cell$ch$main.location.cell, input$selorga_cell)))]
+        pr <- unique(pr)
+      }
+    }
+  })
+  observe({
+    updateSelectizeInput(session, "selectpr_cell", choices = sel_prot_cell(), server = TRUE)
+
+  })
+
+  Sel_cond_cell <- reactive({
+    if(input$selpr_loca_cell){
+      if(input$allpr_cell){
+        pr <- sel_prot_cell()
+      }
+      else{
+        pr <- input$selectpr_cell
+      }
+    }
+    else{
+      pr <- PR_event()
+    }
+
+    tr <- NULL
+    if(!is.null(barpdata_cell())){
+      if(input$cond_sel_cell == "cat" & !is.null(hitdata_cell())){
+        tr <- hitdata_cell()[which(!is.na(match(hitdata_cell()$id,pr))),c("Condition", "category")]
       }
       else {
-        File <- parseFilePaths(volumes, input$replib_wsel)
+        tr <- get_treat_level(barpdata_cell())
       }
-      File <- parseFilePaths(volumes, input$replib_wsel)
-      if(is.null(File))
-        return(NULL)
+    }
+    tr
+  })
 
-      showNotification("Getting your data, this may take a while.", type = "message")
-      diann_load(File$datapath)
-    })
-    lib_data <- reactiveValues(
-      d = NULL
-    )
-    observe({
-      lib_data$d <- Lib_data()
-    })
-    output$libdata_up <- reactive({
-      return(!is.null(lib_data$d))
-    })
-    outputOptions(output, "libdata_up", suspendWhenHidden = FALSE)
 
-    wsel_ev <- reactiveValues(
-      o_h = NULL,
-      o_hf = NULL,
-      n_h = NULL,
-      n_hf = NULL,
-      both = NULL,
-      both_f = NULL
+
+  observe({
+    if(input$cond_sel_cell == "cat"){
+      updateSelectInput(session, "cond_cell", choices = unique(Sel_cond_cell()$category))
+    }
+    else{
+      updateSelectInput(session, "cond_cell", choices = Sel_cond_cell())
+    }
+  })
+
+  data_cell <- reactive({
+    if(!is.null(barpdata_cell())){
+
+      data <- barpdata_cell()
+      TREAT <- get_treat_level(barpdata_cell())
+
+      if(input$cond_sel_cell == "treat"){
+        notsel_cond <- TREAT[!(TREAT %in% input$cond_cell)]
+        notsel_cond <- paste0("_", notsel_cond, "$")
+        notsel_cond <- paste(notsel_cond, collapse = "|")
+
+        if(str_length(notsel_cond) != 0){
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+
+        id_sel <- str_which(names(data), paste(input$cond_cell, collapse = "|"))
+        w <- 1:ncol(data)
+        w <- w[!(w %in% id_sel)]
+
+        ord <- unlist(lapply(input$cond_cell, function(x) str_which(names(data), paste0("_", x, "$"))))
+
+        data <- data[,c(w,ord)]
+
+      }
+      else if(input$cond_sel_cell == "cat"){
+        sele_cond <- Sel_cond_cell()$Condition[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
+        notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
+        if(!purrr::is_empty(notsel_cond)){
+          notsel_cond <- paste(notsel_cond, collapse = "|")
+
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+
+      }
+      else if(input$cond_sel_cell == "all_cond"){
+        notsel_cond <- TREAT[!(TREAT %in% Sel_cond_cell())]
+        if(!purrr::is_empty(notsel_cond)){
+          notsel_cond <- paste(notsel_cond, collapse = "|")
+
+          data <- data[,-str_which(names(data), notsel_cond)]
+        }
+      }
+
+      if(input$selpr_loca_cell){
+        loca_pr <- resdata_cell$ch[which(!is.na(match(resdata_cell$ch$main.location.cell,
+                                                      input$selorga_cell))),
+                                   c("id", "main.location.cell")
+                                   ]
+        if(input$allpr_cell){
+          pr <- sel_prot_cell()
+        }
+        else{
+          pr <- input$selectpr_cell
+        }
+      }
+      else{
+        pr <- PR_event()
+      }
+
+      if(input$selpr_loca_cell & input$save_bar_cell){
+        data_l <- list()
+        for(i in input$selorga_cell){
+          loca_pr_ <- loca_pr[which(loca_pr$main.location.cell == i), ]
+
+          pr_comp <- loca_pr_$id
+          pr_comp <- pr_comp[which(!is.na(match(pr_comp, pr)))]
+
+          data_l[[i]] <- ms_subsetting(data, isfile = F, hitidlist = c(pr_comp))
+        }
+        data <- data_l
+      }
+      else{
+        data <- ms_subsetting(data, isfile = F, hitidlist = c(pr))
+      }
+    }
+    else{
+      data <- NULL
+    }
+
+    data
+  })
+
+
+  output$n_cond_sel_cell <- renderText({
+    if(input$ch_own_col_cell){
+      if (input$cond_sel_cell  == "all_cond"){
+        paste("You selected", length(get_treat_level(data_cell())), "conditions, please enter the same number of colors")
+      }
+      else{
+        paste("You selected", length(input$cond_cell), "conditions, please enter the same number of colors")
+      }
+    }
+    else{
+      NULL
+    }
+  })
+
+  OWN_color_cell <- reactiveValues(
+    ch = c()
+  )
+  observeEvent(input$add_col_cell, {
+    OWN_color_cell$ch <- append(OWN_color_cell$ch, input$own_color_pick_cell)
+  })
+  observeEvent(input$rem_col_cell, {
+    if(length(OWN_color_cell$ch) <= 1){
+      OWN_color_cell$ch <- c()
+    }
+    else{
+      OWN_color_cell$ch <- OWN_color_cell$ch[1:(length(OWN_color_cell$ch)-1)]
+    }
+  })
+  output$own_color_cell <- renderText({
+    paste("You selected this colors :", paste(OWN_color_cell$ch, collapse = ", "))
+  })
+
+
+  BAR_cell <- reactiveValues(
+    ch = ev_null_print
+  )
+
+  Bar_one_cell <- reactive({
+    if(input$save_bar_cell & input$selpr_loca_cell){
+      loca_cell_lab <- "IMPRINTS-CETSA bar plotting \nMain cellular location :"
+    }
+    else{
+      loca_cell_lab <- "IMPRINTS-CETSA bar plotting"
+    }
+    withCallingHandlers({
+      shinyjs::html("diag_bar_cell", "")
+      if(input$ch_own_col_cell){
+        nbc <- ifelse(input$cond_sel_cell  == "all_cond", length(get_treat_level(data_cell())), length(input$cond_cell))
+        COL <- OWN_color_cell$ch
+        if(nbc == length(COL)){
+          ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+                               usegradient = input$grad_cell, linegraph = input$line_cell,
+                               save_pdf = input$save_bar_cell, colorpanel = COL,
+                               layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                               toplabel = loca_cell_lab,
+                               pdfname = input$pdftit_cell)
+        }
+        else{
+          showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+        }
+
+      }
+      else{
+        ms_2D_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+                             usegradient = input$grad_cell, linegraph = input$line_cell,
+                             save_pdf = input$save_bar_cell,
+                             layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                             toplabel = loca_cell_lab,
+                             pdfname = input$pdftit_cell)
+      }
+
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_cell", html = paste(m$message, "<br>", sep = ""), add = FALSE)}
     )
-    wsel_result <- reactive({
-      withCallingHandlers({
-        shinyjs::html("bstw_wsel", "")
-        get_bestwind(lib_data$d, bins = input$bins_wsel, per_frac = input$perfrac_wsel)
-        },
+  })
+
+  observeEvent(input$barp_cell, {
+    if(input$selpr_loca_cell){
+      if(input$allpr_cell){
+        pr <- sel_prot_cell()
+      }
+      else{
+        pr <- input$selectpr_cell
+      }
+    }
+    else{
+      pr <- PR_event()
+    }
+
+    if(is.null(pr)){
+      showNotification("Don't forget to select a protein !", type = "error")
+    }
+    else{
+      if (input$cond_sel_cell != "all_cond"){
+        if (is.null(input$cond_cell)){
+          showNotification("Don't forget to select a condition !", type = "error")
+        }
+        else{
+          BAR_cell$ch <- Bar_one_cell()
+        }
+      }
+      else{
+        BAR_cell$ch <- Bar_one_cell()
+      }
+    }
+
+
+  })
+
+  output$bar_pr_cell <- renderPlot({
+    BAR_cell$ch
+  })
+
+  output$downbar_cell <- downloadHandler(
+    filename = function() {
+      paste("2D_barplot_", Sys.Date(), ".png", sep = "")
+    },
+    content = function(file){
+      ggsave(file, BAR_cell$ch[[1]], device = "png")
+    }
+  )
+
+
+  ### PubMed
+
+  pubmed_data <- reactive({
+    File <- input$data_pubmed
+    if (is.null(File))
+      return(NULL)
+
+    import_list(File$datapath)[[1]]
+  })
+  #check if a file is upload
+  output$pubmed_fileup <- reactive({
+    return(!is.null(pubmed_data()))
+  })
+  outputOptions(output, "pubmed_fileup", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!input$impc_pubmed){
+      updateCheckboxInput(session, "hit_pubmed", value = FALSE)
+    }
+  })
+
+  observeEvent(input$go_pub, {
+    showNotification("Start searching", type = "message")
+
+    if(input$impc_pubmed){
+      data <- pubmed_data()
+    }
+    else{
+      data <- input$dtext_pubmed
+      data <- str_split(data, ",")[[1]]
+      data <- str_trim(data)
+    }
+
+    if (str_length(str_remove_all(input$LA_pubmed, " ")) == 0){
+      LA_ <- NULL
+    }
+    else{
+      LA_ <- input$LA_pubmed
+    }
+    if (str_length(str_remove_all(input$Y_pubmed, " ")) == 0){
+      Y_ <- NULL
+    }
+    else{
+      Y_ <- input$Y_pubmed
+    }
+    if (str_length(str_remove_all(input$api_pubmed, " ")) == 0){
+      api_ <- NULL
+    }
+    else{
+      api_ <- input$api_pubmed
+    }
+
+    withCallingHandlers({
+      shinyjs::html("diag", "")
+      pub <- find_in_pubmed(data, feat = input$feat_pubmed, imp_by_hitlist = input$hit_pubmed,
+                     language = LA_, year_rg = Y_, condition = input$cond_pubmed,
+                     your_API = api_, newfolder_name = input$fname_pubmed)
+      },
       message = function(m) {
-        shinyjs::html(id = "bstw_wsel", html = paste(m$message, "<br>", sep = ""), add = FALSE)
-      }
+         shinyjs::html(id = "diag", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+        }
       )
+
+
+    output$pubmed_out <- DT::renderDataTable({
+      DT::datatable(pub,
+                    caption = htmltools::tags$caption(
+                      style = 'caption-side: top; text-align: left;',
+                      htmltools::strong("PubMed search results")
+                    ),
+                    rownames = FALSE,
+                    options = list(lengthMenu = c(10,20,30), pageLength = 10))
     })
 
-    observeEvent(input$go_wsel, {
-      showNotification("Get best windows for your data", type = "message", duration = 4)
-      res <- wsel_result()
-      wsel_ev$o_h <- res$orig_hist
-      wsel_ev$o_hf <- res$orig_hist_perfrac
-      wsel_ev$n_h <- res$new_hist
-      wsel_ev$n_hf <- res$new_hist_perfrac
-      wsel_ev$both <- ggpubr::ggarrange(res$orig_hist, res$new_hist, ncol = 2, nrow = 1)
-      wsel_ev$both_f <- ggpubr::ggarrange(res$orig_hist_perfrac, res$new_hist_perfrac, ncol = 2, nrow = 1)
-    })
-    output$hist_wsel <- renderPlot({
-      wsel_ev$both
-    })
-    output$hist_wsel_frac <- renderPlot({
-      wsel_ev$both_f
-    })
-    output$downhist_wsel <- downloadHandler(
+    output$down_pubmed <- downloadHandler(
       filename = function() {
-        paste0("DistributionWindow_dia_", Sys.Date(), ".png")
+        paste0("have_publication_", Sys.Date(), "_", input$feat_pubmed, ".xlsx")
       },
       content = function(file){
-        ggsave(file, plot = wsel_ev$both, device = "png",
-               width = 12, height = 8)
+        xlsx::write.xlsx(pub, file, row.names = FALSE)
       }
     )
-    output$downhist_wsel_frac <- downloadHandler(
-      filename = function() {
-        paste0("DistributionWindowFraction_dia_", Sys.Date(), ".png")
-      },
-      content = function(file){
-        ggsave(file, plot = wsel_ev$both_f, device = "png",
-               width = 12, height = 8)
-      }
-    )
+
+
+  })
+
+
 }
 
-
 shinyApp(ui, server)
-
-
-
 
 
 

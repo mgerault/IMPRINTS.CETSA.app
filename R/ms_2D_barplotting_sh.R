@@ -269,6 +269,16 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
           if(nrow(ord_data) != 0)
             data <- ord_data
         }
+        else if(!purrr::is_empty(grep("^score", names(data)))){
+          subt <- data[, c(1, grep("^score", names(data)))]
+          subt <- as.data.frame(subt)
+          colnames(subt) <- c("id", "score")
+          subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
+          subt$score <- NULL
+          rownames(subt) <- subt$id
+          data[,grep("^score", names(data))] <- subt$category
+          data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
+        }
         else{
           subt <- NULL
         }
@@ -445,7 +455,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         subt <- data[, c(1, grep("^category", names(data)), grep("^score", names(data)))]
         subt <- as.data.frame(subt)
         colnames(subt) <- c("id", "category", "score")
-        subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,4))
+        subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,2))
         subt$score <- NULL
         rownames(subt) <- subt$id
         data <- data[,-grep("^score", names(data))]
@@ -472,6 +482,16 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
 
       if(nrow(ord_data) != 0)
         data <- ord_data
+    }
+    else if(!purrr::is_empty(grep("^score", names(data)))){
+      subt <- data[, c(1, grep("^score", names(data)))]
+      subt <- as.data.frame(subt)
+      colnames(subt) <- c("id", "score")
+      subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
+      subt$score <- NULL
+      rownames(subt) <- subt$id
+      data[,grep("^score", names(data))] <- subt$category
+      data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
     }
     else{
       subt <- NULL
@@ -605,7 +625,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     }
     else{
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
-        geom_text(x=0.5, y=0.5, label = "All the barplots have been saved succesfully !
+        geom_text(x=0.5, y=0.5, label = "All the barplots has been saved succesfully !
                                          \nGo check your files", size = 6) +
         theme_cowplot() +
         theme(axis.text.x = element_blank(),

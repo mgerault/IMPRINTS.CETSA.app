@@ -276,8 +276,8 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
           subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
           subt$score <- NULL
           rownames(subt) <- subt$id
-          data[,grep("^score", names(data))] <- subt$category
           data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
+          data <- data[,-grep("^score", names(data))]
         }
         else{
           subt <- NULL
@@ -490,8 +490,8 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
       subt$score <- NULL
       rownames(subt) <- subt$id
-      data[,grep("^score", names(data))] <- subt$category
       data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
+      data <- data[,-grep("^score", names(data))]
     }
     else{
       subt <- NULL

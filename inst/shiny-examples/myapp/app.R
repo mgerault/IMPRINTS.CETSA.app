@@ -3356,7 +3356,7 @@ server <- function(input, output, session){
 
     if(input$species_string == 9606){
       if(!exists("string_db_human")){
-        string_db_human <<- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
+        string_db_human <<- STRINGdb$new(version="11.5", species=9606,               #ID 9606 correspond to human
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }
@@ -3364,7 +3364,7 @@ server <- function(input, output, session){
     }
     else if(input$species_string == 10090){
       if(!exists("string_db_mouse")){
-        string_db_mouse <<- STRINGdb$new(version="11", species=10090,               #ID 10090 correspond to mouse
+        string_db_mouse <<- STRINGdb$new(version="11.5", species=10090,               #ID 10090 correspond to mouse
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }
@@ -3372,7 +3372,7 @@ server <- function(input, output, session){
     }
     else if(input$species_string == 10116){
       if(!exists("string_db_rat")){
-        string_db_rat <<- STRINGdb$new(version="11", species=10116,               #ID 10116 correspond to rat
+        string_db_rat <<- STRINGdb$new(version="11.5", species=10116,               #ID 10116 correspond to rat
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
       }

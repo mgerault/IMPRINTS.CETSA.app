@@ -60,7 +60,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     else
       stop("Format isn't recognize")
   }
-  else if(class(data_diff) != "data.frame"){
+  else if(!("data.frame" %in% class(data_diff))){
     stop("data_diff is neither a file neither a data frame !")
   }
   
@@ -323,7 +323,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   names(vennlist) <- levels(diff_SR_plot$condition)
   VennDiagram::venn.diagram(vennlist, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "VennDiagram.png"),
                             output = TRUE,
-                            fill = RColorBrewer::brewer.pal(length(names(vennlist)), "Pastel2"),
+                            fill = RColorBrewer::brewer.pal(length(names(vennlist)), "Pastel2")[1:length(vennlist)],
                             fontface = "bold",
                             fontfamiliy = "sans",
                             cat.cex = 1.6,

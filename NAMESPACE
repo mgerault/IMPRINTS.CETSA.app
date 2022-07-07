@@ -2,6 +2,7 @@
 
 export(Get_GO)
 export(My_net)
+export(SR_CetsaHit)
 export(com_protein_loop)
 export(find_in_pubmed)
 export(get_treat_level)

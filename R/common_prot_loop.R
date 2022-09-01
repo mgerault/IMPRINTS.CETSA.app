@@ -18,6 +18,9 @@
 #' @export
 
 com_protein_loop <- function(data){
+  if(length(data) <= 1){
+    return(data)
+  }
   all_common <- Reduce(intersect, data) #get the common element for all the element of the list
 
   lonelyL <- list()

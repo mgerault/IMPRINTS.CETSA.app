@@ -28,29 +28,29 @@ First go to Rstudio. This package totally depends on the last version of the min
 For installation from github https://github.com/nkdailingyun/mineCETSA ; it may not be the last version also.
 Moreover, you need to install EBImage and STRINGdb package from BioConductor :
 
-*> if(!requireNamespace("BiocManager", quietly = TRUE)){*
-
-*> install.packages("BiocManager")*  
-
-*> }*
-
-*> BiocManager::install(c("EBImage", "STRINGdb"))*  
+```c
+if(!requireNamespace("BiocManager", quietly = TRUE)){
+   install.packages("BiocManager") 
+}
+BiocManager::install(c("EBImage", "STRINGdb"))
+```
 
 When all of this is done, type and run the following commands in R console:
 
-*> if(!requireNamespace("devtools", quietly = TRUE)){*
+```c
+if(!requireNamespace("devtools", quietly = TRUE)){
+   install.packages("devtools")
+} 
+devtools::install_github("mgerault/mineCETSAapp")
 
-*> install.packages("devtools")*  
-
-*> }*  
-
-*> devtools::install_github("mgerault/mineCETSAapp")*
-
-*> library(mineCETSAapp)*
+library(mineCETSAapp)
+```
 
 If you want now to use the app just type :
 
-*> runCETSAapp()*
+```c
+runCETSAapp()
+```
  
  
  

@@ -1694,6 +1694,7 @@ server <- function(input, output, session){
     if(!purrr::is_empty(nv_nam)){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
+    dat <- dat[,c("id", "description", "Condition", "category")]
     dat
   })
   #check if a file is upload

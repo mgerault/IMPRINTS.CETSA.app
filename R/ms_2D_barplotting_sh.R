@@ -199,7 +199,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       return(q)
     }
   }
-  if(class(data) == "list"){
+  if(("list" %in% class(data))){
     if(!save_pdf){
       stop("Your input data is a list. The aim is to save in the same pdf with diffrent data sets.
            Retry with setting 'save_pdf' to TRUE.")

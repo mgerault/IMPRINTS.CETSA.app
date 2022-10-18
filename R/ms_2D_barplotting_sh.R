@@ -503,6 +503,9 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
     if (!log2scale) {
       data1 <- dplyr::mutate(data1, reading = 2^reading)
     }
+    if(length(treatmentlevel) != length(get_treat_level(data))){
+      data1 <- data1 %>% filter(stringr::str_detect(condition, paste(treatmentlevel, collapse = "|")))
+    }
     a <- data1$condition[1]
     if (length(unlist(strsplit(a, "_"))) == 4) {
       withset <- TRUE

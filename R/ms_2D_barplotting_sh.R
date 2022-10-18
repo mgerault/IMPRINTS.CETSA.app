@@ -199,7 +199,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       return(q)
     }
   }
-  if(class(data) == "list"){
+  if(("list" %in% class(data))){
     if(!save_pdf){
       stop("Your input data is a list. The aim is to save in the same pdf with diffrent data sets.
            Retry with setting 'save_pdf' to TRUE.")
@@ -502,6 +502,9 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                            condition, reading, -id)
     if (!log2scale) {
       data1 <- dplyr::mutate(data1, reading = 2^reading)
+    }
+    if(length(treatmentlevel) != length(get_treat_level(data))){
+      data1 <- data1 %>% filter(stringr::str_detect(condition, paste(treatmentlevel, collapse = "|")))
     }
     a <- data1$condition[1]
     if (length(unlist(strsplit(a, "_"))) == 4) {

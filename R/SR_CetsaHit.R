@@ -171,7 +171,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                 dat = data.frame(x = 0:(length(temp) - 1),
                                  y = d)
                 wght = rep(0.1, length(d))
-                wght[top] <- 0.5
+                wght[1:2] <- 0.5
                 res = lm(y ~ x,
                          data = dat,
                          weights = wght

@@ -911,9 +911,14 @@ ui <- dashboardPage(
                   conditionalPanel(condition = "output.data_stri_up",
                                    tags$hr(),
                                    fluidRow(column(3, checkboxInput("intnet_stri", "Interactive network", FALSE)),
-                                            column(3, actionButton("netbase_stri", "See network", class = "btn-primary btn-lg")),
-
-                                            column(3, checkboxInput("hidnet1_stri", "Hide network", FALSE))
+                                            column(3, checkboxInput("hidnet1_stri", "Hide network", FALSE)),
+                                            column(3, selectInput("edgetype1_stri", "Meaning of network edges",
+                                                                  choices = c("evidence", "confidence", "actions"),
+                                                                  selected = "evidence")),
+                                            column(3, numericInput("intscore1_stri", "Minimum interaction score",
+                                                                   min = 0, max = 1000, step = 100, value = 400))
+                                            ),
+                                   fluidRow(column(3, actionButton("netbase_stri", "See network", class = "btn-primary btn-lg"))
                                             ),
                                    tags$hr(),
                                    actionButton("go_enrich", "Start the enrichment analysis", class = "btn-primary btn-lg"),
@@ -952,9 +957,15 @@ ui <- dashboardPage(
                                                     tags$hr(),
                                                     fluidRow(
                                                       column(3, selectInput("descri_stri", "Select a description to filter proteins", choices = NULL)),
-                                                      column(3, actionButton("netfilt_stri", "See new network", class = "btn-primary btn-lg")),
-                                                      column(3, checkboxInput("hidnet2_stri", "Hide new network", FALSE))
+                                                      column(3, checkboxInput("hidnet2_stri", "Hide new network", FALSE)),
+                                                      column(3, selectInput("edgetype2_stri", "Meaning of network edges",
+                                                                            choices = c("evidence", "confidence", "actions"),
+                                                                            selected = "evidence")),
+                                                      column(3, numericInput("intscore2_stri", "Minimum interaction score",
+                                                                             min = 0, max = 1000, step = 100, value = 400))
                                                       ),
+                                                    fluidRow(column(3, actionButton("netfilt_stri", "See new network", class = "btn-primary btn-lg"))
+                                                             ),
                                                     tags$hr(),
 
                                                     conditionalPanel(condition = "output.enrich_res_tab_up",
@@ -3437,10 +3448,12 @@ server <- function(input, output, session){
 
   g_stri <- reactive({
     if(input$intnet_stri){
-      My_net(string_res$x$STRING_id , inter = TRUE)
+      My_net(string_res$x$STRING_id , inter = TRUE,
+             network_flavor = input$edgetype1_stri, required_score = input$intscore1_stri)
     }
     else{
-      My_net(string_res$x$STRING_id , inter = FALSE)
+      My_net(string_res$x$STRING_id , inter = FALSE,
+             network_flavor = input$edgetype1_stri, required_score = input$intscore1_stri)
     }
   })
 
@@ -3564,10 +3577,12 @@ server <- function(input, output, session){
 
     if(!is.null(pr) & !purrr::is_empty(pr)){
       if(input$intnet_stri){
-        My_net(pr , inter = TRUE)
+        My_net(pr , inter = TRUE,
+               network_flavor = input$edgetype2_stri, required_score = input$intscore2_stri)
       }
       else{
-        My_net(pr , inter = FALSE)
+        My_net(pr , inter = FALSE,
+               network_flavor = input$edgetype2_stri, required_score = input$intscore2_stri)
       }
     }
     else{

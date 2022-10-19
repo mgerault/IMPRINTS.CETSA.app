@@ -8,8 +8,8 @@
 #'                   for additional informations)
 #' @param required_score A threshold on the score that overrides the default score_threshold, that we use
 #'                       only for the picture
-#' @param inter A logical to tel if you want to return an interactive image with plotly
-#' @param add_link arameter to specify whether you want to generate and add a short link to the
+#' @param inter A logical to tell if you want to return an interactive image with plotly
+#' @param add_link Whether you want to generate and add a short link to the
 #'                 relative page in STRING. As default this option is active but we suggest to deactivate it in case
 #'                 one is generating many images (e.g. in a loop). Deactivating
 #'                 this option avoids to generate and store a lot of short-urls on our server.

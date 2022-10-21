@@ -168,7 +168,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
               else{
                 ord = order(d, decreasing = TRUE)
                 d = d[ord]
-                dat = data.frame(x = 0:(length(temp) - 1),
+                dat = data.frame(x = 1:length(temp),
                                  y = d)
                 wght = rep(0.1, length(d))
                 wght[1:2] <- 0.5

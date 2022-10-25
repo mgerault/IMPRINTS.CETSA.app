@@ -71,7 +71,9 @@ ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
 
   message("Clustering data")
   d <- dist(data1[,-1])
-  d <- replace_na(d, 0)
+  if(length(which(is.na(d)))){
+    d[which(is.na(d))] <- 0
+  }
   prot_dend <- hclust(d)
 
   message("Prepare data for plotting")

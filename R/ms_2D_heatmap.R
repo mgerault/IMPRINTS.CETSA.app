@@ -41,7 +41,7 @@ ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
     stop("Please provide one treatment name")
   }
   if (inherits(data, "data.frame") | class(data) == "data.frame") {
-    subset <- grep(treatment, names(data))
+    subset <- stringr::str_which(names(data), paste0("_", treatment, "$"))
     if (length(subset) > 0) {
       data1 = data[, c(1, 2, subset)]
     }

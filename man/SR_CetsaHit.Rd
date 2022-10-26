@@ -9,10 +9,13 @@ SR_CetsaHit(
   data_diff = NULL,
   ctrl,
   valid_val = NULL,
-  SR_cutoff = 1,
-  pval_cutoff = 0.05,
-  padj_method = "BH",
-  folder_name = "Hits_analysis"
+  SR_cutoff = 1.5,
+  FDR = 0.01,
+  curvature = 0.5,
+  FDR_category = 0.1,
+  folder_name = "Hits_analysis",
+  peptide_count_col = "peptides_counts_all",
+  species = "Homo Sapiens"
 )
 }
 \arguments{
@@ -22,25 +25,33 @@ SR_CetsaHit(
 
 \item{ctrl}{The name of the control.}
 
-\item{valid_val}{The percentage of valid values you want per condition. If less, score will be set to NA, 
+\item{valid_val}{The percentage of valid values you want per condition. If less, score will be set to NA,
 i.e. the protein will not be a hit}
 
 \item{SR_cutoff}{The stability rate cutoff}
 
-\item{pval_cutoff}{The combined p-value cutoff}
+\item{FDR}{The FDR used for the BH corrected combined p-value}
 
-\item{padj_method}{The p-value adjust method, default is BH.}
+\item{curvature}{The curvature used for the curve on the volcano plot}
+
+\item{FDR_category}{The FDR used for the BH corrected  p-value at 37°C used in order to categorize the hits}
 
 \item{folder_name}{The name of the folder in which you want to save the results.}
+
+\item{peptide_count_col}{The name of the column that contain the unique peptide count.
+If it is sumUniPeps, don't bother with this parameter.}
+
+\item{species}{The species on which you did the experiment (not necessary if already present in your datas).
+Default is 'Homo Sapiens'.}
 }
 \value{
-A dataframe which contains the hit.
+A dataframe which contains the hits.
 }
 \description{
 Function to categorize protein according to their Expression/Stability change
 based on their stability rate and their combined p-value on their two biggest fold changes.
 }
 \details{
-This function is still on test. Your data should contain the columns named 
+This function is still on test. Your data should contain the columns named
          Protein.Group, Genes and peptides_counts_all.
 }

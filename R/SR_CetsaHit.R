@@ -12,7 +12,9 @@
 #' @param valid_val The percentage of valid values you want per condition. If less, score will be set to NA,
 #'                  i.e. the protein will not be a hit
 #' @param SR_cutoff The stability rate cutoff
-#' @param pval_cutoff The combined p-value cutoff
+#' @param curvature The curvature used for the curve on the volcano plot
+#' @param FDR The FDR used for the BH corrected combined p-value
+#' @param FDR_category The FDR used for the BH corrected  p-value at 37°C used in order to categorize the hits
 #' @param folder_name The name of the folder in which you want to save the results.
 #' @param peptide_count_col The name of the column that contain the unique peptide count.
 #'                          If it is sumUniPeps, don't bother with this parameter.
@@ -24,7 +26,9 @@
 #' @export
 
 SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
-                        SR_cutoff = 1, pval_cutoff = 0.05,
+                        SR_cutoff = 1.5,
+                        FDR = 0.01, curvature = 0.5,
+                        FDR_category = 0.1,
                         folder_name = "Hits_analysis",
                         peptide_count_col = "peptides_counts_all",
                         species = "Homo Sapiens"){
@@ -84,7 +88,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     data_diff <- data_diff[, c("id", "description", name_cond, "sumUniPeps", "sumPSMs", "countNum")]
     data_diff <- mineCETSA::ms_2D_caldiff(data_diff, treatmentlevel = c(ctrl, cond))
   }
-  else if(class(data_diff) == "character"){
+  else if("character" %in% class(data_diff)){
     if(stringr::str_detect(data_diff, "\\.tsv$|\\.csv$|\\.txt$"))
       data_diff <- readr::read_tsv(data_diff)
     else
@@ -92,6 +96,24 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   }
   else if(!("data.frame" %in% class(data_diff))){
     stop("data_diff is neither a file, neither a data frame !")
+  }
+
+  curve <- function(x, cut_neg, cut_pos, cut_p, curvature = curvature){
+    y <- rep(NA, length(x))
+    neg <- which(x <= cut_neg)
+    pos <- which(x >= cut_pos)
+    y[neg] <- curvature/abs(x[neg] - cut_neg) + -log10(cut_p)
+    y[pos] <- curvature/abs(x[pos] - cut_pos) + -log10(cut_p)
+
+    return(y)
+  }
+  find_cutoff <- function(x,y){
+    id <- order(x)
+    x <- x[id]
+    y <- y[id]
+
+    x <- x[which(x > y)]
+    return(x[1])
   }
 
 
@@ -150,6 +172,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
               top <- as.numeric(top)
               d = d[-length(d)]
               d = as.numeric(d)
+              stabilization = sign(mean(d, na.rm = TRUE))
               d = abs(d)
 
               crit = FALSE
@@ -177,9 +200,11 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                          weights = wght
                 )$coefficients[1]
               };
-              res = abs(res)
+              res = abs(res)*stabilization
             }
       )
+    diff_SR[[paste0("SR_", k)]] <- (diff_SR[[paste0("SR_", k)]] -
+                                      mean(diff_SR[[paste0("SR_", k)]], na.rm=TRUE))/sd(diff_SR[[paste0("SR_", k)]], na.rm=TRUE)
 
     message("Get Fisher p-value")
     diff_SR[[paste0("pvalF1_", k)]] <- rep(1,n)
@@ -204,48 +229,65 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
       diff_SR[[paste0("Fisher_", k)]][i] <- metap::sumlog(c(pF1, pF2))$p
     }
+    diff_SR[[paste0("pval", temp[1],  "_", k)]] <- pval[[k]][[temp[1]]]
 
     diff_SR[[paste0("GlobalScore_", k)]] <- tidyr::replace_na(diff_SR[[paste0("SR_", k)]]*(-log10(diff_SR[[paste0("Fisher_", k)]])), 0)
-
-    diff_SR[[paste0("Stabilisation_", k)]] <- apply(diff_SR[,paste0(temp, "_", k)], 1, function(x){m = mean(x, na.rm = TRUE)
-    m = -1*(m < 0) + 1*(m >=0);
-    m}
-    )
   }
   info <- data_diff[,c("id", "description", "sumUniPeps")]
   info$description <- stringr::str_extract(paste0(info$description, " "), "(?<=GN=).+?(?= )") # extract genes
   colnames(info) <- c("id", "Genes", "peptide_count")
   diff_SR <- as.data.frame(cbind(info, diff_SR))
 
-  diff_SR$GlobalScore <- as.numeric(apply(diff_SR[,stringr::str_which(colnames(diff_SR), "^GlobalScore_")], 1, prod))
-  higher_GS <- order(diff_SR$GlobalScore, decreasing = TRUE)[1:30]
-
-
   diff_SR_plot <- diff_SR[,c("id", "Genes", stringr::str_subset(colnames(diff_SR), "^SR_|^Fisher_"))]
   diff_SR_plot <- tidyr::gather(diff_SR_plot, condition, reading, -id, -Genes)
   diff_SR_plot <- tidyr::separate(diff_SR_plot, condition, into = c("Value", "condition"))
   diff_SR_plot <- tidyr::spread(diff_SR_plot, Value, reading)
   diff_SR_plot$condition <- factor(diff_SR_plot$condition)
-  diff_SR_plot$criteria <- -log10(diff_SR_plot$Fisher) >= -log10(pval_cutoff) & diff_SR_plot$SR >= SR_cutoff
-  diff_SR_plot$criteria <- tidyr::replace_na(diff_SR_plot$criteria, FALSE)
+
+  cutoff <- diff_SR_plot %>% dplyr::group_by(condition) %>%
+    dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
+    dplyr::summarise(pval = find_cutoff(Fisher, BH),
+                     SR_pos = SR_cutoff + median(SR[which(Fisher < quantile(Fisher, 0.5))], na.rm = TRUE),
+                     SR_neg = -SR_cutoff - median(SR[which(Fisher < quantile(Fisher, 0.5))], na.rm = TRUE))
+
+  print(cutoff)
+
+  diff_SR_plot <- diff_SR_plot %>% dplyr::group_by(id, Genes, condition) %>%
+    dplyr::mutate(criteria = Fisher <= cutoff$pval[which(cutoff$condition == condition)] &
+                    (SR >= cutoff$SR_pos[which(cutoff$condition == condition)] | SR <= cutoff$SR_neg[which(cutoff$condition == condition)]),
+                  curve = curve(SR, cutoff$SR_neg[which(cutoff$condition == condition)],
+                                cutoff$SR_pos[which(cutoff$condition == condition)],
+                                cutoff$pval[which(cutoff$condition == condition)],
+                                curvature = curvature
+                  ),
+                  criteria_curve = -log10(Fisher) >= curve
+    )
+  diff_SR_plot$criteria_curve <- tidyr::replace_na(diff_SR_plot$criteria_curve, FALSE)
+
+  cond <- unique(diff_SR_plot$condition)
+  n_cond <- length(cond)
+  df_curve <- data.frame(SR = rep(seq(min(diff_SR_plot$SR, na.rm = TRUE), max(diff_SR_plot$SR, na.rm = TRUE), 0.01), n_cond))
+  df_curve$condition <- rep(cond, each = nrow(df_curve)/n_cond)
+  df_curve <- df_curve %>% dplyr::group_by(condition, rownames(df_curve)) %>%
+    dplyr::mutate(curve = curve(SR, cutoff$SR_neg[which(cutoff$condition == condition)],
+                                cutoff$SR_pos[which(cutoff$condition == condition)], cutoff$pval[which(cutoff$condition == condition)],
+                                curvature = curvature)
+    )
 
   message("Creating and saving plot")
-  g_h <- ggplot(diff_SR_plot, aes(SR, -log10(Fisher), color = criteria)) +
-    geom_point(show.legend = FALSE) +
-    geom_hline(yintercept = -log10(pval_cutoff), linetype = "dashed") +
-    geom_vline(xintercept = SR_cutoff, linetype = "dashed") +
+  g_h <- ggplot(diff_SR_plot, aes(SR, -log10(Fisher), color = criteria_curve)) +
+    geom_point() +
+    geom_line(data = df_curve, aes(x = SR, y = curve), linetype = "dashed", color = "black") +
+    ylim(c(0, max(-log10(diff_SR_plot$Fisher)))) +
     labs(title = "Stability rate plot",
          y = "-log10(Fisher p-value)",
          x = "Stability rate") +
-    scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
-    gghighlight::gghighlight(criteria,
-                label_key = Genes,
-                label_params = list(color = "blue"),
-                use_direct_label = TRUE,
-                max_highlight = 100,
-                calculate_per_facet = TRUE) +
+    scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     theme(plot.title = element_text(hjust = 0.5)) +
-    facet_wrap(~condition)
+    facet_wrap(~condition) +
+    ggrepel::geom_label_repel(data = diff_SR_plot[diff_SR_plot$criteria_curve,],
+                              aes(SR, -log10(Fisher),
+                                  label = Genes), show.legend = FALSE)
 
   ggsave(paste0(format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_plot.png"),
          plot = g_h,
@@ -255,18 +297,16 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
          height = 8)
 
 
-  g_I <- ggplot(diff_SR_plot, aes(SR, -log10(Fisher), color = criteria,
-                                  group = Genes, group2 = id)) +
-    geom_point(show.legend = FALSE) +
-    geom_hline(yintercept = -log10(pval_cutoff), linetype = "dashed") +
-    geom_vline(xintercept = SR_cutoff, linetype = "dashed") +
+  g_I <-ggplot(diff_SR_plot, aes(SR, -log10(Fisher), color = criteria_curve)) +
+    geom_point() +
+    geom_line(data = df_curve, aes(x = SR, y = curve), linetype = "dashed", color = "black") +
+    ylim(c(0, max(-log10(diff_SR_plot$Fisher)))) +
     labs(title = "Stability rate plot",
          y = "-log10(Fisher p-value)",
          x = "Stability rate") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     theme(plot.title = element_text(hjust = 0.5)) +
     facet_wrap(~condition)
-
 
   g_I <- plotly::ggplotly(g_I, width = 1080, height = 560)
   htmltools::save_html(g_I, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_plotInt.html"))
@@ -305,14 +345,14 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
         geom_point() +
         scale_size_manual(values = c(1, 2, 4, 6, 8),
                           labels = c("<= 3", "> 3 and <= 10", "> 10 and <= 20", "> 20 and <= 50", "> 50")) +
-        ggrepel::geom_label_repel(data = diff_SR[higher_GS,],
-                                  aes(color = diff_SR[higher_GS,][[paste0("GlobalScore_", cond[((1 + i) %% 3) + 1])]]),
-                                  size = 5,
-                                  point.padding = 0,
-                                  min.segment.length = 0,
-                                  box.padding = 0.3,
-                                  alpha = 1,
-                                  max.overlaps = 50) +
+        #ggrepel::geom_label_repel(data = diff_SR[higher_GS,],
+        #                         aes(color = diff_SR[higher_GS,][[paste0("GlobalScore_", cond[((1 + i) %% 3) + 1])]]),
+        #                          size = 5,
+        #                         point.padding = 0,
+        #                          min.segment.length = 0,
+        #                        box.padding = 0.3,
+        #                       alpha = 1,
+        #                      max.overlaps = 50) +
         scale_color_gradient2(low = "#0027FF", mid = "#FFD800", high = "#FF0000",
                               midpoint = 10, oob = scales::squish, limits = c(0,20)
         ) +
@@ -343,15 +383,61 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     }
   }
 
+  message("Categorization...")
+  diff_SR_plot$criteria <- NULL
+  diff_SR_plot <- diff_SR_plot[diff_SR_plot$criteria_curve,]
+  diff_SR_plot$criteria_curve <- NULL
+  diff_SR_plot$curve <- NULL
+
+  for_categorize <- diff_SR[,str_which(colnames(diff_SR), "^id|Genes|^\\d{1,}|^pval37")]
+  for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Genes) %>%
+    tidyr::separate(key, into = c("key", "condition"), sep = "_") %>%
+    tidyr::spread(key, value)
+
+  cutoff <- for_categorize %>% dplyr::group_by(condition) %>%
+    dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
+    dplyr::summarise(pval = find_cutoff(pval37C, BH))
+
+  diff_SR_plot <- left_join(diff_SR_plot, for_categorize, by = c("id", "Genes", "condition"))
+  diff_SR_plot$category <- NA
+  diff_SR_plot$category[which(is.na(diff_SR_plot$pval37C))] <- "ND"
+
+  diff_SR_plot <- diff_SR_plot %>% group_by(id, Genes, condition) %>%
+    mutate(is_C = pval37C <= cutoff$pval[which(cutoff$condition == condition)])
+
+  diff_SR_plot$category[which(!diff_SR_plot$is_C)] <- "NC"
+  diff_SR_plot$category[which(is.na(diff_SR_plot$category) & is.na(diff_SR_plot[[temp[length(temp)]]]))] <- "CC" #denatured in the end but significant 37
+
+  diff_SR_plot$coeff <- apply(diff_SR_plot[,str_which(colnames(diff_SR_plot), "^\\d{1,}")], 1,
+                              function(x){
+                                x <- abs(x)
+                                n <- 1/length(na.omit(x))
+                                x <- na.omit(x)
+                                x <- x/sum(x)
+                                x <- sum((x - n)**2);
+                                x
+                              })
+  diff_SR_plot$category[which(is.na(diff_SR_plot$category) & diff_SR_plot$coeff <= 1e-2)] <- "CN"
+  diff_SR_plot$category[which(is.na(diff_SR_plot$category))] <- "CC"
+  diff_SR_plot <- diff_SR_plot[,c("id", "Genes", "condition", "Fisher", "SR", "category")]
+
+  for_categorize <- diff_SR_plot[,c("id", "Genes", "condition", "category")] %>%
+    tidyr::spread(condition, category)
+  colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
+  diff_SR <- diff_SR %>% dplyr::left_join(for_categorize, by = c("id", "Genes"))
+  diff_SR[,str_which(colnames(diff_SR), "category")] <- apply(diff_SR[,str_which(colnames(diff_SR), "category")],
+                                                              2, function(x) tidyr::replace_na(x, "NN")
+  )
+
   message("Saving datas...")
-  diff_SR_plot <- diff_SR_plot[diff_SR_plot$criteria,]
-  diff_SR_plot$criteria = NULL
-  diff_SR_plot$GlobalScore <- -log10(diff_SR_plot$Fisher)*diff_SR_plot$SR
   openxlsx::write.xlsx(diff_SR, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_analysis_tab.xlsx"))
   openxlsx::write.xlsx(diff_SR_plot, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_summary.xlsx"))
 
   if(nrow(diff_SR_plot) > 1){
-    vennlist <- (diff_SR_plot %>% dplyr::group_by(condition) %>%
+    diff_SR_plot$condition <- factor(diff_SR_plot$condition)
+    vennlist <- diff_SR_plot
+    vennlist$category <- NULL
+    vennlist <- (vennlist %>% dplyr::ungroup() %>% dplyr::group_by(condition) %>%
                    dplyr::summarize(vennlist = list(id)) %>%
                    dplyr::select(vennlist))[[1]]
     names(vennlist) <- levels(diff_SR_plot$condition)
@@ -369,7 +455,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                          "Genes" = info$Genes[which(!is.na(match(info$id,
                                                                  vennlist[[i]])))]
       )
-      score_info <- diff_SR[,c(1, stringr::str_which(colnames(diff_SR), "^SR_|^Fisher_|^GlobalScore"))]
+      score_info <- diff_SR[,c(1, stringr::str_which(colnames(diff_SR), "^SR_|^Fisher_"))]
 
       vennlist[[i]] <- dplyr::left_join(prot, score_info, by = "id")
     }

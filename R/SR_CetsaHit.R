@@ -298,7 +298,11 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
 
   g_I <-ggplot(diff_SR_plot, aes(SR, -log10(Fisher), color = criteria_curve)) +
-    geom_point() +
+    geom_point(aes(text = paste0("Fisher p-value: ", diff_SR_plot$Fisher, "\n",
+                                 "SR: ", diff_SR_plot$SR, "\n",
+                                 "Protein: ", diff_SR_plot$id, "\n",
+                                 "Genes: ", diff_SR_plot$Genes))
+               ) +
     geom_line(data = df_curve, aes(x = SR, y = curve), linetype = "dashed", color = "black") +
     ylim(c(0, max(-log10(diff_SR_plot$Fisher)))) +
     labs(title = "Stability rate plot",
@@ -308,7 +312,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     theme(plot.title = element_text(hjust = 0.5)) +
     facet_wrap(~condition)
 
-  g_I <- plotly::ggplotly(g_I, width = 1080, height = 560)
+  g_I <- plotly::ggplotly(g_I, tooltip = "text", width = 1080, height = 560)
   htmltools::save_html(g_I, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_plotInt.html"))
 
   if(length(cond) == 3){

@@ -373,7 +373,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     tidyr::spread(Condition, category)
   colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
   diff_SR <- diff_SR %>% dplyr::left_join(for_categorize, by = c("id", "Genes"))
-  diff_SR[,str_which(colnames(diff_SR), "category")] <- apply(diff_SR[,str_which(colnames(diff_SR), "category")],
+  diff_SR[,str_which(colnames(diff_SR), "category")] <- apply(as.data.frame(diff_SR[,str_which(colnames(diff_SR), "category")]),
                                                               2, function(x) tidyr::replace_na(x, "NN")
   )
 

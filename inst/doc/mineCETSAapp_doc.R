@@ -25,17 +25,17 @@
 #  View(mydata_ave)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+#  IMPRINTS_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  
 #  mydata_caldiff_chemarrest <- drug_data$data$chemarrest
 #  all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
-#  ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+#  IMPRINTS_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  #here, it will "join" the two pdf in one
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  mydata_hit <- drug_data$hitlist$elutriation
 #  #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
-#  map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
+#  map_compl <- IMPRINTS_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
 #                                        targetcategory = c("CN", "CC", "NC"))
 #  View(map_compl) #if you want to check the data
 #  
@@ -62,13 +62,13 @@
 #  
 #  #each element of the list contains data from caldiff output for each protein complex selected
 #  
-#  ms_2D_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE,
+#  IMPRINTS_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE,
 #                       toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",  #title on each page (will add the complex name, cf. the names of the list)
 #                       pdfname = "complex_barplot"
 #                       )
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
+#  IMPRINTS_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
 #                            treatmentlevel = "S", protein_profile = "O43776",
 #                            pdfname = "similar_O43776",
 #                            use_score = "euclidean",
@@ -79,7 +79,7 @@
 ## ---- eval=FALSE--------------------------------------------------------------
 #  # According their category
 #  #here we need the average data
-#  ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
+#  IMPRINTS_heatmap(mydata_ave, hit_summary = mydata_hit,
 #                treatment = "S", max_na = 0,
 #                response = "both",
 #                select_cat = c("CC", "CN", "NC"),
@@ -94,7 +94,7 @@
 #  
 #  data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
 #  
-#  ms_2D_heatmap(data, PRcomplex_data = cate_,
+#  IMPRINTS_heatmap(data, PRcomplex_data = cate_,
 #                treatment = "S", max_na = 0,
 #                response = "both",
 #                saveHeat = TRUE, file_type = "png")

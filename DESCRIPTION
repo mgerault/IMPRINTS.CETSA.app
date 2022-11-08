@@ -1,7 +1,7 @@
 Package: mineCETSAapp
 Type: Package
 Title: A shiny app for mineCETSA package 
-Version: 1.1.0
+Version: 2.0.0
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for mineCETSA R package, in a user friendly way.
@@ -15,7 +15,8 @@ Depends:
     dplyr (>= 1.0.0),
     ggplot2 (>= 3.2.0)
 Imports: ggplot2,  stringr, tidyr, magick,
-   shiny, shinydashboard, shinycssloaders, DT, rio, purrr,
+   shiny, shinydashboard, shinyMatrix, shinycssloaders, bslib,
+   DT, rio, purrr, metap, MKmisc,
    dplyr, plyr, shinyjs, cowplot, plotly, pubmedR, 
    rentrez, XML, gridExtra, rjson,
    bibliometrix, officer, colourpicker, openxlsx
@@ -23,6 +24,10 @@ Suggests:
     mineCETSA,
     EBImage,
     STRINGdb,
+    clusterProfiler,
+    biomaRt,
+    enrichplot,
+    multtest,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

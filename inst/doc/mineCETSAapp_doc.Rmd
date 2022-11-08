@@ -1,5 +1,5 @@
 ---
-title: "Analyze IMPRINTS or 2D MS-CETSA datasets in a user friendly way"
+title: "Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way"
 author: "Marc-Antoine Gerault"
 date: "`r Sys.Date()`"
 output: 
@@ -112,7 +112,7 @@ The package contains also some data that you can play with. The are from the pap
 For each dataset, you will find :
 
 * The caldiff output (the protein abundance difference); access it with '$data'
-* The ms_2D_average output (the average from the caldiff output among the bioreplicates); access it with '$data_ave'
+* The IMPRINTS_average output (the average from the caldiff output among the bioreplicates); access it with '$data_ave'
 * The hitlist; access it with '$hitlist'
 * The proteins categorized as "NN"; access it with '$NN'
 * The trement level; access it with '$treat_level'
@@ -128,24 +128,24 @@ View(mydata_ave)
  
 ####  $\underline{2.\space See/save\space the\space barplot}$
       
-The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
+The mineCETSA package already contains the ms_2D_barplotting function; IMPRINTS_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
          
 ```{r, eval=FALSE}
-ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+IMPRINTS_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 
 mydata_caldiff_chemarrest <- drug_data$data$chemarrest
 all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
-ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+IMPRINTS_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #here, it will "join" the two pdf in one
 ```
  
 Instead of doing a list of all our data, we could also get list of our data according to the protein complex.
-For this, you'll need the function ms_2D_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).
+For this, you'll need the function IMPRINTS_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).
          
 ```{r, eval=FALSE}
 mydata_hit <- drug_data$hitlist$elutriation
 #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
-map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
+map_compl <- IMPRINTS_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
                                       targetcategory = c("CN", "CC", "NC"))
 View(map_compl) #if you want to check the data
 
@@ -175,20 +175,20 @@ data <- data_l
 
 #each element of the list contains data from caldiff output for each protein complex selected
 
-ms_2D_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE, 
+IMPRINTS_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE, 
                      toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",  #title on each page (will add the complex name, cf. the names of the list)
                      pdfname = "complex_barplot"
                      )
 ```  
 
-When you looked at your barplots from different protein complex, you noticed that the protein profiles are quite similar among each complex. But if you want only to find similar profiles from a selected protein, you may want to use the ms_2D_barplotting_simprof function. With this function, by typing a protein ID, you will search for similar profiles according to a score. For now, there are two score methods : the Pearson correlation score and the Euclidean distance score. Then by setting a threshold, you can select similar profiles. 
+When you looked at your barplots from different protein complex, you noticed that the protein profiles are quite similar among each complex. But if you want only to find similar profiles from a selected protein, you may want to use the IMPRINTS_barplotting_simprof function. With this function, by typing a protein ID, you will search for similar profiles according to a score. For now, there are two score methods : the Pearson correlation score and the Euclidean distance score. Then by setting a threshold, you can select similar profiles. 
 
 The euclidean distance score will directly take the distance between the values, so the similar profiles will have a similar shape AND similar values. This is not the case with the Peasron correlation score since you divide the covariance by the standard deviation. Indeed the value are all scaled by this division, so you will find more similar profiles and not necessarily with similar values.
 
 For more informations on this scores : [Euclidean](https://nakkaya.com/2009/11/11/euclidean-distance-score/) ; [Pearson](https://www.questionpro.com/blog/pearson-correlation-coefficient/)
          
 ```{r, eval=FALSE}
-ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
+IMPRINTS_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
                           treatmentlevel = "S", protein_profile = "O43776",
                           pdfname = "similar_O43776",
                           use_score = "euclidean",
@@ -207,7 +207,7 @@ You can also get heatmap of your data according to their categories or their pro
 ```{r, eval=FALSE}
 # According their category
 #here we need the average data
-ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
+IMPRINTS_heatmap(mydata_ave, hit_summary = mydata_hit,
               treatment = "S", max_na = 0,
               response = "both",
               select_cat = c("CC", "CN", "NC"),  
@@ -222,7 +222,7 @@ pr_comp <- cate_$id
         
 data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
    
-ms_2D_heatmap(data, PRcomplex_data = cate_,
+IMPRINTS_heatmap(data, PRcomplex_data = cate_,
               treatment = "S", max_na = 0,
               response = "both", 
               saveHeat = TRUE, file_type = "png")
@@ -367,7 +367,7 @@ The package contains also other functions created for the app but which can be u
    
    __get_treat_level__ function
   
-  This function allow you to get the treatment level of your data. The input can be the output from 'caldiff' function or 'ms_2D_average' function.
+  This function allow you to get the treatment level of your data. The input can be the output from 'caldiff' function or 'IMPRINTS_average' function.
        
 ```{r, eval=FALSE}
 get_treat_level(mydata_caldiff)

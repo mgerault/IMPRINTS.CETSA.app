@@ -13,8 +13,8 @@ chemarrest <- ms_fileread("210827_1739_chemarrest_imprints_caldiff.txt")
 hitlist_chemarrest <- openxlsx::read.xlsx("chemarrest_Summary.xlsx")
 NN_chemarrest <- openxlsx::read.xlsx("chemarrest_NN.xlsx")
 
-elutriation_ave <- ms_2D_average_sh(elutriation, FALSE)
-chemarrest_ave <- ms_2D_average_sh(chemarrest, FALSE)
+elutriation_ave <- IMPRINTS_average_sh(elutriation, FALSE)
+chemarrest_ave <- IMPRINTS_average_sh(chemarrest, FALSE)
 
 #the list named drug_data
 drug_data <- list("data" = list("elutriation" = elutriation, "chemarrest" = chemarrest),

@@ -457,7 +457,3 @@ hitlist <- function(inputdata,
   results$NN <- NN
   return(results)
 }
-
-
-
-

@@ -445,6 +445,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                  selectizeInput("prot", "Select a protein", choices = NULL, multiple = TRUE))
 
                                                                          ),
+                                                                         column(4, conditionalPanel(condition = "input.cond_sel != 'cat' ",
+                                                                                                    checkboxInput("rem_con", "Remove the controls", FALSE),
+                                                                                                    conditionalPanel(condition = "input.rem_con",
+                                                                                                                     textInput("con_name", "Type the name of your controls (if sevral names, separate them by |)", "G1")
+                                                                                                    )
+                                                                         )
+                                                                         ),
                                                                          column(4, radioButtons("cond_sel", "Selection type",
                                                                                                 choices = c("Select the treatment level" = "treat",
                                                                                                             "Select treatment level by category" = "cat",
@@ -456,13 +463,6 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                              choices = NULL,
                                                                                                              multiple = TRUE)
                                                                                 )
-                                                                         ),
-                                                                         column(4, conditionalPanel(condition = "input.cond_sel != 'cat' ",
-                                                                                                    checkboxInput("rem_con", "Remove the controls", FALSE),
-                                                                                                    conditionalPanel(condition = "input.rem_con",
-                                                                                                                     textInput("con_name", "Type the name of your controls (if sevral names, separate them by |)", "G1")
-                                                                                                    )
-                                                                         )
                                                                          )
                                                                        ),
 

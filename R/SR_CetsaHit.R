@@ -381,7 +381,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   openxlsx::write.xlsx(diff_SR, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_analysis_tab.xlsx"))
   openxlsx::write.xlsx(diff_SR_plot, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_summary.xlsx"))
 
-  if(nrow(diff_SR_plot) > 1){
+  if(nrow(diff_SR_plot) > 1 & length(cond) > 1){
     diff_SR_plot$Condition <- factor(diff_SR_plot$Condition)
     vennlist <- diff_SR_plot
     vennlist$category <- NULL
@@ -409,7 +409,8 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     }
     openxlsx::write.xlsx(vennlist, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "Venn tab.xlsx"))
   }
-
+   
+  message("Calculation done !")
   return(diff_SR_plot)
 }
 

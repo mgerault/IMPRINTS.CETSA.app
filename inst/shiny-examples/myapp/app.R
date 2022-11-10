@@ -3886,11 +3886,32 @@ server <- function(input, output, session){
 
   clus_data <- reactive({
     if(input$drug_clus == "dat"){
-      File <- input$file_clus
-      if (is.null(File))
-        return(NULL)
+      if(input$ishit_clus){
+        File <- input$file_clus
+        if (is.null(File))
+          return(NULL)
 
-      import_list(File$datapath, header = TRUE)[[1]]
+        h <- import_list(File$datapath, header = TRUE)[[1]]
+        h <- as.data.frame(h)
+        if(!("Genes" %in% colnames(h))){
+          if("description" %in% colnames(h)){
+            h$Genes <- unname(unlist(sapply(h$description, mineCETSAapp:::getGeneName)))
+          }
+          else{
+            h <- NULL
+            showNotification("Your hitlist doesn't contain neither a Genes column, neither a description column.
+                             Are you sure imported a hitlist ?", type = "error")
+          }
+        }
+      }
+      else{
+        File <- input$file_clus
+        if (is.null(File))
+          return(NULL)
+
+        h <- import_list(File$datapath, header = TRUE)[[1]]
+      }
+      h
     }
     else if(input$drug_clus == "base" & length(input$drug2_clus) >= 1){
       h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_clus])
@@ -4042,7 +4063,8 @@ server <- function(input, output, session){
       paste0("CompareCluster_", Sys.Date(), ".png")
     },
     content = function(file){
-      ggsave(file, cluscomp_res$x$graph, device = "png")
+      ggsave(file, cluscomp_res$x$graph, device = "png",
+             width = 16, height = 12, dpi = 600)
     }
   )
 

@@ -25,17 +25,17 @@
 #  View(mydata_ave)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+#  IMPRINTS_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  
 #  mydata_caldiff_chemarrest <- drug_data$data$chemarrest
 #  all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
-#  ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+#  IMPRINTS_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #  #here, it will "join" the two pdf in one
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  mydata_hit <- drug_data$hitlist$elutriation
 #  #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
-#  map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
+#  map_compl <- IMPRINTS_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
 #                                        targetcategory = c("CN", "CC", "NC"))
 #  View(map_compl) #if you want to check the data
 #  
@@ -43,7 +43,7 @@
 #                                   "id", "description", "gene", "category")]
 #  
 #  if(nrow(map_compl) !=0){
-#    map_compl$description <- mineCETSAapp:::getProteinName(map_compl$description)  #keep only protein names in description
+#    map_compl$description <- unname(unlist(sapply(map_compl$description, mineCETSAapp:::getProteinName))) #keep only protein names in description
 #  }
 
 ## ---- eval=FALSE--------------------------------------------------------------
@@ -52,9 +52,9 @@
 #  some_complex <- some_complex[sample(1:length(some_complex), 4)]
 #  for(i in some_complex){
 #    cate_ <- map_compl[which(map_compl$ComplexName == i), ]
-#    pr_comp <- cate_$id
+#    pr_comp <- unique(cate_$id)
 #  
-#    data_l[[i]] <- ms_subsetting(data, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
+#    data_l[[i]] <- ms_subsetting(mydata_caldiff, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
 #  
 #    data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))] #keep category
 #  }
@@ -62,13 +62,13 @@
 #  
 #  #each element of the list contains data from caldiff output for each protein complex selected
 #  
-#  ms_2D_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE,
+#  IMPRINTS_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE,
 #                       toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",  #title on each page (will add the complex name, cf. the names of the list)
 #                       pdfname = "complex_barplot"
 #                       )
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
+#  IMPRINTS_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
 #                            treatmentlevel = "S", protein_profile = "O43776",
 #                            pdfname = "similar_O43776",
 #                            use_score = "euclidean",
@@ -79,7 +79,7 @@
 ## ---- eval=FALSE--------------------------------------------------------------
 #  # According their category
 #  #here we need the average data
-#  ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
+#  IMPRINTS_heatmap(mydata_ave, hit_summary = mydata_hit,
 #                treatment = "S", max_na = 0,
 #                response = "both",
 #                select_cat = c("CC", "CN", "NC"),
@@ -94,20 +94,19 @@
 #  
 #  data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
 #  
-#  ms_2D_heatmap(data, PRcomplex_data = cate_,
+#  IMPRINTS_heatmap(data, PRcomplex_data = cate_,
 #                treatment = "S", max_na = 0,
 #                response = "both",
 #                saveHeat = TRUE, file_type = "png")
 #  #Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  new_hits <- hitlist_outliers(mydata_caldiff, control = "G1", #the control
-#                               basetemp = "37C",        #categorization based on the lowest tempearature
-#                               format = "xlsx") #will save in xlsx format
-#  #will ask you if you want to save or not the results
+#  norm_data <- readr::read_tsv("path_to_your_normalized_data.txt")
+#  new_hits <- SR_CetsaHit(norm_data, ctrl = "Vehicle")
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  library(STRINGdb)
+#  dir.create("STRING_data")   # create folder to stor STRING data
 #  string_db <- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
 #                             score_threshold=200,
 #                             input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
@@ -138,7 +137,7 @@
 #  View(df) #take a look at the data
 #  
 #  #keep the id and separate the gene name from the string ID
-#  id_string <- do.call(rbind, str_split(df$id, ","))
+#  id_string <- do.call(rbind, stringr::str_split(df$id, ","))
 #  colnames(id_string) <- c("gene.names", "STRING_id")
 #  
 #  #bind the two data frames
@@ -147,7 +146,7 @@
 #  
 #  #Let's see the network from some proteins mapped to a specific description
 #  #for example the ribosome and the cytosolic ribosome
-#  ribosome_net <- df$STRING_id[str_which(df$description, paste0("^", c("ribosome", "cytosolic ribosome"), "$"))]
+#  ribosome_net <- df$STRING_id[stringr::str_which(df$description, "^Ribosome$")]
 #  My_net(ribosome_net , inter = FALSE)
 
 ## ---- eval=FALSE--------------------------------------------------------------
@@ -166,8 +165,11 @@
 #  #it takes some time to run, since the plot contains a lot of information
 
 ## ---- eval=FALSE--------------------------------------------------------------
+#  # to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name
+#  mydata_hit$description <- mydata_caldiff$description[which(!is.na(match(mydata_hit$id, mydata_caldiff$id)))]
+#  mydata_hit <- mydata_hit[1:20,] # take a sample of the proteins
 #  find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
-#                 language = "english", year_rg = "2000:2021", your_API = NULL,
+#                 language = "english", year_rg = "2021:2022", your_API = NULL,
 #                 newfolder_name = "elutriation_pubmed_search")
 
 ## ---- eval=FALSE--------------------------------------------------------------

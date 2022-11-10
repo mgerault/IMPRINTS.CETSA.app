@@ -1,5 +1,5 @@
 ---
-title: "Analyze IMPRINTS or 2D MS-CETSA datasets in a user friendly way"
+title: "Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way"
 author: "Marc-Antoine Gerault"
 date: "`r Sys.Date()`"
 output: 
@@ -112,7 +112,7 @@ The package contains also some data that you can play with. The are from the pap
 For each dataset, you will find :
 
 * The caldiff output (the protein abundance difference); access it with '$data'
-* The ms_2D_average output (the average from the caldiff output among the bioreplicates); access it with '$data_ave'
+* The IMPRINTS_average output (the average from the caldiff output among the bioreplicates); access it with '$data_ave'
 * The hitlist; access it with '$hitlist'
 * The proteins categorized as "NN"; access it with '$NN'
 * The trement level; access it with '$treat_level'
@@ -128,24 +128,24 @@ View(mydata_ave)
  
 ####  $\underline{2.\space See/save\space the\space barplot}$
       
-The mineCETSA package already contains the ms_2D_barplotting function; ms_2D_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
+The mineCETSA package already contains the ms_2D_barplotting function; IMPRINTS_barplotting_sh is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
          
 ```{r, eval=FALSE}
-ms_2D_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+IMPRINTS_barplotting_sh(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 
 mydata_caldiff_chemarrest <- drug_data$data$chemarrest
 all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
-ms_2D_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+IMPRINTS_barplotting_sh(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
 #here, it will "join" the two pdf in one
 ```
  
 Instead of doing a list of all our data, we could also get list of our data according to the protein complex.
-For this, you'll need the function ms_2D_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).
+For this, you'll need the function IMPRINTS_complex_mapping_sh (which is also based on ms_2D_complex_mapping from mineCETSA).
          
 ```{r, eval=FALSE}
 mydata_hit <- drug_data$hitlist$elutriation
 #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
-map_compl <- ms_2D_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
+map_compl <- IMPRINTS_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
                                       targetcategory = c("CN", "CC", "NC"))
 View(map_compl) #if you want to check the data
 
@@ -153,7 +153,7 @@ map_compl <- map_compl[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum"
                                  "id", "description", "gene", "category")]
      
 if(nrow(map_compl) !=0){
-  map_compl$description <- mineCETSAapp:::getProteinName(map_compl$description)  #keep only protein names in description
+  map_compl$description <- unname(unlist(sapply(map_compl$description, mineCETSAapp:::getProteinName))) #keep only protein names in description
 }
 ```
   
@@ -165,9 +165,9 @@ some_complex <- unique(map_compl$ComplexName)
 some_complex <- some_complex[sample(1:length(some_complex), 4)]
 for(i in some_complex){
   cate_ <- map_compl[which(map_compl$ComplexName == i), ]
-  pr_comp <- cate_$id
+  pr_comp <- unique(cate_$id)
         
-  data_l[[i]] <- ms_subsetting(data, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
+  data_l[[i]] <- ms_subsetting(mydata_caldiff, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
    
   data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))] #keep category 
 }
@@ -175,20 +175,20 @@ data <- data_l
 
 #each element of the list contains data from caldiff output for each protein complex selected
 
-ms_2D_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE, 
+IMPRINTS_barplotting_sh(data_l,save_pdf = TRUE, ret_plot = FALSE, 
                      toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",  #title on each page (will add the complex name, cf. the names of the list)
                      pdfname = "complex_barplot"
                      )
 ```  
 
-When you looked at your barplots from different protein complex, you noticed that the protein profiles are quite similar among each complex. But if you want only to find similar profiles from a selected protein, you may want to use the ms_2D_barplotting_simprof function. With this function, by typing a protein ID, you will search for similar profiles according to a score. For now, there are two score methods : the Pearson correlation score and the Euclidean distance score. Then by setting a threshold, you can select similar profiles. 
+When you looked at your barplots from different protein complex, you noticed that the protein profiles are quite similar among each complex. But if you want only to find similar profiles from a selected protein, you may want to use the IMPRINTS_barplotting_simprof function. With this function, by typing a protein ID, you will search for similar profiles according to a score. For now, there are two score methods : the Pearson correlation score and the Euclidean distance score. Then by setting a threshold, you can select similar profiles. 
 
 The euclidean distance score will directly take the distance between the values, so the similar profiles will have a similar shape AND similar values. This is not the case with the Peasron correlation score since you divide the covariance by the standard deviation. Indeed the value are all scaled by this division, so you will find more similar profiles and not necessarily with similar values.
 
 For more informations on this scores : [Euclidean](https://nakkaya.com/2009/11/11/euclidean-distance-score/) ; [Pearson](https://www.questionpro.com/blog/pearson-correlation-coefficient/)
          
 ```{r, eval=FALSE}
-ms_2D_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
+IMPRINTS_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
                           treatmentlevel = "S", protein_profile = "O43776",
                           pdfname = "similar_O43776",
                           use_score = "euclidean",
@@ -207,7 +207,7 @@ You can also get heatmap of your data according to their categories or their pro
 ```{r, eval=FALSE}
 # According their category
 #here we need the average data
-ms_2D_heatmap(mydata_ave, hit_summary = mydata_hit,
+IMPRINTS_heatmap(mydata_ave, hit_summary = mydata_hit,
               treatment = "S", max_na = 0,
               response = "both",
               select_cat = c("CC", "CN", "NC"),  
@@ -222,7 +222,7 @@ pr_comp <- cate_$id
         
 data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
    
-ms_2D_heatmap(data, PRcomplex_data = cate_,
+IMPRINTS_heatmap(data, PRcomplex_data = cate_,
               treatment = "S", max_na = 0,
               response = "both", 
               saveHeat = TRUE, file_type = "png")
@@ -230,25 +230,19 @@ ms_2D_heatmap(data, PRcomplex_data = cate_,
 ```  
 
 
-####  $\underline{4.\space Hitlist\space :\space get\space your\space hits\space based\space on\space the\space outliers}$
+####  $\underline{4.\space Hitlist\space :\space get\space your\space hits\space based\space on\space a\space new\space score,\space the\space Stability\space Rate\space and\space a\space p-value}$
 
 You can find the hited proteins with the hitlist function (not written by me) according to your thresholds.
-But you can also use the hitlist_outliers function which define hits if a proteins has at least one outlier among the temperatures.
+But you can also use the SR_CetsaHit function which define hits if a protein has a big enough Stability Rate (SR) and good enough p-value (an FDR can be set).
 
-This function depends on two thresholds, including one that can be choose automatically. 
-
-The first is the Error score cutoff. The function will compute a score between 0 and 1  accord to the SEM. The more it is close to one, the more the error is small. It can be choose by the user or choose automatically for each condition. If so, it will take the maximum error score for which you have the maximum of outlier (plot the histogramm).
-
-The second is the RSS score cutoff between 0 and 1, which has to be chosen by the user. It will differentiate the CN and the CC. The more it is close to one, the more you will consider a small variation between the temperature for thermal shift (categorized as a CC). Since the data are close to 0, you'll maybe need a high cutoff, default is 0.985.
+In order to use this function, you'll need the post normalization data. The caldiff output is not necessary since it can be calculated automatically. You just need to set an FDR and a cutoff for the SR but you can let the default value. For more details, check the documentation of the function.
        
 ```{r, eval=FALSE}
-new_hits <- hitlist_outliers(mydata_caldiff, control = "G1", #the control
-                             basetemp = "37C",        #categorization based on the lowest tempearature
-                             format = "xlsx") #will save in xlsx format
-#will ask you if you want to save or not the results
+norm_data <- readr::read_tsv("path_to_your_normalized_data.txt")
+new_hits <- SR_CetsaHit(norm_data, ctrl = "Vehicle")
 ```    
    
-Here we put data from our global environment, but you could choose a file. For this, you just need to type the file path instead of your data. The current accepted format are xlsx, txt and csv.
+Since we didn't put the caldiff data, it will calculate it. Then it will save all the results (volcano plots, file output, venndiagram) in file named by default 'Hits_analysis'.
    
    
 ####  $\underline{5.\space STRING\space network}$
@@ -258,6 +252,7 @@ First, you need to load the STRINGdb package and import the database from STRING
        
 ```{r, eval=FALSE}
 library(STRINGdb)
+dir.create("STRING_data")   # create folder to stor STRING data
 string_db <- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
                            score_threshold=200,
                            input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
@@ -296,7 +291,7 @@ rownames(df) <- 1:nrow(df)
 View(df) #take a look at the data
 
 #keep the id and separate the gene name from the string ID
-id_string <- do.call(rbind, str_split(df$id, ","))
+id_string <- do.call(rbind, stringr::str_split(df$id, ","))
 colnames(id_string) <- c("gene.names", "STRING_id")
 
 #bind the two data frames
@@ -305,7 +300,7 @@ View(df) #take a look at the final data
 
 #Let's see the network from some proteins mapped to a specific description
 #for example the ribosome and the cytosolic ribosome
-ribosome_net <- df$STRING_id[str_which(df$description, paste0("^", c("ribosome", "cytosolic ribosome"), "$"))]
+ribosome_net <- df$STRING_id[stringr::str_which(df$description, "^Ribosome$")]
 My_net(ribosome_net , inter = FALSE)
 ```   
         
@@ -347,13 +342,16 @@ Let's say you just finish to analyzed your data and now you want to check if the
 Here's how you can can use it :
        
 ```{r, eval=FALSE}
+# to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name
+mydata_hit$description <- mydata_caldiff$description[which(!is.na(match(mydata_hit$id, mydata_caldiff$id)))]
+mydata_hit <- mydata_hit[1:20,] # take a sample of the proteins
 find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
-               language = "english", year_rg = "2000:2021", your_API = NULL,
+               language = "english", year_rg = "2021:2022", your_API = NULL,
                newfolder_name = "elutriation_pubmed_search")
 ```     
    
 This will save the results in the folder named "elutriation_pubmed_search". For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set 'imp_by_hitlist' to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. 
-In this example, we match every protein name found under the condition S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2000 and 2021. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
+In this example, we match every protein name found under the condition S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2021 and 2022. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
 Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set 'imp_by_hitlist' to FALSE.
    
 'your_API' is your API key from NCBI. By default, the access to NCBI API system is free and does not necessarily require an "API key". In this case, NCBI limits users to making only 3 requests per second. Users who register for an “API key” are able to make up to ten requests per second.
@@ -367,7 +365,7 @@ The package contains also other functions created for the app but which can be u
    
    __get_treat_level__ function
   
-  This function allow you to get the treatment level of your data. The input can be the output from 'caldiff' function or 'ms_2D_average' function.
+  This function allow you to get the treatment level of your data. The input can be the output from 'caldiff' function or 'IMPRINTS_average' function.
        
 ```{r, eval=FALSE}
 get_treat_level(mydata_caldiff)
@@ -404,7 +402,7 @@ join_drugdata(drug_data$data, by = c("id", "description"))
    
    Let's say you have several data frames or a hitlist with many conditions and you want to check for each protein if it has been identified in one, two or n conditions.
    
-   This is the goal of this function. In order to use it, you'll a named list which contains numeric or character elements. In our case a list of the proteins identified in each drug experiment/condition.
+   This is the goal of this function. In order to use it, you'll need a named list which contains numeric or character elements. In our case a list of the proteins identified in each drug experiment/condition.
    
 ```{r, eval=FALSE}
 #check between two data frames

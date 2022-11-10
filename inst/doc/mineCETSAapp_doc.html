@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2022-11-02" />
+<meta name="date" content="2022-11-10" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2022-11-02</h4>
+<h4 class="date">2022-11-10</h4>
 
 </div>
 
@@ -1752,7 +1752,7 @@ ms_2D_complex_mapping from mineCETSA).</p>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;gene&quot;</span>, <span class="st">&quot;category&quot;</span>)]</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>     </span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">nrow</span>(map_compl) <span class="sc">!=</span><span class="dv">0</span>){</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  map_compl<span class="sc">$</span>description <span class="ot">&lt;-</span> mineCETSAapp<span class="sc">:::</span><span class="fu">getProteinName</span>(map_compl<span class="sc">$</span>description)  <span class="co">#keep only protein names in description</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  map_compl<span class="sc">$</span>description <span class="ot">&lt;-</span> <span class="fu">unname</span>(<span class="fu">unlist</span>(<span class="fu">sapply</span>(map_compl<span class="sc">$</span>description, mineCETSAapp<span class="sc">:::</span>getProteinName))) <span class="co">#keep only protein names in description</span></span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Now that we know some protein complexes, we can build our list.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>data_l <span class="ot">&lt;-</span> <span class="fu">list</span>() <span class="co">#initialize list</span></span>
@@ -1760,9 +1760,9 @@ ms_2D_complex_mapping from mineCETSA).</p>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> some_complex[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(some_complex), <span class="dv">4</span>)]</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> some_complex){</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  cate_ <span class="ot">&lt;-</span> map_compl[<span class="fu">which</span>(map_compl<span class="sc">$</span>ComplexName <span class="sc">==</span> i), ]</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  pr_comp <span class="ot">&lt;-</span> cate_<span class="sc">$</span>id</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  pr_comp <span class="ot">&lt;-</span> <span class="fu">unique</span>(cate_<span class="sc">$</span>id)</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  data_l[[i]] <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(data, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  data_l[[i]] <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_caldiff, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   </span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  data_l[[i]]<span class="sc">$</span>category <span class="ot">&lt;-</span> cate_<span class="sc">$</span>category[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(cate_<span class="sc">$</span>id, data_l[[i]]<span class="sc">$</span>id)))] <span class="co">#keep category </span></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>}</span>
@@ -1830,34 +1830,25 @@ or their protein complex.</p>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
 <span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S</span></span></code></pre></div>
 </div>
-<div id="underline4.space-hitlistspace-space-getspace-yourspace-hitsspace-basedspace-onspace-thespace-outliers" class="section level4">
+<div id="underline4.space-hitlistspace-space-getspace-yourspace-hitsspace-basedspace-onspace-aspace-newspace-scorespace-thespace-stabilityspace-ratespace-andspace-aspace-p-value" class="section level4">
 <h4><span class="math inline">\(\underline{4.\space Hitlist\space
-:\space get\space your\space hits\space based\space on\space the\space
-outliers}\)</span></h4>
+:\space get\space your\space hits\space based\space on\space a\space
+new\space score,\space the\space Stability\space Rate\space and\space
+a\space p-value}\)</span></h4>
 <p>You can find the hited proteins with the hitlist function (not
 written by me) according to your thresholds. But you can also use the
-hitlist_outliers function which define hits if a proteins has at least
-one outlier among the temperatures.</p>
-<p>This function depends on two thresholds, including one that can be
-choose automatically.</p>
-<p>The first is the Error score cutoff. The function will compute a
-score between 0 and 1 accord to the SEM. The more it is close to one,
-the more the error is small. It can be choose by the user or choose
-automatically for each condition. If so, it will take the maximum error
-score for which you have the maximum of outlier (plot the
-histogramm).</p>
-<p>The second is the RSS score cutoff between 0 and 1, which has to be
-chosen by the user. It will differentiate the CN and the CC. The more it
-is close to one, the more you will consider a small variation between
-the temperature for thermal shift (categorized as a CC). Since the data
-are close to 0, you’ll maybe need a high cutoff, default is 0.985.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">hitlist_outliers</span>(mydata_caldiff, <span class="at">control =</span> <span class="st">&quot;G1&quot;</span>, <span class="co">#the control</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">basetemp =</span> <span class="st">&quot;37C&quot;</span>,        <span class="co">#categorization based on the lowest tempearature</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">format =</span> <span class="st">&quot;xlsx&quot;</span>) <span class="co">#will save in xlsx format</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#will ask you if you want to save or not the results</span></span></code></pre></div>
-<p>Here we put data from our global environment, but you could choose a
-file. For this, you just need to type the file path instead of your
-data. The current accepted format are xlsx, txt and csv.</p>
+SR_CetsaHit function which define hits if a protein has a big enough
+Stability Rate (SR) and good enough p-value (an FDR can be set).</p>
+<p>In order to use this function, you’ll need the post normalization
+data. The caldiff output is not necessary since it can be calculated
+automatically. You just need to set an FDR and a cutoff for the SR but
+you can let the default value. For more details, check the documentation
+of the function.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>norm_data <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_tsv</span>(<span class="st">&quot;path_to_your_normalized_data.txt&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">SR_CetsaHit</span>(norm_data, <span class="at">ctrl =</span> <span class="st">&quot;Vehicle&quot;</span>)</span></code></pre></div>
+<p>Since we didn’t put the caldiff data, it will calculate it. Then it
+will save all the results (volcano plots, file output, venndiagram) in
+file named by default ‘Hits_analysis’.</p>
 </div>
 <div id="underline5.space-stringspace-network" class="section level4">
 <h4><span class="math inline">\(\underline{5.\space STRING\space
@@ -1866,9 +1857,10 @@ network}\)</span></h4>
 your data and start an enrichment analysis. First, you need to load the
 STRINGdb package and import the database from STRING.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(STRINGdb)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>string_db <span class="ot">&lt;-</span> STRINGdb<span class="sc">$</span><span class="fu">new</span>(<span class="at">version=</span><span class="st">&quot;11&quot;</span>, <span class="at">species=</span><span class="dv">9606</span>,               <span class="co">#ID 9606 correspond to human</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;STRING_data&quot;</span>)   <span class="co"># create folder to stor STRING data</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>string_db <span class="ot">&lt;-</span> STRINGdb<span class="sc">$</span><span class="fu">new</span>(<span class="at">version=</span><span class="st">&quot;11&quot;</span>, <span class="at">species=</span><span class="dv">9606</span>,               <span class="co">#ID 9606 correspond to human</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
 <p>Now we can start the analysis on a group of protein. Let’s take the
 hits from the S condition.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
@@ -1897,7 +1889,7 @@ zoom into the plot.</p>
 <span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(df) <span class="co">#take a look at the data</span></span>
 <span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#keep the id and separate the gene name from the string ID</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>id_string <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">str_split</span>(df<span class="sc">$</span>id, <span class="st">&quot;,&quot;</span>))</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>id_string <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, stringr<span class="sc">::</span><span class="fu">str_split</span>(df<span class="sc">$</span>id, <span class="st">&quot;,&quot;</span>))</span>
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(id_string) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;gene.names&quot;</span>, <span class="st">&quot;STRING_id&quot;</span>)</span>
 <span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#bind the two data frames</span></span>
@@ -1906,7 +1898,7 @@ zoom into the plot.</p>
 <span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">#Let&#39;s see the network from some proteins mapped to a specific description</span></span>
 <span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#for example the ribosome and the cytosolic ribosome</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>ribosome_net <span class="ot">&lt;-</span> df<span class="sc">$</span>STRING_id[<span class="fu">str_which</span>(df<span class="sc">$</span>description, <span class="fu">paste0</span>(<span class="st">&quot;^&quot;</span>, <span class="fu">c</span>(<span class="st">&quot;ribosome&quot;</span>, <span class="st">&quot;cytosolic ribosome&quot;</span>), <span class="st">&quot;$&quot;</span>))]</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>ribosome_net <span class="ot">&lt;-</span> df<span class="sc">$</span>STRING_id[stringr<span class="sc">::</span><span class="fu">str_which</span>(df<span class="sc">$</span>description, <span class="st">&quot;^Ribosome$&quot;</span>)]</span>
 <span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(ribosome_net , <span class="at">inter =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <p>Now you can try with other category and/or description, save the
 plots and the results with the function ‘ggsave’ and
@@ -1948,9 +1940,12 @@ search}\)</span></h4>
 check if there are already papers published in PubMed talking about the
 drug you used and the proteins you found. For this, you can use the
 ‘find_in_pubmed’ function. Here’s how you can can use it :</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">condition =</span> <span class="st">&quot;S&quot;</span>,</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2000:2021&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>mydata_hit<span class="sc">$</span>description <span class="ot">&lt;-</span> mydata_caldiff<span class="sc">$</span>description[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(mydata_hit<span class="sc">$</span>id, mydata_caldiff<span class="sc">$</span>id)))]</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> mydata_hit[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,] <span class="co"># take a sample of the proteins</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">condition =</span> <span class="st">&quot;S&quot;</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2021:2022&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
 <p>This will save the results in the folder named
 “elutriation_pubmed_search”. For each protein names (if a paper has been
 found), you will have a word file which contains the title, the authors,
@@ -1960,7 +1955,7 @@ are a hitlist (or any data frames) that contains the column description.
 In this example, we match every protein name found under the condition S
 with the word “cell”. Then we search for articles which contains those
 words in the title and/or the abstract, written in english and published
-between 2000 and 2021. If condition was set to ““, then it would have
+between 2021 and 2022. If condition was set to ““, then it would have
 taken all the protein names from your hitlist. You can also set
 ‘language’ and ‘year_rg’ to NULL to not filter on those criterias; same
 if you set ‘feat’ to”“. Your data can also be any character vector or
@@ -2009,9 +2004,9 @@ by the argument ‘by.’</p>
 <p>Let’s say you have several data frames or a hitlist with many
 conditions and you want to check for each protein if it has been
 identified in one, two or n conditions.</p>
-<p>This is the goal of this function. In order to use it, you’ll a named
-list which contains numeric or character elements. In our case a list of
-the proteins identified in each drug experiment/condition.</p>
+<p>This is the goal of this function. In order to use it, you’ll need a
+named list which contains numeric or character elements. In our case a
+list of the proteins identified in each drug experiment/condition.</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check between two data frames</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pr_elutriation <span class="ot">&lt;-</span> <span class="fu">unique</span>(elutriation<span class="sc">$</span>id)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pr_chemarrest <span class="ot">&lt;-</span> <span class="fu">unique</span>(chemarrest<span class="sc">$</span>id)</span>

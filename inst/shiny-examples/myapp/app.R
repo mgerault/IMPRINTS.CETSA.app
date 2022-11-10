@@ -151,7 +151,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                           fluidRow(box(title = "Upload and clean your data", status = "primary",
                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        tags$u(h3("Upload your data")),
-                                       fluidRow(column(4, selectInput("n_chan", "Choose the numeber of channels", choices = c(10,11,16,18), selected = 10)),
+                                       fluidRow(column(4, selectInput("n_chan", "Choose the number of channels", choices = c(10,11,16,18), selected = 10)),
 
                                                 column(8, uiOutput("treat_nameui"))
                                                 ),
@@ -449,9 +449,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                     checkboxInput("rem_con", "Remove the controls", FALSE),
                                                                                                     conditionalPanel(condition = "input.rem_con",
                                                                                                                      textInput("con_name", "Type the name of your controls (if sevral names, separate them by |)", "G1")
+                                                                                                                     )
                                                                                                     )
-                                                                         )
-                                                                         ),
+                                                                                ),
                                                                          column(4, radioButtons("cond_sel", "Selection type",
                                                                                                 choices = c("Select the treatment level" = "treat",
                                                                                                             "Select treatment level by category" = "cat",
@@ -462,8 +462,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                  selectInput("cond", "Select one or more conditions",
                                                                                                              choices = NULL,
                                                                                                              multiple = TRUE)
+                                                                                                 )
                                                                                 )
-                                                                         )
                                                                        ),
 
                                                                        tags$hr(),
@@ -951,9 +951,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                selected = "base", inline = TRUE),
                                                   conditionalPanel(condition = "input.drug_stri == 'base'",
                                                                    uiOutput("drug2ui_stri"),
-                                                                   fluidRow(column(6, selectInput("cond_fhitB_stri", "Select some conditions for filtering your proteins",
+                                                                   fluidRow(column(6, selectInput("cond_fhitB_stri", "Select some conditions to filter your proteins",
                                                                                                   choices = NULL, multiple = TRUE)),
-                                                                            column(6, selectInput("cat_fhitB_stri", "Select some categories for filtering your proteins (If NULL, will select all)",
+                                                                            column(6, selectInput("cat_fhitB_stri", "Select some categories to filter your proteins (If NULL, will select all)",
                                                                                                   choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
                                                                    )
                                                   ),
@@ -969,7 +969,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                     )
                                                                                              ),
                                                                                              conditionalPanel(condition = "input.ishit_stri",
-                                                                                                              column(4, selectInput("cond_fhit_stri", "Select some condition for filtering your hits",
+                                                                                                              column(4, selectInput("cond_fhit_stri", "Select some conditions to filter your hits",
                                                                                                                                     choices = NULL, multiple = TRUE))
                                                                                              )
                                                                                     )
@@ -1087,23 +1087,23 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                selected = "base", inline = TRUE),
                                                   conditionalPanel(condition = "input.drug_clus == 'base'",
                                                                    uiOutput("drug2ui_clus"),
-                                                                   fluidRow(column(6, selectInput("cond_fhitB_clus", "Select some conditions for filtering your proteins",
+                                                                   fluidRow(column(6, selectInput("cond_fhitB_clus", "Select some conditions to filter your proteins",
                                                                                                   choices = NULL, multiple = TRUE)),
-                                                                            column(6, selectInput("cat_fhitB_clus", "Select some categories for filtering your proteins (If NULL, will select all)",
+                                                                            column(6, selectInput("cat_fhitB_clus", "Select some categories to filter your proteins (If NULL, will select all)",
                                                                                                   choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
                                                                    )
                                                   ),
 
                                                   conditionalPanel(condition = "input.drug_clus == 'dat' ",
                                                                    fluidRow(column(4, fileInput("file_clus", "Choose a file")),
-                                                                            column(4, checkboxInput("ishit_clus", "Do you import a hitlist ?", TRUE),
+                                                                            column(4, checkboxInput("ishit_clus", "Do you import a hitlist ? (needs a column named 'Condition')", TRUE),
                                                                                    conditionalPanel(condition = "!input.ishit_clus",
                                                                                                     textInput("idfile_clus", "What is the name of the column of
-                                                                                                                                            your file which contains the proteins ID ?")
+                                                                                                              your file which contains the Genes ?")
                                                                                    )
                                                                             ),
                                                                             conditionalPanel(condition = "input.ishit_clus",
-                                                                                             column(4, selectInput("cond_fhit_clus", "Select some condition for filtering your hits",
+                                                                                             column(4, selectInput("cond_fhit_clus", "Select some conditions to filter your hits",
                                                                                                                    choices = NULL, multiple = TRUE))
                                                                             )
                                                                    )
@@ -3656,7 +3656,7 @@ server <- function(input, output, session){
           if(input$ishit_stri){
             dat <- stri_data()
             if(!is.null(input$cond_fhit_stri)){
-              dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_stri))
+              dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_stri))))
               a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
             }
             else{
@@ -3675,7 +3675,7 @@ server <- function(input, output, session){
       else if(input$drug_stri == "base"){
         dat <- stri_data()
         if(!is.null(input$cond_fhitB_stri)){
-          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_stri))
+          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_stri))))
           if(!is.null(input$cat_fhitB_stri)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
           }
@@ -3974,7 +3974,7 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_clus))
+            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
           }
           else{
             showNotification("Don't forget to select some conditions !", type = "error")
@@ -3994,7 +3994,7 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_clus))
+          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
@@ -4059,7 +4059,7 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_clus))
+            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
           }
           else{
             showNotification("Don't forget to select some conditions !", type = "error")
@@ -4095,7 +4095,7 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_clus))
+          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
@@ -4167,7 +4167,7 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhit_clus))
+            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
           }
           else{
             showNotification("Don't forget to select some conditions !", type = "error")
@@ -4204,7 +4204,7 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(Condition == c(input$cond_fhitB_clus))
+          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
@@ -4293,7 +4293,7 @@ server <- function(input, output, session){
     showNotification("Getting subcellular locations", type = "message")
 
     data_hit <- hitdata_cell() %>%
-      dplyr::filter(Condition == input$condhit_cell)
+      dplyr::filter(!is.na(match(Condition, c(input$condhit_cell))))
 
     if(!is.null(input$cathit_cell)){
       data_hit <- data_hit %>% dplyr::filter(!is.na(match(category, input$cathit_cell)))

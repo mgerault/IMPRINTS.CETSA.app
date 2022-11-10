@@ -22,8 +22,13 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
                             condition_column = NULL, condition = NULL,
                             pval_cutoff = 0.01){
   ### load database
+  ensembl <- NULL
+  while(is.null(ensembl)){
+    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl", port = ""),
+                        error = function(e) message("Timeout reached for getting gene ensemble,
+                                                    fetching it again.")) # genes_id / gene symbols
+  }
   wp <- get_wikipath(FALSE) # wiki pathway
-  ensembl <- biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl") # genes_id / gene symbols
 
   if(!is.null(condition_column) & !is.null(condition)){
     hits <- hits[which(hits[[condition_column]] == condition),]
@@ -83,7 +88,7 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
 get_wikipath <- function(wp = TRUE){
   date <- stringr::str_split(Sys.Date(), "-")[[1]]
   date <- as.numeric(date)
-  if(date[3] < 10){
+  if(date[3] < 11){
     date[2] <- date[2] - 1
   }
   date[3] <- 10
@@ -96,7 +101,7 @@ get_wikipath <- function(wp = TRUE){
   }
   date <- paste0(date, collapse = "")
 
-  url_wiki <- paste0("https://wikipathways-data.wmcloud.org/current/gmt/wikipathways-",
+  url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
                      date, "-gmt-Homo_sapiens.gmt")
   url_wiki <- url(url_wiki)
 

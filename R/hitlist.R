@@ -112,6 +112,11 @@ hitlist <- function(inputdata,
   #                                                #
   ##################################################
 
+  # remove quantitative proteomics columns
+  if(sum(stringr::str_detect(colnames(data), "36C_"))){
+    data <- data[,-stringr::str_which(colnames(data), "36C_")]
+  }
+
   ###  Saving protein information and count data  ###
   if (length(grep('id',colnames(data)))) {
     proteininfo <- (unique(data[,c('id','description')]))

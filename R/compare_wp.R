@@ -65,7 +65,9 @@ compare_wp <- function(hits, gene_column = "Genes", condition_column = NULL,
                            guide = guide_colorbar(reverse = TRUE)) +
     scale_size(range = c(3,8)) +
     DOSE::theme_dose(12) +
-    theme(axis.title.x = element_blank())
+    theme(axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.85)),
+          axis.text.y = element_text(angle = 30, size = rel(0.85)))
 
   res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
   g <- hits_gene_id$Genes[which(!is.na(match(hits_gene_id$Genes_id, x)))]

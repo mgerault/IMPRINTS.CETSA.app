@@ -69,7 +69,7 @@ find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, conditio
     LA <- paste0(language, "[LA]")
   }
   if(!is.null(year_rg)){
-    LA <- paste0(language, "[DP]")
+    DP <- paste0(year_rg, "[DP]")
   }
   T_AB2 <- paste0(feat, "*[Title/Abstract]")
 

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2022-11-10" />
+<meta name="date" content="2022-11-16" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2022-11-10</h4>
+<h4 class="date">2022-11-16</h4>
 
 </div>
 
@@ -1706,7 +1706,7 @@ called “drug_data”. “drug_data” is list that contains datasets :
 <ul>
 <li>The caldiff output (the protein abundance difference); access it
 with ‘$data’</li>
-<li>The IMPRINTS_average output (the average from the caldiff output
+<li>The imprints_average output (the average from the caldiff output
 among the bioreplicates); access it with ‘$data_ave’</li>
 <li>The hitlist; access it with ‘$hitlist’</li>
 <li>The proteins categorized as “NN”; access it with ‘$NN’</li>
@@ -1722,7 +1722,7 @@ among the bioreplicates); access it with ‘$data_ave’</li>
 <h4><span class="math inline">\(\underline{2.\space See/save\space
 the\space barplot}\)</span></h4>
 <p>The mineCETSA package already contains the ms_2D_barplotting
-function; IMPRINTS_barplotting_sh is totally based on this function.
+function; imprints_barplotting_sh is totally based on this function.
 This one allow you to save or not the file; add the category and/or a
 score on the barplots in the subtitle (to do so, just add a category
 and/or a score columns named “category” and “score”); use joined
@@ -1732,19 +1732,19 @@ cellular location for example). Also, the bar plots will not be
 generated in an external window; however to keep information on how the
 function is running, the remaining number of pages to be saved is
 printed.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_barplotting_sh</span>(mydata_caldiff, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_sh</span>(mydata_caldiff, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>mydata_caldiff_chemarrest <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>chemarrest</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>all_drug <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> mydata_caldiff, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> mydata_caldiff_chemarrest)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_barplotting_sh</span>(all_drug, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_sh</span>(all_drug, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#here, it will &quot;join&quot; the two pdf in one</span></span></code></pre></div>
 <p>Instead of doing a list of all our data, we could also get list of
 our data according to the protein complex. For this, you’ll need the
-function IMPRINTS_complex_mapping_sh (which is also based on
+function imprints_complex_mapping_sh (which is also based on
 ms_2D_complex_mapping from mineCETSA).</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>elutriation</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">IMPRINTS_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">imprints_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">targetcategory =</span> <span class="fu">c</span>(<span class="st">&quot;CN&quot;</span>, <span class="st">&quot;CC&quot;</span>, <span class="st">&quot;NC&quot;</span>))</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(map_compl) <span class="co">#if you want to check the data</span></span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
@@ -1770,14 +1770,14 @@ ms_2D_complex_mapping from mineCETSA).</p>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#each element of the list contains data from caldiff output for each protein complex selected</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_barplotting_sh</span>(data_l,<span class="at">save_pdf =</span> <span class="cn">TRUE</span>, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_sh</span>(data_l,<span class="at">save_pdf =</span> <span class="cn">TRUE</span>, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, </span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">toplabel =</span> <span class="st">&quot;IMPRINTS-CETSA bar plotting </span><span class="sc">\n</span><span class="st">Protein complex :&quot;</span>,  <span class="co">#title on each page (will add the complex name, cf. the names of the list)</span></span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">pdfname =</span> <span class="st">&quot;complex_barplot&quot;</span></span>
 <span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                     )</span></code></pre></div>
 <p>When you looked at your barplots from different protein complex, you
 noticed that the protein profiles are quite similar among each complex.
 But if you want only to find similar profiles from a selected protein,
-you may want to use the IMPRINTS_barplotting_simprof function. With this
+you may want to use the imprints_barplotting_simprof function. With this
 function, by typing a protein ID, you will search for similar profiles
 according to a score. For now, there are two score methods : the Pearson
 correlation score and the Euclidean distance score. Then by setting a
@@ -1790,7 +1790,7 @@ value are all scaled by this division, so you will find more similar
 profiles and not necessarily with similar values.</p>
 <p>For more informations on this scores : <a href="https://nakkaya.com/2009/11/11/euclidean-distance-score/">Euclidean</a>
 ; <a href="https://www.questionpro.com/blog/pearson-correlation-coefficient/">Pearson</a></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_barplotting_simprof</span>(mydata_caldiff, mydata_ave, <span class="co">#here we have the average data, but if it wasn&#39;t the case we would have let it NULL and let the function calculate it for us</span></span>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_simprof</span>(mydata_caldiff, mydata_ave, <span class="co">#here we have the average data, but if it wasn&#39;t the case we would have let it NULL and let the function calculate it for us</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">treatmentlevel =</span> <span class="st">&quot;S&quot;</span>, <span class="at">protein_profile =</span> <span class="st">&quot;O43776&quot;</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">pdfname =</span> <span class="st">&quot;similar_O43776&quot;</span>,</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">use_score =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
@@ -1809,7 +1809,7 @@ Heatmap}\)</span></h4>
 or their protein complex.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># According their category</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#here we need the average data</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_heatmap</span>(mydata_ave, <span class="at">hit_summary =</span> mydata_hit,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(mydata_ave, <span class="at">hit_summary =</span> mydata_hit,</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">select_cat =</span> <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>),  </span>
@@ -1824,7 +1824,7 @@ or their protein complex.</p>
 <span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_ave, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
 <span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">IMPRINTS_heatmap</span>(data, <span class="at">PRcomplex_data =</span> cate_,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(data, <span class="at">PRcomplex_data =</span> cate_,</span>
 <span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>, </span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
@@ -1977,7 +1977,7 @@ functions}\)</span></h4>
 which can be useful for the user.</p>
 <p><strong>get_treat_level</strong> function</p>
 <p>This function allow you to get the treatment level of your data. The
-input can be the output from ‘caldiff’ function or ‘IMPRINTS_average’
+input can be the output from ‘caldiff’ function or ‘imprints_average’
 function.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_caldiff)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_ave)</span></code></pre></div>

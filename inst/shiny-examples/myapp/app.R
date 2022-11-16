@@ -134,6 +134,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                      #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
                                      ),
 
+                          tags$style(type = 'text/css',
+                                     '#modal8_FC .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                      #modal8_FC .modal-body { width: 150vh; overflow-x: auto;}'
+                                     ),
+                          tags$style(type = 'text/css',
+                                     '#modal9_SR .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                      #modal9_SR .modal-body { width: 150vh; overflow-x: auto;}'
+                                     ),
+
                           fluidRow(style = "height:20px;"),
 
                           h1(tags$u(class = "main-1", "The mineCETSA analysis")),
@@ -151,7 +160,16 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                           fluidRow(box(title = "Upload and clean your data", status = "primary",
                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        tags$u(h3("Upload your data")),
-                                       fluidRow(column(4, selectInput("n_chan", "Choose the number of channels", choices = c(10,11,16,18), selected = 10)),
+                                       fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
+                                                          shiny::HTML("<br><h5>On the table on your right, you can type the name
+                                                                      of the sample to the corresponding channel. The underscore '_'
+                                                                      will be used as a separator between temperatures, bioreplicates and
+                                                                      treatments in all further functions, so make sure of your spelling.
+                                                                      <br><br>Here, you'll need to type first the bioreplicate and then
+                                                                      the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
+                                                                      <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
+                                                                      as 'Mix'.</h5>")
+                                                       ),
 
                                                 column(8, uiOutput("treat_nameui"))
                                                 ),
@@ -167,11 +185,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                         tags$u(h3("Rename your conditions and clean your data")),
                                                         tags$hr(),
 
-                                                        fluidRow(column(4, textOutput("incond_name")),
-                                                                 column(4, textInput("outcond", "Type the new condition naming, spaced by a comma",
-                                                                                     "37C,47C,50C,52C,54C,57C,36C"),
-                                                                        checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
-                                                                        checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
+                                                        fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
+                                                                                       For example, like this: '37C', '47C', etc. <br>Remember to not use '_'.</h5>")),
+                                                                 column(4, uiOutput("temp_nameui")),
+                                                                 column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
+                                                                          checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
                                                                  column(2, actionButton("str_ren", "Rename the conditions", class = "btn-primary")),
                                                                  column(2, actionButton("see2_cetsa", "View data renamed"))
                                                         )
@@ -256,12 +274,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 
                                                                          checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
                                                                          conditionalPanel(condition = "!input.got_diff_cetsa",
-                                                                                          fluidRow(column(4, textInput("treat_name2", "Type the treatment name, spaced by a comma",
-                                                                                                                       "Vehicle,Alpelisib,Buparlisib")),
-
+                                                                                          fluidRow(column(4, selectInput("ctrl_name2", "Select the condition that corresponds to your control.",
+                                                                                                                         choices = NULL)
+                                                                                                          ),
                                                                                                    column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
                                                                                                                            abundance difference should still within the same biorep", TRUE)),
-
                                                                                                    column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
                                                                                           )
                                                                          ),
@@ -283,12 +300,16 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                                         selected = "FC",
                                                                                                                         inline = TRUE),
                                                                                                            conditionalPanel(condition = "input.hitmethod_cetsa == 'FC'",
+                                                                                                                            actionButton("see8_cetsa", "See more information"),
+                                                                                                                            tags$hr(),
                                                                                                                             fluidRow(column(4, numericInput("meancut_cetsa", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
                                                                                                                                      column(4, numericInput("bound_cetsa", "Choose the boundedness", value = 4)),
                                                                                                                                      column(4, checkboxInput("save_hit", "Save the hitlist", TRUE))
                                                                                                                             )
                                                                                                            ),
                                                                                                            conditionalPanel(condition = "input.hitmethod_cetsa == 'SR'",
+                                                                                                                            actionButton("see9_cetsa", "See more information"),
+                                                                                                                            tags$hr(),
                                                                                                                             fluidRow(column(4, numericInput("SRcut_cetsa", "Choose a Stability Rate cutoff", value = 1.5, min = 0, step = 0.1)),
                                                                                                                                      column(4, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
                                                                                                                                      column(4, numericInput("validval_cetsa", "Choose the minimum proportion of valid values", value = 0, min = 0, max = 1, step = 0.05))
@@ -336,15 +357,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                               click on the button 'Add dataset', and you're good to go !</h5></p>
                               <p><h5>If you want to remove a dataset, select one of the dataset available from the database,
                               and click on the button 'Remove dataset', in the box below. Beware, this operation cannot be undone !</h5></p>
-                              <br><h5>Once you made your changements, don't forget to click on the button 'Reload the database' to use directly.</h5>"
+                              <br><h5>Once you made your changements, don't forget to click on the button 'Reload the database' to use it directly.</h5>"
                           ),
 
                           fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff"),
-                                                       checkboxInput("gave_daba", "Don't have the IMPRINTS_average output
+                                                       checkboxInput("gave_daba", "Don't have the imprints_average output
                                                                          (will calculate and save it)", TRUE),
                                                        conditionalPanel(condition = "!input.gave_daba",
-                                                                        fileInput("AVE_dabafile", "Import the output from IMPRINTS_average_sh")
+                                                                        fileInput("AVE_dabafile", "Import the output from imprints_average_sh")
                                                        )
                                        ),
                                        column(4, fileInput("hitsum_daba", "Import the summary file from the hitlist outputs")),
@@ -537,10 +558,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                  column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
                                                                                                  column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
                                                                                         ),
-                                                                                        fluidRow(column(4, checkboxInput("gave_compl", "Don't have the IMPRINTS_average output
+                                                                                        fluidRow(column(4, checkboxInput("gave_compl", "Don't have the imprints_average output
                                                                                      (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_compl",
-                                                                                                                  column(4, fileInput("avef_compl", "Import the output from IMPRINTS_average"))
+                                                                                                                  column(4, fileInput("avef_compl", "Import the output from imprints_average"))
                                                                                                  )
                                                                                         )
                                                                        ),
@@ -639,10 +660,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 
                                                                        conditionalPanel(condition = "input.drug_simpf == 'dat' ",
                                                                                         fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from ms_2D_caldiff")),
-                                                                                                 column(4, checkboxInput("gave_simpf", "Don't have the IMPRINTS_average output
+                                                                                                 column(4, checkboxInput("gave_simpf", "Don't have the imprints_average output
                                                                                      (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_simpf",
-                                                                                                                  column(4, fileInput("avef_simpf", "Import the output from IMPRINTS_average"))
+                                                                                                                  column(4, fileInput("avef_simpf", "Import the output from imprints_average"))
                                                                                                  )
                                                                                         )
                                                                        )
@@ -767,13 +788,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_heat == 'dat' ",
-                                                                                        fluidRow(column(4, checkboxInput("gave_heat", "Don't have the IMPRINTS_average output
+                                                                                        fluidRow(column(4, checkboxInput("gave_heat", "Don't have the imprints_average output
                                                                                                   (will calculate and save it)", TRUE),
                                                                                                         conditionalPanel(condition = "input.gave_heat",
                                                                                                                          fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
-                                                                                                                         fileInput("fileave_heat", "Choose a IMPRINTS_average_sh output")
+                                                                                                                         fileInput("fileave_heat", "Choose a imprints_average_sh output")
                                                                                                         )
                                                                                         ),
                                                                                         column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
@@ -851,14 +872,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_heatcom == 'dat' ",
-                                                                                        fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the IMPRINTS_average output
+                                                                                        fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the imprints_average output
                                                                                                   (will calculate and save it)", TRUE)),
                                                                                                  column(4,
                                                                                                         conditionalPanel(condition = "input.gave_heatcom",
                                                                                                                          fileInput("filedif_heatcom", "Choose a ms_2D_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heatcom",
-                                                                                                                         fileInput("fileave_heatcom", "Choose a IMPRINTS_average_sh output")
+                                                                                                                         fileInput("fileave_heatcom", "Choose a imprints_average_sh output")
                                                                                                         )
                                                                                                  )
                                                                                         )
@@ -1431,30 +1452,62 @@ server <- function(input, output, session){
     }
   })
 
-  output$incond_name <- renderText({
+
+
+
+
+  output$temp_nameui <- renderUI({
     if(!is.null(cetsa_data())){
-      paste("The current condition name are :", paste(unique(cetsa_data()$condition), collapse = "  "))
+      temp <- unique(cetsa_data()$condition)
     }
     else{
-      NULL
+      temp <- NULL
     }
-  })
+    m <- matrix("", length(temp), 1,
+                dimnames = list(temp, "Temperatures"))
 
-  cetsa_data_clean <- eventReactive(input$str_ren, {
-    d1 <- ms_conditionrename(cetsa_data(),
-                             incondition = unique(cetsa_data()$condition),
-                             outcondition = str_remove(unlist(str_split(input$outcond, ",")), " ")
+    matrixInput("temp_name", "Type the name you want for your temperatures",
+                value = m,
+                rows = list(names = TRUE),
+                cols = list(names = TRUE)
     )
-
-    if(input$rem_mix){
-      d1 <- d1[, !(names(d1) %in% "Mix")]
+  })
+  cetsa_data_clean <- eventReactive(input$str_ren, {
+    d1 <- NULL
+    temp <- as.character(input$temp_name[,1])
+    if(any(sapply(temp, stringr::str_length) == 0)){
+      showNotification("Some temperatures names are empty !", type = "error", duration = 5)
     }
-    if(input$clean_data){
-      d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
+    else if(length(unique(temp)) != length(temp)){
+      showNotification("Some temperatures names are equal !", type = "error", duration = 5)
     }
-    showNotification("Calculation done !", type = "message", duration = 3)
+    else{
+      d1 <- ms_conditionrename(cetsa_data(),
+                               incondition = unique(cetsa_data()$condition),
+                               outcondition = temp
+                               )
 
-
+      if(input$rem_mix){
+        if(!("Mix" %in% names(d1))){
+          showNotification("The coolumn 'Mix' was not found in your data !", type = "error", duration = 5)
+          d1 <- NULL
+        }
+        else{
+          d1 <- d1[, !(names(d1) %in% "Mix")]
+          if(input$clean_data){
+            d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
+          }
+          showNotification("Renaming done !", type = "message", duration = 3)
+        }
+      }
+      else if(input$clean_data){
+        d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
+        showNotification("Cleaning done !", type = "message", duration = 3)
+      }
+      else{
+        showNotification("Renaming done !", type = "message", duration = 3)
+      }
+    }
     d1
   })
   #check if a file is upload
@@ -1710,26 +1763,29 @@ server <- function(input, output, session){
     }
   })
 
+  observe({
+    if(!is.null(cetsa_isoform$norm)){
+      tr_level <- get_treat_level(cetsa_isoform$norm)
+      updateSelectInput(session, "ctrl_name2", choices = tr_level, selected = tr_level[1])
+    }
+  })
   observeEvent(input$CAL_DIF, {
     if(!is.null(cetsa_isoform$norm)){
       showNotification("Start difference calculation, this may take a while. Please wait a few minutes",
                        type = "message", duration = 5)
-      ytr_level <- str_remove(unlist(str_split(input$treat_name2, ",")), " ")
       tr_level <- get_treat_level(cetsa_isoform$norm)
-      if(sum(str_detect(tr_level, paste(ytr_level, collapse = "|"))) != length(tr_level)){
-        showNotification("The treatments you typed doesn't match the treatments from your data !", type = "error")
-      }
-      else{
-        d <- ms_2D_caldiff(cetsa_isoform$norm,
-                           treatmentlevel = ytr_level,
+      tr_level <- tr_level[-which(tr_level == input$ctrl_name2)]
+      tr_level <- c(input$ctrl_name2, tr_level)
+      d <- ms_2D_caldiff(cetsa_isoform$norm,
+                           treatmentlevel = tr_level,
                            withinrep = input$wit_rep
-        )
+                         )
 
-        cetsa_isoform$dif <- d
-        message("Done to calculate the pair-wise (per replicate and temperature)
-            protein abundance differences")
-        showNotification("Difference calculation succeed !", type = "message", duration = 5)
-      }
+      cetsa_isoform$dif <- d
+      message("Done to calculate the pair-wise (per replicate and temperature)
+               protein abundance differences")
+      showNotification("Difference calculation succeed !", type = "message", duration = 5)
+
     }
     else{
       showNotification("Don't forget to import a file or start the analysis", type = "error")
@@ -1774,6 +1830,75 @@ server <- function(input, output, session){
     }
   })
 
+
+  # hitlist doc
+  observeEvent(input$see8_cetsa,{
+    showModal(tags$div(id="modal8_FC",modalDialog(
+        shiny::HTML("<h1>Hitlist generation: using fold-change cutoff</h1><br>
+                    <br>This method is simple and only needs the caldiff output, i.e. the fold-changes data.
+                    <br>It defines a protein as a hit if in at least one of the temperatures, a fold change
+                    passes some criterias. In the shiny app, you can choose two different cutoffs: a cutoff
+                    on the mean and the acceptable boundedness.
+                    <br> By default, the values are 0.25 and 4. It means that if a protein has one mean fold change
+                    superior than 0.25 (in absolute value) and if this absolute value is superior than 4*SEM
+                    (its Standard Error of the Mean), it will be considered as a hits.
+                    <br><br>For the categorization, if a hits is an ND, it means that its 37°C value is not well
+                    measured (i.e. has a missing value or has an SEM > 0.15). Indeed the categorization totally depends
+                    on the behaviour of the protein at 37°C.
+                    <br><br><h6><em>This function hasn't been written by me</em></h6>"),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+  })
+  observeEvent(input$see9_cetsa,{
+    showModal(tags$div(id="modal9_SR",modalDialog(
+        shiny::HTML("<h1>Hitlist generation: using fold-change cutoff</h1><br>
+                    <br>This method compute a score for each protein and returns a volcano plot.
+                    Since it will compute p-value, it needs the post-normalization file. It will
+                    also compute the fold-changes but if you already have the caldiff output, you
+                    will gain some time.
+                    <br>For each protein, we want to extract a p-value and a score, the Stability Rate (SR).
+                    <br>Let's consider our data with <var>n</var> proteins, <var>T</var> temperatures,
+                    1 control and <var>C</var> conditions, <var>B</var> bio-replicates where <var>B</var> >= 3.
+                    <br><br><u>1. The p-value</u><br><br>
+                    For each condition <var>c</var> = 1, ..., <var>C</var>, we compute a moderated t-test for each temperature
+                    <var>t</var> = 1, ..., <var>T</var>. We now have 𝑇 p-values for each protein <var>p</var> = 1, ..., <var>n</var>.
+                    We then only keep the two p-values from the two biggest mean fold changes (in absolute value) from
+                    each protein <var>p</var>. We now compute a Fisher’s t-test on these two p-values which return
+                    one final p-value. (Figure 1. A.)
+                    <br>Finally, we have 𝑛 p-values for each condition <var>c</var> = 1, ..., <var>C</var>.
+                    <br><br><u>2. SR</u><br><br>
+                    For each protein <var>p</var> = 1, ..., <var>n</var> and for each condition <var>c</var> = 1, ..., <var>C</var>,
+                    we extract the <var>T</var> mean fold changes. We take the absolute value from these and then order them in
+                    the decreasing order. We now fit a weighted linear regression to these data with
+                    weights five times higher for the two biggest fold changes, i.e. the two first data
+                    points. Which means more importance is given to the two biggest fold changes but
+                    we still take into account the whole profile. (Figure 1. A.)
+                    <br>From this regression we extract the intercept with the y-axis. This intercept will
+                    always be positive and to keep track if the protein is destabilized or stabilized, we
+                    multiply this value by the sign of the mean of all the fold changes (either -1 or 1).
+                    <br>Finally, we apply a z-score normalization on this 𝑛 SR for each condition <var>c</var> = 1, ..., <var>C</var>.
+                    <br><br>In the end, we plot the -log10(p-value) vs SR which gives us a volcano plot. (Figure 1. B.)
+                    <br><br><img src='SR_figure1.jpg' alt='SR figure', width='1180' height='660'>
+                    <br><br><u>Set the cutoffs</u><br><br>
+                    We have two cutoffs to set in order to choose what are the significant hits: an SR cutoff and
+                    a p-value cutoff.
+                    <br>For the p-value, we apply the Benjamini and Hochberg correction on the p-values with a
+                    chosen FDR (1% by default) which gives us the p-value cutoff to set for the corresponding FDR.
+                    <br>To set the SR cutoff, we apply the default method used in a classical volcano plot. We
+                    compute the median of the p-values <var>p<sub>m</sub></var> and then we compute the median of
+                    the SR, <var>SR<sub>m</sub></var> with a corresponding p-value <var>p</var> < <var>p<sub>m</sub></var>.
+                    Finally, to the default value chosen (typically 2 but here 1.5 is the default value), we add and remove
+                    <var>SR<sub>m</sub></var>; so we have the cutoffs − 1. 5 − <var>SR<sub>m</sub></var> and
+                    1. 5 + <var>SR<sub>m</sub></var>.
+                    <br>In the end, a curve is computed from these cutoffs with by default a curvature of 0.5 which
+                    gives us the final ‘cutoff curve’. Every protein that is above this curve in the volcano plot
+                    is then considered as a significant hit. (Figure 1. B.)"),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+  })
+  # hitlist calculation
   hit_pr <- reactiveValues(
     hitlist = NULL,
     ND = NULL,
@@ -1877,7 +2002,7 @@ server <- function(input, output, session){
                 selected = "elutriation")
   })
   output$davai2_daba_ui <- renderUI({
-    selectInput("davai2_daba", "Choose a dataset to remove", choices = names(drug_data_sh$y$data),
+    selectInput("davai2_daba", "Choose a dataset in which you want to rename the conditions", choices = names(drug_data_sh$y$data),
                 selected = "elutriation")
   })
   output$drug2_ui <- renderUI({
@@ -1887,13 +2012,18 @@ server <- function(input, output, session){
   observeEvent(input$up_daba,{
     showNotification("Start loading the data, this may take a while", type = "message")
     a <- loadData()
-    drug_data_sh$y <- a
-    drug_data2 <<- drug_data_sh$y
+    if(!is.null(a)){
+      drug_data_sh$y <- a
+      drug_data2 <<- drug_data_sh$y
 
-    updateSelectInput(session, "davai_daba", choices = names(a$data), selected = names(a$data)[1])
-    updateSelectInput(session, "drug2", choices = names(a$data), selected = names(a$data)[1])
+      updateSelectInput(session, "davai_daba", choices = names(a$data), selected = names(a$data)[1])
+      updateSelectInput(session, "drug2", choices = names(a$data), selected = names(a$data)[1])
 
-    showNotification("Data loaded !", type = "message")
+      showNotification("Data loaded !", type = "message")
+    }
+    else{
+      showNotification("No folder named 'drug_data' has been created; there is nothing to update.", type = "error")
+    }
   })
 
   output$info_daba <- renderText({
@@ -1990,7 +2120,7 @@ server <- function(input, output, session){
       }
       else{
         showNotification("Getting average dataset, this may take a while.", type = "message")
-        ave_data <- IMPRINTS_average_sh(DIF_daba())
+        ave_data <- imprints_average_sh(DIF_daba())
         showNotification("Average calculation succeed !", type = "message")
       }
       showNotification("Start saving dataset, this may take a while.", type = "message")
@@ -2537,7 +2667,7 @@ server <- function(input, output, session){
         nbc <- ifelse(input$cond_sel == "all_cond", length(get_treat_level(data())), length(input$cond))
         COL <- OWN_color$ch
         if(nbc == length(COL)){
-          IMPRINTS_barplotting_sh(data(), witherrorbar = input$werb,
+          imprints_barplotting_sh(data(), witherrorbar = input$werb,
                                usegradient = input$grad, linegraph = input$line,
                                save_pdf = input$save_bar, colorpanel = COL,
                                layout = c(input$lay_bar1, input$lay_bar2),
@@ -2549,7 +2679,7 @@ server <- function(input, output, session){
 
       }
       else{
-        IMPRINTS_barplotting_sh(data(), witherrorbar = input$werb,
+        imprints_barplotting_sh(data(), witherrorbar = input$werb,
                              usegradient = input$grad, linegraph = input$line,
                              save_pdf = input$save_bar,
                              layout = c(input$lay_bar1, input$lay_bar2),
@@ -2749,7 +2879,7 @@ server <- function(input, output, session){
       showNotification("Start mapping proteins, this may take a while", type = "message")
 
       if(input$gave_compl & input$drug_compl == "dat"){
-        data_ave <- IMPRINTS_average_sh(DIF_compl())
+        data_ave <- imprints_average_sh(DIF_compl())
         showNotification("Average calculation succeed !", type = "message")
       }
       else{
@@ -2767,7 +2897,7 @@ server <- function(input, output, session){
 
       withCallingHandlers({
         shinyjs::html("diagmapping_compl", "")
-        map_compl <- IMPRINTS_complex_mapping_sh(data_ave, cat_tab, treatment = input$condsel_compl,
+        map_compl <- imprints_complex_mapping_sh(data_ave, cat_tab, treatment = input$condsel_compl,
                                               targetcategory = input$catego_compl,
                                               organism = input$organism_compl)
       },
@@ -2892,7 +3022,7 @@ server <- function(input, output, session){
       COL <- ifelse(input$ch_own_col_compl, input$own_color_pick_compl, "#18FF00")
 
 
-      IMPRINTS_barplotting_sh(data_compl(), witherrorbar = input$werb_compl,
+      imprints_barplotting_sh(data_compl(), witherrorbar = input$werb_compl,
                            usegradient = input$grad_compl, linegraph = input$line_compl,
                            save_pdf = input$save_bar_compl, colorpanel = COL,
                            layout = c(input$lay_bar1_compl, input$lay_bar2_compl),
@@ -3021,7 +3151,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
-      IMPRINTS_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+      imprints_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
                                 treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
@@ -3061,7 +3191,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
-      geting_data_simpf$ch <- IMPRINTS_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
+      geting_data_simpf$ch <- imprints_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
                                                         treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
                                                         usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                         use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
@@ -3092,7 +3222,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
-      BAR_simpf$ch <- IMPRINTS_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+      BAR_simpf$ch <- imprints_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
                                                 treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
                                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
@@ -3116,7 +3246,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
-      BAR_simpf$ch <- IMPRINTS_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
+      BAR_simpf$ch <- imprints_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
                                                 treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
                                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
@@ -3298,12 +3428,12 @@ server <- function(input, output, session){
     }
     else if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
       showNotification("Start average calculation, this mays take a while.", type = "message")
-      dat <- IMPRINTS_average_sh(DIF_heat())
+      dat <- imprints_average_sh(DIF_heat())
     }
 
     withCallingHandlers({
       shinyjs::html("diagl_heat", "")
-      h <- IMPRINTS_heatmap(dat, HIT_heat(), NN_data = NN_heat(),
+      h <- imprints_heatmap(dat, HIT_heat(), NN_data = NN_heat(),
                          treatment = input$cond_heat, max_na = input$maxna_heat,
                          response = input$resp_heat, select_cat = input$catego_heat,
                          gradient_color = c(input$grad1col_heat, input$grad2col_heat, input$grad3col_heat),
@@ -3404,7 +3534,7 @@ server <- function(input, output, session){
     showNotification("Start mapping proteins, this may take a while", type = "message")
 
     if(input$gave_heatcom  & input$drug_heatcom == "dat"){
-      data_ave <- IMPRINTS_average_sh(DIF_heatcom())
+      data_ave <- imprints_average_sh(DIF_heatcom())
       resAVE_heatcom$d <- data_ave
       showNotification("Average calculation succeed !", type = "message")
     }
@@ -3414,7 +3544,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diagmapping_heatcom", "")
-      map_heatcom <- IMPRINTS_complex_mapping_sh(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
+      map_heatcom <- imprints_complex_mapping_sh(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
                                               targetcategory = NULL,
                                               organism = input$organism_heatcom)
     },
@@ -3509,7 +3639,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diagl_heatcom", "")
-      h <- IMPRINTS_heatmap(dat, NULL, NN_data = NULL, PRcomplex_data = PRcompl,
+      h <- imprints_heatmap(dat, NULL, NN_data = NULL, PRcomplex_data = PRcompl,
                          treatment = input$cond_heatcom, max_na = input$maxna_heatcom,
                          response = input$resp_heatcom,
                          gradient_color = c(input$grad1col_heatcom, input$grad2col_heatcom, input$grad3col_heatcom),
@@ -4644,7 +4774,7 @@ server <- function(input, output, session){
         nbc <- ifelse(input$cond_sel_cell  == "all_cond", length(get_treat_level(data_cell())), length(input$cond_cell))
         COL <- OWN_color_cell$ch
         if(nbc == length(COL)){
-          IMPRINTS_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+          imprints_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
                                usegradient = input$grad_cell, linegraph = input$line_cell,
                                save_pdf = input$save_bar_cell, colorpanel = COL,
                                layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
@@ -4657,7 +4787,7 @@ server <- function(input, output, session){
 
       }
       else{
-        IMPRINTS_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
+        imprints_barplotting_sh(data_cell(), witherrorbar = input$werb_cell,
                              usegradient = input$grad_cell, linegraph = input$line_cell,
                              save_pdf = input$save_bar_cell,
                              layout = c(input$lay_bar1_cell, input$lay_bar2_cell),

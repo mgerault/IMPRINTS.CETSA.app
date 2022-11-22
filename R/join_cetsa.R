@@ -20,7 +20,7 @@
 #' join_cetsa(list(test, test2))
 
 join_cetsa <- function(list_data, new_names = c("1h", "6h")){
-  if(sum(str_detect(new_names, "_|/")) > 0){
+  if(sum(stringr::str_detect(new_names, "_|/")) > 0){
     stop("Please enter a valid suffix. The character '_' and '/' are not allowed.")
   }
   if(sum(class(list_data) == "data.frame") >= 1){
@@ -36,11 +36,23 @@ join_cetsa <- function(list_data, new_names = c("1h", "6h")){
                                        paste0(colnames(x)[!(colnames(x) %in% c("id", "description"))], y); x},
                       list_data, new_names, SIMPLIFY = FALSE)
 
+  is_OX <- unlist(lapply(list_data,
+                         function(z){
+                           z <- z$description[1]
+                           z <- stringr::str_detect(z, "OX=\\d{1,}");
+                           z
+                         })
+  )
+  if(length(unique(is_OX)) > 1){   # if in description OX is precised and for other not, remove it
+    list_data[is_OX] <- lapply(list_data[is_OX],
+                                 function(z){
+                                   z$description <- stringr::str_remove_all(z$description, "OX=\\d{1,} ");
+                                   z
+                              })
+  }
   df <- plyr::join_all(list_data, by = c("id", "description"), type = "full")
 
   return(df)
 }
-
-
 
 

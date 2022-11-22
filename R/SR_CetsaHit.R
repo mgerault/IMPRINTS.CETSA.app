@@ -341,7 +341,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_SR_plot$criteria_curve <- NULL
   diff_SR_plot$curve <- NULL
 
-  for_categorize <- diff_SR[,str_which(colnames(diff_SR), "^id|Genes|^\\d{1,}|^pval37")]
+  for_categorize <- diff_SR[,stringr::str_which(colnames(diff_SR), "^id|Genes|^\\d{1,}|^pval37")]
   for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Genes) %>%
     tidyr::separate(key, into = c("key", "Condition"), sep = "_") %>%
     tidyr::spread(key, value)
@@ -360,7 +360,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_SR_plot$category[which(!diff_SR_plot$is_C)] <- "NC"
   diff_SR_plot$category[which(is.na(diff_SR_plot$category) & is.na(diff_SR_plot[[temp[length(temp)]]]))] <- "CC" #denatured in the end but significant 37
 
-  diff_SR_plot$coeff <- apply(diff_SR_plot[,str_which(colnames(diff_SR_plot), "^\\d{1,}")], 1,
+  diff_SR_plot$coeff <- apply(diff_SR_plot[,stringr::str_which(colnames(diff_SR_plot), "^\\d{1,}")], 1,
                               function(x){
                                 x <- abs(x)
                                 n <- 1/length(na.omit(x))
@@ -378,7 +378,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
   diff_SR <- diff_SR %>% dplyr::left_join(for_categorize, by = c("id", "Genes"))
 
-  diff_SR[,str_which(colnames(diff_SR), "category")] <- apply(as.data.frame(diff_SR[,str_which(colnames(diff_SR), "category")]),
+  diff_SR[,stringr::str_which(colnames(diff_SR), "category")] <- apply(as.data.frame(diff_SR[,stringr::str_which(colnames(diff_SR), "category")]),
                                                               2, function(x) tidyr::replace_na(x, "NN")
   )
 
@@ -407,16 +407,16 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     if(length(too_long)){
       for(n in too_long){
         name_toolong <- names(vennlist)[n]
-        in_common <- Reduce(intersect, str_split(str_split(name_toolong, " & ")[[1]], ""))
-        name_toolong <- str_remove_all(name_toolong,
+        in_common <- Reduce(intersect, stringr::str_split(stringr::str_split(name_toolong, " & ")[[1]], ""))
+        name_toolong <- stringr::str_remove_all(name_toolong,
                                        paste(in_common, collapse = "|"))
-        if(str_length(in_common) > 31){
-          name_toolong <- str_remove_all(name_toolong, " ")
+        if(stringr::str_length(name_toolong) > 31){
+          name_toolong <- stringr::str_remove_all(name_toolong, " ")
         }
-        if(str_length(in_common) > 31){
+        if(stringr::str_length(name_toolong) > 31){
           name_toolong <- paste0("&", name_toolong, "&")
-          name_toolong <- str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
-          name_toolong <-  str_remove_all(name_toolong, "^&|&$")
+          name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
+          name_toolong <-  stringr::str_remove_all(name_toolong, "^&|&$")
         }
         names(vennlist)[n] <- name_toolong
       }

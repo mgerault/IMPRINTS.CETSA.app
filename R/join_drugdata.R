@@ -33,9 +33,26 @@ join_drugdata <- function (dfs, by = NULL){
   else if (length(dfs) == 1)
     return(dfs[[1]])
 
+  if("description" %in% by){
+    is_OX <- unlist(lapply(dfs,
+                           function(z){
+                             z <- z$description[1]
+                             z <- stringr::str_detect(z, "OX=\\d{1,}");
+                             z
+                           })
+                    )
+    if(length(unique(is_OX)) > 1){   # if in description OX is precised and for other not, remove it
+      dfs[is_OX] <- lapply(dfs[is_OX],
+                           function(z){
+                             z$description <- stringr::str_remove_all(z$description, "OX=\\d{1,} ");
+                             z
+                           })
+    }
+  }
   joined <- dfs[[1]]
   for (i in 2:length(dfs)) {
     joined <- dplyr::full_join(joined, dfs[[i]], by = by)
   }
   return(joined)
 }
+

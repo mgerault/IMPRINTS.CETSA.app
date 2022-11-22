@@ -348,12 +348,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                           htmlOutput("info_daba"),
                           tags$hr(),
 
-                          HTML("<p><h5>In order to add new dataset, you need to import three files.<br>
+                          HTML("<p><h5>In order to add new dataset, you need to import two files.<br>
                               This files are : <br>
                               - The output from the ms_2D_caldiff function from the mineCETSA package <br>
-                              - The file named 'Summary', from the hitlist function output <br>
-                              - The file named 'NN', from the hitlist function output <br>
-                              Once you uploaded this three files, choose a name for your dataset (like 'elutriation' for example),
+                              - The file named 'Summary', from the hitlist function output OR,
+                                if you have it, the analysis tab from SR function that contains the SR for all proteins<br>
+                              Once you uploaded these two files, choose a name for your dataset (like 'elutriation' for example),
                               click on the button 'Add dataset', and you're good to go !</h5></p>
                               <p><h5>If you want to remove a dataset, select one of the dataset available from the database,
                               and click on the button 'Remove dataset', in the box below. Beware, this operation cannot be undone !</h5></p>
@@ -361,19 +361,18 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                           ),
 
                           fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                       fluidRow(column(4, fileInput("caldif_daba", "Import the output from ms_2D_caldiff"),
+                                       fluidRow(column(6, fileInput("caldif_daba", "Import the output from ms_2D_caldiff"),
                                                        checkboxInput("gave_daba", "Don't have the imprints_average output
                                                                          (will calculate and save it)", TRUE),
                                                        conditionalPanel(condition = "!input.gave_daba",
                                                                         fileInput("AVE_dabafile", "Import the output from imprints_average_sh")
                                                        )
                                        ),
-                                       column(4, fileInput("hitsum_daba", "Import the summary file from the hitlist outputs")),
-                                       column(4, fileInput("NN_daba", "Import the NN file from the hitlist outputs")),
+                                       column(6, fileInput("hitsum_daba", "Import the summary file OR the analysis tab from the hitlist outputs")),
                                        ),
-                                       conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup & output.NNdaba_fileup",
-                                                        fluidRow(column(4, textInput("name_daba", "Type a name for your new dataset")),
-                                                                 column(4, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"))
+                                       conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup",
+                                                        fluidRow(column(6, textInput("name_daba", "Type a name for your new dataset")),
+                                                                 column(6, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"))
                                                         )
                                        )
 
@@ -436,7 +435,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                         ),
                                                                                         column(8, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
                                                                                                conditionalPanel(condition = "!input.calc_hitlist",
-                                                                                                                fileInput("data_hitlist", "Upload your own hitlist (summary and NN file from hitlist function)",
+                                                                                                                fileInput("data_hitlist", "Upload your own hitlist, the summary file from the hitlist outputs",
                                                                                                                           accept = c(".txt", ".csv", ".xlsx"), multiple = TRUE)),
                                                                                                conditionalPanel(condition = "input.calc_hitlist",
                                                                                                                 fluidRow(column(3, numericInput("meancut_bar", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
@@ -554,14 +553,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_compl == 'dat' ",
-                                                                                        fluidRow(column(4, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
-                                                                                                 column(4, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs")),
-                                                                                                 column(4, fileInput("NN_compl", "Import the NN file from the hitlist outputs"))
-                                                                                        ),
-                                                                                        fluidRow(column(4, checkboxInput("gave_compl", "Don't have the imprints_average output
+                                                                                        fluidRow(column(6, fileInput("caldif_compl", "Import the output from ms_2D_caldiff")),
+                                                                                                 column(6, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs"))
+                                                                                                 ),
+                                                                                        fluidRow(column(6, checkboxInput("gave_compl", "Don't have the imprints_average output
                                                                                      (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_compl",
-                                                                                                                  column(4, fileInput("avef_compl", "Import the output from imprints_average"))
+                                                                                                                  column(6, fileInput("avef_compl", "Import the output from imprints_average"))
                                                                                                  )
                                                                                         )
                                                                        ),
@@ -788,7 +786,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_heat == 'dat' ",
-                                                                                        fluidRow(column(4, checkboxInput("gave_heat", "Don't have the imprints_average output
+                                                                                        fluidRow(column(6, checkboxInput("gave_heat", "Don't have the imprints_average output
                                                                                                   (will calculate and save it)", TRUE),
                                                                                                         conditionalPanel(condition = "input.gave_heat",
                                                                                                                          fileInput("filedif_heat", "Choose a ms_2D_caldiff output")
@@ -796,15 +794,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
                                                                                                                          fileInput("fileave_heat", "Choose a imprints_average_sh output")
                                                                                                         )
+                                                                                                        ),
+                                                                                                 column(6, fileInput("summary_heat", "Choose the summary file from the hitlist output"))
+                                                                                                 )
                                                                                         ),
-                                                                                        column(4, fileInput("summary_heat", "Choose the summary file from the hitlist output")),
-                                                                                        column(4, checkboxInput("impNN_heat", "Also import the NN file from hitlist output", FALSE),
-                                                                                               conditionalPanel(condition = "input.impNN_heat",
-                                                                                                                fileInput("NNfile_heat", "Choose the summary file from the hitlist output")
-                                                                                               )
-                                                                                        )
-                                                                                        )
-                                                                       ),
 
                                                                        tags$hr(),
 
@@ -1153,7 +1146,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                  tabPanel("GSEA",
                                                           fluidRow(box(title = "Make a GSEA on your data", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                       fluidRow(column(4, textInput("scorename_clus", "Type the column's name that contain the score")),
+                                                                       fluidRow(column(4, uiOutput("scorenameui_clus")),
                                                                                 column(4, checkboxInput("onlypos_clus", "Show only enrcihment set with positive enrichment score", TRUE)),
                                                                                 column(4, actionButton("gogsea_clus", "Start GSEA", class = "btn-primary btn-lg"))
                                                                                 ),
@@ -1168,7 +1161,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                  tabPanel("Gene concept network",
                                                           fluidRow(box(title = "View a gene concept network from your data", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                       fluidRow(column(4, textInput("scorename2_clus", "Type the column's name that contain the score")),
+                                                                       fluidRow(column(4, uiOutput("scorename2ui_clus")),
                                                                                 column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for the gene concept network",
                                                                                                        value = 0.01, min = 0, max = 1, step = 0.01)),
                                                                                 column(4, actionButton("gogeneconc_clus", "See gene concept network", class = "btn-primary btn-lg"))
@@ -2069,6 +2062,9 @@ server <- function(input, output, session){
   })
   outputOptions(output, "AVEdaba_fileup", suspendWhenHidden = FALSE)
 
+  NN_daba <- reactiveValues(
+    x = NULL
+  )
   HIT_daba <- reactive({
     File <- input$hitsum_daba
     if (is.null(File))
@@ -2079,34 +2075,42 @@ server <- function(input, output, session){
     if(!purrr::is_empty(nv_nam)){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
-    dat
+    if(!("Condition" %in% colnames(dat))){ # means that the analysis tab was imported
+      dat <- dat[,stringr::str_which(colnames(dat), "^id$|^Fisher_|^SR_|^GlobalScore_|^category_")]
+      dat <- dat %>% tidyr::gather("key", "value", -id) %>%
+        tidyr::separate(key, into = c("key", "Condition"), sep = "_") %>%
+        tidyr::spread(key, value)
 
+      nn <- dat %>% dplyr::filter(category == "NN")
+      dif <- DIF_daba()[,1:2]
+      nn <- dplyr::left_join(nn, dif, by = "id")
+      nn <- nn[,c("id", "description", "Condition", "category", "Fisher", "SR", "GlobalScore")]
+      NN_daba$x <- nn
+
+      dat <- dat %>% dplyr::filter(category != "NN")
+    }
+    else{
+      dif <- DIF_daba()[,1:2]
+      dat <- dat[,c("id", "Condition", "category")]
+      nn <- lapply(unique(dat$Condition), function(x){
+        x <- dat %>% dplyr::filter(Condition == x) %>%
+          dplyr::right_join(dif, by = "id") %>%
+          dplyr::filter(is.na(category)) %>%
+          dplyr::mutate(category = "NN",
+                              Condition = x);
+        x
+      })
+      nn <- as.data.frame(Reduce(rbind, nn))
+      nn <- nn[,c("id", "description", "Condition", "category")]
+      NN_daba$x <- nn
+    }
+    dat
   })
   #check if a file is upload
   output$HITdaba_fileup <- reactive({
     return(!is.null(HIT_daba()))
   })
   outputOptions(output, "HITdaba_fileup", suspendWhenHidden = FALSE)
-
-  NN_daba <- reactive({
-    File <- input$NN_daba
-    if (is.null(File))
-      return(NULL)
-
-    dat <- import(File$datapath, header = TRUE)
-    nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
-      dat <- dat[, !(names(dat) %in% nv_nam)]
-    }
-    dat <- dat[,c("id", "description", "Condition", "category")]
-    dat
-  })
-  #check if a file is upload
-  output$NNdaba_fileup <- reactive({
-    return(!is.null(NN_daba()))
-  })
-  outputOptions(output, "NNdaba_fileup", suspendWhenHidden = FALSE)
-
 
 
   observeEvent(input$add_daba, {
@@ -2127,7 +2131,7 @@ server <- function(input, output, session){
       saveData(drug_data_sh$y, new_add = list("data" = DIF_daba(),
                                               "data_ave" = ave_data,
                                               "hitlist" = HIT_daba(),
-                                              "NN" = NN_daba(),
+                                              "NN" = NN_daba$x,
                                               "treat_level" = get_treat_level(DIF_daba())),
                input$name_daba)
 
@@ -2216,8 +2220,6 @@ server <- function(input, output, session){
         showNotification("You didn't make any changement !", type = "error")
       }
     }
-
-
   })
 
   observeEvent(input$rem_daba, {
@@ -2260,9 +2262,7 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    d <- import_list(File$datapath, header = TRUE)
-    names(d) <- File$name
-
+    d <- import(File$datapath, header = TRUE)
     d
   })
   #check if a file is upload
@@ -2298,13 +2298,13 @@ server <- function(input, output, session){
 
     if(input$hit){
       if(input$drug == "base" & length(input$drug2) >= 1){
-        HIT <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
+        HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2],
+                                     function(x) x[,c("id", "Condition", "category")])
+                       )
       }
       else if(input$drug == "dat"){
         if(is.null(hit_bar$summa)){
-          idx <- grep("Summary", names(barhit_data()))
-
-          HIT <- barhit_data()[idx][[1]]
+          HIT <- barhit_data()
         }
         else{
           HIT <- hit_bar$summa
@@ -2420,15 +2420,29 @@ server <- function(input, output, session){
     }
 
     if(input$drug == "base" & length(input$drug2) >= 1){
-      HIT <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2])
-      NN <- do.call(rbind, drug_data_sh$y$NN[input$drug2])
+      HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2],
+                                   function(x) x[,c("id", "Condition", "category")])
+                     )
+      NN <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2],
+                                  function(x) x[,c("id", "description", "Condition", "category")])
+                    )
     }
     else if(input$drug == "dat"){
       if(is.null(hit_bar$summa)){
-        idx <- grep("Summary", names(barhit_data()))
 
-        HIT <- barhit_data()[idx][[1]]
-        NN <- barhit_data()[!(1:length(names(barhit_data())) %in% idx)][[1]]
+        HIT <- barhit_data()
+        if(!is.null(HIT)){
+          NN <- lapply(unique(HIT$Condition), function(z){
+            z <- HIT %>% dplyr::filter(Condition == z) %>%
+              dplyr::right_join(barplot_data()[,1:2], by = "id") %>%
+              dplyr::filter(is.na(category)) %>%
+              dplyr::mutate(category = "NN",
+                            Condition = z);
+            z
+          })
+          NN <- as.data.frame(Reduce(rbind, NN))
+          NN <- NN[,c("id", "description", "Condition", "category")]
+        }
       }
       else{
         HIT <- hit_bar$summa
@@ -2588,7 +2602,7 @@ server <- function(input, output, session){
       hit_info <- hit_info[, !(names(hit_info) %in% "category")]
       names(hit_info)[!(names(hit_info) %in% "id")] <- "Hits_Info"
 
-      DR <-left_join(DR, hit_info, by = "id")
+      DR <- left_join(DR, hit_info, by = "id")
     }
     if(!is.null(DR)){
       if(ncol(DR) <= 1){
@@ -2796,7 +2810,9 @@ server <- function(input, output, session){
       dat
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
-      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_compl])
+      do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_compl],
+                            function(x) x[,c("id", "Condition", "category")])
+              )
     }
     else{
       NULL
@@ -2810,19 +2826,25 @@ server <- function(input, output, session){
 
   NN_compl <- reactive({
     if(input$drug_compl == "dat"){
-      File <- input$NN_compl
-      if (is.null(File))
-        return(NULL)
-
-      dat <- import(File$datapath, header = TRUE)
-      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-      if(!purrr::is_empty(nv_nam)){
-        dat <- dat[, !(names(dat) %in% nv_nam)]
-      }
-      dat
+      nn <- NULL
+      if(!is.null(HIT_compl()) & !is.null(DIF_compl()))
+      dif <- DIF_compl()[,1:2]
+      nn <- lapply(unique(HIT_compl()$Condition), function(x){
+        x <- HIT_compl() %>% dplyr::filter(Condition == x) %>%
+          dplyr::right_join(dif, by = "id") %>%
+          dplyr::filter(is.na(category)) %>%
+          dplyr::mutate(category = "NN",
+                              Condition = x);
+        x
+      })
+      nn <- as.data.frame(Reduce(rbind, nn))
+      nn <- nn[,c("id", "description", "Condition", "category")]
+      nn
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
-      do.call(rbind, drug_data_sh$y$NN[input$drug2_compl])
+      do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_compl],
+                            function(x) x[,c("id", "description", "Condition", "category")])
+              )
     }
     else{
       NULL
@@ -3170,7 +3192,6 @@ server <- function(input, output, session){
     }
     )
 
-
   })
 
 
@@ -3336,7 +3357,9 @@ server <- function(input, output, session){
       dat
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
-      do.call(rbind, drug_data_sh$y$hitlist[input$drug2_heat])
+      do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_heat],
+                            function(x) x[,c("id", "Condition", "category")])
+              )
     }
     else{
       NULL
@@ -3350,19 +3373,26 @@ server <- function(input, output, session){
 
   NN_heat <- reactive({
     if(input$drug_heat == "dat"){
-      File <- input$NNfile_heat
-      if (is.null(File) | !input$impNN_heat)
-        return(NULL)
-
-      dat <- import(File$datapath, header = TRUE)
-      nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-      if(!purrr::is_empty(nv_nam)){
-        dat <- dat[, !(names(dat) %in% nv_nam)]
+      nn <- NULL
+      if(!is.null(HIT_heat()) & !is.null(DIF_heat())){
+        dif <- DIF_heat()[,1:2]
+        nn <- lapply(unique(HIT_heat()$Condition), function(x){
+          x <- HIT_heat() %>% dplyr::filter(Condition == x) %>%
+            dplyr::right_join(dif, by = "id") %>%
+            dplyr::filter(is.na(category)) %>%
+            dplyr::mutate(category = "NN",
+                          Condition = x);
+          x
+        })
+        nn <- as.data.frame(Reduce(rbind, nn))
+        nn <- nn[,c("id", "description", "Condition", "category")]
+        nn
       }
-      dat
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
-      do.call(rbind, drug_data_sh$y$NN[input$drug2_heat])
+      do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_heat],
+                            function(x) x[,c("id", "description", "Condition", "category")])
+              )
     }
     else{
       NULL
@@ -3700,8 +3730,12 @@ server <- function(input, output, session){
       }
     }
     else if(input$drug_stri == "base" & length(input$drug2_stri) >= 1){
-      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_stri])
-      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_stri])
+      h <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_stri],
+                                 function(x) x[,c("id", "Condition", "category")])
+                   )
+      n <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_stri],
+                                 function(x) x[,c("id", "description", "Condition", "category")])
+                   )
       n <- unique(n[,c("id", "Condition", "category")])
 
       rbind(h,n)
@@ -4039,13 +4073,29 @@ server <- function(input, output, session){
         if (is.null(File))
           return(NULL)
 
-        h <- import_list(File$datapath, header = TRUE)[[1]]
+        h <- rio::import(File$datapath, header = TRUE)
       }
       h
     }
     else if(input$drug_clus == "base" & length(input$drug2_clus) >= 1){
-      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_clus])
-      h <- as.data.frame(h)
+      h <- drug_data_sh$y$hitlist[input$drug2_clus]
+      h_names <- lapply(h, colnames)
+      h_names_common <- com_protein_loop(h_names)
+
+      if(length(h_names_common) > 1){
+        for(i in names(h_names_common)[-length(h_names_common)]){
+          n <- strsplit(i, " & ")[[1]]
+          for(k in h_names_common[[i]]){
+            h[!(names(h) %in% n)] <- lapply(h[!(names(h) %in% n)], function(b) {b[[k]] <- NA; b})
+          }
+        }
+        h <- as.data.frame(Reduce(rbind, h))
+      }
+      else{
+        h <- Reduce(rbind, h)
+        h <- as.data.frame(h)
+      }
+
       if(!("Genes" %in% colnames(h))){
         if("description" %in% colnames(h)){
           h$Genes <- unname(unlist(sapply(h$description, mineCETSAapp:::getGeneName)))
@@ -4057,24 +4107,40 @@ server <- function(input, output, session){
           h$Genes <- unname(unlist(sapply(h$description, mineCETSAapp:::getGeneName)))
         }
       }
-      h <- h[,c("id", "Genes", "Condition", "category")]
+      h$description <- NULL
 
-      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_clus])
-      n <- as.data.frame(n)
-      if(!("Genes" %in% colnames(n))){
-        if("description" %in% colnames(n)){
-          n$Genes <- unname(unlist(sapply(n$description, mineCETSAapp:::getGeneName)))
+      nn <- drug_data_sh$y$NN[input$drug2_clus]
+      nn_names <- lapply(nn, colnames)
+      nn_names_common <- com_protein_loop(nn_names)
+
+      if(length(nn_names_common) > 1){
+        for(i in names(nn_names_common)[-length(nn_names_common)]){
+          n <- strsplit(i, " & ")[[1]]
+          for(k in nn_names_common[[i]]){
+            nn[!(names(nn) %in% n)] <- lapply(nn[!(names(nn) %in% n)], function(b) {b[[k]] <- NA; b})
+          }
+        }
+        nn <- as.data.frame(Reduce(rbind, nn))
+      }
+      else{
+        nn <- Reduce(rbind, nn)
+        nn <- as.data.frame(nn)
+      }
+
+      if(!("Genes" %in% colnames(nn))){
+        if("description" %in% colnames(nn)){
+          nn$Genes <- unname(unlist(sapply(nn$description, mineCETSAapp:::getGeneName)))
         }
         else{
           d <- join_drugdata(drug_data_sh$y$data_ave[input$drug2_clus], by = c("id", "description")) ## extract gene information
           d <- d[,c("id", "description")]
-          n <- dplyr::left_join(n, d, by = "id")
-          n$Genes <- unname(unlist(sapply(n$description, mineCETSAapp:::getGeneName)))
+          nn <- dplyr::left_join(nn, d, by = "id")
+          nn$Genes <- unname(unlist(sapply(n$description, mineCETSAapp:::getGeneName)))
         }
       }
-      n <- unique(n[,c("id", "Genes", "Condition", "category")])
+      nn$description <- NULL
 
-      rbind(h,n)
+      rbind(h,nn)
     }
     else{
       NULL
@@ -4199,6 +4265,21 @@ server <- function(input, output, session){
   )
 
   ## GSEA
+  output$scorenameui_clus <- renderUI({
+    if(input$drug_clus == "dat"){
+      textInput("scorenameDAT_clus", "Type the column's name that contain the score")
+    }
+    else if(input$drug_clus == "base"){
+      ch <- "No score"
+      if(!is.null(clus_data())){
+        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "SR", "GlobalScore")]
+        if(length(n)){
+          ch <- n
+        }
+      }
+      selectInput("scorenameBASE_clus", "Select a score", choices = ch)
+    }
+  })
   clusgsea_res <- reactiveValues(
     x = NULL
   )
@@ -4218,27 +4299,31 @@ server <- function(input, output, session){
             dat <- NULL
           }
           if(!is.null(dat)){
-            if(input$scorename_clus %in% colnames(dat)){
+            if(input$scorenameDAT_clus %in% colnames(dat)){
               showNotification("Starting GSEA !", type = "message")
+              dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
+              dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
               res <- cetsa_gsea(dat, gene_column = "Genes",
-                                score_column = input$scorename_clus,
+                                score_column = input$scorenameDAT_clus,
                                 pos_enrichment = input$onlypos_clus)
             }
             else{
-              showNotification(paste(input$scorename_clus,
+              showNotification(paste(input$scorenameDAT_clus,
                                      "was not found in the column names of the data. Please check the name you wrote."),
                                type = "error")
             }
           }
         }
         else{
-          if(input$scorename_clus %in% colnames(dat)){
+          if(input$scorenameDAT_clus %in% colnames(dat)){
             showNotification("Starting GSEA !", type = "message")
-            res <- cetsa_gsea(dat, gene_column = input$idfile_clus, score_column = input$scorename_clus,
+            dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
+            dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
+            res <- cetsa_gsea(dat, gene_column = input$idfile_clus, score_column = input$scorenameDAT_clus,
                               pos_enrichment = input$onlypos_clus)
           }
           else{
-            showNotification(paste(input$scorename_clus,
+            showNotification(paste(input$scorenameDAT_clus,
                                    "was not found in the column names of the data. Please check the name you wrote."),
                              type = "error")
           }
@@ -4257,14 +4342,16 @@ server <- function(input, output, session){
           dat <- NULL
         }
         if(!is.null(dat)){
-          if(input$scorename_clus %in% colnames(dat)){
+          if(input$scorenameBASE_clus %in% colnames(dat)){
             showNotification("Starting GSEA !", type = "message")
+            dat[[input$scorenameBASE_clus]] <- as.numeric(dat[[input$scorenameBASE_clus]])
+            dat[[input$scorenameBASE_clus]] <- tidyr::replace_na(dat[[input$scorenameBASE_clus]],0)
             res <- cetsa_gsea(dat, gene_column = "Genes",
-                              score_column = input$scorename_clus,
+                              score_column = input$scorenameBASE_clus,
                               pos_enrichment = input$onlypos_clus)
           }
           else{
-            showNotification(paste(input$scorename_clus,
+            showNotification(paste(input$scorenameBASE_clus,
                                    "was not found in the column names of the data. Please check the name you wrote."),
                              type = "error")
           }
@@ -4307,6 +4394,21 @@ server <- function(input, output, session){
   )
 
   ## Gene concept network
+  output$scorename2ui_clus <- renderUI({
+    if(input$drug_clus == "dat"){
+      textInput("scorename2DAT_clus", "Type the column's name that contain the score")
+    }
+    else if(input$drug_clus == "base"){
+      ch <- "No score"
+      if(!is.null(clus_data())){
+        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "SR", "GlobalScore")]
+        if(length(n)){
+          ch <- n
+        }
+      }
+      selectInput("scorename2BASE_clus", "Select a score", choices = ch)
+    }
+  })
   clusgene_res <- reactiveValues(
     x = NULL
   )
@@ -4326,28 +4428,32 @@ server <- function(input, output, session){
             dat <- NULL
           }
           if(!is.null(dat)){
-            if(input$scorename2_clus %in% colnames(dat)){
+            if(input$scorename2DAT_clus %in% colnames(dat)){
               showNotification("Starting GSEA !", type = "message")
+              dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
+              dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
               res <- gene_conceptNet(dat, gene_column = "Genes",
-                                     score_column = input$scorename2_clus,
+                                     score_column = input$scorename2DAT_clus,
                                      pval_cutoff = input$pvcut_clus)
             }
             else{
-              showNotification(paste(input$scorename2_clus,
+              showNotification(paste(input$scorename2DAT_clus,
                                      "was not found in the column names of the data. Please check the name you wrote."),
                                type = "error")
             }
           }
         }
         else{
-          if(input$scorename2_clus %in% colnames(dat)){
+          if(input$scorename2DAT_clus %in% colnames(dat)){
             showNotification("Starting GSEA !", type = "message")
+            dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
+            dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
             res <- gene_conceptNet(dat, gene_column = input$idfile_clus,
-                                   score_column = input$scorename2_clus,
+                                   score_column = input$scorename2DAT_clus,
                                    pval_cutoff = input$pvcut_clus)
           }
           else{
-            showNotification(paste(input$scorename2_clus,
+            showNotification(paste(input$scorename2DAT_clus,
                                    "was not found in the column names of the data. Please check the name you wrote."),
                              type = "error")
           }
@@ -4366,14 +4472,16 @@ server <- function(input, output, session){
           dat <- NULL
         }
         if(!is.null(dat)){
-          if(input$scorename2_clus %in% colnames(dat)){
+          if(input$scorename2BASE_clus %in% colnames(dat)){
             showNotification("Starting GSEA !", type = "message")
+            dat[[input$scorename2BASE_clus]] <- as.numeric(dat[[input$scorename2BASE_clus]])
+            dat[[input$scorename2BASE_clus]] <- tidyr::replace_na(dat[[input$scorename2BASE_clus]],0)
             res <- gene_conceptNet(dat, gene_column = "Genes",
-                                   score_column = input$scorename2_clus,
+                                   score_column = input$scorename2BASE_clus,
                                    pval_cutoff = input$pvcut_clus)
           }
           else{
-            showNotification(paste(input$scorename2_clus,
+            showNotification(paste(input$scorename2BASE_clus,
                                    "was not found in the column names of the data. Please check the name you wrote."),
                              type = "error")
           }
@@ -4415,8 +4523,12 @@ server <- function(input, output, session){
       import_list(File$datapath, header = TRUE)[[1]]
     }
     else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
-      h <- do.call(rbind, drug_data_sh$y$hitlist[input$drug2_cell])
-      n <- do.call(rbind, drug_data_sh$y$NN[input$drug2_cell])
+      h <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_cell],
+                                 function(x) x[,c("id", "Condition", "category")])
+                   )
+      n <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_cell],
+                                 function(x) x[,c("id", "description", "Condition", "category")])
+                   )
       n <- unique(n[,c("id", "Condition", "category")])
 
       rbind(h,n)

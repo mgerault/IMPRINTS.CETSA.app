@@ -385,6 +385,12 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
         cdata$condition <- factor(as.character(cdata$condition),
                                   levels = apply(expand.grid(temperature, treatmentlevel),
                                                  1, paste, collapse = "_"))
+        # if data with different temperatures, prevent from creating non sense factors
+        cdata$condition <- factor(as.character(cdata$condition),
+                                  levels = levels(cdata$condition)[levels(cdata$condition)
+                                                                   %in% as.character(cdata$condition)
+                                                                   ]
+                                  )
         message("Generating fitted plot, pls wait.")
 
 
@@ -603,6 +609,13 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
     cdata$condition <- factor(as.character(cdata$condition),
                               levels = apply(expand.grid(temperature, treatmentlevel),
                                              1, paste, collapse = "_"))
+    # if data with different temperatures, prevent from creating non sense factors
+    cdata$condition <- factor(as.character(cdata$condition),
+                              levels = levels(cdata$condition)[levels(cdata$condition)
+                                                               %in% as.character(cdata$condition)
+                                                               ]
+                              )
+
     message("Generating fitted plot, pls wait.")
 
 

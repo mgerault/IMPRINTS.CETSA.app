@@ -506,6 +506,12 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
     cdata$condition <- factor(as.character(cdata$condition),
                               levels = apply(expand.grid(temperature, treatmentlevel),
                                              1, paste, collapse = "_"))
+    # if data with different temperatures, prevent from creating non sense factors
+    cdata$condition <- factor(as.character(cdata$condition),
+                              levels = levels(cdata$condition)[levels(cdata$condition)
+                                                               %in% as.character(cdata$condition)
+                                                               ]
+                              )
     message("Generating fitted plot, pls wait.")
 
     cdata_ <- cdata[-str_which(cdata$id, paste0("^", protein_profile, "\\n")),]

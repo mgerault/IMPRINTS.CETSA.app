@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2022-11-16" />
+<meta name="date" content="2022-12-13" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2022-11-16</h4>
+<h4 class="date">2022-12-13</h4>
 
 </div>
 
@@ -1594,7 +1594,7 @@ shiny app. The app contains 6 tabs :</p>
 <ol style="list-style-type: decimal">
 <li>mineCETSA analysis
 <ul>
-<li>Do the whole analysis of your 2D MS-CETSA datasets</li>
+<li>Do the whole analysis of your IMPRINTS MS-CETSA datasets</li>
 </ul></li>
 <li>Hit proteins and bar plots
 <ul>
@@ -1691,8 +1691,8 @@ it.</p></li>
 <p>If you want more informations on how to use the app, I recommend you
 to watch the <a href="https://youtu.be/cOlOzU7-S3A">tutorial</a>.</p>
 </div>
-<div id="use-the-functions-from-minecetsaapp-package" class="section level3">
-<h3>Use the functions from mineCETSAapp package</h3>
+<div id="an-overview-from-the-functions" class="section level3">
+<h3>An overview from the functions</h3>
 <hr />
 <div id="underline1.space-thespace-dataspace" class="section level4">
 <h4><span class="math inline">\(\underline{1.\space The\space
@@ -2061,6 +2061,127 @@ but very tight which allow almost any mistakes.</p>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co">#You can create way more complicated border. You&#39;ll just need a data frame of 2 columns named x and y.</span></span></code></pre></div>
 <p><a href="http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html">More
 information</a></p>
+</div>
+</div>
+<div id="peptide-analysis" class="section level3">
+<h3>Peptide analysis</h3>
+<hr />
+<p>mineCETSAapp also contains functions to analyse IMPRINTS-CETSA on the
+peptide level. Their names always start with ‘imprints’ and ends with
+‘peptides’. One of the main question for example is the search for
+potential cleaved peptides.</p>
+<div id="underline1.space-readspace-yourspace-data" class="section level4">
+<h4><span class="math inline">\(\underline{1.\space Read\space
+your\space data}\)</span></h4>
+<p>The first step is to read your peptide data. For that, you’ll need
+the PeptideGroup files from Proteome Discoverer and the function
+‘imprints_read_peptides’. For easier handle, you can put all your
+peptide file in a folder named ‘Analysis_files’ for example.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mineCETSAapp)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>peptides <span class="ot">&lt;-</span> <span class="fu">imprints_read_peptides</span>(<span class="at">peptides_files =</span> <span class="fu">list.files</span>(<span class="st">&quot;Analysis_files&quot;</span>,     <span class="co"># your files</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">pattern =</span> <span class="st">&quot;Peptide&quot;</span>, </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">full.names =</span> T),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;B1_Vehicle&quot;</span>, <span class="st">&quot;B1_DrugA&quot;</span>, <span class="st">&quot;B1_DrugB&quot;</span>,  <span class="co"># the conditions corresponding to your channel</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B2_Vehicle&quot;</span>,<span class="st">&quot;B2_DrugA&quot;</span>, <span class="st">&quot;B2_DrugB&quot;</span>,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B3_Vehicle&quot;</span>, <span class="st">&quot;B3_DrugA&quot;</span>, <span class="st">&quot;B3_DrugB&quot;</span>,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;Mix&quot;</span>),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">temperatures =</span> <span class="fu">c</span>(<span class="st">&quot;37C&quot;</span>, <span class="st">&quot;47C&quot;</span>, <span class="st">&quot;50C&quot;</span>, <span class="st">&quot;52C&quot;</span>, <span class="st">&quot;54C&quot;</span>, <span class="st">&quot;57C&quot;</span>), <span class="co"># temperatures from your corresponding files</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">proteins =</span> <span class="st">&quot;Analysis_files/proteins_imprints_caldiff.txt&quot;</span>) <span class="co"># The proteins from which you want to analyze the peptides, can be a dataframe</span></span></code></pre></div>
+<p>All peptides files are now joined and only the peptides from the
+proteins you analyzed are kept. A file is also saved.</p>
+</div>
+<div id="underline2.space-normalizespace-yourspace-data" class="section level4">
+<h4><span class="math inline">\(\underline{2.\space Normalize\space
+your\space data}\)</span></h4>
+<p>Second step is now to normalize the peptides data the same way it is
+done for protein using the ‘ms_2D_normalization’ function from mineCETSA
+package.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>peptides_norm <span class="ot">&lt;-</span> <span class="fu">imprints_normalize_peptides</span>(peptides)</span></code></pre></div>
+<p>It returns the normalize, non log2 transformed, peptide data. A file
+is also saved.</p>
+</div>
+<div id="underline3.space-plotspace-andspace-checkspace-yourspace-data" class="section level4">
+<h4><span class="math inline">\(\underline{3.\space Plot\space and\space
+check\space your\space data}\)</span></h4>
+<p>You can now start to plot imprints of your peptides. It’s a lot of
+data, so it’s better to select some proteins first.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one of your hitlist</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>proteins <span class="ot">&lt;-</span> hitlist<span class="sc">$</span>id</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>peptides_norm_diff <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">proteins =</span>  proteins,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
+<p>The function returns the caldiff output from all peptides from each
+protein you selected. It also save it as a file and plot the barplots
+from all these peptides.</p>
+</div>
+<div id="underline4.space-searchingspace-forspace-cleavedspace-peptides" class="section level4">
+<h4><span class="math inline">\(\underline{4.\space Searching\space
+for\space cleaved\space peptides}\)</span></h4>
+<p>From the ‘peptides_norm_diff’, you can search for potential cleaved
+peptides. If it is cleaved, it means that first peptides (or the last)
+from the proteins are more abundant than the other from the same
+protein. For this, you can use the ‘imprints_cleaved_peptides’ function.
+For more details, look into the documentation of the same function.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>potential_cleaved <span class="ot">&lt;-</span>  <span class="fu">imprints_cleaved_peptides</span>(peptides_norm_diff,</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>                                                <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># if you want to remove the control from you data (advised)</span></span></code></pre></div>
+<p>This function returns a data frame that contains the proteins that
+are potentially cleaved and their respective potential cleaved
+sites.</p>
+</div>
+<div id="underline5.space-checkspace-thespace-cleavedspace-peptides" class="section level4">
+<h4><span class="math inline">\(\underline{5.\space Check\space
+the\space cleaved\space peptides}\)</span></h4>
+<p>You can now sum all the fold changes from all the peptides before the
+cleaved site found and after, and this for all poteins found to be
+potentially cleaved. For this, you can use again the
+‘imprints_sequence_peptides’ function but this time, input some
+sequences. Here, we will do it only for DrugA.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span>stringr<span class="sc">::</span><span class="fu">str_which</span>(<span class="fu">colnames</span>(peptides_norm), <span class="st">&quot;_DrugB$&quot;</span>)]</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleaved sites</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
+<p>You can now check the barplots obtained and see if the proteins found
+are cleaved. In ‘imprints_sequence_peptides’, you can put any sequence.
+Check the documentation from the function for more details.</p>
+</div>
+<div id="underline6.space-multiplespace-datasetspace-analysis" class="section level4">
+<h4><span class="math inline">\(\underline{6.\space Multiple\space
+dataset\space analysis}\)</span></h4>
+<p>If you do the exact same analysis for another dataset, or here with
+Drug B; you’ll maybe want to compare your results between each drug.</p>
+<p>For more clarity, let’s remove the peptide cleaved site.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugA, </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugB, </span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span></code></pre></div>
+<p>Then, you can join your datasets (can be more than 2). Usually, the
+exact same peptide sequence is not found between the datasets. Since the
+fold change are summed, we can join ‘early sequence’ protein together,
+same for ‘late sequence’.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">list</span>(peptides_cleaved_drugA, peptides_cleaved_drugB) <span class="co"># you could add more datasets</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">imprints_join_peptides</span>(peptides_cleaved)</span></code></pre></div>
+</div>
+<div id="underline7.space-plotspace-yourspace-results" class="section level4">
+<h4><span class="math inline">\(\underline{7.\space Plot\space
+your\space results}\)</span></h4>
+<p>You can use the ‘imprints_barplotting_sh’ function to plot your final
+results.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prepare data for function</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Master Protein Accessions</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">paste</span>(peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Positions in Master Proteins</span><span class="st">`</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(peptides_cleaved)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;sumUniPeps&quot;</span>, <span class="st">&quot;sumPSMs&quot;</span>, <span class="st">&quot;countNum&quot;</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_sh</span>(peptides_cleaved, <span class="at">layout =</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
 </div>
 </div>
 </div>

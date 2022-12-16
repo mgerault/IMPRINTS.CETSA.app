@@ -23,7 +23,7 @@ The main goal of mineCETSAapp package is to provide a "user-friendly" interface 
 The app contains 6 tabs :
 
 1. mineCETSA analysis 
-   * Do the whole analysis of your 2D MS-CETSA datasets
+   * Do the whole analysis of your IMPRINTS MS-CETSA datasets 
 2. Hit proteins and bar plots
    * Modify the database
    * Get the bar plots according to the hits, the protein complex, similar profiles of a selected protein
@@ -99,7 +99,7 @@ runCETSAapp()      #this function will directly start the app
 
 If you want more informations on how to use the app, I recommend you to watch the  [tutorial](https://youtu.be/cOlOzU7-S3A).
 
-### Use the functions from mineCETSAapp package
+### An overview from the functions
 
 ------------------------------------------------
 
@@ -475,6 +475,125 @@ is_in_zone(square, point_out) #FALSE
 #You can create way more complicated border. You'll just need a data frame of 2 columns named x and y.
 ```   
    [More information](http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html)
+
+
+### Peptide analysis
+
+------------------------------------------------
+
+mineCETSAapp also contains functions to analyse IMPRINTS-CETSA on the peptide level. Their names always start with 'imprints' and ends with 'peptides'.
+One of the main question for example is the search for potential cleaved peptides.
+
+####  $\underline{1.\space Read\space your\space data}$
+
+The first step is to read your peptide data. For that, you'll need the PeptideGroup files from Proteome Discoverer and the function 'imprints_read_peptides'. For easier handle, you can put all your peptide file in a folder named 'Analysis_files' for example. 
+```{r, eval=FALSE}
+library(mineCETSAapp)
+
+peptides <- imprints_read_peptides(peptides_files = list.files("Analysis_files",     # your files
+                                                               pattern = "Peptide", 
+                                                               full.names = T),
+                                   treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the conditions corresponding to your channel
+                                                 "B2_Vehicle","B2_DrugA", "B2_DrugB",
+                                                 "B3_Vehicle", "B3_DrugA", "B3_DrugB",
+                                                 "Mix"),
+                                   temperatures = c("37C", "47C", "50C", "52C", "54C", "57C"), # temperatures from your corresponding files
+                                   proteins = "Analysis_files/proteins_imprints_caldiff.txt") # The proteins from which you want to analyze the peptides, can be a dataframe
+```  
+
+All peptides files are now joined and only the peptides from the proteins you analyzed are kept. A file is also saved.
+
+####  $\underline{2.\space Normalize\space your\space data}$
+
+Second step is now to normalize the peptides data the same way it is done for protein using the 'ms_2D_normalization' function from mineCETSA package.
+
+```{r, eval=FALSE}
+peptides_norm <- imprints_normalize_peptides(peptides)
+```  
+
+It returns the normalize, non log2 transformed, peptide data. A file is also saved.
+
+####  $\underline{3.\space Plot\space and\space check\space your\space data}$
+
+You can now start to plot imprints of your peptides. It's a lot of data, so it's better to select some proteins first.
+
+```{r, eval=FALSE}
+# one of your hitlist
+proteins <- hitlist$id
+peptides_norm_diff <-  imprints_sequence_peptides(peptides_norm,
+                                                  proteins =  proteins,
+                                                  control = "Vehicle") # needs to specify control from your experiment
+```  
+
+The function returns the caldiff output from all peptides from each protein you selected. It also save it as a file and plot the barplots from all these peptides.
+
+####  $\underline{4.\space Searching\space for\space cleaved\space peptides}$
+
+From the 'peptides_norm_diff', you can search for potential cleaved peptides. If it is cleaved, it means that first peptides (or the last) from the proteins are more abundant than the other from the same protein. 
+For this, you can use the 'imprints_cleaved_peptides' function. For more details, look into the documentation of the same function.
+
+```{r, eval=FALSE}
+potential_cleaved <-  imprints_cleaved_peptides(peptides_norm_diff,
+                                                control = "Vehicle") # if you want to remove the control from you data (advised)
+```  
+
+This function returns a data frame that contains the proteins that are potentially cleaved and their respective potential cleaved sites.
+
+####  $\underline{5.\space Check\space the\space cleaved\space peptides}$
+
+You can now sum all the fold changes from all the peptides before the cleaved site found and after, and this for all poteins found to be potentially cleaved. For this, you can use again the 'imprints_sequence_peptides' function but this time, input some sequences. Here, we will do it only for DrugA.
+
+```{r, eval=FALSE}
+# keeping only drug A
+peptides_norm_drugA <- peptides_norm[,-stringr::str_which(colnames(peptides_norm), "_DrugB$")]
+potential_cleaved_drugA <- potential_cleaved %>%
+  dplyr::filter(Condition == "DrugA")
+
+peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
+                                                      proteins =  potential_cleaved_drugA$protein,  
+                                                      sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleaved sites
+                                                      control = "Vehicle") # needs to specify control from your experiment
+```  
+
+You can now check the barplots obtained and see if the proteins found are cleaved.
+In 'imprints_sequence_peptides', you can put any sequence. Check the documentation from the function for more details.
+
+####  $\underline{6.\space Multiple\space dataset\space analysis}$
+
+If you do the exact same analysis for another dataset, or here with Drug B; you'll maybe want to compare your results between each drug.
+
+For more clarity, let's remove the peptide cleaved site.
+```{r, eval=FALSE}
+peptides_cleaved_drugA <- imprints_remove_peptides(peptides_cleaved_drugA, 
+                                                   proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the sepecific sequence
+                                                   sequence = potential_cleaved_drugA$cleaved_site) # the sequence you want to remove
+
+peptides_cleaved_drugB <- imprints_remove_peptides(peptides_cleaved_drugB, 
+                                                   proteins =  potential_cleaved_drugB$protein,  # the protein from which you want to remove the sepecific sequence
+                                                   sequence = potential_cleaved_drugB$cleaved_site) # the sequence you want to remove
+```  
+
+Then, you can join your datasets (can be more than 2). Usually, the exact same peptide sequence is not found between the datasets. Since the fold change are summed, we can join 'early sequence' protein together, same for 'late sequence'.
+
+```{r, eval=FALSE}
+peptides_cleaved <- list(peptides_cleaved_drugA, peptides_cleaved_drugB) # you could add more datasets
+
+peptides_cleaved <- imprints_join_peptides(peptides_cleaved)
+
+```  
+
+####  $\underline{7.\space Plot\space your\space results}$
+
+You can use the 'imprints_barplotting_sh' function to plot your final results.
+
+```{r, eval=FALSE}
+# prepare data for function
+peptides_cleaved$`Master Protein Accessions` <- paste(peptides_cleaved$`Positions in Master Proteins`, "\n", "\n")
+colnames(peptides_cleaved)[1:5] <- c("id", "description", "sumUniPeps", "sumPSMs", "countNum")
+
+# save the imprints in a pdf
+imprints_barplotting_sh(peptides_cleaved, layout = c(2,2), save_pdf = T, ret_plot = F)
+```  
 
 
 ## Details

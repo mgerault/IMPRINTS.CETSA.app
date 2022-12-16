@@ -23,6 +23,13 @@ options(shiny.maxRequestSize = 1000*1024^2)
 #set options for the spinner when things are loading
 options(spinner.color = "#518CE2", spinner.color.background = "000000", spinner.size = 2)
 
+# javascript code to collapse box
+jscode <- "
+shinyjs.collapse = function(boxid) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
+}
+"
+
 ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                  id = "navBar",
                  theme = "paper.css", # file in www
@@ -93,7 +100,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                             column(6,
                                    tags$div(align = "center",
                                             tags$a("Start",
-                                                   onclick="fakeClick('analysis')", # take you to other tab with value 'analysis'
+                                                   onclick="fakeClick('proteins')", # take you to other tab with value 'analysis'
                                                    class="btn btn-primary btn-lg")
                                    )
                             ),
@@ -103,240 +110,503 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                           tags$hr()
                           ),
 
-                 tabPanel("Analysis", value = "analysis",
-                          shinyjs::useShinyjs(),
-                          tags$style(type = 'text/css',
-                                     '#modal1 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal1 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal2 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal2 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal3 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal3 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal4 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal4 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal5 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal5 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal6 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal6 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal7 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                     #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-
-                          tags$style(type = 'text/css',
-                                     '#modal8_FC .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                      #modal8_FC .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-                          tags$style(type = 'text/css',
-                                     '#modal9_SR .modal-dialog { width: fit-content !important; overflow-x: initial !important}
-                                      #modal9_SR .modal-body { width: 150vh; overflow-x: auto;}'
-                                     ),
-
-                          fluidRow(style = "height:20px;"),
-
-                          h1(tags$u(class = "main-1", "The mineCETSA analysis")),
-
-                          tags$br(),
-
-                          radioButtons("step_cetsa", "At which step do you want to start your analysis ?",
-                                       choices = c("From the beginning" = "1begin",
-                                                   "Consolidate isoforms and rearrange your data" = "2conso_ISO",
-                                                   "Normalize your data" = "3NORM",
-                                                   "Get the protein abundance difference" = "4DIFF",
-                                                   "Get your hitlist" = "5HIT"),
-                                       inline = TRUE),
-
-                          fluidRow(box(title = "Upload and clean your data", status = "primary",
-                                       solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                       tags$u(h3("Upload your data")),
-                                       fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
-                                                          shiny::HTML("<br><h5>On the table on your right, you can type the name
-                                                                      of the sample to the corresponding channel. The underscore '_'
-                                                                      will be used as a separator between temperatures, bioreplicates and
-                                                                      treatments in all further functions, so make sure of your spelling.
-                                                                      <br><br>Here, you'll need to type first the bioreplicate and then
-                                                                      the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
-                                                                      <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
-                                                                      as 'Mix'.</h5>")
-                                                       ),
-
-                                                column(8, uiOutput("treat_nameui"))
+                 navbarMenu("Analysis",
+                            tabPanel("Peptides", value = "peptides",
+                                     shinyjs::useShinyjs(),
+                                     tags$style(type = 'text/css',
+                                                '#modal1_pep .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal1_pep .modal-body { width: 150vh; overflow-x: auto;}'
+                                                ),
+                                     tags$style(type = 'text/css',
+                                                '#modal2_pep .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal2_pep .modal-body { width: 150vh; overflow-x: auto;}'
+                                                ),
+                                     tags$style(type = 'text/css',
+                                                '#modal3_pep .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal3_pep .modal-body { width: 150vh; overflow-x: auto;}'
                                                 ),
 
+                                     fluidRow(style = "height:20px;"),
+                                     fluidRow(column(1),
+                                              column(8, checkboxInput("step_peptides", tags$strong("Did you already performed normalization ?"), FALSE, width = "100%"))
+                                              ),
 
-                                       fileInput("PD_data", "Select txt files for your analysis",
-                                                 accept = ".txt", multiple = TRUE),
+                                     shinyjs:::useShinyjs(),
+                                     shinyjs:::extendShinyjs(text = jscode, functions = "collapse"),
+                                     fluidRow(box(id="upload_peptide", title = "Upload and concatenate your data", status = "primary",
+                                                  solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                  tags$u(h3("Upload your data")),
+                                                  checkboxInput("got_data_pep", "Do you already have the concatenate peptide file ?", FALSE),
 
+                                                  conditionalPanel(condition = "input.got_data_pep",
+                                                                   fileInput("file_data_pep", "Select your concatenate peptide file",
+                                                                             accept = ".txt")
+                                                                   ),
+                                                  conditionalPanel(condition = "!input.got_data_pep",
+                                                                   fileInput("PD_data_pep", "Select PD txt files for your analysis",
+                                                                             accept = ".txt", multiple = TRUE),
+                                                                   tags$hr(),
 
-                                       conditionalPanel(condition = "output.cetsa_fileup",
-                                                        actionButton("see1_cetsa", "View data uploaded"),
-                                                        tags$hr(),
-                                                        tags$u(h3("Rename your conditions and clean your data")),
-                                                        tags$hr(),
+                                                                   conditionalPanel(condition = "output.pep_fileup",
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>On the table on your right, you can type the tempeature
+                                                                                                                   you used for each of your files. It needs to start with a digit
+                                                                                                                   and also it's better to finish by a letter like this:
+                                                                                                                   '37C' or '99F'. Remember to not use '_'.
+                                                                                                                   <br>Also, if you have a quantitative proteomic file, it is
+                                                                                                                   advised to name its 'temperature' as '36C' for easier handle
+                                                                                                                   in the other functions from mineCETSAapp.</h5>")),
+                                                                                             column(8, uiOutput("temp_nameui_pep"))
+                                                                                             ),
+                                                                                    tags$hr(),
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>On the table on your right, you can type the name
+                                                                                                                    of the sample to the corresponding channel. The underscore '_'
+                                                                                                                    will be used as a separator between temperatures, bioreplicates and
+                                                                                                                    treatments in all further functions, so make sure of your spelling.
+                                                                                                                    <br><br>Here, you'll need to type first the bioreplicate and then
+                                                                                                                    the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
+                                                                                                                    <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
+                                                                                                                    as 'Mix'.</h5>")),
+                                                                                             column(8, uiOutput("treat_nameui_pep"))
+                                                                                             ),
+                                                                                    tags$hr(),
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>On your right, you can upload a data frame that contains
+                                                                                                                   some proteins of interest, the one you want to analyze their peptides.
+                                                                                                                   This data frame should contain the column 'id' and the column 'description',
+                                                                                                                   the Uniprot IDs and the protein description respectively.<br>
+                                                                                                                   So you can use the caldiff file output you have from your protein analysis.
+                                                                                                                   <br><br>If yoou upload nothing, all proteins from the pepetides files
+                                                                                                                   will be kept but the protein description will be missing.</h5>")),
+                                                                                             column(8, fileInput("prot_data_pep", "Select a protein file",
+                                                                                                                 accept = ".txt", multiple = TRUE))
+                                                                                             ),
+                                                                                    tags$hr(),
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>For now, you cannot choose the peptide modification
+                                                                                                                   you want to keep or remove. By default, only the TMT modifications
+                                                                                                                   are kept.</h5>")),
+                                                                                             column(4, textInput("dname_pep", "Type a name for your dataset so the saved
+                                                                                                                               file name can contain it. Can be NULL", value = ""))
+                                                                                             ),
+                                                                                    tags$hr(),
+                                                                                    actionButton("read_pep", "Read your peptides data", class = "btn-primary")
+                                                                                    )
+                                                                   ),
+                                                  tags$hr(),
+                                                  actionButton("see1_pep", "View data uploaded")
+                                                  )
+                                              ),
 
-                                                        fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
-                                                                                       For example, like this: '37C', '47C', etc. <br>Remember to not use '_'.</h5>")),
-                                                                 column(4, uiOutput("temp_nameui")),
-                                                                 column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
-                                                                          checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
-                                                                 column(2, actionButton("str_ren", "Rename the conditions", class = "btn-primary")),
-                                                                 column(2, actionButton("see2_cetsa", "View data renamed"))
-                                                        )
-                                       )
-                          )),
-                          tags$hr(),
+                                     conditionalPanel(condition = "output.pep_dataup | input.step_peptides",
+                                                      fluidRow(box(title = "Normalize your peptides data", status = "primary",
+                                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                                   tags$u(h3("Normalize your data")),
+                                                                   fluidRow(column(6, checkboxInput("got_norm_pep", "Do you already have the peptide file NormPeptides ?")),
+                                                                            column(6, conditionalPanel(condition = "!input.got_norm_pep",
+                                                                                                       actionButton("NORM_pep", "Start Normalization", class = "btn-primary")
+                                                                                                       ),
+                                                                                   conditionalPanel(condition = "input.got_norm_pep",
+                                                                                                    fileInput("normfile_pep", "Select the NormPeptides file", accept = ".txt")
+                                                                                                    )
+                                                                                   )
+                                                                            ),
+                                                                   tags$hr(),
+                                                                   actionButton("see2_pep", "View normalized data")
+                                                                   )
+                                                               )
+                                                      ),
+                                     conditionalPanel(condition = "output.norm_pep_dataup",
+                                                      fluidRow(box(title = "Compute fold change and save bar plots", status = "primary",
+                                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                                   tags$u(h3("Fold-change calculation")),
+                                                                   checkboxInput("sequence_file", "Import a file with proteins and sequences"),
+                                                                   tags$hr(),
+                                                                   conditionalPanel(condition = "input.sequence_file",
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>This file needs to contains at leats one column named
+                                                                                                                    'protein' and at most another one named 'sequence'.
+                                                                                                                    <br>The 'protein' column contains the Uniprot ID from the
+                                                                                                                    protein you want to compute fold changes at the peptide level.
+                                                                                                                    <br>The 'sequence' column contains the peptide position you want to highlight.
+                                                                                                                    Every peptides before this sequence will be summed, same for the ones after.
+                                                                                                                    The position needs to be in this format precisely: a number followed by a
+                                                                                                                    dash and another number; like this for example '208-221'.
+                                                                                                                    <br>If you import nothing, it will select all proteins from your
+                                                                                                                   peptides data and will not select specific sequences. Which means
+                                                                                                                   it will compute and plot fold change for all the peptides in your data.</h5>")),
+                                                                                             column(8, fileInput("protseq_file_pep", "Import the file"))
+                                                                                             )
+                                                                                    ),
+                                                                   conditionalPanel(condition = "!input.sequence_file",
+                                                                                    shiny::HTML("<h5>Here, you can select the protein from which you want to compute fold
+                                                                                                     changes at the peptide level.
+                                                                                                     <br>The sequence you can select correspond to the peptide position you want to highlight.
+                                                                                                     Every peptides before this sequence will be summed, same for the ones after.
+                                                                                                     <br>The position needs to be in this format precisely: a number followed by a
+                                                                                                     dash and another number; like this for example '208-221'.
+                                                                                                     <br>If you select nothing, it will select all proteins from your
+                                                                                                     peptides data and will not select specific sequences. Which means
+                                                                                                     it will compute and plot fold change for all the peptides in your data.</h5>"),
+                                                                                    fluidRow(column(6, selectizeInput("protseq_pep", "Select some proteins (if NULL, will select all)", choices = NULL, multiple = TRUE)),
+                                                                                             column(6, uiOutput("selectSequenceui_pep"))
+                                                                                             )
+                                                                                    ),
+                                                                   fluidRow(column(6, selectInput("control_pep", "Select the control from your experiment", choices = NULL)),
+                                                                            column(6, textInput("dnamediff_pep", "Type a name for your dataset so the saved
+                                                                                                                  file name can contain it. Can be NULL", value = ""))),
+                                                                   tags$hr(),
+                                                                   fluidRow(column(6, actionButton("SEQU_pep", "Compute and plot fold change", class = "btn-primary")),
+                                                                            column(6, textOutput("diag_pep_sequence"))
+                                                                            ),
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
 
-                          conditionalPanel(condition = "output.cetsa_cleanup | input.step_cetsa > '2' ",
-                                           fluidRow(box(title = "Isoform ambiguity cleanup, rearrange and normalization", status = "primary",
-                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                        tags$u(h3("Isoform ambiguity cleanup and rearrange")),
-                                                        tags$hr(),
+                                                                   tags$u(h3("Find potential cleaved sites")),
+                                                                   fluidRow(column(6, checkboxInput("got_FCfile_pep", "Import your own fold-change file.
+                                                                                                     If not, will use the one obtained in previous step.", value = FALSE)),
+                                                                            conditionalPanel(condition = "input.got_FCfile_pep",
+                                                                                             column(6, fileInput("FCfile_pep", "Import a peptide fold change file (txt)", accept = ".txt")))
+                                                                           ),
+                                                                   tags$hr(),
 
-                                                        checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
-                                                        conditionalPanel(condition = "!input.got_ISO_cetsa",
-                                                                         actionButton("ISO", "Resolve isoform", class = "btn-primary")
-                                                        ),
-                                                        conditionalPanel(condition = "input.got_ISO_cetsa",
-                                                                         fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt")
-                                                        ),
+                                                                   conditionalPanel(condition = "output.sequence_pep_dataup",
+                                                                                    fluidRow(column(4, numericInput("R2cleaved_pep", "Choose the maximum R-squared from the
+                                                                                                                                      cumulative sum of the fold change.",
+                                                                                                                    value = 0.9, min = 0, max = 1, step = 0.01),
+                                                                                                    shiny::HTML("<br><h5>The higher it is, the less stringent your are. It means that you
+                                                                                                                can accept more 'cumulative sum profile' with a linear evolution, i.e. it is
+                                                                                                                less likely that there is a cleaved site.</h5>")),
+                                                                                             column(4, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
+                                                                                             column(4, actionButton("CLEAVED_pep", "Search for potential cleaved site", class = "btn-primary"))
+                                                                                             )
+                                                                                    )
+                                                                   )
+                                                               )
+                                                      ),
+                                     fluidRow(box(title = "Join peptides datasets, remove peptides and barplots", status = "primary",
+                                                  solidHeader = TRUE, collapsible = TRUE, width = 12, collapsed = TRUE,
+                                                  tags$u(h3("Filter your dataset")),
 
+                                                  shiny::HTML("<br><h5>Here, you can filter out some conditions from your peptide fold-change data
+                                                              and remove some specific sequences like the cleaved sites found.
+                                                              <br>For selecting the sequence you want to remove,
+                                                              you can import the same file you used previously. A file that contains the protein from
+                                                              which you want to remove the specific sequence (column named 'protein') and the sequence
+                                                              you want to remove (column named 'sequence'). The sequence needs to be in the this format:
+                                                              a number followed by a dash followed by a number, like this for example '208-221'.
+                                                              <br>Once the filtration is done a txt file is saved.</h5>"),
+                                                  fileInput("filter_joinpep", "Import a fold-change peptide file (txt)", accept = ".txt"),
+                                                  tags$hr(),
+                                                  checkboxInput("sequence_file_joinpep", "Import a file with proteins and sequences"),
+                                                  tags$hr(),
+                                                  conditionalPanel(condition = "input.sequence_file_joinpep",
+                                                                   fluidRow(column(6, fileInput("protseq_file_joinpep", "Import the file"))
+                                                                            )
+                                                                   ),
+                                                  conditionalPanel(condition = "!input.sequence_file_joinpep",
+                                                                    fluidRow(column(6, selectizeInput("protseq_joinpep", "Select some proteins (if NULL, will select all)", choices = NULL, multiple = TRUE)),
+                                                                             column(6, uiOutput("selectSequenceui_joinpep"))
+                                                                             )
+                                                                   ),
+                                                  fluidRow(column(6, selectInput("remcond_joinpep", "Select some conditions you want to remove. If NULL, nothing is removed.",
+                                                                                 choices = NULL, multiple = TRUE)),
+                                                           column(6, actionButton("gofilter_joinpep", "Filter your dataset", class = "btn-primary"),
+                                                                  textOutput("diag_pep_filter"))
+                                                           ),
 
-                                                        conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
-                                                                         tags$hr(),
-                                                                         actionButton("see3_cetsa", "View data with isoform resolved"),
-                                                                         checkboxInput("got_rearr_cetsa", "Do you already have the file data_pre_normalization
-                                                                                                           (output after rarranging your data) ?", FALSE),
-                                                                         conditionalPanel(condition = "!input.got_rearr_cetsa",
-                                                                                          fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
-                                                                                                          conditionalPanel(condition = "input.iso_conso",
-                                                                                                                           numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
-                                                                                                                           fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
-                                                                                                                                     accept = ".txt")
-                                                                                                          )
-                                                                                          ),
-                                                                                          column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
-                                                                                                 conditionalPanel(condition = "input.iso_rearr",
-                                                                                                                  numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
-                                                                                                                  numericInput("rep_thr", "Type the minimal percentage threshold of
-                                                                                                                               protein being sampled from multiple runs", value = 0.1, min = 0, max = 1, step = 0.01),
-                                                                                                                  numericInput("count_thr", "Type the minimal threshold number
-                                                                                                                                                          of associated abundance count of proteins", value = 1, min = 0, step = 0.5),
-                                                                                                                  checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
-                                                                                                 )
-                                                                                          )
-                                                                                          ),
-                                                                                          actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary")
-                                                                         ),
-                                                                         conditionalPanel(condition = "input.got_rearr_cetsa",
-                                                                                          fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
-                                                                         ),
-                                                                         tags$hr(),
-                                                                         fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
-                                                                                  column(3, actionButton("see5_cetsa", "View rearranged data"))),
+                                                  tags$hr(),
+                                                  tags$u(h3("Join your datasets")),
+                                                  shiny::HTML("<br><h5>Here you can import as much peptides dataset as you want an join them.
+                                                              <br>This feature has been mainly made to join dataset after you checked for cleaved sites
+                                                              and computed fold changes. For example if you checked for the same potential cleaved site for
+                                                              one protein for several drugs and you want now to compare their effect.
+                                                              <br><br>Once you joined your data, you can plot their bar plots if you want</h5>"),
+                                                  tags$hr(),
+                                                  fluidRow(column(6, fileInput("joinFC_file_pep", "Import the peptides files you want to join", multiple = TRUE)),
+                                                           conditionalPanel(condition = "output.tojoin_pep_dataup",
+                                                                            column(3, actionButton("JOIN_pep", "Start joining datasets", class = "btn-primary"),
+                                                                                      textOutput("diag_pep_join")),
+                                                                            column(3, actionButton("see3_pep", "View joined data"))
+                                                                            )
+                                                           ),
 
-                                                                         tags$hr(),
+                                                  tags$hr(),
+                                                  fluidRow(style = "height:10px;"),
 
-                                                                         tags$u(h3("Normalize your data")),
-                                                                         tags$hr(),
+                                                  tags$u(h3("Plot your data")),
+                                                  fluidRow(column(6, radioButtons("join_data_pep", label = "", choices = c("Use the joined data" = "join_app",
+                                                                                                                           "Use a file" = "join_file"))
+                                                                  ),
+                                                           conditionalPanel(condition = "input.join_data_pep == 'join_file'",
+                                                                            column(6, fileInput("joined_file_pep", "Import your joined data file (txt)", accept = ".txt"))
+                                                                            )
+                                                           ),
+                                                  conditionalPanel(condition = "output.toplot_pep_dataup",
+                                                                   fluidRow(column(4, selectInput("condition_plotjoinpep", "Select one or more conditions",
+                                                                                                  choices = NULL,
+                                                                                                  multiple = TRUE)
+                                                                                   ),
+                                                                            column(4, numericInput("lay_bar1_plotjoinpep", "Type the number of plot per row", min = 1, max = 10, step = 1, value = 2),
+                                                                                      numericInput("lay_bar2_plotjoinpep", "Type the number of plot per column", min = 1, max = 10, step = 1, value = 2)),
+                                                                            column(4, textInput("pdftit_plotjoinpep", "Choose a name for your pdf file", "barplot"))
+                                                                            ),
+                                                                   fluidRow(column(4, checkboxInput("ch_own_col_plotjoinpep", "Choose your own color", FALSE)),
+                                                                            conditionalPanel(condition = "input.ch_own_col_plotjoinpep",
+                                                                                             column(4, textOutput("n_cond_sel_plotjoinpep"),
+                                                                                                       colourpicker::colourInput("own_color_pick_plotjoinpep", NULL, "#FF2B00",
+                                                                                                                                 allowTransparent = TRUE, closeOnClick = TRUE),
+                                                                                                       textOutput("own_color_plotjoinpep")
+                                                                                                    ),
+                                                                                             column(4, actionButton("add_col_plotjoinpep", "Add the color"),
+                                                                                                       actionButton("rem_col_plotjoinpep", "Remove the last color")
+                                                                                                    )
+                                                                                             )
+                                                                            ),
+                                                                   tags$hr(),
+                                                                   fluidRow(column(6, actionButton("getbar_plotjoinpep", "Save bar plots", class = "btn-primary")),
+                                                                            column(6, textOutput("diag_bar_plotjoinpep"))
+                                                                            )
+                                                                   )
 
-                                                                         fluidRow(column(6, checkboxInput("got_norm_cetsa", "Do you already have the file data_post_normalization ?")),
-                                                                                  column(6, conditionalPanel(condition = "!input.got_norm_cetsa",
-                                                                                                             actionButton("NORM", "Start Normalization", class = "btn-primary")
-                                                                                  ),
-                                                                                  conditionalPanel(condition = "input.got_norm_cetsa",
-                                                                                                   fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt")
-                                                                                  )
-                                                                                  )
-                                                                         )
-                                                        )
-                                           )
-                                           ),
+                                                  )
+                                              )
+                                     ),
+                            tabPanel("Proteins", value = "proteins",
+                                      shinyjs::useShinyjs(),
+                                      tags$style(type = 'text/css',
+                                                 '#modal1 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal1 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal2 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal2 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal3 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal3 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal4 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal4 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal5 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal5 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal6 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal6 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal7 .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
 
-                                           tags$hr(),
-                                           conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
-                                                            fluidRow(box(title = "Abundance difference calculation and hitlist", status = "primary",
-                                                                         solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                         actionButton("see6_cetsa", "View normalized data"),
-                                                                         tags$hr(),
-                                                                         tags$u(h3("Calculate the pair-wise protein abundance differences")),
-                                                                         tags$hr(),
+                                      tags$style(type = 'text/css',
+                                                 '#modal8_FC .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                  #modal8_FC .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
+                                      tags$style(type = 'text/css',
+                                                 '#modal9_SR .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                  #modal9_SR .modal-body { width: 150vh; overflow-x: auto;}'
+                                                 ),
 
-                                                                         checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
-                                                                         conditionalPanel(condition = "!input.got_diff_cetsa",
-                                                                                          fluidRow(column(4, selectInput("ctrl_name2", "Select the condition that corresponds to your control.",
-                                                                                                                         choices = NULL)
-                                                                                                          ),
-                                                                                                   column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
-                                                                                                                           abundance difference should still within the same biorep", TRUE)),
-                                                                                                   column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
-                                                                                          )
-                                                                         ),
-                                                                         conditionalPanel(condition = "input.got_diff_cetsa",
-                                                                                          fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt")),
+                                      fluidRow(style = "height:20px;"),
 
-                                                                         tags$hr(),
+                                      h1(tags$u(class = "main-1", "The mineCETSA analysis")),
 
-                                                                         conditionalPanel(condition = "output.cetsa_difup | input.step_cetsa > '5' ",
-                                                                                          actionButton("see7_cetsa", "View caldiff output"),
-                                                                                          tags$hr(),
-                                                                                          tags$u(h3("Get the protein hitlist")),
-                                                                                          tags$hr(),
+                                      tags$br(),
 
-                                                                                          conditionalPanel(condition = "!input.calc_diff",
-                                                                                                           radioButtons("hitmethod_cetsa", "Choose a method to get your hitlist",
-                                                                                                                        choices = c("Fold Change cutoff" = "FC",
-                                                                                                                                    "Stability Rate" = "SR"),
-                                                                                                                        selected = "FC",
-                                                                                                                        inline = TRUE),
-                                                                                                           conditionalPanel(condition = "input.hitmethod_cetsa == 'FC'",
-                                                                                                                            actionButton("see8_cetsa", "See more information"),
-                                                                                                                            tags$hr(),
-                                                                                                                            fluidRow(column(4, numericInput("meancut_cetsa", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
-                                                                                                                                     column(4, numericInput("bound_cetsa", "Choose the boundedness", value = 4)),
-                                                                                                                                     column(4, checkboxInput("save_hit", "Save the hitlist", TRUE))
-                                                                                                                            )
-                                                                                                           ),
-                                                                                                           conditionalPanel(condition = "input.hitmethod_cetsa == 'SR'",
-                                                                                                                            actionButton("see9_cetsa", "See more information"),
-                                                                                                                            tags$hr(),
-                                                                                                                            fluidRow(column(4, numericInput("SRcut_cetsa", "Choose a Stability Rate cutoff", value = 1.5, min = 0, step = 0.1)),
-                                                                                                                                     column(4, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
-                                                                                                                                     column(4, numericInput("validval_cetsa", "Choose the minimum proportion of valid values", value = 0, min = 0, max = 1, step = 0.05))
-                                                                                                                            ),
-                                                                                                                            tags$hr(),
-                                                                                                                            textOutput("diag_SR"),
-                                                                                                                            tags$hr(),
-                                                                                                           ),
+                                      radioButtons("step_cetsa", "At which step do you want to start your analysis ?",
+                                                   choices = c("From the beginning" = "1begin",
+                                                               "Consolidate isoforms and rearrange your data" = "2conso_ISO",
+                                                               "Normalize your data" = "3NORM",
+                                                               "Get the protein abundance difference" = "4DIFF",
+                                                               "Get your hitlist" = "5HIT"),
+                                                   inline = TRUE),
 
-                                                                                                           actionButton("str_calchitlist", "Start calculation", class = "btn-primary"),
-                                                                                                           tags$hr(),
+                                      fluidRow(box(title = "Upload and clean your data", status = "primary",
+                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                   tags$u(h3("Upload your data")),
+                                                   fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
+                                                                      shiny::HTML("<br><h5>On the table on your right, you can type the name
+                                                                                  of the sample to the corresponding channel. The underscore '_'
+                                                                                  will be used as a separator between temperatures, bioreplicates and
+                                                                                  treatments in all further functions, so make sure of your spelling.
+                                                                                  <br><br>Here, you'll need to type first the bioreplicate and then
+                                                                                  the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
+                                                                                  <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
+                                                                                  as 'Mix'.</h5>")
+                                                                   ),
 
-                                                                                                           radioButtons("HIT", h3("Choose a result to print"),
-                                                                                                                        choices = c("hitlist", "CC", "CN", "NC", "ND"),
-                                                                                                                        selected = "hitlist", inline = TRUE),
-
-                                                                                                           DT::dataTableOutput("hit_out")
-                                                                                          )
-                                                                         )
-                                                            )
+                                                            column(8, uiOutput("treat_nameui"))
                                                             ),
 
-                                                            h3("Go check your file in your working directory, all the results from your analysis should be saved !"),
-                                                            tags$hr()
-                                           )
-                          )
-                          ),
+
+                                                   fileInput("PD_data", "Select txt files for your analysis",
+                                                             accept = ".txt", multiple = TRUE),
+
+
+                                                   conditionalPanel(condition = "output.cetsa_fileup",
+                                                                    actionButton("see1_cetsa", "View data uploaded"),
+                                                                    tags$hr(),
+                                                                    tags$u(h3("Rename your conditions and clean your data")),
+                                                                    tags$hr(),
+
+                                                                    fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
+                                                                                                   For example, like this: '37C', '47C', etc. <br>Remember to not use '_'.
+                                                                                                   <br>Also, if you have a quantitative proteomic file, it is
+                                                                                                   advised to name its 'temperature' as '36C' for easier handle
+                                                                                                   in the other functions from mineCETSAapp.</h5>")),
+                                                                             column(4, uiOutput("temp_nameui")),
+                                                                             column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
+                                                                                      checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
+                                                                             column(2, actionButton("str_ren", "Rename the conditions", class = "btn-primary")),
+                                                                             column(2, actionButton("see2_cetsa", "View data renamed"))
+                                                                             )
+                                                                    )
+                                                   )
+                                               ),
+                                      tags$hr(),
+
+                                      conditionalPanel(condition = "output.cetsa_cleanup | input.step_cetsa > '2' ",
+                                                       fluidRow(box(title = "Isoform ambiguity cleanup, rearrange and normalization", status = "primary",
+                                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                                    tags$u(h3("Isoform ambiguity cleanup and rearrange")),
+                                                                    tags$hr(),
+
+                                                                    checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
+                                                                    conditionalPanel(condition = "!input.got_ISO_cetsa",
+                                                                                     actionButton("ISO", "Resolve isoform", class = "btn-primary")
+                                                                    ),
+                                                                    conditionalPanel(condition = "input.got_ISO_cetsa",
+                                                                                     fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt")
+                                                                    ),
+
+
+                                                                    conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
+                                                                                     tags$hr(),
+                                                                                     actionButton("see3_cetsa", "View data with isoform resolved"),
+                                                                                     checkboxInput("got_rearr_cetsa", "Do you already have the file data_pre_normalization
+                                                                                                                       (output after rarranging your data) ?", FALSE),
+                                                                                     conditionalPanel(condition = "!input.got_rearr_cetsa",
+                                                                                                      fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
+                                                                                                                      conditionalPanel(condition = "input.iso_conso",
+                                                                                                                                       numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                                       fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
+                                                                                                                                                 accept = ".txt")
+                                                                                                                      )
+                                                                                                      ),
+                                                                                                      column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
+                                                                                                             conditionalPanel(condition = "input.iso_rearr",
+                                                                                                                              numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                              numericInput("rep_thr", "Type the minimal percentage threshold of
+                                                                                                                                           protein being sampled from multiple runs", value = 0.1, min = 0, max = 1, step = 0.01),
+                                                                                                                              numericInput("count_thr", "Type the minimal threshold number
+                                                                                                                                                                      of associated abundance count of proteins", value = 1, min = 0, step = 0.5),
+                                                                                                                              checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
+                                                                                                             )
+                                                                                                      )
+                                                                                                      ),
+                                                                                                      actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary")
+                                                                                     ),
+                                                                                     conditionalPanel(condition = "input.got_rearr_cetsa",
+                                                                                                      fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
+                                                                                     ),
+                                                                                     tags$hr(),
+                                                                                     fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
+                                                                                              column(3, actionButton("see5_cetsa", "View rearranged data"))),
+
+                                                                                     tags$hr(),
+
+                                                                                     tags$u(h3("Normalize your data")),
+                                                                                     tags$hr(),
+
+                                                                                     fluidRow(column(6, checkboxInput("got_norm_cetsa", "Do you already have the file data_post_normalization ?")),
+                                                                                              column(6, conditionalPanel(condition = "!input.got_norm_cetsa",
+                                                                                                                         actionButton("NORM", "Start Normalization", class = "btn-primary")
+                                                                                              ),
+                                                                                              conditionalPanel(condition = "input.got_norm_cetsa",
+                                                                                                               fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt")
+                                                                                              )
+                                                                                              )
+                                                                                     )
+                                                                    )
+                                                       )
+                                                       ),
+
+                                                       tags$hr(),
+                                                       conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
+                                                                        fluidRow(box(title = "Abundance difference calculation and hitlist", status = "primary",
+                                                                                     solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                                                     actionButton("see6_cetsa", "View normalized data"),
+                                                                                     tags$hr(),
+                                                                                     tags$u(h3("Calculate the pair-wise protein abundance differences")),
+                                                                                     tags$hr(),
+
+                                                                                     checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
+                                                                                     conditionalPanel(condition = "!input.got_diff_cetsa",
+                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the condition that corresponds to your control.",
+                                                                                                                                     choices = NULL)
+                                                                                                                      ),
+                                                                                                               column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
+                                                                                                                                       abundance difference should still within the same biorep", TRUE)),
+                                                                                                               column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
+                                                                                                      )
+                                                                                     ),
+                                                                                     conditionalPanel(condition = "input.got_diff_cetsa",
+                                                                                                      fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt")),
+
+                                                                                     tags$hr(),
+
+                                                                                     conditionalPanel(condition = "output.cetsa_difup | input.step_cetsa > '5' ",
+                                                                                                      actionButton("see7_cetsa", "View caldiff output"),
+                                                                                                      tags$hr(),
+                                                                                                      tags$u(h3("Get the protein hitlist")),
+                                                                                                      tags$hr(),
+
+                                                                                                      conditionalPanel(condition = "!input.calc_diff",
+                                                                                                                       radioButtons("hitmethod_cetsa", "Choose a method to get your hitlist",
+                                                                                                                                    choices = c("Fold Change cutoff" = "FC",
+                                                                                                                                                "Stability Rate" = "SR"),
+                                                                                                                                    selected = "FC",
+                                                                                                                                    inline = TRUE),
+                                                                                                                       conditionalPanel(condition = "input.hitmethod_cetsa == 'FC'",
+                                                                                                                                        actionButton("see8_cetsa", "See more information"),
+                                                                                                                                        tags$hr(),
+                                                                                                                                        fluidRow(column(4, numericInput("meancut_cetsa", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                                                                                 column(4, numericInput("bound_cetsa", "Choose the boundedness", value = 4)),
+                                                                                                                                                 column(4, checkboxInput("save_hit", "Save the hitlist", TRUE))
+                                                                                                                                        )
+                                                                                                                       ),
+                                                                                                                       conditionalPanel(condition = "input.hitmethod_cetsa == 'SR'",
+                                                                                                                                        actionButton("see9_cetsa", "See more information"),
+                                                                                                                                        tags$hr(),
+                                                                                                                                        fluidRow(column(4, numericInput("SRcut_cetsa", "Choose a Stability Rate cutoff", value = 1.5, min = 0, step = 0.1)),
+                                                                                                                                                 column(4, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
+                                                                                                                                                 column(4, numericInput("validval_cetsa", "Choose the minimum proportion of valid values", value = 0, min = 0, max = 1, step = 0.05))
+                                                                                                                                        ),
+                                                                                                                                        tags$hr(),
+                                                                                                                                        textOutput("diag_SR"),
+                                                                                                                                        tags$hr(),
+                                                                                                                       ),
+
+                                                                                                                       actionButton("str_calchitlist", "Start calculation", class = "btn-primary"),
+                                                                                                                       tags$hr(),
+
+                                                                                                                       radioButtons("HIT", h3("Choose a result to print"),
+                                                                                                                                    choices = c("hitlist", "CC", "CN", "NC", "ND"),
+                                                                                                                                    selected = "hitlist", inline = TRUE),
+
+                                                                                                                       DT::dataTableOutput("hit_out")
+                                                                                                      )
+                                                                                     )
+                                                                        )
+                                                                        ),
+
+                                                                        h3("Go check your file in your working directory, all the results from your analysis should be saved !"),
+                                                                        tags$hr()
+                                                                        )
+                                                       )
+                                     )
+                            ),
 
                  tabPanel("Database", value = "database",
                           shinyjs::useShinyjs(),
@@ -1383,7 +1653,651 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 server <- function(input, output, session){
   setwd(WD)
 
-  ### analysis tab
+  ### analysis tab - Peptides
+
+  # PD peptides files
+  pep_file_data <- reactive({
+    File <- input$PD_data_pep
+    if (is.null(File)){
+      return(NULL)
+    }
+    File
+  })
+  #check if a files are uploaded
+  output$pep_fileup <- reactive({
+    return(!is.null(pep_file_data()))
+  })
+  outputOptions(output, "pep_fileup", suspendWhenHidden = FALSE)
+
+  # temperatures
+  output$temp_nameui_pep <- renderUI({
+    if(!is.null(pep_file_data())){
+      files_temp <- pep_file_data()$name
+    }
+    else{
+      files_temp <- NULL
+    }
+    m <- matrix("", length(files_temp), 1,
+                dimnames = list(files_temp, "Temperatures"))
+
+    matrixInput("temp_name_pep", "Type the name you want for your temperatures",
+                value = m,
+                rows = list(names = TRUE),
+                cols = list(names = TRUE)
+                )
+  })
+
+  # treatments
+  output$treat_nameui_pep <- renderUI({
+    if(!is.null(pep_file_data())){
+      TMT <- colnames(readr::read_tsv(pep_file_data()$datapath[1], n_max = 0, progress = F, show_col_types = F)) # only read header
+      TMT <- unique(unlist(stringr::str_extract_all(TMT, "(?<=: )\\d{3}[C|N](?=,)"))) # extract TMT channels --> not 126
+      TMT <- c("126", TMT)
+    }
+    else{
+      TMT <- NULL
+    }
+
+    m <- matrix("", length(TMT), 1,
+                dimnames = list(TMT, "Treatment"))
+
+    matrixInput("treat_name_pep", "Type the name of your channels",
+                value = m,
+                rows = list(names = TRUE),
+                cols = list(names = TRUE)
+    )
+  })
+
+  # protein file
+  prot_data_pep <- reactive({
+    File <- input$prot_data_pep
+    if (is.null(File)){
+      return(NULL)
+    }
+    readr::read_tsv(File$datapath)
+  })
+
+  # read the data
+  pep_data <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$file_data_pep,{
+    if(input$got_data_pep){
+      File <- input$file_data_pep
+      if(!is.null(File)){
+        pep_data$x <- readr::read_tsv(File$datapath)
+      }
+    }
+  })
+  observeEvent(input$read_pep, {
+    df <- NULL
+    treat <- as.character(input$treat_name_pep[,1])
+    temp <- as.character(input$temp_name_pep[,1])
+    if(any(stringr::str_length(treat) == 0)){
+      showNotification("Type the treatment names !", type = "error")
+      return(NULL)
+    }
+    else if(any(stringr::str_length(temp) == 0)){
+      showNotification("Type the temperature names !", type = "error")
+      return(NULL)
+    }
+    else{
+      showNotification("Reading files...", type = "message")
+      df <- imprints_read_peptides(pep_file_data()$datapath, treatment = treat,
+                                   temperatures = temp,
+                                   proteins = prot_data_pep(),
+                                   dataset_name = input$dname_pep)
+    }
+    pep_data$x <- df
+  })
+
+  # check if pep data available
+  output$pep_dataup <- reactive({
+    return(!is.null(pep_data$x))
+  })
+  outputOptions(output, "pep_dataup", suspendWhenHidden = FALSE)
+
+  # see the peptides data
+  observeEvent(input$see1_pep,{
+    if(!is.null(pep_data$x)){
+      showModal(tags$div(id="modal1_pep", modalDialog(
+        DT::renderDataTable({DT::datatable(pep_data$x,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Peptides data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10,
+                                                          scrollX = TRUE))
+        }),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+
+  # normalization
+  observeEvent(input$step_peptides, {
+    js$collapse("upload_peptide")
+    updateCheckboxInput(session, "got_norm_pep", value = input$step_peptides)
+  }, ignoreInit = TRUE)
+
+  norm_pep_data <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$normfile_pep,{
+    if(input$got_norm_pep){
+      File <- input$normfile_pep
+      if(!is.null(File)){
+        norm_pep_data$x <- readr::read_tsv(File$datapath)
+      }
+    }
+  })
+  observeEvent(input$NORM_pep, {
+    df <- NULL
+
+    showNotification("Starting normalization, this may take a while", type = "message")
+    df <- imprints_normalize_peptides(pep_data$x)
+
+    norm_pep_data$x <- df
+    showNotification("Normalized data saved !",  type = "message")
+  })
+
+  # check if norm pep data available
+  output$norm_pep_dataup <- reactive({
+    return(!is.null(norm_pep_data$x))
+  })
+  outputOptions(output, "norm_pep_dataup", suspendWhenHidden = FALSE)
+
+  # see the norm peptides data
+  observeEvent(input$see2_pep,{
+    if(!is.null(norm_pep_data$x)){
+      showModal(tags$div(id="modal2_pep", modalDialog(
+        DT::renderDataTable({DT::datatable(norm_pep_data$x,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Normalized peptides data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10,
+                                                          scrollX = TRUE))
+        }),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+
+  ## sequence function
+  observe({
+    updateSelectInput(session, "control_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+
+  protseq_file_pep <- reactive({
+    File <- input$protseq_file_pep
+    if (is.null(File)){
+      return(NULL)
+    }
+    df <- rio::import(File$datapath, header = TRUE)
+    if(!("protein" %in% colnames(df))){
+      showNotification("Your file needs to contain the protein column !", type = "error")
+      return(NULL)
+    }
+    else if(!("sequence" %in% colnames(df))){
+      showNotification("Your file doesn't contain the sequence column, only protein are kept.", type = "warning")
+      df <- df[,"protein", drop = FALSE]
+    }
+    else{
+      df <- df[,c("protein", "sequence")]
+    }
+    df
+  })
+  observe({
+    updateSelectizeInput(session, "protseq_pep", choices = norm_pep_data$x$`Master Protein Accessions`, server = TRUE)
+  })
+
+  # handling sequence selection
+  output$selectSequenceui_pep <- renderUI({
+    if(!is.null(input$protseq_pep)){
+      if(length(input$protseq_pep) <= 20){
+        prot <- input$protseq_pep
+        m <- matrix("", length(prot), 1,
+                    dimnames = list(prot, "sequence"))
+
+        matrixInput("selectSequence_pep", "Type the sequences (i.e. peptide position) you want to highlight.
+                                           Press enter or click outside the table when you're done.",
+                    value = m,
+                    rows = list(names = TRUE),
+                    cols = list(names = TRUE)
+                    )
+      }
+      else{
+        shiny::HTML("<h5>If you want to select a specific sequence for more than 20 proteins,
+                         you need to import a file (check box on the top).</h5>")
+      }
+    }
+    else{
+      textInput("selectSequence_pep", "Type the sequences (i.e. peptide position) you want to highlight.
+                                       It will be applied for all proteins.")
+    }
+  })
+
+  sequence_pep_data <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$FCfile_pep,{
+    if(input$got_FCfile_pep){
+      File <- input$FCfile_pep
+      if(!is.null(File)){
+        sequence_pep_data$x <- readr::read_tsv(File$datapath)
+      }
+    }
+  })
+  observeEvent(input$SEQU_pep, {
+    prot <- NULL
+    sequ <- NULL
+    if(input$sequence_file){
+      if(!is.null(protseq_file_pep())){
+        prot <- protseq_file_pep()$protein
+        sequ <- protseq_file_pep()$sequence
+      }
+      else{
+        return(NULL)
+      }
+    }
+    else{
+      prot <- input$protseq_pep
+      if(!is.null(input$selectSequence_pep)){
+        if("matrix" %in% class(input$selectSequence_pep)){
+          sequ <- as.character(input$selectSequence_pep[,1])
+        }
+        else{
+          if(stringr::str_detect(input$selectSequence_pep, "^\\d{1,}-\\d{1,}$") & stringr::str_length(input$selectSequence_pep) == 0){
+            sequ <- input$selectSequence_pep
+          }
+          else{
+            showNotification("The sequence you wrote isn't in the right format.
+                              No sequence has been selected.", duration = 8, type = "warning")
+          }
+        }
+      }
+    }
+
+    withCallingHandlers({
+      shinyjs::html("diag_pep_sequence", "")
+      sequence_pep_data$x <- imprints_sequence_peptides(norm_pep_data$x,
+                                                        proteins = prot, sequence = sequ,
+                                                        control = input$control_pep,
+                                                        dataset_name = input$dnamediff_pep)
+      showNotification("Fold change and bar plot saved !",  type = "message")
+      },
+      message = function(m) {
+        shinyjs::html(id = "diag_pep_sequence", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+        }
+      )
+  })
+
+  # check if FC pep data available
+  output$sequence_pep_dataup <- reactive({
+    return(!is.null(sequence_pep_data$x))
+  })
+  outputOptions(output, "sequence_pep_dataup", suspendWhenHidden = FALSE)
+
+
+  # potential cleaved
+  observe({
+    updateSelectInput(session, "controlcleaved_pep", choices = get_treat_level(sequence_pep_data$x))
+  })
+
+  cleaved_pep_data <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$CLEAVED_pep, {
+    showNotification("Searching for cleaved sites", type = "message")
+    n_prot <- length(unique(sequence_pep_data$x$`Master Protein Accessions`))
+
+    cleaved_pep_data$x <- imprints_cleaved_peptides(sequence_pep_data$x,
+                                                    R2 = input$R2cleaved_pep,
+                                                    control = input$controlcleaved_pep)
+    cleaved_pep_data$x <- cleaved_pep_data$x %>% dplyr::ungroup()
+
+    showModal(
+      modalDialog(
+        selectInput("conditioncleaved_pep", "Choose a condition",
+                    choices = unique(cleaved_pep_data$x$Condition),
+                    selected = unique(cleaved_pep_data$x$Condition)[1]),
+        DT::renderDataTable({DT::datatable(cleaved_pep_data$x[cleaved_pep_data$x$Condition %in% input$conditioncleaved_pep,],
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong(paste("Potentially cleaved -", input$conditioncleaved_pep))
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10,
+                                                          scrollX = TRUE))
+          }),
+        tags$hr(),
+        textOutput("diag_pep_cleaved"),
+
+        title = tags$strong("Do you want to compute and plot fold change from the potentially cleaved proteins ?"),
+        footer = tagList(actionButton("confirm_cleavedplot", tags$strong("Yes"), class = "btn-lg btn-success"),
+                         modalButton(tags$strong("No"))
+        )
+      )
+    )
+  })
+  observeEvent(input$confirm_cleavedplot, {
+    showNotification("Start computing and plotting fold change", type = "message")
+    withCallingHandlers({
+      shinyjs::html("diag_pep_cleaved", "")
+      cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(Condition == input$conditioncleaved_pep)
+      sequence_pep_data$x <- imprints_sequence_peptides(norm_pep_data$x,
+                                                        proteins = cleaved_pepTab$protein,
+                                                        sequence = cleaved_pepTab$cleaved_site,
+                                                        control = input$controlcleaved_pep,
+                                                        dataset_name = "potentially_cleaved")
+      },
+      message = function(m) {
+        shinyjs::html(id = "diag_pep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+        }
+    )
+
+    removeModal()
+    showNotification("Fold change computed !", type = "message")
+  })
+
+
+  # filter peptides data
+  info_filterpep <- reactiveValues(
+    name = NULL
+  )
+  tofilter_pep_data <- reactive({
+    File <- input$filter_joinpep
+    if (is.null(File)){
+      return(NULL)
+    }
+    info_filterpep$name <- File$name
+    readr::read_tsv(File$datapath)
+  })
+
+
+  protseq_file_joinpep <- reactive({
+    File <- input$protseq_file_joinpep
+    if (is.null(File)){
+      return(NULL)
+    }
+    df <- rio::import(File$datapath, header = TRUE)
+    if(!("protein" %in% colnames(df)) | !("sequence" %in% colnames(df))){
+      showNotification("Your file needs to contain the protein column and the sequence column !", type = "error")
+      return(NULL)
+    }
+    else{
+      df <- df[,c("protein", "sequence")]
+    }
+    df
+  })
+  observe({
+    updateSelectizeInput(session, "protseq_joinpep",
+                         choices = unique(stringr::str_remove_all(tofilter_pep_data()$`Master Protein Accessions`, "\\s.*")),
+                         server = TRUE)
+  })
+  observe({
+    updateSelectInput(session, "remcond_joinpep", choices = get_treat_level(tofilter_pep_data()))
+  })
+
+  # handling sequence selection
+  output$selectSequenceui_joinpep <- renderUI({
+    if(!is.null(input$protseq_joinpep)){
+      if(length(input$protseq_joinpep) <= 20){
+        prot <- input$protseq_joinpep
+        m <- matrix("", length(prot), 1,
+                    dimnames = list(prot, "sequence"))
+
+        matrixInput("selectSequence_joinpep", "Type the sequences (i.e. peptide position) you want to highlight.
+                                               Press enter or click outside the table when you're done.",
+                    value = m,
+                    rows = list(names = TRUE),
+                    cols = list(names = TRUE)
+        )
+      }
+      else{
+        shiny::HTML("<h5>If you want to select a specific sequence for more than 20 proteins,
+                         you need to import a file (check box on the top).</h5>")
+      }
+    }
+    else{
+      textInput("selectSequence_joinpep", "Type the sequences (i.e. peptide position) you want to highlight.
+                                       It will be applied for all proteins.")
+    }
+  })
+
+  observeEvent(input$gofilter_joinpep, {
+    prot <- NULL
+    sequ <- NULL
+    if(input$sequence_file_joinpep){
+      if(!is.null(protseq_file_joinpep())){
+        prot <- protseq_file_joinpep()$protein
+        sequ <- protseq_file_joinpep()$sequence
+      }
+      else{
+        return(NULL)
+      }
+    }
+    else{
+      prot <- input$protseq_joinpep
+      if(!is.null(input$selectSequence_joinpep)){
+        if("matrix" %in% class(input$selectSequence_joinpep)){
+          sequ <- as.character(input$selectSequence_joinpep[,1])
+        }
+        else{
+          if(stringr::str_detect(input$selectSequence_joinpep, "^\\d{1,}-\\d{1,}$") & stringr::str_length(input$selectSequence_joinpep) == 0){
+            sequ <- input$selectSequence_joinpep
+          }
+          else{
+            showNotification("The sequence you wrote isn't in the right format.
+                              No sequence has been selected.", duration = 8, type = "warning")
+          }
+        }
+      }
+    }
+
+    df_filtered <- tofilter_pep_data()
+    withCallingHandlers({
+      shinyjs::html("diag_pep_filter", "")
+      if(!is.null(prot) & !is.null(sequence)){
+        message("Rmoving specific peptides")
+        df_filtered <- imprints_remove_peptides(tofilter_pep_data(),
+                                                proteins = prot,
+                                                sequence = sequ)
+      }
+      if(!is.null(input$remcond_joinpep)){
+        message("Removing conditions")
+        df_filtered <- df_filtered[,-stringr::str_which(colnames(df_filtered), paste0("_", input$remcond_joinpep,
+                                                                                      "$", collapse = "|")
+                                                        )
+                                   ]
+      }
+      message("Saving filtered data")
+      f_name <- stringr::str_replace(info_filterpep$name, "\\.txt", "_filtered.txt")
+      f_name <- str_replace_all(f_name, "\\d{6}_\\d{4}_", format(Sys.time(), "%y%m%d_%H%M_"))
+      readr::write_tsv(df_filtered, file = f_name)
+      message("Filtered data saved !")
+      showNotification("Filtered data saved !",  type = "message")
+      },
+      message = function(m) {
+        shinyjs::html(id = "diag_pep_filter", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+        }
+    )
+  })
+
+  # join peptides datasets
+  tojoin_pep_data <- reactive({
+    File <- input$joinFC_file_pep
+    if (is.null(File)){
+      return(NULL)
+    }
+    File$datapath
+  })
+  # check if all files are uploaded
+  output$tojoin_pep_dataup <- reactive({
+    return(!is.null(tojoin_pep_data()))
+  })
+  outputOptions(output, "tojoin_pep_dataup", suspendWhenHidden = FALSE)
+
+  joined_pep_data <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$JOIN_pep, {
+    withCallingHandlers({
+      shinyjs::html("diag_pep_join", "")
+      message("Reading and joining data")
+      tojoin <- lapply(tojoin_pep_data(), readr::read_tsv)
+      joined_pep_data$x <- imprints_join_peptides(tojoin)
+
+      message("Saving joined dataset")
+      readr::write_tsv(joined_pep_data$x,
+                       file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
+                                     "JoinedPeptides.txt")
+                       )
+      message("Joined data saved !")
+      showNotification("Joined data saved !",  type = "message")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_pep_join", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+    }
+    )
+  })
+
+  # see the joined peptides data
+  observeEvent(input$see3_pep,{
+    if(!is.null(joined_pep_data$x)){
+      showModal(tags$div(id="modal3_pep", modalDialog(
+        DT::renderDataTable({DT::datatable(joined_pep_data$x,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Joined peptides data")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20,30), pageLength = 10,
+                                                          scrollX = TRUE))
+        }),
+        footer = NULL,
+        easyClose = TRUE
+      )))
+    }
+    else{
+      showNotification("The data are currently NULL, try to refresh.", type = "error")
+    }
+  })
+
+
+  # plot joined data
+  toplot_pep_data <- reactive({
+    if(input$join_data_pep == "join_app"){
+      return(joined_pep_data$x)
+    }
+    else if(input$join_data_pep == "join_file"){
+      File <- input$joined_file_pep
+      if (is.null(File)){
+        return(NULL)
+      }
+      else{
+        df <- readr::read_tsv(File$datapath)
+        return(df)
+      }
+    }
+  })
+  # check if data available
+  output$toplot_pep_dataup <- reactive({
+    return(!is.null(toplot_pep_data()))
+  })
+  outputOptions(output, "toplot_pep_dataup", suspendWhenHidden = FALSE)
+
+  observe({
+    updateSelectInput(session, "condition_plotjoinpep", choices = get_treat_level(toplot_pep_data()))
+  })
+
+  # handling color selection
+  output$n_cond_sel_plotjoinpep <- renderText({
+    if(input$ch_own_col_plotjoinpep){
+      paste("You selected", length(input$condition_plotjoinpep), "conditions, please enter the same number of colors")
+    }
+    else{
+      NULL
+    }
+  })
+
+  OWN_color_plotjoinpep <- reactiveValues(
+    ch = c()
+  )
+  observeEvent(input$add_col_plotjoinpep, {
+    OWN_color_plotjoinpep$ch <- append(OWN_color_plotjoinpep$ch, input$own_color_pick_plotjoinpep)
+  })
+  observeEvent(input$rem_col_plotjoinpep, {
+    if(length(OWN_color_plotjoinpep$ch) <= 1){
+      OWN_color_plotjoinpep$ch <- c()
+    }
+    else{
+      OWN_color_plotjoinpep$ch <- OWN_color_plotjoinpep$ch[1:(length(OWN_color_plotjoinpep$ch)-1)]
+    }
+  })
+  output$own_color_plotjoinpep <- renderText({
+    paste("You selected this colors :", paste(OWN_color_plotjoinpep$ch, collapse = ", "))
+  })
+
+
+  # plot peptides bar plot !
+  observeEvent(input$getbar_plotjoinpep, {
+    data_toplot <- toplot_pep_data()
+    data_toplot$`Master Protein Accessions` <- paste(data_toplot$`Positions in Master Proteins`, "\n", "\n")
+    colnames(data_toplot)[1:5] <- c("id", "description", "sumUniPeps", "sumPSMs", "countNum")
+
+    withCallingHandlers({
+      shinyjs::html("diag_bar_plotjoinpep", "")
+      if(length(input$condition_plotjoinpep)){
+        if(input$ch_own_col_plotjoinpep){
+          nbc <- length(input$condition_plotjoinpep)
+          COL <- OWN_color_plotjoinpep$ch
+          if(nbc == length(COL)){
+            imprints_barplotting_sh(data_toplot, save_pdf = TRUE, ret_plot = FALSE,
+                                    colorpanel = COL, treatmentlevel = input$condition_plotjoinpep,
+                                    layout = c(input$lay_bar1_plotjoinpep, input$lay_bar2_plotjoinpep),
+                                    pdfname = input$pdftit_plotjoinpep)
+            showNotification("Bar plot saved !",  type = "message")
+          }
+          else{
+            showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+          }
+        }
+        else{
+          imprints_barplotting_sh(data_toplot, save_pdf = TRUE, ret_plot = FALSE,
+                                  treatmentlevel = input$condition_plotjoinpep,
+                                  layout = c(input$lay_bar1_plotjoinpep, input$lay_bar2_plotjoinpep),
+                                  pdfname = input$pdftit_plotjoinpep)
+          showNotification("Bar plot saved !",  type = "message")
+        }
+      }
+      else{
+        showNotification("Don't forget to select some conditions !", type = "error")
+      }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_bar_plotjoinpep", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+      }
+    )
+  })
+
+
+
+
+  ### analysis tab - Proteins
   output$treat_nameui <- renderUI({
     TMT <- list("10" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131"),
                 "11" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C"),
@@ -1393,7 +2307,7 @@ server <- function(input, output, session){
     m <- matrix("", as.numeric(input$n_chan), 1,
                 dimnames = list(c(TMT[[input$n_chan]]), "Treatment"))
 
-    matrixInput("treat_name", "Type the name of your channel",
+    matrixInput("treat_name", "Type the name of your channels",
                 value = m,
                 rows = list(names = TRUE),
                 cols = list(names = TRUE)
@@ -1444,9 +2358,6 @@ server <- function(input, output, session){
       showNotification("The data are currently NULL, try to refresh.", type = "error")
     }
   })
-
-
-
 
 
   output$temp_nameui <- renderUI({
@@ -2408,7 +3319,6 @@ server <- function(input, output, session){
 
   observe({
     updateSelectizeInput(session, "prot", choices = sel_prot(), server = TRUE)
-
   })
 
   Sel_cond <- reactive({
@@ -2525,7 +3435,6 @@ server <- function(input, output, session){
     }
 
     data <- ms_subsetting(data, isfile = F, hitidlist = c(PROT), allisoform = input$alliso_bar)
-
 
 
     if(input$cond_sel == "treat"){

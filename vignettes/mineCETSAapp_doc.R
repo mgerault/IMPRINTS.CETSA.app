@@ -240,3 +240,64 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #  
 #  #You can create way more complicated border. You'll just need a data frame of 2 columns named x and y.
 
+## ---- eval=FALSE--------------------------------------------------------------
+#  library(mineCETSAapp)
+#  
+#  peptides <- imprints_read_peptides(peptides_files = list.files("Analysis_files",     # your files
+#                                                                 pattern = "Peptide",
+#                                                                 full.names = T),
+#                                     treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the conditions corresponding to your channel
+#                                                   "B2_Vehicle","B2_DrugA", "B2_DrugB",
+#                                                   "B3_Vehicle", "B3_DrugA", "B3_DrugB",
+#                                                   "Mix"),
+#                                     temperatures = c("37C", "47C", "50C", "52C", "54C", "57C"), # temperatures from your corresponding files
+#                                     proteins = "Analysis_files/proteins_imprints_caldiff.txt") # The proteins from which you want to analyze the peptides, can be a dataframe
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  peptides_norm <- imprints_normalize_peptides(peptides)
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  # one of your hitlist
+#  proteins <- hitlist$id
+#  peptides_norm_diff <-  imprints_sequence_peptides(peptides_norm,
+#                                                    proteins =  proteins,
+#                                                    control = "Vehicle") # needs to specify control from your experiment
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  potential_cleaved <-  imprints_cleaved_peptides(peptides_norm_diff,
+#                                                  control = "Vehicle") # if you want to remove the control from you data (advised)
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  # keeping only drug A
+#  peptides_norm_drugA <- peptides_norm[,-stringr::str_which(colnames(peptides_norm), "_DrugB$")]
+#  potential_cleaved_drugA <- potential_cleaved %>%
+#    dplyr::filter(Condition == "DrugA")
+#  
+#  peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
+#                                                        proteins =  potential_cleaved_drugA$protein,
+#                                                        sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleaved sites
+#                                                        control = "Vehicle") # needs to specify control from your experiment
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  peptides_cleaved_drugA <- imprints_remove_peptides(peptides_cleaved_drugA,
+#                                                     proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the sepecific sequence
+#                                                     sequence = potential_cleaved_drugA$cleaved_site) # the sequence you want to remove
+#  
+#  peptides_cleaved_drugB <- imprints_remove_peptides(peptides_cleaved_drugB,
+#                                                     proteins =  potential_cleaved_drugB$protein,  # the protein from which you want to remove the sepecific sequence
+#                                                     sequence = potential_cleaved_drugB$cleaved_site) # the sequence you want to remove
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  peptides_cleaved <- list(peptides_cleaved_drugA, peptides_cleaved_drugB) # you could add more datasets
+#  
+#  peptides_cleaved <- imprints_join_peptides(peptides_cleaved)
+#  
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  # prepare data for function
+#  peptides_cleaved$`Master Protein Accessions` <- paste(peptides_cleaved$`Positions in Master Proteins`, "\n", "\n")
+#  colnames(peptides_cleaved)[1:5] <- c("id", "description", "sumUniPeps", "sumPSMs", "countNum")
+#  
+#  # save the imprints in a pdf
+#  imprints_barplotting_sh(peptides_cleaved, layout = c(2,2), save_pdf = T, ret_plot = F)
+

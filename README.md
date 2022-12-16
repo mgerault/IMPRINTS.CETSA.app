@@ -5,6 +5,7 @@ The goal of this package is to provide a user friendly interface of this package
 The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell and get information on it when clicking one. The subcellular location is obtained thanks to the protein Atlas data base.
 
 Moreover, the package contains a new way of getting hits with the function called SR_CetsaHit (SR = Stability Rate). This function computes a score and a p-value for each protein and return a volcano plot with the selected FDR. Also, thnaks to this scoring, the proteins can be ranked and used for further gene ontology analysis.
+mineCETSAapp also allows to do the IMPRINTS analysis on the peptide level and search for potential cleaved peptides. 
 
 Some data are available in the package so that you can play with when you first try the app. The data are from the [The cell cycle paper (2018)](https://www-sciencedirect-com.proxy.insermbiblio.inist.fr/science/article/pii/S0092867418303970?via%3Dihub) from Dai Lingyun and al.
 
@@ -21,7 +22,7 @@ CETSA allows direct monitoring of ligand binding to a specific target (target en
 It can also be used to study downstream effects on protein interaction, providing a novel perspective on protein function in situ. For more details 
 please refer to the [CETSA website](https://www.cetsa.org/about). 
 
-This package is specifically cinceived to analyse the IMPRINTS-CETSA data. With this technique, less temperatures are required; only fold change bar plot are computed not the melt curve. With this informative technique, you can compare different cell state by temperature in one experiment set.
+This package is specifically conceived to analyse the IMPRINTS-CETSA data. With this technique, less temperatures are required; only fold change bar plot are computed not the melt curve. With this informative technique, you can compare different cell state by temperature in one experiment set.
  
 
 ## How to install mineCETSAapp?  

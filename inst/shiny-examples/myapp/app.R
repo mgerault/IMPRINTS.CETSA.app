@@ -1693,6 +1693,9 @@ server <- function(input, output, session){
       TMT <- colnames(readr::read_tsv(pep_file_data()$datapath[1], n_max = 0, progress = F, show_col_types = F)) # only read header
       TMT <- unique(unlist(stringr::str_extract_all(TMT, "(?<=: )\\d{3}[C|N](?=,)"))) # extract TMT channels --> not 126
       TMT <- c("126", TMT)
+      if(length(TMT) == 9){
+        TMT <- c(TMT, "131")
+      }
     }
     else{
       TMT <- NULL

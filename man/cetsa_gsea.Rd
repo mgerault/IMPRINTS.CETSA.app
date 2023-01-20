@@ -10,6 +10,7 @@ cetsa_gsea(
   score_column = "SR",
   condition_column = NULL,
   condition = NULL,
+  species = c("human", "mouse"),
   pos_enrichment = TRUE
 )
 }
@@ -23,6 +24,8 @@ cetsa_gsea(
 \item{condition_column}{The name of the column that contains the conditions. Default is NULL.}
 
 \item{condition}{The name of the condition you ant to keep. Default is NULL.}
+
+\item{species}{Specify the species. Currently, only 'human' and 'mouse' are available.}
 
 \item{pos_enrichment}{Logical to tell if you want to only look at positive enrichment score.
 If FALSE, show only negative.}

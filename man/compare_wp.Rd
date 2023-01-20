@@ -4,7 +4,13 @@
 \alias{compare_wp}
 \title{compare_wp}
 \usage{
-compare_wp(hits, gene_column = "Genes", condition_column = NULL, n_pathway = 5)
+compare_wp(
+  hits,
+  gene_column = "Genes",
+  condition_column = NULL,
+  species = c("human", "mouse"),
+  n_pathway = 5
+)
 }
 \arguments{
 \item{hits}{The hitlist; a data.frame containing the genes id and preferably a condition column but not necessary.}
@@ -12,6 +18,8 @@ compare_wp(hits, gene_column = "Genes", condition_column = NULL, n_pathway = 5)
 \item{gene_column}{The name of the coulumn that contains the genes. Default is 'Genes'.}
 
 \item{condition_column}{The name of the column that contains the conditions. Default is NULL.}
+
+\item{species}{Specify the species. Currently, only 'human' and 'mouse' are available.}
 
 \item{n_pathway}{Number of pathway to show on plot. Default is 5.
 For more info you, see \code{\link{compareCluster}}.}

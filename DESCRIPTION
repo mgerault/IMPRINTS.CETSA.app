@@ -1,7 +1,7 @@
 Package: mineCETSAapp
 Type: Package
 Title: A shiny app for mineCETSA package 
-Version: 3.0.0
+Version: 3.0.1
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for mineCETSA R package, in a user friendly way.

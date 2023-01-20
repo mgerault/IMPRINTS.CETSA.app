@@ -1375,8 +1375,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                   choices = NULL, multiple = TRUE)),
                                                                             column(6, selectInput("cat_fhitB_clus", "Select some categories to filter your proteins (If NULL, will select all)",
                                                                                                   choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
-                                                                   )
-                                                  ),
+                                                                            )
+                                                                   ),
 
                                                   conditionalPanel(condition = "input.drug_clus == 'dat' ",
                                                                    fluidRow(column(4, fileInput("file_clus", "Choose a file")),
@@ -1384,16 +1384,19 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                    conditionalPanel(condition = "!input.ishit_clus",
                                                                                                     textInput("idfile_clus", "What is the name of the column of
                                                                                                               your file which contains the Genes ?")
-                                                                                   )
-                                                                            ),
+                                                                                                    )
+                                                                                   ),
                                                                             conditionalPanel(condition = "input.ishit_clus",
                                                                                              column(4, selectInput("cond_fhit_clus", "Select some conditions to filter your hits",
                                                                                                                    choices = NULL, multiple = TRUE))
+                                                                                             )
                                                                             )
-                                                                   )
+                                                                   ),
+                                                  selectInput("species_clus", "Specify the species from your data",
+                                                              choices = c("Human", "Mouse"), selected = "Human")
+
                                                   )
-                                     )
-                                     ),
+                                              ),
 
                                      tabsetPanel(type = "tabs",
 
@@ -5111,13 +5114,14 @@ server <- function(input, output, session){
           }
           if(!is.null(dat)){
             showNotification("Starting pathway analysis !", type = "message")
-            res <- compare_wp(dat, gene_column = "Genes",
+            res <- compare_wp(dat, gene_column = "Genes", species = input$species_clus,
                               n_pathway = input$npath_clus, condition_column = "Condition")
           }
         }
         else{
           showNotification("Starting pathway analysis !", type = "message")
-          res <- compare_wp(dat, gene_column = input$idfile_clus, n_pathway = input$npath_clus)
+          res <- compare_wp(dat, gene_column = input$idfile_clus,
+                            species = input$species_clus, n_pathway = input$npath_clus)
         }
       }
       else if(input$drug_clus == "base"){
@@ -5135,6 +5139,7 @@ server <- function(input, output, session){
         if(!is.null(dat)){
           showNotification("Starting pathway analysis !", type = "message")
           res <- compare_wp(dat, gene_column = "Genes",
+                            species = input$species_clus,
                             n_pathway = input$npath_clus,
                             condition_column = "Condition")
         }
@@ -5216,6 +5221,7 @@ server <- function(input, output, session){
               dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
               dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
               res <- cetsa_gsea(dat, gene_column = "Genes",
+                                species = input$species_clus,
                                 score_column = input$scorenameDAT_clus,
                                 pos_enrichment = input$onlypos_clus)
             }
@@ -5231,7 +5237,9 @@ server <- function(input, output, session){
             showNotification("Starting GSEA !", type = "message")
             dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
             dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
-            res <- cetsa_gsea(dat, gene_column = input$idfile_clus, score_column = input$scorenameDAT_clus,
+            res <- cetsa_gsea(dat, gene_column = input$idfile_clus,
+                              species = input$species_clus,
+                              score_column = input$scorenameDAT_clus,
                               pos_enrichment = input$onlypos_clus)
           }
           else{
@@ -5259,6 +5267,7 @@ server <- function(input, output, session){
             dat[[input$scorenameBASE_clus]] <- as.numeric(dat[[input$scorenameBASE_clus]])
             dat[[input$scorenameBASE_clus]] <- tidyr::replace_na(dat[[input$scorenameBASE_clus]],0)
             res <- cetsa_gsea(dat, gene_column = "Genes",
+                              species = input$species_clus,
                               score_column = input$scorenameBASE_clus,
                               pos_enrichment = input$onlypos_clus)
           }
@@ -5345,6 +5354,7 @@ server <- function(input, output, session){
               dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
               dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
               res <- gene_conceptNet(dat, gene_column = "Genes",
+                                     species = input$species_clus,
                                      score_column = input$scorename2DAT_clus,
                                      pval_cutoff = input$pvcut_clus)
             }
@@ -5361,6 +5371,7 @@ server <- function(input, output, session){
             dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
             dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
             res <- gene_conceptNet(dat, gene_column = input$idfile_clus,
+                                   species = input$species_clus,
                                    score_column = input$scorename2DAT_clus,
                                    pval_cutoff = input$pvcut_clus)
           }
@@ -5389,6 +5400,7 @@ server <- function(input, output, session){
             dat[[input$scorename2BASE_clus]] <- as.numeric(dat[[input$scorename2BASE_clus]])
             dat[[input$scorename2BASE_clus]] <- tidyr::replace_na(dat[[input$scorename2BASE_clus]],0)
             res <- gene_conceptNet(dat, gene_column = "Genes",
+                                   species = input$species_clus,
                                    score_column = input$scorename2BASE_clus,
                                    pval_cutoff = input$pvcut_clus)
           }

@@ -4,7 +4,7 @@
 \alias{imprints_cleaved_peptides}
 \title{imprints_cleaved_peptides}
 \usage{
-imprints_cleaved_peptides(data, R2 = 0.9, control = NULL)
+imprints_cleaved_peptides(data, R2 = 0.9, control = NULL, min_ValidValue = 0.4)
 }
 \arguments{
 \item{data}{The input data set, i.e. the outpout from \code{imprints_sequence_peptides}.}
@@ -14,6 +14,9 @@ from every peptide from each protein. The higher it is, the less stringent you a
 of taking a protein as cleaved. Default is 0.9.}
 
 \item{control}{The control condition from your dataset. If the condition is found in your data, then it is removed from it.}
+
+\item{min_ValidValue}{The minimum proportion of valid values per peptides.
+Default is 0.4; so if 7 temperatures need at least 3 valid values.}
 }
 \value{
 The potential cleaved sites from the proteins considered as cleaved.

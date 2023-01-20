@@ -22,13 +22,15 @@
 #'           from every peptide from each protein. The higher it is, the less stringent you are on the decision
 #'           of taking a protein as cleaved. Default is 0.9.
 #' @param control The control condition from your dataset. If the condition is found in your data, then it is removed from it.
+#' @param min_ValidValue The minimum proportion of valid values per peptides.
+#'                       Default is 0.4; so if 7 temperatures need at least 3 valid values.
 #'
 #' @return The potential cleaved sites from the proteins considered as cleaved.
 #'
 #' @export
 #'
 
-imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL){
+imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidValue = 0.4){
   if(!is.null(control)){
     if(any(stringr::str_detect(colnames(data), paste0("_", control, "$")))){
       data <- data[,-stringr::str_which(colnames(data), paste0("_", control, "$"))]
@@ -44,6 +46,7 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL){
   data$Modifications <- NULL
   colnames(data)[1] <- "id" # easier handle
 
+
   # get summed value from all temperature for every peptide
   data <- data %>%
     tidyr::gather("Condition", "value", -id, -description) %>%
@@ -51,8 +54,10 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL){
     dplyr::group_by(id, description, temp, Condition) %>%
     dplyr::summarise(mean_value = mean(value, na.rm = TRUE)) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, Condition) %>%
-    dplyr::filter(length(na.omit(mean_value))/length(mean_value) >= 0.4) %>%  # keeping proteins with more than 40% of valid values
-    dplyr::summarise(sum_profile = sum(mean_value, na.rm = TRUE)) # get sum value for each peptides --> sum all temperatures values
+    dplyr::filter(length(na.omit(mean_value))/length(mean_value) >= min_ValidValue) %>%  # keeping peptides with more than 40% of valid values
+    dplyr::summarise(sum_profile = sum(mean_value, na.rm = TRUE)) %>%  # get sum value for each peptides --> sum all temperatures values
+    dplyr::ungroup() %>% dplyr::group_by(description, Condition) %>%
+    dplyr::filter(length(sum_profile) > 3)  # only keeping proteins with more than 3 peptides
 
   # separate id in protein and sequence
   data$id <- stringr::word(data$id, 1, 2)
@@ -65,6 +70,7 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL){
   # ordering according sequence is capital
   data$factor <- data$protein
   data <- data[order(data$protein),]
+  data$sequence <- stringr::str_remove_all(data$sequence, ";")
   ord <- lapply(stringr::str_split(data$sequence, "-|~"),
                 function(x) {sum(as.numeric(x))}
                 )
@@ -98,36 +104,36 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL){
   # if cumulative abundance concave --> first derivative is decreasing globally --> inflexion point is where second derivative is minimum
   # if cumulative abundance convex --> first derivative is increasing globally --> inflexion point is where second derivative is maximum
   inflex <- function(x, R2 = R2){
-    if(length(x) <= 2){ # need at least 2 peptides
-      return(NA)
-    }
-    else{
-      R2 <- cor(1:length(x), x)  # if linear relationship --> ~ constantly increasing/decreasing --> no cleaved
-      R2 <- R2**2
-      if(R2 <= 0.9){
-        x <- diff(x) # get first 'first derivative'
-        # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
-        df <- data.frame(x = 1:length(x),
-                         y = x)
-        res <- lm(y ~ x, data = df)
-        res <- res$coeff[2]
-        res <- sign(res)
+    R2 <- cor(1:length(x), x)  # if linear relationship --> ~ constantly increasing/decreasing --> no cleaved
+    R2 <- R2**2
+    if(R2 <= 0.9){
+      x <- diff(x) # get first 'first derivative'
+      # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
+      df <- data.frame(x = 1:length(x),
+                       y = x)
+      res <- lm(y ~ x, data = df)
+      res <- res$coeff[2]
+      res <- sign(res)
 
-        x <- diff(x) # get second 'first derivative'
-        if(res == 1){
-          inflex_point <- which.max(x) + 2 # double diff, so add 2 to index point
-        }
-        else{
-          inflex_point <- which.min(x) + 2 # double diff, so add 2 to index point
-        }
-
-        return(inflex_point)
+      x <- diff(x) # get second 'first derivative'
+      if(res == 1){
+        inflex_point <- which.max(x) + 2 # double diff, so add 2 to index point
       }
       else{
-        return(NA)
+        inflex_point <- which.min(x) + 2 # double diff, so add 2 to index point
       }
+
+      if(inflex_point - 2 == length(x)){  # if inflex_point is last one, can't conclude that is cleaved
+        inflex_point <- NaN
+      }
+
+      return(inflex_point)
+    }
+    else{
+      return(NaN)
     }
   }
+
   data <- data %>% dplyr::ungroup() %>% dplyr::group_by(protein, description, Condition) %>%
     dplyr::summarise(cleaved_site = sequence[inflex(cumsum_profile)]) %>%  # get back potential cleaved site
     dplyr::filter(!is.na(cleaved_site))  # if NA --> not cleaved

@@ -218,22 +218,25 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL, c
   final_res_diff$id <- stringr::str_remove_all(final_res_diff$id, "^\\d{1,}_")
 
   final_res_diff$id <- paste(final_res_diff$sumUniPeps, final_res_diff$sumPSMs, final_res_diff$countNum, sep = " \n")
+
+  # return data in same shape as input
+  final_res_difffile <- final_res_diff[, c(1:2, (ncol(final_res_diff) - 2):ncol(final_res_diff),
+                                           3:(ncol(final_res_diff) - 3))
+                                       ]
+  colnames(final_res_difffile)[1:5] <- keep_n
+  final_res_difffile$`Master Protein Accessions` <- stringr::word(final_res_difffile$`Master Protein Accessions`, 1, 2)
+
+  readr::write_tsv(final_res_difffile,
+                   file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
+                                 "CaldiffPeptides_", dataset_name, ".txt")
+                   )
+
+
   message("Generates plot")
   imprints_barplotting_sh(final_res_diff, ret_plot = FALSE, save_pdf = TRUE, layout = c(3,3),
                           pdfname = dataset_name)
 
-  # return data in same shape as input
-  final_res_diff <- final_res_diff[, c(1:2, (ncol(final_res_diff) - 2):ncol(final_res_diff),
-                                       3:(ncol(final_res_diff) - 3)
-  )
-  ]
-  colnames(final_res_diff)[1:5] <- keep_n
-  final_res_diff$`Master Protein Accessions` <- stringr::word(final_res_diff$`Master Protein Accessions`, 1, 2)
 
-  readr::write_tsv(final_res_diff,
-                   file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
-                                 "CaldiffPeptides_", dataset_name, ".txt")
-  )
 
   return(final_res_diff)
 }

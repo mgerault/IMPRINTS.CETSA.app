@@ -267,14 +267,18 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                    tags$hr(),
 
                                                                    conditionalPanel(condition = "output.sequence_pep_dataup",
-                                                                                    fluidRow(column(4, numericInput("R2cleaved_pep", "Choose the maximum R-squared from the
+                                                                                    fluidRow(column(3, numericInput("R2cleaved_pep", "Choose the maximum R-squared from the
                                                                                                                                       cumulative sum of the fold change.",
                                                                                                                     value = 0.9, min = 0, max = 1, step = 0.01),
                                                                                                     shiny::HTML("<br><h5>The higher it is, the less stringent your are. It means that you
                                                                                                                 can accept more 'cumulative sum profile' with a linear evolution, i.e. it is
                                                                                                                 less likely that there is a cleaved site.</h5>")),
-                                                                                             column(4, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
-                                                                                             column(4, actionButton("CLEAVED_pep", "Search for potential cleaved site", class = "btn-primary"))
+                                                                                             column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
+                                                                                             column(3, numericInput("propValcleaved_pep", "Choose the minimum proportion of valid values per peptide
+                                                                                                                                           per condition; i.e. if 6 temperatures and 0.5, it can't
+                                                                                                                                           have more than 3 missing values.",
+                                                                                                                    value = 0.4, min = 0, max = 1, step = 0.01)),
+                                                                                             column(3, actionButton("CLEAVED_pep", "Search for potential cleaved site", class = "btn-primary"))
                                                                                              )
                                                                                     )
                                                                    )
@@ -1972,7 +1976,8 @@ server <- function(input, output, session){
 
     cleaved_pep_data$x <- imprints_cleaved_peptides(sequence_pep_data$x,
                                                     R2 = input$R2cleaved_pep,
-                                                    control = input$controlcleaved_pep)
+                                                    control = input$controlcleaved_pep,
+                                                    min_ValidValue = input$propValcleaved_pep)
     cleaved_pep_data$x <- cleaved_pep_data$x %>% dplyr::ungroup()
 
     showModal(

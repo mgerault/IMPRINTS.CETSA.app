@@ -16,9 +16,9 @@ Depends:
     ggplot2 (>= 3.2.0)
 Imports: ggplot2,  stringr, tidyr, magick,
    shiny, shinydashboard, shinyMatrix, shinycssloaders, bslib,
-   DT, rio, purrr, metap, MKmisc,
+   DT, rio, metap, MKmisc,
    dplyr, plyr, shinyjs, cowplot, plotly, pubmedR, 
-   rentrez, XML, gridExtra, rjson,
+   rentrez, XML, gridExtra, rjson, VennDiagram,
    bibliometrix, officer, colourpicker, openxlsx
 Suggests: 
     mineCETSA,

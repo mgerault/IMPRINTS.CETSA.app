@@ -2994,7 +2994,7 @@ server <- function(input, output, session){
 
     dat <- import(File$datapath, header = TRUE)
     nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-    if(!purrr::is_empty(nv_nam)){
+    if(length(nv_nam)){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
     if(!("Condition" %in% colnames(dat))){ # means that the analysis tab was imported
@@ -3069,7 +3069,7 @@ server <- function(input, output, session){
       df <- drug_data_sh$y$data[[input$davai2_daba]]
     }
 
-    if(!is.null(df) & !purrr::is_empty(df)){
+    if(!is.null(df) & length(df)){
       cd <- get_treat_level(df)
       cd_1 <- cd[-length(cd)]
       cd_e <- cd[length(cd)]
@@ -3098,7 +3098,7 @@ server <- function(input, output, session){
         }
       }
       change <- cd[!(nm %in% cd)]
-      if(!purrr::is_empty(change) & !is.null(change)){
+      if(length(change) & !is.null(change)){
         new <- nm[!(nm %in% cd)]
         showNotification(paste("You decided to change :", paste(change, collapse = ", "),
                                "In :", paste(new, collapse = ", ")), type = "message")
@@ -3233,7 +3233,7 @@ server <- function(input, output, session){
         }
       }
       c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
-      if(!purrr::is_empty(c_idx)){
+      if(length(c_idx)){
         HIT_summup <- list()
         for(i in unique(HIT[, c_idx])){
           HIT_summup[[i]] <- (HIT %>% dplyr::filter(Condition == i))$id
@@ -3254,7 +3254,7 @@ server <- function(input, output, session){
     if(!is.null(Sel_cond_fhit())){
       c_idx <- str_which(colnames(Sel_cond_fhit()), "^[C|c]ondition")
       Sel_cond_fhit_SUMMA$hit <- Sel_cond_fhit()
-      if(!purrr::is_empty(c_idx)){
+      if(length(c_idx)){
         Sel_cond_fhit_SUMMA$choice <- unique(Sel_cond_fhit()[,c_idx])
       }
       updateSelectInput(session, "cond_fhit", choices = Sel_cond_fhit_SUMMA$choice, selected = Sel_cond_fhit_SUMMA$choice[1])
@@ -3281,7 +3281,7 @@ server <- function(input, output, session){
           }
 
           a <- pr[!(pr %in% prcheck)]
-          if(!purrr::is_empty(a)){
+          if(length(a)){
             pr <- pr[(pr %in% prcheck)]
             showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
                              type = "error")
@@ -3724,7 +3724,7 @@ server <- function(input, output, session){
 
       dat <- import(File$datapath, header = TRUE)
       nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-      if(!purrr::is_empty(nv_nam)){
+      if(length(nv_nam)){
         dat <- dat[, !(names(dat) %in% nv_nam)]
       }
       dat
@@ -4271,7 +4271,7 @@ server <- function(input, output, session){
 
       dat <- import(File$datapath, header = TRUE)
       nv_nam <- str_subset(names(dat), "^V\\d{1}$")
-      if(!purrr::is_empty(nv_nam)){
+      if(length(nv_nam)){
         dat <- dat[, !(names(dat) %in% nv_nam)]
       }
       dat
@@ -4335,12 +4335,12 @@ server <- function(input, output, session){
       cat_idx <- str_which(colnames(HIT_heat()), "^[C|c]ategory")
 
       tr <- NULL
-      if(!purrr::is_empty(c_idx)){
+      if(length(c_idx)){
         tr <- HIT_heat()[, c_idx]
         tr <- unique(tr)
       }
       cat <- c()
-      if(!purrr::is_empty(cat_idx)){
+      if(length(cat_idx)){
         cat <- HIT_heat()[, cat_idx]
         cat <- unique(cat)
       }
@@ -4678,7 +4678,7 @@ server <- function(input, output, session){
 
       c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
 
-      if(!purrr::is_empty(c_idx)){
+      if(length(c_idx)){
         tr <- HIT[, c_idx]
         tr <- unique(tr)
       }
@@ -4916,7 +4916,7 @@ server <- function(input, output, session){
     descr <- str_replace_all(descr, "\\)", "\\\\)")
     pr <- enrich_res_tab()$STRING_id[str_which(enrich_res_tab()$description, paste0("^", descr, "$"))]
 
-    if(!is.null(pr) & !purrr::is_empty(pr)){
+    if(!is.null(pr) & length(pr)){
       if(input$intnet_stri){
         My_net(pr , inter = TRUE,
                network_flavor = input$edgetype2_stri, required_score = input$intscore2_stri)
@@ -5080,7 +5080,7 @@ server <- function(input, output, session){
 
       c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
 
-      if(!purrr::is_empty(c_idx)){
+      if(length(c_idx)){
         tr <- HIT[, c_idx]
         tr <- unique(tr)
       }
@@ -5581,7 +5581,7 @@ server <- function(input, output, session){
   observeEvent(PR_event_click(), {
     PR <- event_data("plotly_click", source = "M")$customdata
     if(!is.null(PR_event)){
-      if(purrr::is_empty(which(PR_event() == PR))){
+      if(length(which(PR_event() == PR)) == 0){
         PR_old_new <- c(PR_event(), PR)
       }
       else{
@@ -5709,7 +5709,7 @@ server <- function(input, output, session){
       else if(input$cond_sel_cell == "cat"){
         sele_cond <- Sel_cond_cell()$Condition[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
         notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
-        if(!purrr::is_empty(notsel_cond)){
+        if(length(notsel_cond)){
           notsel_cond <- paste(notsel_cond, collapse = "|")
 
           data <- data[,-str_which(names(data), notsel_cond)]
@@ -5718,7 +5718,7 @@ server <- function(input, output, session){
       }
       else if(input$cond_sel_cell == "all_cond"){
         notsel_cond <- TREAT[!(TREAT %in% Sel_cond_cell())]
-        if(!purrr::is_empty(notsel_cond)){
+        if(length(notsel_cond)){
           notsel_cond <- paste(notsel_cond, collapse = "|")
 
           data <- data[,-str_which(names(data), notsel_cond)]

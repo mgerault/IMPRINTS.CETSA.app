@@ -6,6 +6,7 @@
 #' @param hits The hitlist; a data.frame containing the genes id and preferably a condition column but not necessary.
 #' @param gene_column The name of the coulumn that contains the genes. Default is 'Genes'.
 #' @param condition_column The name of the column that contains the conditions. Default is NULL.
+#' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param n_pathway Number of pathway to show on plot. Default is 5.
 #'                  For more info you, see \code{\link{compareCluster}}.
 #'
@@ -18,20 +19,36 @@
 #' @seealso \code{\link{clusterProfiler}}
 
 compare_wp <- function(hits, gene_column = "Genes", condition_column = NULL,
-                       n_pathway = 5){
+                       species = c("human", "mouse"), n_pathway = 5){
+  if(length(species) == 0){
+    stop("You need to specify a species; either human or mouse")
+  }
+  else if(length(species) > 1){
+    species <- species[1]
+  }
+  species <- tolower(species)
+  if(!(species %in% c("human", "mouse"))){
+    stop("Only human and mouse are supported for now")
+  }
+
+  biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
 
   ### load database
   ensembl <- NULL
   while(is.null(ensembl)){
-    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl", port = ""),
+    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
                         error = function(e) message("Timeout reached for getting gene ensemble,
                                                     fetching it again.")) # genes_id / gene symbols
   }
-  wp <- get_wikipath() # wiki pathway
+  wp <- get_wikipath(species = species) # wiki pathway
+
+  if(any(is.na(hits[[gene_column]]))){
+    hits <- hits[which(!is.na(hits[[gene_column]])),]
+  }
 
   # get genes id from gene symbol
-  hits_gene_id <- biomaRt::getBM(attributes = c("hgnc_symbol", "entrezgene_id"),
-                                 filters = "hgnc_symbol",
+  hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
+                                 filters = "uniprot_gn_symbol",
                                  curl = curl::handle_setopt(curl::new_handle(), timeout = 30000),
                                  values = unique(sort(hits[[gene_column]])),
                                  bmHeader = TRUE,
@@ -81,7 +98,14 @@ compare_wp <- function(hits, gene_column = "Genes", condition_column = NULL,
 
 
 # function to always get most recent wiki pathway database (update every 10 of month)
-get_wikipath <- function(wp = TRUE){
+get_wikipath <- function(wp = TRUE, species = "human"){
+  if(species == "human"){
+    species <- "Homo_sapiens"
+  }
+  else if(species == "mouse"){
+    species <- "Mus_musculus"
+  }
+
   date <- stringr::str_split(Sys.Date(), "-")[[1]]
   date <- as.numeric(date)
   if(date[3] < 11){
@@ -98,7 +122,7 @@ get_wikipath <- function(wp = TRUE){
   date <- paste0(date, collapse = "")
 
   url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
-                     date, "-gmt-Homo_sapiens.gmt")
+                     date, "-gmt-", species, ".gmt")
   url_wiki <- url(url_wiki)
 
   if(wp){

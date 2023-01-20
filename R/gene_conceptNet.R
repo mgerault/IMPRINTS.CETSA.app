@@ -8,6 +8,7 @@
 #' @param score_column The name of the coulumn that contains the score values. Default is 'SR'.
 #' @param condition_column The name of the column that contains the conditions. Default is NULL.
 #' @param condition The name of the condition you ant to keep. Default is NULL.
+#' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param pval_cutoff The p-value cutoff for the gene concept network.
 #'
 #' @return The gene concept network plot.
@@ -20,15 +21,28 @@
 
 gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
                             condition_column = NULL, condition = NULL,
-                            pval_cutoff = 0.01){
+                            species = c("human", "mouse"), pval_cutoff = 0.01){
+  if(length(species) == 0){
+    stop("You need to specify a species; either human or mouse")
+  }
+  else if(length(species) > 1){
+    species <- species[1]
+  }
+  species <- tolower(species)
+  if(!(species %in% c("human", "mouse"))){
+    stop("Only human and mouse are supported for now")
+  }
+
+  biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
+
   ### load database
   ensembl <- NULL
   while(is.null(ensembl)){
-    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl", port = ""),
+    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
                         error = function(e) message("Timeout reached for getting gene ensemble,
                                                     fetching it again.")) # genes_id / gene symbols
   }
-  wp <- get_wikipath(FALSE) # wiki pathway
+  wp <- get_wikipath(FALSE, species = species) # wiki pathway
 
   if(!is.null(condition_column) & !is.null(condition)){
     hits <- hits[which(hits[[condition_column]] == condition),]
@@ -36,10 +50,13 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
   if(any(is.na(hits[[score_column]]))){
     hits <- hits[which(!is.na(hits[[score_column]])),]
   }
+  if(any(is.na(hits[[gene_column]]))){
+    hits <- hits[which(!is.na(hits[[gene_column]])),]
+  }
 
   # get genes id from gene symbol
-  hits_gene_id <- biomaRt::getBM(attributes = c("hgnc_symbol", "entrezgene_id"),
-                                 filters = "hgnc_symbol",
+  hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
+                                 filters = "uniprot_gn_symbol",
                                  values = unique(sort(hits[[gene_column]])),
                                  bmHeader = TRUE,
                                  mart = ensembl)
@@ -85,7 +102,14 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
 
 
 # function to always get most recent wiki pathway database (update every 10 of month)
-get_wikipath <- function(wp = TRUE){
+get_wikipath <- function(wp = TRUE, species = "human"){
+  if(species == "human"){
+    species <- "Homo_sapiens"
+  }
+  else if(species == "mouse"){
+    species <- "Mus_musculus"
+  }
+
   date <- stringr::str_split(Sys.Date(), "-")[[1]]
   date <- as.numeric(date)
   if(date[3] < 11){
@@ -102,7 +126,7 @@ get_wikipath <- function(wp = TRUE){
   date <- paste0(date, collapse = "")
 
   url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
-                     date, "-gmt-Homo_sapiens.gmt")
+                     date, "-gmt-", species, ".gmt")
   url_wiki <- url(url_wiki)
 
   if(wp){

@@ -31,12 +31,14 @@
 imprints_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
                           PRcomplex_data = NULL,
                           treatment, max_na = 0,
-                          response = c("S", "D", "both"),
+                          response = c("both", "S", "D"),
                           select_cat = c("CC", "CN", "NC"),
                           saveHeat = FALSE, file_type = c("png", "pdf"), file_name = "Heatmap",
                           titleH = "Elutriation heatmap", gradient_color = c("#005EFF", "#FFFFFF", "#FF0000"),
                           cat_color = list("CC" = "#FB4F0B", "CN" = "#0FAEB9", "NC" = "#E7B700"),
                           back_color = "#FFFFFF", border_color = NULL){
+  response <- match.arg(response)
+  file_type <- match.arg(file_type)
   if (length(treatment) != 1) {
     stop("Please provide one treatment name")
   }

@@ -3147,7 +3147,7 @@ server <- function(input, output, session){
   observeEvent(input$rem_daba, {
     showModal(
       modalDialog(
-        title="Are you sur you want to remove this dataset ?",
+        title="Are you sure you want to remove this dataset ?",
         footer = tagList(actionButton("confirmRem", "Remove"),
                          modalButton("Cancel")
         )

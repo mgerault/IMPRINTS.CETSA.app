@@ -292,7 +292,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
           subt <- data[, c(1, grep("^score", names(data)))]
           subt <- as.data.frame(subt)
           colnames(subt) <- c("id", "score")
-          subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
+          subt$category <- paste("Score :", round(subt$score,4))  # keep same name for simplicity
           subt$score <- NULL
           rownames(subt) <- subt$id
           data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
@@ -474,7 +474,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
         subt <- data[, c(1, grep("^category", names(data)), grep("^score", names(data)))]
         subt <- as.data.frame(subt)
         colnames(subt) <- c("id", "category", "score")
-        subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,2))
+        subt$category <- paste("Category :", subt$category, ", Score :", round(subt$score,4))
         subt$score <- NULL
         rownames(subt) <- subt$id
         data <- data[,-grep("^score", names(data))]
@@ -506,7 +506,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
       subt <- data[, c(1, grep("^score", names(data)))]
       subt <- as.data.frame(subt)
       colnames(subt) <- c("id", "score")
-      subt$category <- paste("Score :", round(subt$score,2))  # keep same name for simplicity
+      subt$category <- paste("Score :", round(subt$score,4))  # keep same name for simplicity
       subt$score <- NULL
       rownames(subt) <- subt$id
       data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]

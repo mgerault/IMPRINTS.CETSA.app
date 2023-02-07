@@ -84,39 +84,55 @@ cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
                                    TERM2NAME=wp[,c("wpid", "name")],
                                    scoreType = "pos")
 
-  gsea_res@result$geneSymbol <- unlist(lapply(strsplit(gsea_res@result$core_enrichment, "/"),
-                                              function(x){x <- as.numeric(x)
-                                              g <- hits_gene_id$Genes[which(!is.na(match(hits_gene_id$Genes_id, x)))]
-                                              g <- paste(g, collapse = "/");
-                                              g
-                                              }
-                                              )
-                                       )
+  if(nrow(gsea_res@result) == 0){
+    #no term enriched under specific pvalueCutoff...
+    graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = "No term enriched \nunder p-value of 0.05", size = 10) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
 
-  if(pos_enrichment){
-    if(length(which(gsea_res@result$enrichmentScore > 0))){
-      graph <- enrichplot::gseaplot2(gsea_res,
-                         geneSetID = which(gsea_res@result$enrichmentScore > 0))
-    }
-    else{
-      message("All enrichment score are negative, showing those instead.")
-      graph <- enrichplot::gseaplot2(gsea_res,
-                         geneSetID = which(gsea_res@result$enrichmentScore < 0))
-    }
+    return(list("res" = NULL, "graph" = graph))
   }
   else{
-    if(length(which(gsea_res@result$enrichmentScore < 0))){
-      graph <- enrichplot::gseaplot2(gsea_res,
-                         geneSetID = which(gsea_res@result$enrichmentScore < 0))
+    gsea_res@result$geneSymbol <- unlist(lapply(strsplit(gsea_res@result$core_enrichment, "/"),
+                                                function(x){x <- as.numeric(x)
+                                                g <- hits_gene_id$Genes[which(!is.na(match(hits_gene_id$Genes_id, x)))]
+                                                g <- paste(g, collapse = "/");
+                                                g
+                                                }
+    )
+    )
+
+    if(pos_enrichment){
+      if(length(which(gsea_res@result$enrichmentScore > 0))){
+        graph <- enrichplot::gseaplot2(gsea_res,
+                                       geneSetID = which(gsea_res@result$enrichmentScore > 0))
+      }
+      else{
+        message("All enrichment score are negative, showing those instead.")
+        graph <- enrichplot::gseaplot2(gsea_res,
+                                       geneSetID = which(gsea_res@result$enrichmentScore < 0))
+      }
     }
     else{
-      message("All enrichment score are positive, showing those instead.")
-      graph <- enrichplot::gseaplot2(gsea_res,
-                         geneSetID = which(gsea_res@result$enrichmentScore > 0))
+      if(length(which(gsea_res@result$enrichmentScore < 0))){
+        graph <- enrichplot::gseaplot2(gsea_res,
+                                       geneSetID = which(gsea_res@result$enrichmentScore < 0))
+      }
+      else{
+        message("All enrichment score are positive, showing those instead.")
+        graph <- enrichplot::gseaplot2(gsea_res,
+                                       geneSetID = which(gsea_res@result$enrichmentScore > 0))
+      }
     }
-  }
 
-  return(list("res" = gsea_res@result, "graph" = graph))
+    return(list("res" = gsea_res@result, "graph" = graph))
+  }
 }
 
 

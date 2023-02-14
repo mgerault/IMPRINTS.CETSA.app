@@ -128,7 +128,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
                                       score_threshold = score_threshold,
                                       max_na = max_na_prow)
 
-    if(class(data_simi) != "data.frame"){
+    if(!inherits(data_simi, "data.frame")){
       return(data_simi)
     }
 
@@ -473,7 +473,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
     }
-    if (class(corrtable) != "NULL") {
+    if (!is.null(corrtable)) {
       corrtable <- corrtable[order(corrtable$correlation,
                                    decreasing = T), ]
       if (printBothName & !pfdatabase) {

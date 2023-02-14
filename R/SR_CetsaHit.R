@@ -98,13 +98,13 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     data_diff <- data_diff[, c("id", "description", name_cond, "sumUniPeps", "sumPSMs", "countNum")]
     data_diff <- mineCETSA::ms_2D_caldiff(data_diff, treatmentlevel = c(ctrl, cond))
   }
-  else if("character" %in% class(data_diff)){
+  else if(inherits(data_diff, "character")){
     if(stringr::str_detect(data_diff, "\\.tsv$|\\.csv$|\\.txt$"))
       data_diff <- readr::read_tsv(data_diff)
     else
       stop("Format isn't recognize")
   }
-  else if(!("data.frame" %in% class(data_diff))){
+  else if(!inherits(data_diff, "data.frame")){
     stop("data_diff is neither a file, neither a data frame !")
   }
 

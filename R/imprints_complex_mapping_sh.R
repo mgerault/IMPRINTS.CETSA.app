@@ -37,7 +37,7 @@ imprints_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL,
   }
   complexdb <- subset(mineCETSA::coreCorum, Organism == organism)
   if (length(complexID)) {
-    if (class(complexID) == "character") {
+    if (inherits(complexID, "character")) {
       complexID <- as.numeric(complexID)
     }
     complexdb <- subset(complexdb, ComplexID %in% complexID)

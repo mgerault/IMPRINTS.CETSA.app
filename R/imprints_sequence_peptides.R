@@ -31,7 +31,7 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL, c
   }
 
   if(!is.null(sequence)){
-    if(!(length(proteins) == length(sequence) | length(sequence) == 1) & class(sequence) != "list"){
+    if(!(length(proteins) == length(sequence) | length(sequence) == 1) & !inherits(sequence, "list")){
       message("Error :The number of sequence needs to match the number of proteins or just provide one sequence")
       return()
     }

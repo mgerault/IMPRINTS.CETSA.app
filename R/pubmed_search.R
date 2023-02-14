@@ -41,7 +41,7 @@ find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, conditio
   no_res <- c()
 
   if (typeof(data) == "character"){
-    if(length(data) == 1 & str_detect(data, "\\.txt$|\\.csv$|\\.xlsx$"))
+    if(length(data) == 1 & all(str_detect(data, "\\.txt$|\\.csv$|\\.xlsx$")))
       data <- import_list(data)[[1]]
   }
 

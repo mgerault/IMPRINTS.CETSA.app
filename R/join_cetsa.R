@@ -23,7 +23,7 @@ join_cetsa <- function(list_data, new_names = c("1h", "6h")){
   if(sum(stringr::str_detect(new_names, "_|/")) > 0){
     stop("Please enter a valid suffix. The character '_' and '/' are not allowed.")
   }
-  if(sum(class(list_data) == "data.frame") >= 1){
+  if(inherits(list_data, "data.frame")){
     list_data <- list(list_data)
   }
   n <- length(list_data)

@@ -39,6 +39,7 @@ com_protein_loop <- function(data){
   names(all_common) <- paste(names(data), collapse = " & ")
 
   all_possi <- all_inter(rep_L)          #call all_inter to know in which groups the duplicates are duplicated
+
   all_possi <- Reduce(append, all_possi) #get the whole list
 
   all_possi <- all_possi[!unlist(lapply(all_possi, function(x) length(x) == 0))]  #remove the empty ones
@@ -95,6 +96,4 @@ all_inter <- function(data){  #here the data are duplicates but not common in al
 
   return(l)
 }
-
-
 

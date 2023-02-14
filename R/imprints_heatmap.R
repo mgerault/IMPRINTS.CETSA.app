@@ -42,7 +42,7 @@ imprints_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
   if (length(treatment) != 1) {
     stop("Please provide one treatment name")
   }
-  if (inherits(data, "data.frame") | class(data) == "data.frame") {
+  if (inherits(data, "data.frame")) {
     subset <- stringr::str_which(names(data), paste0("_", treatment, "$", collapse = "|"))
     if (length(subset) > 0) {
       data1 = data[, c(1, 2, subset)]
@@ -210,7 +210,7 @@ imprints_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
     fills <- PaletteWithoutGrey(unique(datah$category))
   }
   else{
-    stripr <- which(grepl('strip-l', H$layout$name)) #strip-r correspond to the left facet label
+    stripr <- which(grepl('strip-l', H$layout$name)) #strip-l correspond to the left facet label
     fills <- "#5691FC"
   }
   k <- 1

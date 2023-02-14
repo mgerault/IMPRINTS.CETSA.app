@@ -1,40 +1,29 @@
-#check if package mineCETSA has been downloaded
 .onAttach <- function(libname, pkgname) {
-
-  if (!("mineCETSA" %in% rownames(installed.packages()))) {
+  if (!("mineCETSA" %in% installed.packages())) {
     packageStartupMessage(
-      paste0(
-        "Please install the last version of `mineCETSA` by",
-        " `devtools::install_github('nkdailingyun/mineCETSA')`",
-        " or by procuring you the tar.gz file."
-      )
+      "Please install the last version of `mineCETSA` by",
+      " `devtools::install_github('nkdailingyun/mineCETSA')`",
+      " or by procuring you the tar.gz file."
     )
   }
-  if (!("STRINGdb" %in% rownames(installed.packages()))) {
+  if (!requireNamespace("STRINGdb", quietly = TRUE)) {
     packageStartupMessage(
-      paste0(
         "Please install `STRINGdb` package by",
         " `BiocManager::install('STRINGdb')`"
-      )
-    )
-  }
-  if (!("EBImage" %in% rownames(installed.packages()))) {
-    packageStartupMessage(
-      paste0(
-        "Please install `EBImage` package by",
-        " `BiocManager::install('EBImage')`"
-      )
     )
   }
 
-}
+  packageStartupMessage(
+    "\n",
+    "Welcome to mineCETSAapp package! To launch the app, run runCETSAapp() function.\n",
+    "To access the documentation type browseVignettes(package = 'mineCETSAapp') or \n",
+    "with vignette('mineCETSAapp_doc', package = 'mineCETSAapp')"
+    )
 
-#save the working directory of the user in order to save file when using the app
-.onLoad <- function(...){
   WD <<- getwd()
-  message(
-    paste0("Your working directory has been save to the variable WD as ", WD, " Please don't change this variable unless you want to change your saving directory when using the app.")
+  packageStartupMessage(
+    "\n",
+    "A variable named 'WD' has been created to make it easier to browse files\n",
+    "when using the app. You can change its value but it must be a valid file path."
   )
-  message("")
-  message("To access the documentation type browseVignettes(package = 'mineCETSAapp') or with vignette('mineCETSAapp_doc', package = 'mineCETSAapp')")
 }

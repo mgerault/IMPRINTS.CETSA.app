@@ -218,7 +218,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
       return(q)
     }
   }
-  if(("list" %in% class(data))){
+  if(inherits(data, "list")){
     if(!save_pdf){
       stop("Your input data is a list. The aim is to save in the same pdf with diffrent data sets.
            Retry with setting 'save_pdf' to TRUE.")
@@ -357,7 +357,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
         if (withset) {
           cdata$set <- factor(as.character(cdata$set), levels = setlevel)
         }
-        if (class(corrtable) != "NULL") {
+        if (!is.null(corrtable)) {
           corrtable <- corrtable[order(corrtable$correlation,
                                        decreasing = T), ]
           if (printBothName & !pfdatabase) {
@@ -574,7 +574,7 @@ imprints_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
     }
-    if (class(corrtable) != "NULL") {
+    if (!is.null(corrtable)) {
       corrtable <- corrtable[order(corrtable$correlation,
                                    decreasing = T), ]
       if (printBothName & !pfdatabase) {

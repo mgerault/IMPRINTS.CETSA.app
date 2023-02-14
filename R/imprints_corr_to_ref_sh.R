@@ -33,7 +33,7 @@ imprints_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, 
   if (length(reference) == 0) {
     stop("Pls provide a numeric reading vector as the reference profile")
   }
-  if (inherits(data, "data.frame") | class(data) == "data.frame") {
+  if (inherits(data, "data.frame")) {
     subset <- grep(treatment, names(data))
     if (length(set)) {
       subset_set <- grep(set, names(data))

@@ -25,7 +25,7 @@ imprints_normalize_peptides <- function(peptides_data){
       return()
     }
   }
-  else if("data.frame" %in% class(peptides_data)){
+  else if(inherits(peptides_data, "data.frame")){
     necessary_columns <- c("Master Protein Accessions", "description",
                            "Positions in Master Proteins",
                            "Annotated Sequence", "Modifications")

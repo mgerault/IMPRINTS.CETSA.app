@@ -66,7 +66,7 @@ compare_wp <- function(hits, gene_column = "Genes", condition_column = NULL,
 
   # cluster compare enrichment analysis
   hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
-                                                 data = hits, fun = clusterProfiler::enricher,
+                                                 data = hits, fun = "enricher",
                                                  TERM2GENE=wp[,c("wpid", "gene")],
                                                  TERM2NAME=wp[,c("wpid", "name")])
 
@@ -95,7 +95,6 @@ compare_wp <- function(hits, gene_column = "Genes", condition_column = NULL,
 
   return(list("res" = res, "graph" = graph))
 }
-
 
 # function to always get most recent wiki pathway database (update every 10 of month)
 get_wikipath <- function(wp = TRUE, species = "human"){

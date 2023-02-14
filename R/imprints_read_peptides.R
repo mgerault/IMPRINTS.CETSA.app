@@ -86,7 +86,7 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
     }
   }
   else{
-    if("data.frame" %in% class(proteins)){
+    if(inherits(proteins, "data.frame")){
       if(all(c("id", "description") %in% colnames(proteins))){
         proteins <- proteins[,c("id", "description")]
       }

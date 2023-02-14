@@ -1610,15 +1610,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                        conditionalPanel(condition = "input.impc_pubmed",
                                                                         fileInput("data_pubmed", "Import your data")),
                                                        conditionalPanel(condition = "!input.impc_pubmed",
-                                                                        textInput("dtext_pubmed", "Type some protein names, separated by a comma", ""))
+                                                                        textInput("dtext_pubmed", "Type some protein names or any other words, separated by a comma", "proteomics"))
                                                        ),
-                                       column(3, textInput("feat_pubmed", "Type your second research word", "cell cycle")),
-                                       column(3, textInput("LA_pubmed", "Type a language to match (can be null)")),
-                                       column(3, textInput("Y_pubmed", "Type a year range to match (can be null, format is Y1:Y2)"))
+                                       column(3, textInput("feat_pubmed", "Type your second research word (can be null)", "")),
+                                       column(3, textInput("LA_pubmed", "Type a language to match (can be null)", "english")),
+                                       column(3, textInput("Y_pubmed", "Type a year range to match (can be null, format is Y1:Y2)", "2022:2023"))
                                        ),
 
                                        fluidRow(column(3, textInput("api_pubmed", "Type your NCBI API if you have an account")),
-                                                column(3, textInput("fname_pubmed", "Type the name of the folder that will be created", "Elutriation_pubmed_search")),
+                                                column(3, textInput("fname_pubmed", "Type the name of the folder that will be created", "pubmed_search")),
                                                 column(3, conditionalPanel(condition = "input.impc_pubmed",
                                                                            checkboxInput("hit_pubmed", "Do you import a hitlist ? (need description column)", TRUE))
                                                        ),
@@ -1926,7 +1926,7 @@ server <- function(input, output, session){
     else{
       prot <- input$protseq_pep
       if(!is.null(input$selectSequence_pep)){
-        if("matrix" %in% class(input$selectSequence_pep)){
+        if(inherits(input$selectSequence_pep, "matrix")){
           sequ <- as.character(input$selectSequence_pep[,1])
         }
         else{
@@ -2104,7 +2104,7 @@ server <- function(input, output, session){
     else{
       prot <- input$protseq_joinpep
       if(!is.null(input$selectSequence_joinpep)){
-        if("matrix" %in% class(input$selectSequence_joinpep)){
+        if(inherits(input$selectSequence_joinpep, "matrix")){
           sequ <- as.character(input$selectSequence_joinpep[,1])
         }
         else{
@@ -5888,6 +5888,93 @@ server <- function(input, output, session){
     }
   )
 
+
+  ### PubMed
+
+  pubmed_data <- reactive({
+    File <- input$data_pubmed
+    if (is.null(File))
+      return(NULL)
+
+    import_list(File$datapath)[[1]]
+  })
+  #check if a file is upload
+  output$pubmed_fileup <- reactive({
+    return(!is.null(pubmed_data()))
+  })
+  outputOptions(output, "pubmed_fileup", suspendWhenHidden = FALSE)
+
+  observe({
+    if(!input$impc_pubmed){
+      updateCheckboxInput(session, "hit_pubmed", value = FALSE)
+    }
+  })
+
+  observeEvent(input$go_pub, {
+    showNotification("Start searching", type = "message")
+
+    if(input$impc_pubmed){
+      data <- pubmed_data()
+    }
+    else{
+      data <- input$dtext_pubmed
+      data <- str_split(data, ",")[[1]]
+      data <- str_trim(data)
+    }
+
+    if (str_length(str_remove_all(input$LA_pubmed, " ")) == 0){
+      LA_ <- NULL
+    }
+    else{
+      LA_ <- input$LA_pubmed
+    }
+    if (str_length(str_remove_all(input$Y_pubmed, " ")) == 0){
+      Y_ <- NULL
+    }
+    else{
+      Y_ <- input$Y_pubmed
+    }
+    if (str_length(str_remove_all(input$api_pubmed, " ")) == 0){
+      api_ <- NULL
+    }
+    else{
+      api_ <- input$api_pubmed
+    }
+
+    withCallingHandlers({
+      shinyjs::html("diag", "")
+      pub <- find_in_pubmed(data, feat = input$feat_pubmed, imp_by_hitlist = input$hit_pubmed,
+                            language = LA_, year_rg = Y_, condition = input$cond_pubmed,
+                            your_API = api_, newfolder_name = input$fname_pubmed)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+
+    }
+    )
+
+
+    output$pubmed_out <- DT::renderDataTable({
+      DT::datatable(pub,
+                    caption = htmltools::tags$caption(
+                      style = 'caption-side: top; text-align: left;',
+                      htmltools::strong("PubMed search results")
+                    ),
+                    rownames = FALSE,
+                    options = list(lengthMenu = c(10,20,30), pageLength = 10))
+    })
+
+    output$down_pubmed <- downloadHandler(
+      filename = function() {
+        paste0("have_publication_", Sys.Date(), "_", input$feat_pubmed, ".xlsx")
+      },
+      content = function(file){
+        xlsx::write.xlsx(pub, file, row.names = FALSE)
+      }
+    )
+
+
+  })
 }
 
 

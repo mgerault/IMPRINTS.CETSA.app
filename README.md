@@ -26,8 +26,8 @@ This package is specifically conceived to analyse the IMPRINTS-CETSA data. With 
  
 
 ## How to install mineCETSAapp?  
-First go to Rstudio. This package totally depends on the last version of the mineCETSA package. If you havn't donwload it yet, please do so.
-For installation from github https://github.com/nkdailingyun/mineCETSA ; however it may not be the last version.
+First go to Rstudio. This package totally depends on the last version of the IMRPRINTS.CETSA package. If you havn't donwload it yet, please do so.
+For installation from github https://github.com/nkdailingyun/IMRPRINTS.CETSA .
 Moreover, you need to install some packages from BioConductor especially for the gene ontology analysis :
 
 ```c

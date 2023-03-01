@@ -1,6 +1,6 @@
 # mineCETSAapp
-This is a package to complete the mineCETSA package from Dai Lingyun (https://github.com/nkdailingyun/mineCETSA), more specifically the CETSA IMPRINTS analysis.
-The goal of this package is to provide a user friendly interface of this package. With this shiny app, you can do the complete CETSA 2D analysis; visualize the 2D bar plot or heatmap of many proteins from drug experiment available in the database; add new dataset or remove old ones from this database; get STRING network and extract other GO analysis from your data; start a PubMed search based on the protein names or any character you want and save the results in word files; etc.
+This is a package to complete the IMRPRINTS.CETSA package from Dai Lingyun (https://github.com/nkdailingyun/IMRPRINTS.CETSA), more specifically the CETSA IMPRINTS analysis.
+The goal of this package is to provide a user friendly interface of this package. With this shiny app, you can do the complete IMPRINTS CETSA analysis on the protein and peptide level; visualize the 2D bar plot or heatmap of many proteins from drug experiment available in the database; add new dataset or remove old ones from this database; get STRING network and extract other GO analysis from your data; plot interactive barplots networks; start a PubMed search based on the protein names or any character you want and save the results in word files; etc.
 
 The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell and get information on it when clicking one. The subcellular location is obtained thanks to the protein Atlas data base.
 

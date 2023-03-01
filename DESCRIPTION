@@ -1,7 +1,7 @@
 Package: mineCETSAapp
 Type: Package
-Title: A shiny app for mineCETSA package 
-Version: 3.0.2
+Title: A shiny app for IMPRINTS.CETSA package 
+Version: 3.1.0
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for mineCETSA R package, in a user friendly way.
@@ -12,16 +12,16 @@ LazyData: true
 RoxygenNote: 7.2.3
 Depends: 
     R (>= 4.1.0),
-    dplyr (>= 1.0.0),
+    dplyr (>= 1.1.0),
     ggplot2 (>= 3.2.0)
 Imports: ggplot2,  stringr, tidyr, magick,
    shiny, shinydashboard, shinyMatrix, shinycssloaders, bslib,
-   DT, rio, metap, MKmisc,
+   DT, rio, metap, MKmisc, visNetwork, RCurl,
    dplyr, plyr, shinyjs, cowplot, plotly, pubmedR, 
    rentrez, XML, gridExtra, rjson, VennDiagram,
    bibliometrix, officer, colourpicker, openxlsx
 Suggests: 
-    mineCETSA,
+    IMPRINTS.CETSA,
     EBImage,
     STRINGdb,
     clusterProfiler,

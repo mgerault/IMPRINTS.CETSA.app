@@ -1,0 +1,603 @@
+---
+title: "Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way"
+author: "Marc-Antoine Gerault"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    theme: dark
+    highlight: espresso
+vignette: >
+  %\VignetteIndexEntry{Use the mineCETSAapp package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction  
+The mineCETSAapp package totally depends on the IMPRINTS.CETSA package, written by Dai Lingyun. 
+If you're not familiar with this package, go see its [github page](https://github.com/nkdailingyun/IMPRINTS.CETSA) or type 
+'browseVignettes(package = "IMPRINTS.CETSA")' in the R console if you already installed it.
+The main goal of mineCETSAapp package is to provide a "user-friendly" interface of the IMPRINTS.CETSA package thanks to a shiny app. 
+The app contains 6 tabs :
+
+1. IMPRINTS.CETSA analysis 
+   * Do the whole analysis of your IMPRINTS MS-CETSA datasets 
+2. Hit proteins and bar plots
+   * Modify the database
+   * Get the bar plots according to the hits, the protein complex, similar profiles of a selected protein
+3. Heatmap
+   * Get  heatmap of your datasets according to the category or the protein complex
+4. Network
+   * Get the STRING network and the enrichment analysis
+5. Interactive cell
+   * Print the proteins on an interactive cell according to their cellular location (depends on the Protein Atlas database)
+6. PubMed Search
+   * Check if other papers have been published on PubMed according to your criterias
+
+In the tabs 2 to 5, you will be able to use the data from the database. But you will still be able to import your own data.
+The package contains also other functions that you can use directly on Rstudio; we will get through those in this vignette.
+
+--------------------------------------------------------------------------------------------
+
+## Prerequisites
+* R version > 4.0.0 
+* Rstudio version > 1.0
+* Dependent packages:  
+"IMPRINTS.CETSA", "STRINGdb", "EBImage", "ggplot2",  "stringr", "tidyr", "magick", "shiny", "shinydashboard", "shinycssloaders", "DT", "rio", "purrr", "dplyr", "plyr", "shinyjs", "cowplot", "plotly", "pubmedR", "rentrez", "XML", "gridExtra", "rjson", "bibliometrix", "officer", "colourpicker", "openxlsx" 
+ 
+Three packages are not from CRAN and hence will not be installed when you will install mineCETSAapp package :  
+"IMPRINTS.CETSA", "STRINGdb", "EBImage". For the IMPRINTS.CETSA package, you'll need the last version from github. For the two others, you can install them from BioConductor. For this, type this command in the R console :
+
+```{r, eval=FALSE}
+if(!requireNamespace("BiocManager", quietly = TRUE)){ #check if you already have the BiocManager package
+ install.packages("BiocManager")  #if not, install it
+}
+BiocManager::install("STRINGdb")
+BiocManager::install("EBImage")
+```
+
+The mineCETSAapp package is currently on github, so for installing it you'll also need the "devtools" package.
+You can install the mineCETSAapp package with this commands :
+
+```{r, eval=FALSE}
+if(!requireNamespace("devtools", quietly = TRUE)){ #check if you already have the devtools package
+ install.packages("devtools")  #if not, install it
+}
+devtools::install_github("mgerault/mineCETSAapp")
+```
+
+You can access the same informations (and the source code) on the [github repository](https://github.com/mgerault/mineCETSAapp)
+
+--------------------------------------------------------------------------------------------
+
+## Set up
+1. For better organization of data analysis, it is __highly recommended__ to use the [Project management feature](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects) in Rstudio.   
+For each project, you are suggested to create a brand new working folder as your local working directory.  
+When you will use the package and/or the app inside this directory, all your results will be saved in this directory.
+Indeed, when you will load the package, it will save the path of your working directory under the variable WD.
+You can modify it if you want to quickly change your saving directory, but only do it if you are sure and of course if your file exists.
+
+2. Activate `mineCETSAapp` package by library it.  
+
+```{r, message=FALSE, eval=FALSE}
+library("mineCETSAapp")
+```
+
+--------------------------------------------------
+
+## Analysis
+
+### Run the shiny app
+
+-------------------------------------------------
+    
+```{r, eval=FALSE}
+runCETSAapp()      #this function will directly start the app
+```
+
+If you want more informations on how to use the app, I recommend you to watch the  [tutorial](https://youtu.be/cOlOzU7-S3A).
+
+### An overview from the functions
+
+------------------------------------------------
+
+    
+#### $\underline{1.\space The\space data\space}$
+  
+The package contains also some data that you can play with. The are from the paper "Modulation of Protein-Interaction States through the Cell Cycle" from Dai Lingyun and al. 2018. Let's take a look at the data called "drug_data".
+         "drug_data" is list that contains datasets : "elutriation" and "chemarrest". 
+         
+For each dataset, you will find :
+
+* The caldiff output (the protein abundance difference); access it with '$data'
+* The imprints_average output (the average from the caldiff output among the bioreplicates); access it with '$data_ave'
+* The hitlist; access it with '$hitlist'
+* The proteins categorized as "NN"; access it with '$NN'
+* The trement level; access it with '$treat_level'
+         
+```{r, eval=FALSE}
+mydata_caldiff <- drug_data$data$elutriation  #save your data    
+mydata_ave <- drug_data$data_ave$elutriation
+
+View(mydata_caldiff)  #take a look at the data
+View(mydata_ave)
+```
+  
+ 
+####  $\underline{2.\space See/save\space the\space barplot}$
+      
+The IMPRINTS.CETSA package already contains the imprints_barplotting function; imprints_barplotting_app is totally based on this function. This one allow you to save or not the file; add the category and/or a score on the barplots in the subtitle (to do so, just add a category and/or a score columns named "category" and "score"); use joined dataset; use a named list of dataset (will plot all the barplots from each dataset, usefull when dataset according to the protein complex or cellular location for example). Also, the bar plots will not be generated in an external window; however to keep information on how the function is running, the remaining number of pages to be saved is printed.
+         
+```{r, eval=FALSE}
+imprints_barplotting_app(mydata_caldiff, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+
+mydata_caldiff_chemarrest <- drug_data$data$chemarrest
+all_drug <- list("elutriation" = mydata_caldiff, "chemarrest" = mydata_caldiff_chemarrest)
+imprints_barplotting_app(all_drug, ret_plot = FALSE, save_pdf = TRUE) #will save all the barplots from the data
+#here, it will "join" the two pdf in one
+```
+ 
+Instead of doing a list of all our data, we could also get list of our data according to the protein complex.
+For this, you'll need the function imprints_complex_mapping_sh (which is also based on imprints_complex_mapping from IMPRINTS.CETSA).
+         
+```{r, eval=FALSE}
+mydata_hit <- drug_data$hitlist$elutriation
+#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
+map_compl <- imprints_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
+                                      targetcategory = c("CN", "CC", "NC"))
+View(map_compl) #if you want to check the data
+
+map_compl <- map_compl[, c("ComplexName", "subunitsNum", "subunitsIdentifiedNum",  #keep columns of interest
+                                 "id", "description", "gene", "category")]
+     
+if(nrow(map_compl) !=0){
+  map_compl$description <- unname(unlist(sapply(map_compl$description, mineCETSAapp:::getProteinName))) #keep only protein names in description
+}
+```
+  
+Now that we know some protein complexes, we can build our list.
+         
+```{r, eval=FALSE}
+data_l <- list() #initialize list
+some_complex <- unique(map_compl$ComplexName)
+some_complex <- some_complex[sample(1:length(some_complex), 4)]
+for(i in some_complex){
+  cate_ <- map_compl[which(map_compl$ComplexName == i), ]
+  pr_comp <- unique(cate_$id)
+        
+  data_l[[i]] <- ms_subsetting(mydata_caldiff, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
+   
+  data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))] #keep category 
+}
+data <- data_l
+
+#each element of the list contains data from caldiff output for each protein complex selected
+
+imprints_barplotting_app(data_l,save_pdf = TRUE, ret_plot = FALSE, 
+                     toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",  #title on each page (will add the complex name, cf. the names of the list)
+                     pdfname = "complex_barplot"
+                     )
+```  
+
+When you looked at your barplots from different protein complex, you noticed that the protein profiles are quite similar among each complex. But if you want only to find similar profiles from a selected protein, you may want to use the imprints_barplotting_simprof function. With this function, by typing a protein ID, you will search for similar profiles according to a score. For now, there are two score methods : the Pearson correlation score and the Euclidean distance score. Then by setting a threshold, you can select similar profiles. 
+
+The euclidean distance score will directly take the distance between the values, so the similar profiles will have a similar shape AND similar values. This is not the case with the Peasron correlation score since you divide the covariance by the standard deviation. Indeed the value are all scaled by this division, so you will find more similar profiles and not necessarily with similar values.
+
+For more informations on this scores : [Euclidean](https://nakkaya.com/2009/11/11/euclidean-distance-score/) ; [Pearson](https://www.questionpro.com/blog/pearson-correlation-coefficient/)
+         
+```{r, eval=FALSE}
+imprints_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the average data, but if it wasn't the case we would have let it NULL and let the function calculate it for us
+                          treatmentlevel = "S", protein_profile = "O43776",
+                          pdfname = "similar_O43776",
+                          use_score = "euclidean",
+                          score_threshold = 0.65, max_na_prow = 0
+                          )
+#Here we choose the Euclidean distance score with a threshold of 0.65 and no missing values
+```   
+        
+The function will find the similar profiles and inform you of how many it found. If you're satistfied with the number, you can continue and so save the plots or you can stop here and change the method or the threshold.
+  
+  
+####  $\underline{3.\space Heatmap}$
+       
+You can also get heatmap of your data according to their categories or their protein complex.
+       
+```{r, eval=FALSE}
+# According their category
+#here we need the average data
+imprints_heatmap(mydata_ave, hit_summary = mydata_hit,
+              treatment = "S", max_na = 0,
+              response = "both",
+              select_cat = c("CC", "CN", "NC"),  
+              saveHeat = TRUE, file_type = "png")
+#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S
+
+# According to their protein complex
+some_complex <- unique(map_compl$ComplexName)
+some_complex <- some_complex[sample(1:length(some_complex), 4)]
+cate_ <- map_compl[which(map_compl$ComplexName == i), ]
+pr_comp <- cate_$id
+        
+data <- ms_subsetting(mydata_ave, isfile = F, hitidlist = c(pr_comp)) #filter the proteins from those complexes
+   
+imprints_heatmap(data, PRcomplex_data = cate_,
+              treatment = "S", max_na = 0,
+              response = "both", 
+              saveHeat = TRUE, file_type = "png")
+#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
+```  
+
+
+####  $\underline{4.\space Hitlist\space :\space get\space your\space hits\space based\space on\space a\space new\space score,\space the\space Stability\space Rate\space and\space a\space p-value}$
+
+You can find the hited proteins with the hitlist function (not written by me) according to your thresholds.
+But you can also use the SR_CetsaHit function which define hits if a protein has a big enough Stability Rate (SR) and good enough p-value (an FDR can be set).
+
+In order to use this function, you'll need the post normalization data. The caldiff output is not necessary since it can be calculated automatically. You just need to set an FDR and a cutoff for the SR but you can let the default value. For more details, check the documentation of the function.
+       
+```{r, eval=FALSE}
+norm_data <- readr::read_tsv("path_to_your_normalized_data.txt")
+new_hits <- SR_CetsaHit(norm_data, ctrl = "Vehicle")
+```    
+   
+Since we didn't put the caldiff data, it will calculate it. Then it will save all the results (volcano plots, file output, venndiagram) in file named by default 'Hits_analysis'.
+   
+   
+####  $\underline{5.\space STRING\space network}$
+    
+In this section, you will learn how to plot a string network from your data and start an enrichment analysis.
+First, you need to load the STRINGdb package and import the database from STRING.
+       
+```{r, eval=FALSE}
+library(STRINGdb)
+dir.create("STRING_data")   # create folder to stor STRING data
+string_db <- STRINGdb$new(version="11", species=9606,               #ID 9606 correspond to human
+                           score_threshold=200,
+                           input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
+```
+   
+Now we can start the analysis on a group of protein. Let's take the hits from the S condition.
+       
+```{r, eval=FALSE}
+data <- mydata_hit %>% dplyr::filter(Condition == "S")
+network_hit <- string_db$map(data, "id", removeUnmappedRows = TRUE)         #will map the proteins to the string ID
+
+My_net(network_hit$STRING_id , inter = FALSE) #will plot the network
+```
+   
+You can also choose to set the variable 'inter' to 'TRUE' in order to zoom into the plot.
+   
+Now, let's start the enrichment analysis. 
+       
+```{r, eval=FALSE}
+enrich_hit <- string_db$get_enrichment(network_hit$STRING_id)
+View(enrich_hit) #take a look at the data
+#Each protein has been mapped to a category (Component, function, ...) with a description of this category.
+#For example, with the category component we can have the description ribosome
+
+#sum up the result, will take only the category "Component"
+df <- Get_GO(enrich_hit, enrich = TRUE, all_cat = FALSE, sing_cat = "Component") #a list of data frame
+d_n <- as.list(lapply(df, names)[["Component"]]) #get names of the list : the string ID and the gene name
+#as.list() to keep the class list and use it in mapply after
+
+#add the column id in each data frame (the names we got at the last step)
+df <- mapply(function(x,y) {x$id <- rep(y, nrow(x)); x},
+                     df[["Component"]],
+                     d_n, SIMPLIFY = FALSE)
+df <- do.call(rbind, df)                    #put all the data frame in one 
+rownames(df) <- 1:nrow(df)
+View(df) #take a look at the data
+
+#keep the id and separate the gene name from the string ID
+id_string <- do.call(rbind, stringr::str_split(df$id, ","))
+colnames(id_string) <- c("gene.names", "STRING_id")
+
+#bind the two data frames
+df <- cbind(id_string, df[,-ncol(df)])
+View(df) #take a look at the final data
+
+#Let's see the network from some proteins mapped to a specific description
+#for example the ribosome and the cytosolic ribosome
+ribosome_net <- df$STRING_id[stringr::str_which(df$description, "^Ribosome$")]
+My_net(ribosome_net , inter = FALSE)
+```   
+        
+Now you can try with other category and/or description, save the plots and the results with the function 'ggsave' and 'openxlsx::write.xlsx()'.
+
+If you want more information, go check the [STRINGdb documentation](http://www.bioconductor.org/packages/release/bioc/html/STRINGdb.html).
+   
+   
+####  $\underline{6.\space The\space interactive\space cell}$
+       
+Now, if you want to check where your hits could be located, you may want to use the 'hit_for_cell' function.
+ This function will check if you proteins are in the Protein Atlas database and will map them to their main location.
+
+Then, it will generate random coordinates for each proteins __according to their cellular location__ on the cell image already present in the package. It will return a data frame containing the protein ID, the condition, the category, the gene name, the main location, the number of location found and the coordinates generated.
+       
+```{r, eval=FALSE}
+# Let's test it on the S condition
+data <- mydata_hit %>% dplyr::filter(Condition == "S")
+data <- data %>% dplyr::filter(!is.na(match(category, c("CC", "CN", "NC")))) #filter the category, but you could have take them all, even add also the NN
+
+cell_result <- hit_for_cell(data, organism = "HUMAN")
+View(cell_result) #take a look at the data
+```   
+
+Now let's plot our result on the cell ! It will generate an interactive plot thanks to the package [plotly](https://plotly.com/r/).
+
+```{r, eval=FALSE}
+hit_plotcell(cell_result, 
+             cat_col_list = list("CC" = "#FB4F0B", 
+                                 "CN" = "#0FAEB9",
+                                 "NC" = "#E7B700"))
+#it takes some time to run, since the plot contains a lot of information
+```      
+   
+   
+####  $\underline{7.\space PubMed\space search}$
+
+Let's say you just finish to analyzed your data and now you want to check if there are already papers published in PubMed talking about the drug you used and the proteins you found. For this, you can use the 'find_in_pubmed' function.
+Here's how you can can use it :
+       
+```{r, eval=FALSE}
+# to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name
+mydata_hit$description <- mydata_caldiff$description[which(!is.na(match(mydata_hit$id, mydata_caldiff$id)))]
+mydata_hit <- mydata_hit[1:20,] # take a sample of the proteins
+find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
+               language = "english", year_rg = "2021:2022", your_API = NULL,
+               newfolder_name = "elutriation_pubmed_search")
+```     
+   
+This will save the results in the folder named "elutriation_pubmed_search". For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set 'imp_by_hitlist' to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. 
+In this example, we match every protein name found under the condition S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2021 and 2022. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
+Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set 'imp_by_hitlist' to FALSE.
+   
+'your_API' is your API key from NCBI. By default, the access to NCBI API system is free and does not necessarily require an "API key". In this case, NCBI limits users to making only 3 requests per second. Users who register for an “API key” are able to make up to ten requests per second.
+Obtaing a key is very simple, you just need to register for ["my ncbi account"](https://www.ncbi.nlm.nih.gov/account/) then click on a button in the ["account settings page"](https://www.ncbi.nlm.nih.gov/account/?back_url=https://www.ncbi.nlm.nih.gov/account/settings/).
+   
+   
+####  $\underline{8.\space Other\space functions}$
+       
+The package contains also other functions created for the app but which can be useful for the user.
+   
+   
+   __get_treat_level__ function
+  
+  This function allow you to get the treatment level of your data. The input can be the output from 'caldiff' function or 'imprints_average' function.
+       
+```{r, eval=FALSE}
+get_treat_level(mydata_caldiff)
+get_treat_level(mydata_ave)
+```     
+   
+   
+   __join_cetsa__ function
+   
+   This function take a list of data frame and join them. It also allow you to add character at the end of the column names.
+   
+```{r, eval=FALSE}
+dl <- list(elutriation, chemarrest)
+new_data <- join_cetsa(dl, new_names = c("elutriation", "chemarrest"))
+new_data_nosuffix <- join_cetsa(dl, new_names = c("", "")) #without new names
+
+#just rename conditions
+chemarrest_new_name <- join_cetsa(chemarrest, "new")
+```
+ 
+  Remember you'll always need to add the same number of new names as you have data frames in your list. Also, to avoid any problems in the other function, the character '_' and '/' are not allowed.
+  
+  
+   __join_drugdata__ function
+   
+   As join_cetsa, this function will simply joined a list of data frame but without renaming. It is the same as the 'join_all' function from the 'plyr' package but allow to use the 'full_join' function from the 'dplyr' package and so to add suffixes to duplicated names not selecting by the argument 'by.'
+   
+```{r, eval=FALSE}
+join_drugdata(drug_data$data, by = c("id", "description"))
+```
+
+
+   __com_protein_loop__ function
+   
+   Let's say you have several data frames or a hitlist with many conditions and you want to check for each protein if it has been identified in one, two or n conditions.
+   
+   This is the goal of this function. In order to use it, you'll need a named list which contains numeric or character elements. In our case a list of the proteins identified in each drug experiment/condition.
+   
+```{r, eval=FALSE}
+#check between two data frames
+pr_elutriation <- unique(elutriation$id)
+pr_chemarrest <- unique(chemarrest$id)
+pr_list <- list("elutriation" = pr_elutriation, "chemarrest" = pr_chemarrest)
+
+result_common <- com_protein_loop(pr_list)
+result_common #A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both
+
+#check hits between conditions
+all_hits <- rbind(hitlist_elutriation, hitlist_chemarrest)
+pr_list <- list()
+for(i in unique(all_hits$Condition)){
+  pr_list[[i]] <- (all_hits %>% dplyr::filter(Condition == i))$id  #get hits for each condition in a hit
+}
+pr_list
+pr_list <- com_protein_loop(pr_list)  #A list which contains all the common and unique hits between all the condtions
+```
+  
+  Of course, you can then play with this list and reshape it. For example, just add the information in your hitlist :
+  
+```{r, eval=FALSE}
+all_hits$drug <- rep("c", nrow(all_hits))
+for (i in names(pr_list)){
+  all_hits$drug[which(!is.na(match(all_hits$id, pr_list[[i]])))] <- i
+}
+View(all_hits) #take a look at the data
+```
+   
+   Remember that this function works with any elements (some number, gene names, any ID, ...). You just need a named list in which you want to check the common things, no matter the number of elements in your list.
+
+
+   __is_in_zone__ function
+   
+   This function has been created for the hit_for_cell function. The aim is to check if a point is in a given delimited zone. 
+   
+   * The principle is as follow : If you take a square for example, and put a point in it. Now, link this point to all the points from the square. Then sum up the angles that you created; like this :
+```{r, fig.show='hold', echo=FALSE, fig.width=6, fig.height=6}
+library(ggplot2)
+ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() + geom_path() +
+  xlim(c(0.75,2.25)) + ylim(c(0.75,2.25)) + 
+  geom_point(data = data.frame(x = 1.5, y = 1.5), color = "red", size = 5) +
+  geom_segment(data = data.frame(x1 = c(1,1), x2 = c(2,2), y1 = c(1,2), y2 = c(2,1)), 
+               aes(x = x1, y = y1, xend = x2, yend = y2),
+               color = "blue") +
+ geom_curve(
+  aes(x = x1, y = y1, xend = x2, yend = y2),
+  data = data.frame(x1 = c(1.5, 1.75, 1.5, 1.25), x2 = c(1.75, 1.5, 1.25, 1.5), 
+                    y1 = c(1.25, 1.5, 1.75, 1.5), y2 = c(1.5, 1.75, 1.5, 1.25)),
+  arrow = arrow(length = unit(0.03, "npc"))
+  ) + 
+  geom_text(data = data.frame(x = c(1.15,1.5,1.85,1.5), y = c(1.5,1.15,1.5,1.85),
+                              text = rep("90°", 4)),
+            aes(x, y, label = text))
+```
+   
+   If your point is in the square, you should have a sum of 360° (or -360°); if not you will have a different value.
+   Now, instead of a square take any shape and apply this same principle. For every point, you will check if the sum of angle will be close to 360°. To be very confident, in this function, this sum of angle divided by 360 needs to be between 0 and 1e-20 or between 359.9995/360 and 1. This threshold are arbitrary but very tight which allow almost any mistakes.
+   
+   If we continue with our example of our square :
+```{r, eval=FALSE}
+square <- data.frame(x = c(1,1,2,2), y = c(1,2,2,1))
+point_in <- c(1.5,1.5)
+point_out <- c(2.1,2)
+
+is_in_zone(square, point_in)  #TRUE
+is_in_zone(square, point_out) #FALSE
+
+#You can create way more complicated border. You'll just need a data frame of 2 columns named x and y.
+```   
+   [More information](http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html)
+
+
+### Peptide analysis
+
+------------------------------------------------
+
+mineCETSAapp also contains functions to analyse IMPRINTS-CETSA on the peptide level. Their names always start with 'imprints' and ends with 'peptides'.
+One of the main question for example is the search for potential cleaved peptides.
+
+####  $\underline{1.\space Read\space your\space data}$
+
+The first step is to read your peptide data. For that, you'll need the PeptideGroup files from Proteome Discoverer and the function 'imprints_read_peptides'. For easier handle, you can put all your peptide file in a folder named 'Analysis_files' for example. 
+```{r, eval=FALSE}
+library(mineCETSAapp)
+
+peptides <- imprints_read_peptides(peptides_files = list.files("Analysis_files",     # your files
+                                                               pattern = "Peptide", 
+                                                               full.names = T),
+                                   treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the conditions corresponding to your channel
+                                                 "B2_Vehicle","B2_DrugA", "B2_DrugB",
+                                                 "B3_Vehicle", "B3_DrugA", "B3_DrugB",
+                                                 "Mix"),
+                                   temperatures = c("37C", "47C", "50C", "52C", "54C", "57C"), # temperatures from your corresponding files
+                                   proteins = "Analysis_files/proteins_imprints_caldiff.txt") # The proteins from which you want to analyze the peptides, can be a dataframe
+```  
+
+All peptides files are now joined and only the peptides from the proteins you analyzed are kept. A file is also saved.
+
+####  $\underline{2.\space Normalize\space your\space data}$
+
+Second step is now to normalize the peptides data the same way it is done for protein using the 'imprints_normalization' function from IMPRINTS.CETSA package.
+
+```{r, eval=FALSE}
+peptides_norm <- imprints_normalize_peptides(peptides)
+```  
+
+It returns the normalize, non log2 transformed, peptide data. A file is also saved.
+
+####  $\underline{3.\space Plot\space and\space check\space your\space data}$
+
+You can now start to plot imprints of your peptides. It's a lot of data, so it's better to select some proteins first.
+
+```{r, eval=FALSE}
+# one of your hitlist
+proteins <- hitlist$id
+peptides_norm_diff <-  imprints_sequence_peptides(peptides_norm,
+                                                  proteins =  proteins,
+                                                  control = "Vehicle") # needs to specify control from your experiment
+```  
+
+The function returns the caldiff output from all peptides from each protein you selected. It also save it as a file and plot the barplots from all these peptides.
+
+####  $\underline{4.\space Searching\space for\space cleaved\space peptides}$
+
+From the 'peptides_norm_diff', you can search for potential cleaved peptides. If it is cleaved, it means that first peptides (or the last) from the proteins are more abundant than the other from the same protein. 
+For this, you can use the 'imprints_cleaved_peptides' function. For more details, look into the documentation of the same function.
+
+```{r, eval=FALSE}
+potential_cleaved <-  imprints_cleaved_peptides(peptides_norm_diff,
+                                                control = "Vehicle") # if you want to remove the control from you data (advised)
+```  
+
+This function returns a data frame that contains the proteins that are potentially cleaved and their respective potential cleaved sites.
+
+####  $\underline{5.\space Check\space the\space cleaved\space peptides}$
+
+You can now sum all the fold changes from all the peptides before the cleaved site found and after, and this for all poteins found to be potentially cleaved. For this, you can use again the 'imprints_sequence_peptides' function but this time, input some sequences. Here, we will do it only for DrugA.
+
+```{r, eval=FALSE}
+# keeping only drug A
+peptides_norm_drugA <- peptides_norm[,-stringr::str_which(colnames(peptides_norm), "_DrugB$")]
+potential_cleaved_drugA <- potential_cleaved %>%
+  dplyr::filter(Condition == "DrugA")
+
+peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
+                                                      proteins =  potential_cleaved_drugA$protein,  
+                                                      sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleaved sites
+                                                      control = "Vehicle") # needs to specify control from your experiment
+```  
+
+You can now check the barplots obtained and see if the proteins found are cleaved.
+In 'imprints_sequence_peptides', you can put any sequence. Check the documentation from the function for more details.
+
+####  $\underline{6.\space Multiple\space dataset\space analysis}$
+
+If you do the exact same analysis for another dataset, or here with Drug B; you'll maybe want to compare your results between each drug.
+
+For more clarity, let's remove the peptide cleaved site.
+```{r, eval=FALSE}
+peptides_cleaved_drugA <- imprints_remove_peptides(peptides_cleaved_drugA, 
+                                                   proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the sepecific sequence
+                                                   sequence = potential_cleaved_drugA$cleaved_site) # the sequence you want to remove
+
+peptides_cleaved_drugB <- imprints_remove_peptides(peptides_cleaved_drugB, 
+                                                   proteins =  potential_cleaved_drugB$protein,  # the protein from which you want to remove the sepecific sequence
+                                                   sequence = potential_cleaved_drugB$cleaved_site) # the sequence you want to remove
+```  
+
+Then, you can join your datasets (can be more than 2). Usually, the exact same peptide sequence is not found between the datasets. Since the fold change are summed, we can join 'early sequence' protein together, same for 'late sequence'.
+
+```{r, eval=FALSE}
+peptides_cleaved <- list(peptides_cleaved_drugA, peptides_cleaved_drugB) # you could add more datasets
+
+peptides_cleaved <- imprints_join_peptides(peptides_cleaved)
+
+```  
+
+####  $\underline{7.\space Plot\space your\space results}$
+
+You can use the 'imprints_barplotting_app' function to plot your final results.
+
+```{r, eval=FALSE}
+# prepare data for function
+peptides_cleaved$`Master Protein Accessions` <- paste(peptides_cleaved$`Positions in Master Proteins`, "\n", "\n")
+colnames(peptides_cleaved)[1:5] <- c("id", "description", "sumUniPeps", "sumPSMs", "countNum")
+
+# save the imprints in a pdf
+imprints_barplotting_app(peptides_cleaved, layout = c(2,2), save_pdf = T, ret_plot = F)
+```  
+
+
+## Details
+If you want more information, remember that you can use the operator '?' and type the name of the function for accessing the documentation. You can also use the function 'View()' to see the source the code or see it on the [github](https://github.com/mgerault/mineCETSAapp) repository.
+
+## Any questions or bug report ?
+Feel free to send me an [e-mail](mailto:marco.gerault@gmail.com).

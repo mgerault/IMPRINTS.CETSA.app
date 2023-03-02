@@ -6,15 +6,19 @@ library(stringr)
 #elutriation file
 elutriation <- ms_fileread("210827_1735_elutriation_imprints_caldiff.txt")
 hitlist_elutriation <- openxlsx::read.xlsx("elutriation_Summary.xlsx")
+colnames(hitlist_elutriation)[2] <- "treatment"
 NN_elutriation <- openxlsx::read.xlsx("elutriation_NN.xlsx")
+colnames(NN_elutriation)[3] <- "treatment"
 
 #the chemarrest file
 chemarrest <- ms_fileread("210827_1739_chemarrest_imprints_caldiff.txt")
 hitlist_chemarrest <- openxlsx::read.xlsx("chemarrest_Summary.xlsx")
+colnames(hitlist_chemarrest)[2] <- "treatment"
 NN_chemarrest <- openxlsx::read.xlsx("chemarrest_NN.xlsx")
+colnames(NN_chemarrest)[3] <- "treatment"
 
-elutriation_ave <- IMPRINTS_average_sh(elutriation, FALSE)
-chemarrest_ave <- IMPRINTS_average_sh(chemarrest, FALSE)
+elutriation_ave <- imprints_average_sh(elutriation, FALSE)
+chemarrest_ave <- imprints_average_sh(chemarrest, FALSE)
 
 #the list named drug_data
 drug_data <- list("data" = list("elutriation" = elutriation, "chemarrest" = chemarrest),

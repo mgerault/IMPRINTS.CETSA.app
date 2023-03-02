@@ -7,7 +7,7 @@
 compare_enrich(
   hits,
   gene_column = "Genes",
-  condition_column = NULL,
+  treatment_column = NULL,
   species = c("human", "mouse"),
   n_pathway = 5,
   pval_cutoff = 0.01,
@@ -15,11 +15,11 @@ compare_enrich(
 )
 }
 \arguments{
-\item{hits}{The hitlist; a data.frame containing the genes id and preferably a condition column but not necessary.}
+\item{hits}{The hitlist; a data.frame containing the genes id and preferably a treatment column but not necessary.}
 
 \item{gene_column}{The name of the coulumn that contains the genes. Default is 'Genes'.}
 
-\item{condition_column}{The name of the column that contains the conditions. Default is NULL.}
+\item{treatment_column}{The name of the column that contains the treatments. Default is NULL.}
 
 \item{species}{Specify the species. Currently, only 'human' and 'mouse' are available.}
 
@@ -35,7 +35,7 @@ A list that contains the results and the plot.
 }
 \description{
 Function to run enrichment analysis on your hits and return
-a plot that compare the pathways found between your conditions.
+a plot that compare the pathways found between your treatments.
 }
 \seealso{
 \code{\link{clusterProfiler}}

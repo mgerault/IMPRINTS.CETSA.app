@@ -130,36 +130,36 @@ hitlist <- function(inputdata,
 
   ###  Cleaning data and calculating statistics  ###
   data <- data %>%
-    gather(condition,value,-id)
+    gather(treatment,value,-id)
 
   # Cleaning and calculating according to treatment format
-  if (length(unlist(strsplit(data$condition[1],'_')))==4) {
+  if (length(unlist(strsplit(data$treatment[1],'_')))==4) {
     data <- data %>%
-      separate(condition, into = c('Treatment',
+      separate(treatment, into = c('set',
                                  'Temperature',
                                  'Replicate',
-                                 'Condition'),sep = '_')
+                                 'treatment'),sep = '_')
     data_clean <- data %>%
-      dplyr::group_by(id, Treatment,Temperature, Condition) %>%
+      dplyr::group_by(id, set,Temperature, treatment) %>%
       dplyr::reframe(Mean = mean(value,na.rm=T),
               SD = sd(value,na.rm=T),
               SEM = SD/sqrt(length(na.omit(value))))
     }
-  else if (length(unlist(strsplit(data$condition[1],'_')))==3) {
-    if(any(grepl('[a-zA-Z][0-9]{2}[a-zA-Z]',unlist(strsplit(data$condition[1],'_'))))){
+  else if (length(unlist(strsplit(data$treatment[1],'_')))==3) {
+    if(any(grepl('[a-zA-Z][0-9]{2}[a-zA-Z]',unlist(strsplit(data$treatment[1],'_'))))){
       data[,2] <- gsub("X","",data[,2],perl = TRUE)
       data <- data %>%
-        separate(condition, into = c('Temperature',
+        separate(treatment, into = c('Temperature',
                                    'Replicate',
-                                   'Condition'),sep = '_')
+                                   'treatment'),sep = '_')
       data_clean <- data %>%
-        dplyr::group_by(id,Temperature, Condition) %>%
+        dplyr::group_by(id,Temperature, treatment) %>%
         dplyr::reframe(Mean = mean(value,na.rm=T),
                 SD = sd(value,na.rm=T),
                 SEM = SD/sqrt(length(na.omit(value))))
       }
     else {
-      identifiers <- data.frame(str_split(data$condition,
+      identifiers <- data.frame(str_split(data$treatment,
                                         '\\_',
                                         simplify=T))
 
@@ -169,35 +169,35 @@ hitlist <- function(inputdata,
                             into = c('temp','repl'),
                             sep = '\\_')
 
-      data[,2] <- unite(identifiers,'condition',sep = '_',remove=T)
+      data[,2] <- unite(identifiers,'treatment',sep = '_',remove=T)
       data <- data %>%
-        separate(condition, into = c('Treatment',
+        separate(treatment, into = c('set',
                                    'Temperature',
                                    'Replicate',
-                                   'Condition'),sep = '_')
+                                   'treatment'),sep = '_')
 
       data_clean <- data %>%
-        dplyr::group_by(id,Treatment,Temperature, Condition) %>%
+        dplyr::group_by(id,set,Temperature, treatment) %>%
         dplyr::reframe(Mean = mean(value,na.rm=T),
                 SD = sd(value,na.rm=T),
                 SEM = SD/sqrt(length(na.omit(value))))
       }
     }
-  else if (length(unlist(strsplit(data$condition[1],'_'))) < 3  ) {
+  else if (length(unlist(strsplit(data$treatment[1],'_'))) < 3  ) {
     print('Make sure the format/label is correct.')
     }
 
 
   # Handling user inputs string of treatments/drugs and control group
   veh_loc <- (data_clean$Mean==0)
-  default_expstr <- na.omit(c(unique(data_clean$Condition[!veh_loc]),unique(data_clean$Condition[veh_loc])))
+  default_expstr <- na.omit(c(unique(data_clean$treatment[!veh_loc]),unique(data_clean$treatment[veh_loc])))
 
   # Placing vehicle string in the last position
   if(any(length(expstr))){
     for (i in seq_along(expstr)){
-      data_clean$Condition <- gsub(default_expstr[i],
+      data_clean$treatment <- gsub(default_expstr[i],
                                    expstr[i],
-                                   data_clean$Condition,
+                                   data_clean$treatment,
                                    perl = TRUE)
       }
     }
@@ -242,18 +242,18 @@ hitlist <- function(inputdata,
     dplyr::filter(mean_threshold == T, bounded == T)
 
   #Unique id,cond pair for hits
-  keys_hits <- hits_definition %>% dplyr::ungroup() %>%  dplyr::select(id,Condition) %>%  dplyr::distinct()
+  keys_hits <- hits_definition %>% dplyr::ungroup() %>%  dplyr::select(id,treatment) %>%  dplyr::distinct()
 
   # Reference hitlist
-  hitlist <- selection_metrics %>% dplyr::right_join(keys_hits, by = c('id','Condition'))
+  hitlist <- selection_metrics %>% dplyr::right_join(keys_hits, by = c('id','treatment'))
   referencelist <- hitlist
 
 
 
   # Separate hits and NN from data
   NN <- selection_metrics %>%
-    dplyr::anti_join(hitlist, by = c('id','Condition')) %>%
-    dplyr::filter(Condition != expstr[length(expstr)]) %>%
+    dplyr::anti_join(hitlist, by = c('id','treatment')) %>%
+    dplyr::filter(treatment != expstr[length(expstr)]) %>%
     dplyr::group_by(category = 'NN')
 
 
@@ -264,9 +264,9 @@ hitlist <- function(inputdata,
                                     bounded == FALSE,
                                     wellmeasured == FALSE)
 
-  keys_ND <- ND_condition %>% dplyr::ungroup() %>% dplyr::select(id,Condition) %>%  dplyr::distinct()
+  keys_ND <- ND_condition %>% dplyr::ungroup() %>% dplyr::select(id,treatment) %>%  dplyr::distinct()
 
-  ND <- hitlist %>%  dplyr::right_join(keys_ND,by = c('id','Condition'))
+  ND <- hitlist %>%  dplyr::right_join(keys_ND,by = c('id','treatment'))
 
   # Proteins without 37C measurements
   NDwo37 <- hitlist %>% dplyr::filter(Temperature == '37C',
@@ -278,7 +278,7 @@ hitlist <- function(inputdata,
     dplyr::group_by(category = 'ND')
 
   # Remove ND from hitlist
-  hitlist <- hitlist %>% dplyr::anti_join(ND, by = c('id','Condition'))
+  hitlist <- hitlist %>% dplyr::anti_join(ND, by = c('id','treatment'))
 
 
   ## Stability change w/out expression change  - NC
@@ -287,23 +287,23 @@ hitlist <- function(inputdata,
   highT <- hitlist %>% dplyr::filter(Temperature != '37C',
                              mean_threshold == TRUE,
                              bounded == TRUE)
-  keys_highT <- highT %>% dplyr::ungroup() %>%  dplyr::select(id, Condition) %>%  dplyr::distinct()
+  keys_highT <- highT %>% dplyr::ungroup() %>%  dplyr::select(id, treatment) %>%  dplyr::distinct()
 
   # Low Temp., small mean and well measured
   lowT <- hitlist %>% dplyr::filter(Temperature == '37C',
                             mean_threshold == FALSE,
                             wellmeasured == TRUE)
-  keys_lowT <- lowT %>%  dplyr::ungroup() %>%  dplyr::select(id,Condition) %>%  dplyr::distinct()
+  keys_lowT <- lowT %>%  dplyr::ungroup() %>%  dplyr::select(id,treatment) %>%  dplyr::distinct()
 
-  # Match id,condition pair fulfilling NC condition
-  NC_keys <- dplyr::inner_join(keys_highT,keys_lowT, by = c('id','Condition'))
+  # Match id,treatment pair fulfilling NC condition
+  NC_keys <- dplyr::inner_join(keys_highT,keys_lowT, by = c('id','treatment'))
 
 
-  NC <- dplyr::right_join(hitlist,NC_keys,by = c('id','Condition')) %>%
+  NC <- dplyr::right_join(hitlist,NC_keys,by = c('id','treatment')) %>%
     dplyr::group_by(category = 'NC')
 
   # Remove NC from hitlist
-  hitlist <- hitlist %>%  dplyr::anti_join(NC, by = c('id','Condition'))
+  hitlist <- hitlist %>%  dplyr::anti_join(NC, by = c('id','treatment'))
 
   if(nrow(hitlist) > 0){
 
@@ -311,14 +311,14 @@ hitlist <- function(inputdata,
 
     ### INTERVAL CONDITION FOR CN
     CN_intervals <- hitlist %>%  dplyr::group_by(upperbound = Mean + SEM, lowerbound = Mean - SEM)
-    CN_keys <- CN_intervals %>%  dplyr::ungroup() %>%  dplyr::select(id, Condition) %>%  dplyr::distinct()
+    CN_keys <- CN_intervals %>%  dplyr::ungroup() %>%  dplyr::select(id, treatment) %>%  dplyr::distinct()
 
     CN_keep_interval <- c()
     CN_discard_interval <- c() # Will be part of CC
 
     for (idx in 1:nrow(CN_keys)){
       iterTibble <- CN_intervals %>%
-        dplyr::filter(id == CN_keys$id[idx],Condition == CN_keys$Condition[idx]) %>%
+        dplyr::filter(id == CN_keys$id[idx],treatment == CN_keys$treatment[idx]) %>%
         dplyr::select(upperbound,lowerbound)
       overlap <- c()
       for (i in 1:nrow(iterTibble)) {
@@ -335,13 +335,13 @@ hitlist <- function(inputdata,
     }
 
 
-    ### DEVIATION FROM REFERENCE MEAN CONDITION
+    ### DEVIATION FROM REFERENCE MEAN treatment
 
     # 37C with high mean
     CN_referencekeys <- hitlist %>%
       dplyr::filter(Temperature =='37C', mean_threshold == TRUE) %>%
       dplyr::ungroup () %>%
-      dplyr::select(id,Condition) %>%
+      dplyr::select(id,treatment) %>%
       dplyr::distinct()
 
     CN_keep_meandev <- c()
@@ -349,7 +349,7 @@ hitlist <- function(inputdata,
 
     for (idx in 1:nrow(CN_referencekeys)) {
       iterTibble <- hitlist %>% dplyr::filter(id == CN_referencekeys$id[idx],
-                                       Condition == CN_referencekeys$Condition[idx])
+                                       treatment == CN_referencekeys$treatment[idx])
       if (nrow(iterTibble %>% dplyr::filter(Temperature !='37C',bounded == TRUE)) == 0){
         next # Not bounded high temps are disregarded
       } else {
@@ -371,13 +371,13 @@ hitlist <- function(inputdata,
 
 
     # Proteins that do not fulfill either of CN conditions are CC - Expression and stability change
-    CCkeys <- dplyr::inner_join(CN_discard_interval,CN_discard_meandev, by = c('id','Condition'))
-    CC <- dplyr::right_join(hitlist,CCkeys,by = c('id','Condition')) %>%
+    CCkeys <- dplyr::inner_join(CN_discard_interval,CN_discard_meandev, by = c('id','treatment'))
+    CC <- dplyr::right_join(hitlist,CCkeys,by = c('id','treatment')) %>%
       dplyr::group_by(category = 'CC')
 
 
     # Remove all CC and reveal CNs
-    CN <- dplyr::anti_join(hitlist,CC, by = c('id','Condition')) %>%
+    CN <- dplyr::anti_join(hitlist,CC, by = c('id','treatment')) %>%
       dplyr::group_by(category = 'CN')
 
   }
@@ -408,7 +408,7 @@ hitlist <- function(inputdata,
     # Output content
     out_reference <- dplyr::inner_join(proteininfo,referencelist, by = 'id')
     out_categorized <- dplyr::inner_join(proteininfo,categorized_full, by = 'id')
-    out_summary <- categorized_full %>% dplyr::group_by(id,Condition,category) %>%  dplyr::summarize()
+    out_summary <- categorized_full %>% dplyr::group_by(id,treatment,category) %>%  dplyr::summarize()
     out_NN <- dplyr::inner_join(proteininfo,NN, by = 'id')
 
     # Output name formatting
@@ -439,8 +439,8 @@ hitlist <- function(inputdata,
   ### Summary: Return to user
 
   ### Return : Summary of run and dataframe with categories for further handling. ###
-  summary_categorized <- categorized_full %>% dplyr::group_by(id,Condition,category) %>%  dplyr::reframe()
-  summary_NN <- NN %>% dplyr::group_by(id,Condition,category) %>%  dplyr::reframe()
+  summary_categorized <- categorized_full %>% dplyr::group_by(id,treatment,category) %>%  dplyr::reframe()
+  summary_NN <- NN %>% dplyr::group_by(id,treatment,category) %>%  dplyr::reframe()
   tablecate <- table(summary_categorized[,2:3])
   tableNN <- table(summary_NN[,2:3])
 

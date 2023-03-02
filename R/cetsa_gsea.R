@@ -2,11 +2,11 @@
 #'
 #' Function to run enrichment analysis and plot a GSEA plot.
 #'
-#' @param hits A data.frame containing the genes id, a score value and preferably a condition column but not necessary.
+#' @param hits A data.frame containing the genes id, a score value and preferably a treatment column but not necessary.
 #' @param gene_column The name of the coulumn that contains the genes. Default is 'Genes'.
 #' @param score_column The name of the coulumn that contains the score values. Default is 'SR'.
-#' @param condition_column The name of the column that contains the conditions. Default is NULL.
-#' @param condition The name of the condition you ant to keep. Default is NULL.
+#' @param treatment_column The name of the column that contains the treatments. Default is NULL.
+#' @param treatment The name of the treatment you want to keep. Default is NULL.
 #' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param pos_enrichment Logical to tell if you want to only look at positive enrichment score.
 #'                       If FALSE, show only negative.
@@ -20,7 +20,7 @@
 #' @seealso \code{\link{clusterProfiler}}
 
 cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
-                       condition_column = NULL, condition = NULL,
+                       treatment_column = NULL, treatment = NULL,
                        species = c("human", "mouse"), pos_enrichment = TRUE,
                        pval_cutoff = 0.01,
                        database = c("WikiPathway", "KEGG", "GO")){
@@ -44,8 +44,8 @@ cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
                                                     fetching it again.")) # genes_id / gene symbols
   }
 
-  if(!is.null(condition_column) & !is.null(condition)){
-    hits <- hits[which(hits[[condition_column]] == condition),]
+  if(!is.null(treatment_column) & !is.null(treatment)){
+    hits <- hits[which(hits[[treatment_column]] == treatment),]
   }
   if(any(is.na(hits[[score_column]]))){
     hits <- hits[which(!is.na(hits[[score_column]])),]

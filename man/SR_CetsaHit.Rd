@@ -25,7 +25,7 @@ SR_CetsaHit(
 
 \item{ctrl}{The name of the control.}
 
-\item{valid_val}{The percentage of valid values you want per condition. If less, score will be set to NA,
+\item{valid_val}{The percentage of valid values you want per treatment. If less, score will be set to NA,
 i.e. the protein will not be a hit}
 
 \item{SR_cutoff}{The stability rate cutoff}

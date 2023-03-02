@@ -4,7 +4,7 @@
 #'
 #' @param data The output from hit_for_cell function
 #' @param tit The title of the plot
-#' @param cond The conditions you want to keep. If NULL, will take it all
+#' @param cond The treatments you want to keep. If NULL, will take it all
 #' @param cat_col_list A list containing the color for each category (CC, CN, NC, ND, NN)
 #'
 #' @return An interactive plot
@@ -20,7 +20,7 @@ hit_plotcell <- function(data, tit = "PI3K data in the cell",
                                                           "NN" = "#CCCCCC")){
   df <- data
   if(!is.null(cond)){
-    df <- df[which(!is.na(match(df$Condition, cond))),]
+    df <- df[which(!is.na(match(df$treatment, cond))),]
   }
 
   df <- df[order(df$nb_location),]

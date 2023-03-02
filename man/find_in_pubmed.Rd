@@ -8,7 +8,7 @@ find_in_pubmed(
   data,
   feat = "PI3K",
   imp_by_hitlist = FALSE,
-  condition = "",
+  treatment = "",
   language = NULL,
   year_rg = NULL,
   your_API = NULL,
@@ -23,7 +23,7 @@ the dataframe hitlist output from the Hitlist function.}
 
 \item{imp_by_hitlist}{Logical to tell if the data are in the hitlist format.}
 
-\item{condition}{A character vector for selecting specific condition. Use when data are in hitlist format.}
+\item{treatment}{A character vector for selecting specific treatment. Use when data are in hitlist format.}
 
 \item{language}{A character to tell if you want to select publications in a specific language like 'english'.}
 

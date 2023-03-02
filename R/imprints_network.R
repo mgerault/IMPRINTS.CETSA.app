@@ -5,8 +5,8 @@
 #' @param data Dataset after imprints_caldiff
 #' @param hits The Uniprots ids from which you want to plot the network.
 #'   If NULL, it will take all the proteins from the data.
-#' @param condition The condition from which you want to plot to plot the barplots.
-#'   If NULL, it will plot all the conditions present in the data.
+#' @param treatment The treatment from which you want to plot to plot the barplots.
+#'   If NULL, it will plot all the treatments present in the data.
 #' @param GOterm Either a data frame containing the columns 'id', 'GOterm' and eventually 'color';
 #'   a character corresponding to a data base or a NULL object.
 #'   If you choose a data base, it will perform an enrichment analysis and assign a GO term
@@ -18,7 +18,7 @@
 #' @param witherrorbar Logical to tell if you want to print the error bar or not on the bar plots.
 #' @param FC_border Logical to tell if you want to color the nodes borders according to the
 #'   mean Fold-Change from each protein.
-#' @param colorbar A vector of colors corresponding to each condition.
+#' @param colorbar A vector of colors corresponding to each treatment.
 #' @param colorFC If FC_border is set to TRUE, a vector of three color corresponding
 #'   to the min, mid and max value from the mean fold change.
 #' @param species The species; either human, mouse or rat.
@@ -34,7 +34,7 @@
 #'
 #' @export
 
-imprints_network <- function(data, hits = NULL, condition = NULL, GOterm = NULL,
+imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
                              required_score = 400, witherrorbar = TRUE, FC_border = TRUE,
                              colorbar = NULL, colorFC = c("#0041FF", "#FFFFFF", "#FF0000"),
                              species = c("human", "mouse", "rat"),
@@ -71,19 +71,19 @@ imprints_network <- function(data, hits = NULL, condition = NULL, GOterm = NULL,
     }
   }
 
-  if(is.null(condition)){
-    condition <- get_treat_level(data)
+  if(is.null(treatment)){
+    treatment <- get_treat_level(data)
   }
   else{
-    condition_in <- condition %in% get_treat_level(data)
-    if(!all(condition_in)){
-      message(paste("Error: ", condition[!condition_in], "wasn't found in your data."))
+    treatment_in <- treatment %in% get_treat_level(data)
+    if(!all(treatment_in)){
+      message(paste("Error: ", treatment[!treatment_in], "wasn't found in your data."))
       return()
     }
   }
 
   if(!is.null(colorbar)){
-    if(length(colorbar) != length(condition)){
+    if(length(colorbar) != length(treatment)){
       message("Error: The number of colors you gave doesn't match the number of conditons.")
       return()
     }
@@ -175,12 +175,12 @@ imprints_network <- function(data, hits = NULL, condition = NULL, GOterm = NULL,
 
   message("Generates barplots...")
   if(is.null(colorbar)){
-    bar <- imprints_barplotting_app(data, treatmentlevel = condition,
+    bar <- imprints_barplotting_app(data, treatmentlevel = treatment,
                                     witherrorbar = witherrorbar,
                                     printBothName = FALSE)
   }
   else{
-    bar <- imprints_barplotting_app(data, treatmentlevel = condition,
+    bar <- imprints_barplotting_app(data, treatmentlevel = treatment,
                                     colorpanel = colorbar, witherrorbar = witherrorbar,
                                     printBothName = FALSE)
   }
@@ -205,13 +205,13 @@ imprints_network <- function(data, hits = NULL, condition = NULL, GOterm = NULL,
   lnodes <- data.frame(matrix(nrow = 0, ncol = 5))
   colnames(lnodes) <- c("label", "color.border", "color.background", "shape", "borderWidth")
   if(FC_border){
-    to_rm <- get_treat_level(data)[!(get_treat_level(data) %in% condition)]
+    to_rm <- get_treat_level(data)[!(get_treat_level(data) %in% treatment)]
     if(length(to_rm)){
       data <- data[,-stringr::str_which(colnames(data), paste0("_", to_rm, "$", collapse = "|"))]
     }
 
-    if(length(condition) > 1){
-      message("More than one condition has been selected. The biggest mean FC in absolute value will be taken.")
+    if(length(treatment) > 1){
+      message("More than one treatment has been selected. The biggest mean FC in absolute value will be taken.")
     }
 
     FC <- data %>%

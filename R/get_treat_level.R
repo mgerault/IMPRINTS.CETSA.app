@@ -13,7 +13,7 @@ get_treat_level <- function(data){
   lev <- names(data)
   lev <- str_subset(lev, "^\\d{2}")
   lev <- str_split(lev, "_")
-  lev <- lapply(lev, function(x) x[length(x)]) #take the last element after a '_', so in theory the condition
+  lev <- lapply(lev, function(x) x[length(x)]) #take the last element after a '_', so in theory the treatment
   lev <- unique(unlist(lev))
 
   return(lev)

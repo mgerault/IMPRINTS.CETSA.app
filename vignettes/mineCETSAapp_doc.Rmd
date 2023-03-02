@@ -144,7 +144,7 @@ For this, you'll need the function imprints_complex_mapping_sh (which is also ba
          
 ```{r, eval=FALSE}
 mydata_hit <- drug_data$hitlist$elutriation
-#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
+#will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)
 map_compl <- imprints_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",  
                                       targetcategory = c("CN", "CC", "NC"))
 View(map_compl) #if you want to check the data
@@ -212,7 +212,7 @@ imprints_heatmap(mydata_ave, hit_summary = mydata_hit,
               response = "both",
               select_cat = c("CC", "CN", "NC"),  
               saveHeat = TRUE, file_type = "png")
-#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S
+#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the treatment S
 
 # According to their protein complex
 some_complex <- unique(map_compl$ComplexName)
@@ -226,7 +226,7 @@ imprints_heatmap(data, PRcomplex_data = cate_,
               treatment = "S", max_na = 0,
               response = "both", 
               saveHeat = TRUE, file_type = "png")
-#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
+#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the treatment S
 ```  
 
 
@@ -258,10 +258,10 @@ string_db <- STRINGdb$new(version="11", species=9606,               #ID 9606 cor
                            input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
 ```
    
-Now we can start the analysis on a group of protein. Let's take the hits from the S condition.
+Now we can start the analysis on a group of protein. Let's take the hits from the S treatment.
        
 ```{r, eval=FALSE}
-data <- mydata_hit %>% dplyr::filter(Condition == "S")
+data <- mydata_hit %>% dplyr::filter(treatment == "S")
 network_hit <- string_db$map(data, "id", removeUnmappedRows = TRUE)         #will map the proteins to the string ID
 
 My_net(network_hit$STRING_id , inter = FALSE) #will plot the network
@@ -314,11 +314,11 @@ If you want more information, go check the [STRINGdb documentation](http://www.b
 Now, if you want to check where your hits could be located, you may want to use the 'hit_for_cell' function.
  This function will check if you proteins are in the Protein Atlas database and will map them to their main location.
 
-Then, it will generate random coordinates for each proteins __according to their cellular location__ on the cell image already present in the package. It will return a data frame containing the protein ID, the condition, the category, the gene name, the main location, the number of location found and the coordinates generated.
+Then, it will generate random coordinates for each proteins __according to their cellular location__ on the cell image already present in the package. It will return a data frame containing the protein ID, the treatment, the category, the gene name, the main location, the number of location found and the coordinates generated.
        
 ```{r, eval=FALSE}
-# Let's test it on the S condition
-data <- mydata_hit %>% dplyr::filter(Condition == "S")
+# Let's test it on the S treatment
+data <- mydata_hit %>% dplyr::filter(treatment == "S")
 data <- data %>% dplyr::filter(!is.na(match(category, c("CC", "CN", "NC")))) #filter the category, but you could have take them all, even add also the NN
 
 cell_result <- hit_for_cell(data, organism = "HUMAN")
@@ -345,13 +345,13 @@ Here's how you can can use it :
 # to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name
 mydata_hit$description <- mydata_caldiff$description[which(!is.na(match(mydata_hit$id, mydata_caldiff$id)))]
 mydata_hit <- mydata_hit[1:20,] # take a sample of the proteins
-find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
+find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, treatment = "S",
                language = "english", year_rg = "2021:2022", your_API = NULL,
                newfolder_name = "elutriation_pubmed_search")
 ```     
    
 This will save the results in the folder named "elutriation_pubmed_search". For each protein names (if a paper has been found), you will have a word file which contains the title, the authors, the date of publication and the abstract of each publication found in PubMed. When you set 'imp_by_hitlist' to TRUE, it means that your data are a hitlist (or any data frames) that contains the column description. 
-In this example, we match every protein name found under the condition S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2021 and 2022. If condition was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
+In this example, we match every protein name found under the treatment S with the word "cell". Then we search for articles which contains those words in the title and/or the abstract, written in english and published between 2021 and 2022. If treatment was set to "", then it would have taken all the protein names from your hitlist. You can also set 'language' and 'year_rg' to NULL to not filter on those criterias; same if you set 'feat' to "".
 Your data can also be any character vector or another file (tab or comma separated) which contains one column of words that you want to search for publications; if so you need to set 'imp_by_hitlist' to FALSE.
    
 'your_API' is your API key from NCBI. By default, the access to NCBI API system is free and does not necessarily require an "API key". In this case, NCBI limits users to making only 3 requests per second. Users who register for an “API key” are able to make up to ten requests per second.
@@ -382,7 +382,7 @@ dl <- list(elutriation, chemarrest)
 new_data <- join_cetsa(dl, new_names = c("elutriation", "chemarrest"))
 new_data_nosuffix <- join_cetsa(dl, new_names = c("", "")) #without new names
 
-#just rename conditions
+#just rename treatments
 chemarrest_new_name <- join_cetsa(chemarrest, "new")
 ```
  
@@ -413,11 +413,11 @@ pr_list <- list("elutriation" = pr_elutriation, "chemarrest" = pr_chemarrest)
 result_common <- com_protein_loop(pr_list)
 result_common #A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both
 
-#check hits between conditions
+#check hits between treatments
 all_hits <- rbind(hitlist_elutriation, hitlist_chemarrest)
 pr_list <- list()
-for(i in unique(all_hits$Condition)){
-  pr_list[[i]] <- (all_hits %>% dplyr::filter(Condition == i))$id  #get hits for each condition in a hit
+for(i in unique(all_hits$treatment)){
+  pr_list[[i]] <- (all_hits %>% dplyr::filter(treatment == i))$id  #get hits for each treatment in a hit
 }
 pr_list
 pr_list <- com_protein_loop(pr_list)  #A list which contains all the common and unique hits between all the condtions
@@ -493,7 +493,7 @@ library(mineCETSAapp)
 peptides <- imprints_read_peptides(peptides_files = list.files("Analysis_files",     # your files
                                                                pattern = "Peptide", 
                                                                full.names = T),
-                                   treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the conditions corresponding to your channel
+                                   treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the treatments corresponding to your channel
                                                  "B2_Vehicle","B2_DrugA", "B2_DrugB",
                                                  "B3_Vehicle", "B3_DrugA", "B3_DrugB",
                                                  "Mix"),
@@ -547,7 +547,7 @@ You can now sum all the fold changes from all the peptides before the cleaved si
 # keeping only drug A
 peptides_norm_drugA <- peptides_norm[,-stringr::str_which(colnames(peptides_norm), "_DrugB$")]
 potential_cleaved_drugA <- potential_cleaved %>%
-  dplyr::filter(Condition == "DrugA")
+  dplyr::filter(treatment == "DrugA")
 
 peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
                                                       proteins =  potential_cleaved_drugA$protein,  

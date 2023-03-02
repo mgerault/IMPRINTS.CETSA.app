@@ -8,7 +8,7 @@ hit_for_cell(HIT, organism = c("HUMAN", "MOUSE"))
 }
 \arguments{
 \item{HIT}{Usually, the output from hitlist function; but just has to be a data frame with the
-columns id, Condition and category}
+columns id, treatment and category}
 
 \item{organism}{The organism on whi you did your experiment. For now, only 'HUMAN' and 'MOUSE' are available.}
 }

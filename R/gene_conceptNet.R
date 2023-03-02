@@ -3,11 +3,11 @@
 #' Function to run enrichment analysis on your hits and return
 #' a network plot.
 #'
-#' @param hits A data.frame containing the genes id, a score value and preferably a condition column but not necessary.
+#' @param hits A data.frame containing the genes id, a score value and preferably a treatment column but not necessary.
 #' @param gene_column The name of the coulumn that contains the genes. Default is 'Genes'.
 #' @param score_column The name of the coulumn that contains the score values. Default is 'SR'.
-#' @param condition_column The name of the column that contains the conditions. Default is NULL.
-#' @param condition The name of the condition you ant to keep. Default is NULL.
+#' @param treatment_column The name of the column that contains the treatments. Default is NULL.
+#' @param treatment The name of the treatment you ant to keep. Default is NULL.
 #' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param pval_cutoff The p-value cutoff for the gene concept network.
 #' @param database Specify the database. Currently, WikiPathway, KEGG and GO ar available.
@@ -19,7 +19,7 @@
 #' @seealso \code{\link{clusterProfiler}}
 
 gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
-                            condition_column = NULL, condition = NULL,
+                            treatment_column = NULL, treatment = NULL,
                             species = c("human", "mouse"), pval_cutoff = 0.01,
                             database = c("WikiPathway", "KEGG", "GO")){
   if(!("KEGGREST" %in% installed.packages())){
@@ -42,8 +42,8 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
                                                     fetching it again.")) # genes_id / gene symbols
   }
 
-  if(!is.null(condition_column) & !is.null(condition)){
-    hits <- hits[which(hits[[condition_column]] == condition),]
+  if(!is.null(treatment_column) & !is.null(treatment)){
+    hits <- hits[which(hits[[treatment_column]] == treatment),]
   }
   if(any(is.na(hits[[score_column]]))){
     hits <- hits[which(!is.na(hits[[score_column]])),]
@@ -97,36 +97,52 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
     }
   }
 
-  hits_enrich@result$geneSymbol <- unlist(lapply(strsplit(hits_enrich@result$geneID, "/"),
-                                                 function(x){x <- as.numeric(x)
-                                                 g <- hits[[gene_column]][which(!is.na(match(hits$Genes_id, x)))]
-                                                 g <- paste(g, collapse = "/");
-                                                 g
-                                                 }
-  ))
-  hits_enrich@result$Description <- stringr::str_remove_all(hits_enrich@result$Description, "%.{1,}")
-  colnames(hits_enrich@result)[c(8,10)] <- c("geneNumber", "geneID")
-  n_toshow <- length(which(hits_enrich@result$p.adjust <= pval_cutoff))
+  if(nrow(hits_enrich@result) == 0){
+    #no term enriched under specific pvalueCutoff...
+    graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = paste("No term enriched \nunder p-value of", pval_cutoff), size = 10) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
 
-  fold <- hits[,c(gene_column, score_column)]
-  fold <- as.data.frame(fold)
-  if(any(duplicated(fold[[gene_column]]))){
-    fold <- fold[-which(duplicated(fold[[gene_column]])),]
+    return(graph)
   }
-  rownames(fold) <- fold[[gene_column]]
-  fold[[gene_column]] <- NULL
-  fold <- unlist(as.list(as.data.frame(t(fold))))
+  else{
+    hits_enrich@result$geneSymbol <- unlist(lapply(strsplit(hits_enrich@result$geneID, "/"),
+                                                   function(x){x <- as.numeric(x)
+                                                   g <- hits[[gene_column]][which(!is.na(match(hits$Genes_id, x)))]
+                                                   g <- paste(g, collapse = "/");
+                                                   g
+                                                   }
+    ))
+    hits_enrich@result$Description <- stringr::str_remove_all(hits_enrich@result$Description, "%.{1,}")
+    colnames(hits_enrich@result)[c(8,10)] <- c("geneNumber", "geneID")
+    n_toshow <- length(which(hits_enrich@result$p.adjust <= pval_cutoff))
+
+    fold <- hits[,c(gene_column, score_column)]
+    fold <- as.data.frame(fold)
+    if(any(duplicated(fold[[gene_column]]))){
+      fold <- fold[-which(duplicated(fold[[gene_column]])),]
+    }
+    rownames(fold) <- fold[[gene_column]]
+    fold[[gene_column]] <- NULL
+    fold <- unlist(as.list(as.data.frame(t(fold))))
 
 
-  graph <- enrichplot::cnetplot(hits_enrich, showCategory = n_toshow, foldChange = fold,
-                    color_category = "#0059FE") +
-    scale_color_gradient(low = "#87FE00", high = "#FE0000") +
-    labs(title = paste("Gene-concept network", condition, "hits"),
-         subtitle = paste(database, "p-value cutoff:", pval_cutoff),
-         color = score_column,
-         size = "Count")
+    graph <- enrichplot::cnetplot(hits_enrich, showCategory = n_toshow, foldChange = fold,
+                                  color_category = "#0059FE") +
+      scale_color_gradient(low = "#87FE00", high = "#FE0000") +
+      labs(title = paste("Gene-concept network", treatment, "hits"),
+           subtitle = paste(database, "p-value cutoff:", pval_cutoff),
+           color = score_column,
+           size = "Count")
 
-  return(graph)
+    return(graph)
+  }
 }
 
 

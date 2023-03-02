@@ -277,7 +277,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                                 less likely that there is a cleaved site.</h5>")),
                                                                                              column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
                                                                                              column(3, numericInput("propValcleaved_pep", "Choose the minimum proportion of valid values per peptide
-                                                                                                                                           per condition; i.e. if 6 temperatures and 0.5, it can't
+                                                                                                                                           per treatment; i.e. if 6 temperatures and 0.5, it can't
                                                                                                                                            have more than 3 missing values.",
                                                                                                                     value = 0.4, min = 0, max = 1, step = 0.01)),
                                                                                              column(3, actionButton("CLEAVED_pep", "Search for potential cleaved site", class = "btn-primary"))
@@ -290,7 +290,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                   solidHeader = TRUE, collapsible = TRUE, width = 12, collapsed = TRUE,
                                                   tags$u(h3("Filter your dataset")),
 
-                                                  shiny::HTML("<br><h5>Here, you can filter out some conditions from your peptide fold-change data
+                                                  shiny::HTML("<br><h5>Here, you can filter out some treatments from your peptide fold-change data
                                                               and remove some specific sequences like the cleaved sites found.
                                                               <br>For selecting the sequence you want to remove,
                                                               you can import the same file you used previously. A file that contains the protein from
@@ -311,7 +311,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                              column(6, uiOutput("selectSequenceui_joinpep"))
                                                                              )
                                                                    ),
-                                                  fluidRow(column(6, selectInput("remcond_joinpep", "Select some conditions you want to remove. If NULL, nothing is removed.",
+                                                  fluidRow(column(6, selectInput("remcond_joinpep", "Select some treatments you want to remove. If NULL, nothing is removed.",
                                                                                  choices = NULL, multiple = TRUE)),
                                                            column(6, actionButton("gofilter_joinpep", "Filter your dataset", class = "btn-primary"),
                                                                   textOutput("diag_pep_filter"))
@@ -345,7 +345,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                             )
                                                            ),
                                                   conditionalPanel(condition = "output.toplot_pep_dataup",
-                                                                   fluidRow(column(4, selectInput("condition_plotjoinpep", "Select one or more conditions",
+                                                                   fluidRow(column(4, selectInput("condition_plotjoinpep", "Select one or more treatments",
                                                                                                   choices = NULL,
                                                                                                   multiple = TRUE)
                                                                                    ),
@@ -453,7 +453,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                    conditionalPanel(condition = "output.cetsa_fileup",
                                                                     actionButton("see1_cetsa", "View data uploaded"),
                                                                     tags$hr(),
-                                                                    tags$u(h3("Rename your conditions and clean your data")),
+                                                                    tags$u(h3("Rename your treatments and clean your data")),
                                                                     tags$hr(),
 
                                                                     fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
@@ -464,7 +464,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                              column(4, uiOutput("temp_nameui")),
                                                                              column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
                                                                                       checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
-                                                                             column(2, actionButton("str_ren", "Rename the conditions", class = "btn-primary")),
+                                                                             column(2, actionButton("str_ren", "Rename the treatments", class = "btn-primary")),
                                                                              column(2, actionButton("see2_cetsa", "View data renamed"))
                                                                              )
                                                                     )
@@ -549,7 +549,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 
                                                                                      checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
                                                                                      conditionalPanel(condition = "!input.got_diff_cetsa",
-                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the condition that corresponds to your control.",
+                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control.",
                                                                                                                                      choices = NULL)
                                                                                                                       ),
                                                                                                                column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
@@ -654,13 +654,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 
                           )),
 
-                          fluidRow(box(title = "Rename your conditions", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                          fluidRow(box(title = "Rename your treatments", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, uiOutput("davai2_daba_ui")),
                                                 column(6, htmlOutput("condfrom_daba"),
-                                                       textInput("condnew_daba", "Type the new names of the conditions
+                                                       textInput("condnew_daba", "Type the new names of the treatments
                                                                    (same order; separated by a comma; if empty, no changement)"))
                                        ),
-                                       actionButton("changename_daba", "Change the name of your conditions", class = "btn-primary btn-lg")
+                                       actionButton("changename_daba", "Change the name of your treatments", class = "btn-primary btn-lg")
                           )
                           ),
 
@@ -730,7 +730,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                 conditionalPanel(condition = "!input.protlist_bar",
                                                                                                  checkboxInput("hit", "Only take the hited proteins", FALSE),
                                                                                                  conditionalPanel(condition = "input.hit",
-                                                                                                                  selectInput("cond_fhit", "Select hits condition", choices = NULL, multiple = TRUE))
+                                                                                                                  selectInput("cond_fhit", "Select hits treatment", choices = NULL, multiple = TRUE))
                                                                                 ),
                                                                                 conditionalPanel(condition = "input.protlist_bar",
                                                                                                  fileInput("prlist_file_bar", "Import your protein list (txt file)", accept = ".txt"),
@@ -754,7 +754,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                 selected = "treat"),
 
                                                                                 conditionalPanel(condition = "input.cond_sel != 'all_cond' ",
-                                                                                                 selectInput("cond", "Select one or more conditions",
+                                                                                                 selectInput("cond", "Select one or more treatments",
                                                                                                              choices = NULL,
                                                                                                              multiple = TRUE)
                                                                                                  )
@@ -841,7 +841,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        tags$hr(),
 
                                                                        conditionalPanel(condition = "output.DIFcompl_fileup & output.HITcompl_fileup & output.NNcompl_fileup & output.AVEcompl_fileup",
-                                                                                        fluidRow(column(4, selectInput("condsel_compl", "Select a condition", choices = NULL)),
+                                                                                        fluidRow(column(4, selectInput("condsel_compl", "Select a treatment", choices = NULL)),
                                                                                                  column(4, selectInput("catego_compl", "Select some categories", choices = NULL, multiple = TRUE)),
                                                                                                  column(4, selectInput("organism_compl", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                                         ),
@@ -942,7 +942,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        ,
 
                                                                        conditionalPanel(condition = "output.AVEsimpf_fileup & output.DIFsimpf_fileup",
-                                                                                        fluidRow(column(3, selectInput("treat_simpf", "Select a condition", choices = NULL)),
+                                                                                        fluidRow(column(3, selectInput("treat_simpf", "Select a treatment", choices = NULL)),
                                                                                                  column(3, selectizeInput("prot_simpf", "Select a protein from which you want to get
                                                                                           the similar profiles", choices = NULL)),
                                                                                                  column(3, sliderInput("maxna_simpf", "Choose a maximum number of
@@ -1076,7 +1076,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        tags$hr(),
 
                                                                        conditionalPanel(condition = "output.heat_fileup & output.HITheat_fileup & output.NNheat_fileup",
-                                                                                        fluidRow(column(3, selectInput("cond_heat", "Select a condition", choices = NULL)),
+                                                                                        fluidRow(column(3, selectInput("cond_heat", "Select a treatment", choices = NULL)),
                                                                                                  column(3, selectInput("resp_heat", "Select a response to the drug",
                                                                                                                        choices = c("Stabilization" = "S",
                                                                                                                                    "Destabilization" = "D",
@@ -1155,7 +1155,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                        tags$hr(),
 
                                                                        conditionalPanel(condition = "output.heatcom_fileup",
-                                                                                        fluidRow(column(4, selectInput("cond_heatcom", "Select a condition", choices = NULL)),
+                                                                                        fluidRow(column(4, selectInput("cond_heatcom", "Select a treatment", choices = NULL)),
                                                                                                  column(4, selectInput("organism_heatcom", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                                         ),
 
@@ -1247,7 +1247,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_stri == 'base'",
                                                                                         uiOutput("drug2ui_stri"),
-                                                                                        fluidRow(column(6, selectInput("cond_fhitB_stri", "Select some conditions to filter your proteins",
+                                                                                        fluidRow(column(6, selectInput("cond_fhitB_stri", "Select some treatments to filter your proteins",
                                                                                                                        choices = NULL, multiple = TRUE)),
                                                                                                  column(6, selectInput("cat_fhitB_stri", "Select some categories to filter your proteins (If NULL, will select all)",
                                                                                                                        choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
@@ -1265,7 +1265,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                                                           )
                                                                                                                          ),
                                                                                                                   conditionalPanel(condition = "input.ishit_stri",
-                                                                                                                                   column(4, selectInput("cond_fhit_stri", "Select some conditions to filter your hits",
+                                                                                                                                   column(4, selectInput("cond_fhit_stri", "Select some treatments to filter your hits",
                                                                                                                                                          choices = NULL, multiple = TRUE))
                                                                                                                                    )
                                                                                                                   )
@@ -1391,7 +1391,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                 conditionalPanel(condition = "!input.importprot_barnet",
                                                                                                  checkboxInput("onlyhit_barnet", "Only take the hited proteins", FALSE),
                                                                                                  conditionalPanel(condition = "input.onlyhit_barnet",
-                                                                                                                  selectInput("cond_fhit_barnet", "Select hits condition", choices = NULL, multiple = TRUE))
+                                                                                                                  selectInput("cond_fhit_barnet", "Select hits treatment", choices = NULL, multiple = TRUE))
                                                                                                  ),
                                                                                 conditionalPanel(condition = "input.importprot_barnet",
                                                                                                  fileInput("prlist_file_barnet", "Import your protein list (txt file)", accept = ".txt")
@@ -1399,7 +1399,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                 selectizeInput("prot_barnet", "Select some proteins (if NULL, will select all)", choices = NULL, multiple = TRUE)
                                                                                 ),
 
-                                                                         column(4, selectInput("condition_barnet", "Select one or more conditions (if NULL, selet all)",
+                                                                         column(4, selectInput("condition_barnet", "Select one or more treatments (if NULL, selet all)",
                                                                                                choices = NULL,  multiple = TRUE)
                                                                                 ),
                                                                          column(4, checkboxInput("importGO_barnet", "Import a file with GO terms", FALSE),
@@ -1540,7 +1540,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                selected = "base", inline = TRUE),
                                                   conditionalPanel(condition = "input.drug_clus == 'base'",
                                                                    uiOutput("drug2ui_clus"),
-                                                                   fluidRow(column(6, selectInput("cond_fhitB_clus", "Select some conditions to filter your proteins",
+                                                                   fluidRow(column(6, selectInput("cond_fhitB_clus", "Select some treatments to filter your proteins",
                                                                                                   choices = NULL, multiple = TRUE)),
                                                                             column(6, selectInput("cat_fhitB_clus", "Select some categories to filter your proteins (If NULL, will select all)",
                                                                                                   choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
@@ -1549,14 +1549,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
 
                                                   conditionalPanel(condition = "input.drug_clus == 'dat' ",
                                                                    fluidRow(column(4, fileInput("file_clus", "Choose a file")),
-                                                                            column(4, checkboxInput("ishit_clus", "Do you import a hitlist ? (needs a column named 'Condition')", TRUE),
+                                                                            column(4, checkboxInput("ishit_clus", "Do you import a hitlist ? (needs a column named 'treatment')", TRUE),
                                                                                    conditionalPanel(condition = "!input.ishit_clus",
                                                                                                     textInput("idfile_clus", "What is the name of the column of
                                                                                                               your file which contains the Genes ?")
                                                                                                     )
                                                                                    ),
                                                                             conditionalPanel(condition = "input.ishit_clus",
-                                                                                             column(4, selectInput("cond_fhit_clus", "Select some conditions to filter your hits",
+                                                                                             column(4, selectInput("cond_fhit_clus", "Select some treatments to filter your hits",
                                                                                                                    choices = NULL, multiple = TRUE))
                                                                                              )
                                                                             )
@@ -1575,7 +1575,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                      tabsetPanel(type = "tabs",
 
                                                  tabPanel("Compare cluster",
-                                                          fluidRow(box(title = "Compare the enrichment results of your data between conditions", status = "primary",
+                                                          fluidRow(box(title = "Compare the enrichment results of your data between treatments", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                        fluidRow(column(6, sliderInput("npath_clus", "Choose the maximum number of pathway found to show",
                                                                                                       min = 1, max = 100, step = 1, value = 5)
@@ -1647,7 +1647,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                 ),
 
                                 conditionalPanel(condition = "output.hitdata_cell_up",
-                                                 fluidRow(column(4, selectInput("condhit_cell", "Select a condition", choices = NULL)),
+                                                 fluidRow(column(4, selectInput("condhit_cell", "Select a treatment", choices = NULL)),
                                                           column(4, selectInput("cathit_cell", "Select some categories (if NULL, will select all)", choices = NULL, multiple = TRUE)),
                                                           column(4, actionButton("goloca_cell", "Get subcellular location", class = "btn-primary btn-lg"))
                                                  )
@@ -1669,7 +1669,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                              box(title = "The cell", status = "primary",
                                                  solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                  fluidRow(column(4, textInput("titp_cell", "Type a title for the plot", "elutriation data in the cell")),
-                                                          column(4, selectInput("condp_cell", "Select some conditions", multiple = TRUE, choices = NULL)),
+                                                          column(4, selectInput("condp_cell", "Select some treatments", multiple = TRUE, choices = NULL)),
                                                           column(4, actionButton("gop_cell", "See the plot", class = "btn-primary btn-lg"))
                                                  ),
                                                  tags$hr(),
@@ -1713,7 +1713,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                  ),
 
                                                  conditionalPanel(condition = "input.cond_sel_cell != 'all_cond' ",
-                                                                  selectInput("cond_cell", "Select one or more conditions",
+                                                                  selectInput("cond_cell", "Select one or more treatments",
                                                                               choices = NULL,
                                                                               multiple = TRUE)
                                                  ),
@@ -1791,7 +1791,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                            checkboxInput("hit_pubmed", "Do you import a hitlist ? (need description column)", TRUE))
                                                        ),
                                                 conditionalPanel(condition = "input.hit_pubmed",
-                                                                 column(3, textInput("cond_pubmed", "Type a condition from you hitlist (if null, will take all the conditions)"))
+                                                                 column(3, textInput("cond_pubmed", "Type a treatment from you hitlist (if null, will take all the treatments)"))
                                                                  )
                                                 ),
                                        tags$hr(),
@@ -2150,10 +2150,10 @@ server <- function(input, output, session){
 
     showModal(
       modalDialog(
-        selectInput("conditioncleaved_pep", "Choose a condition",
-                    choices = unique(cleaved_pep_data$x$Condition),
-                    selected = unique(cleaved_pep_data$x$Condition)[1]),
-        DT::renderDataTable({DT::datatable(cleaved_pep_data$x[cleaved_pep_data$x$Condition %in% input$conditioncleaved_pep,],
+        selectInput("conditioncleaved_pep", "Choose a treatment",
+                    choices = unique(cleaved_pep_data$x$treatment),
+                    selected = unique(cleaved_pep_data$x$treatment)[1]),
+        DT::renderDataTable({DT::datatable(cleaved_pep_data$x[cleaved_pep_data$x$treatment %in% input$conditioncleaved_pep,],
                                            caption = htmltools::tags$caption(
                                              style = 'caption-side: top; text-align: left;',
                                              htmltools::strong(paste("Potentially cleaved -", input$conditioncleaved_pep))
@@ -2176,7 +2176,7 @@ server <- function(input, output, session){
     showNotification("Start computing and plotting fold change", type = "message")
     withCallingHandlers({
       shinyjs::html("diag_pep_cleaved", "")
-      cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(Condition == input$conditioncleaved_pep)
+      cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(treatment == input$conditioncleaved_pep)
       sequence_pep_data$x <- imprints_sequence_peptides(norm_pep_data$x,
                                                         proteins = cleaved_pepTab$protein,
                                                         sequence = cleaved_pepTab$cleaved_site,
@@ -2297,7 +2297,7 @@ server <- function(input, output, session){
                                                 sequence = sequ)
       }
       if(!is.null(input$remcond_joinpep)){
-        message("Removing conditions")
+        message("Removing treatments")
         df_filtered <- df_filtered[,-stringr::str_which(colnames(df_filtered), paste0("_", input$remcond_joinpep,
                                                                                       "$", collapse = "|")
                                                         )
@@ -2406,7 +2406,7 @@ server <- function(input, output, session){
   # handling color selection
   output$n_cond_sel_plotjoinpep <- renderText({
     if(input$ch_own_col_plotjoinpep){
-      paste("You selected", length(input$condition_plotjoinpep), "conditions, please enter the same number of colors")
+      paste("You selected", length(input$condition_plotjoinpep), "treatments, please enter the same number of colors")
     }
     else{
       NULL
@@ -2452,7 +2452,7 @@ server <- function(input, output, session){
             showNotification("Bar plot saved !",  type = "message")
           }
           else{
-            showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+            showNotification("The number of colors given doesn't match the number of treatment selected !", type = "error")
           }
         }
         else{
@@ -2464,7 +2464,7 @@ server <- function(input, output, session){
         }
       }
       else{
-        showNotification("Don't forget to select some conditions !", type = "error")
+        showNotification("Don't forget to select some treatments !", type = "error")
       }
     },
     message = function(m) {
@@ -2942,16 +2942,16 @@ server <- function(input, output, session){
                     will gain some time.
                     <br>For each protein, we want to extract a p-value and a score, the Stability Rate (SR).
                     <br>Let's consider our data with <var>n</var> proteins, <var>T</var> temperatures,
-                    1 control and <var>C</var> conditions, <var>B</var> bio-replicates where <var>B</var> >= 3.
+                    1 control and <var>C</var> treatments, <var>B</var> bio-replicates where <var>B</var> >= 3.
                     <br><br><u>1. The p-value</u><br><br>
-                    For each condition <var>c</var> = 1, ..., <var>C</var>, we compute a moderated t-test for each temperature
+                    For each treatment <var>c</var> = 1, ..., <var>C</var>, we compute a moderated t-test for each temperature
                     <var>t</var> = 1, ..., <var>T</var>. We now have 𝑇 p-values for each protein <var>p</var> = 1, ..., <var>n</var>.
                     We then only keep the two p-values from the two biggest mean fold changes (in absolute value) from
                     each protein <var>p</var>. We now compute a Fisher’s t-test on these two p-values which return
                     one final p-value. (Figure 1. A.)
-                    <br>Finally, we have 𝑛 p-values for each condition <var>c</var> = 1, ..., <var>C</var>.
+                    <br>Finally, we have 𝑛 p-values for each treatment <var>c</var> = 1, ..., <var>C</var>.
                     <br><br><u>2. SR</u><br><br>
-                    For each protein <var>p</var> = 1, ..., <var>n</var> and for each condition <var>c</var> = 1, ..., <var>C</var>,
+                    For each protein <var>p</var> = 1, ..., <var>n</var> and for each treatment <var>c</var> = 1, ..., <var>C</var>,
                     we extract the <var>T</var> mean fold changes. We take the absolute value from these and then order them in
                     the decreasing order. We now fit a weighted linear regression to these data with
                     weights five times higher for the two biggest fold changes, i.e. the two first data
@@ -2960,7 +2960,7 @@ server <- function(input, output, session){
                     <br>From this regression we extract the intercept with the y-axis. This intercept will
                     always be positive and to keep track if the protein is destabilized or stabilized, we
                     multiply this value by the sign of the mean of all the fold changes (either -1 or 1).
-                    <br>Finally, we apply a z-score normalization on this 𝑛 SR for each condition <var>c</var> = 1, ..., <var>C</var>.
+                    <br>Finally, we apply a z-score normalization on this 𝑛 SR for each treatment <var>c</var> = 1, ..., <var>C</var>.
                     <br><br>In the end, we plot the -log10(p-value) vs SR which gives us a volcano plot. (Figure 1. B.)
                     <br><br><img src='SR_figure1.jpg' alt='SR figure', width='1180' height='660'>
                     <br><br><u>Set the cutoffs</u><br><br>
@@ -3085,7 +3085,7 @@ server <- function(input, output, session){
                 selected = "elutriation")
   })
   output$davai2_daba_ui <- renderUI({
-    selectInput("davai2_daba", "Choose a dataset in which you want to rename the conditions", choices = names(drug_data_sh$y$data),
+    selectInput("davai2_daba", "Choose a dataset in which you want to rename the treatments", choices = names(drug_data_sh$y$data),
                 selected = "elutriation")
   })
   output$drug2_ui <- renderUI({
@@ -3143,7 +3143,7 @@ server <- function(input, output, session){
       ms_fileread(File$datapath)
     }
     else{
-      1  #simplify condition is.null
+      1  #simplify treatment is.null
     }
   })
   #check if a file is upload
@@ -3165,33 +3165,33 @@ server <- function(input, output, session){
     if(length(nv_nam)){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
-    if(!("Condition" %in% colnames(dat))){ # means that the analysis tab was imported
+    if(!("treatment" %in% colnames(dat))){ # means that the analysis tab was imported
       dat <- dat[,stringr::str_which(colnames(dat), "^id$|^Fisher_|^SR_|^GlobalScore_|^category_")]
       dat <- dat %>% tidyr::gather("key", "value", -id) %>%
-        tidyr::separate(key, into = c("key", "Condition"), sep = "_") %>%
+        tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
         tidyr::spread(key, value)
 
       nn <- dat %>% dplyr::filter(category == "NN")
       dif <- DIF_daba()[,1:2]
       nn <- dplyr::left_join(nn, dif, by = "id")
-      nn <- nn[,c("id", "description", "Condition", "category", "Fisher", "SR", "GlobalScore")]
+      nn <- nn[,c("id", "description", "treatment", "category", "Fisher", "SR", "GlobalScore")]
       NN_daba$x <- nn
 
       dat <- dat %>% dplyr::filter(category != "NN")
     }
     else{
       dif <- DIF_daba()[,1:2]
-      dat <- dat[,c("id", "Condition", "category")]
-      nn <- lapply(unique(dat$Condition), function(x){
-        x <- dat %>% dplyr::filter(Condition == x) %>%
+      dat <- dat[,c("id", "treatment", "category")]
+      nn <- lapply(unique(dat$treatment), function(x){
+        x <- dat %>% dplyr::filter(treatment == x) %>%
           dplyr::right_join(dif, by = "id") %>%
           dplyr::filter(is.na(category)) %>%
           dplyr::mutate(category = "NN",
-                              Condition = x);
+                              treatment = x);
         x
       })
       nn <- as.data.frame(Reduce(rbind, nn))
-      nn <- nn[,c("id", "description", "Condition", "category")]
+      nn <- nn[,c("id", "description", "treatment", "category")]
       NN_daba$x <- nn
     }
     dat
@@ -3278,8 +3278,8 @@ server <- function(input, output, session){
 
         n_df <- names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))]
         n_df_ave <- names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))]
-        n_dh <- dh$Condition
-        n_dnn <- dnn$Condition
+        n_dh <- dh$treatment
+        n_dnn <- dnn$treatment
 
         for(i in 1:length(change)){
           n_df <- str_replace_all(n_df, paste0("_", change[i], "$"), paste0("_", new[i]))
@@ -3290,8 +3290,8 @@ server <- function(input, output, session){
 
         names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df
         names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df_ave
-        dh$Condition <- n_dh
-        dnn$Condition <- n_dnn
+        dh$treatment <- n_dh
+        dnn$treatment <- n_dnn
         dt <- get_treat_level(df)
 
         showNotification("Start saving changes, this may take a while.", type = "message")
@@ -3374,7 +3374,7 @@ server <- function(input, output, session){
                  use_prompt = FALSE, exported = input$save_hit_bar)
     h_s <- rbind(h$CC, h$CN, h$NC, h$ND)
 
-    hit_bar$summa <- h_s %>% group_by(id,Condition,category) %>%  summarize()
+    hit_bar$summa <- h_s %>% group_by(id,treatment,category) %>%  summarize()
     hit_bar$NN <- h$NN
   })
 
@@ -3389,7 +3389,7 @@ server <- function(input, output, session){
     if(input$hit){
       if(input$drug == "base" & length(input$drug2) >= 1){
         HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2],
-                                     function(x) x[,c("id", "Condition", "category")])
+                                     function(x) x[,c("id", "treatment", "category")])
                        )
       }
       else if(input$drug == "dat"){
@@ -3400,11 +3400,11 @@ server <- function(input, output, session){
           HIT <- hit_bar$summa
         }
       }
-      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      c_idx <- str_which(colnames(HIT), "treatment")
       if(length(c_idx)){
         HIT_summup <- list()
         for(i in unique(HIT[, c_idx])){
-          HIT_summup[[i]] <- (HIT %>% dplyr::filter(Condition == i))$id
+          HIT_summup[[i]] <- (HIT %>% dplyr::filter(treatment == i))$id
         }
         HIT_summup <- com_protein_loop(HIT_summup)
 
@@ -3420,7 +3420,7 @@ server <- function(input, output, session){
 
   observe({
     if(!is.null(Sel_cond_fhit())){
-      c_idx <- str_which(colnames(Sel_cond_fhit()), "^[C|c]ondition")
+      c_idx <- str_which(colnames(Sel_cond_fhit()), "treatment")
       Sel_cond_fhit_SUMMA$hit <- Sel_cond_fhit()
       if(length(c_idx)){
         Sel_cond_fhit_SUMMA$choice <- unique(Sel_cond_fhit()[,c_idx])
@@ -3460,7 +3460,7 @@ server <- function(input, output, session){
         if(length(input$drug2) == 1){
           if(input$hit & !is.null(input$cond_fhit)){
             pr <- Sel_cond_fhit_SUMMA$hit
-            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
             pr <- pr$id
             pr <- unique(pr)
           }
@@ -3471,7 +3471,7 @@ server <- function(input, output, session){
         else if(length(input$drug2) > 1){
           if(input$hit & !is.null(input$cond_fhit)){
             pr <- Sel_cond_fhit_SUMMA$hit
-            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
             pr <- pr$id
             pr <- unique(pr)
           }
@@ -3505,7 +3505,7 @@ server <- function(input, output, session){
       else{
         if(input$hit  & !is.null(input$cond_fhit)){
           pr <- Sel_cond_fhit_SUMMA$hit
-          pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit))))
+          pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
           pr <- pr$id
           pr <- unique(pr)
         }
@@ -3531,10 +3531,10 @@ server <- function(input, output, session){
 
     if(input$drug == "base" & length(input$drug2) >= 1){
       HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2],
-                                   function(x) x[,c("id", "Condition", "category")])
+                                   function(x) x[,c("id", "treatment", "category")])
                      )
       NN <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2],
-                                  function(x) x[,c("id", "description", "Condition", "category")])
+                                  function(x) x[,c("id", "description", "treatment", "category")])
                     )
     }
     else if(input$drug == "dat"){
@@ -3542,16 +3542,16 @@ server <- function(input, output, session){
 
         HIT <- barhit_data()
         if(!is.null(HIT)){
-          NN <- lapply(unique(HIT$Condition), function(z){
-            z <- HIT %>% dplyr::filter(Condition == z) %>%
+          NN <- lapply(unique(HIT$treatment), function(z){
+            z <- HIT %>% dplyr::filter(treatment == z) %>%
               dplyr::right_join(barplot_data()[,1:2], by = "id") %>%
               dplyr::filter(is.na(category)) %>%
               dplyr::mutate(category = "NN",
-                            Condition = z);
+                            treatment = z);
             z
           })
           NN <- as.data.frame(Reduce(rbind, NN))
-          NN <- NN[,c("id", "description", "Condition", "category")]
+          NN <- NN[,c("id", "description", "treatment", "category")]
         }
       }
       else{
@@ -3564,8 +3564,8 @@ server <- function(input, output, session){
     tr <- NULL
     if(input$cond_sel == "cat"){
       if(length(input$drug2) >= 1){
-        trh <- HIT[which(!is.na(match(HIT$id, PROT))),c("Condition", "category")]
-        tr <- NN[which(!is.na(match(NN$id, PROT))), c("Condition", "category")]
+        trh <- HIT[which(!is.na(match(HIT$id, PROT))),c("treatment", "category")]
+        tr <- NN[which(!is.na(match(NN$id, PROT))), c("treatment", "category")]
         tr <- tr[!duplicated(tr),]
         tr <- rbind(trh, tr)
       }
@@ -3654,7 +3654,7 @@ server <- function(input, output, session){
       data <- data[,c(w,ord)]
     }
     else if(input$cond_sel == "cat"){
-      sele_cond <- Sel_cond()$Condition[which(!is.na(match(Sel_cond()$category, input$cond)))]
+      sele_cond <- Sel_cond()$treatment[which(!is.na(match(Sel_cond()$category, input$cond)))]
       notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
       notsel_cond <- paste(notsel_cond, collapse = "|")
 
@@ -3750,10 +3750,10 @@ server <- function(input, output, session){
   output$n_cond_sel <- renderText({
     if(input$ch_own_col){
       if (input$cond_sel  == "all_cond"){
-        paste("You selected", length(get_treat_level(data())), "conditions, please enter the same number of colors")
+        paste("You selected", length(get_treat_level(data())), "treatments, please enter the same number of colors")
       }
       else{
-        paste("You selected", length(input$cond), "conditions, please enter the same number of colors")
+        paste("You selected", length(input$cond), "treatments, please enter the same number of colors")
       }
     }
     else{
@@ -3797,7 +3797,7 @@ server <- function(input, output, session){
                                pdfname = input$pdftit)
         }
         else{
-          showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+          showNotification("The number of colors given doesn't match the number of treatment selected !", type = "error")
         }
 
       }
@@ -3849,13 +3849,9 @@ server <- function(input, output, session){
       showNotification("Don't forget to select a protein !", type = "error")
     }
     else if (che2){
-      showNotification("Don't forget to select a condition !", type = "error")
+      showNotification("Don't forget to select a treatment !", type = "error")
 
     }
-    #else if(che){
-    # showNotification("If you want to select all conditions,
-    #                   please select the option 'Select all the treatment level'", type = "error")
-    #}
     else{
       BAR$ch <- Bar_one()
     }
@@ -3920,7 +3916,7 @@ server <- function(input, output, session){
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
       do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_compl],
-                            function(x) x[,c("id", "Condition", "category")])
+                            function(x) x[,c("id", "treatment", "category")])
               )
     }
     else{
@@ -3938,21 +3934,21 @@ server <- function(input, output, session){
       nn <- NULL
       if(!is.null(HIT_compl()) & !is.null(DIF_compl()))
       dif <- DIF_compl()[,1:2]
-      nn <- lapply(unique(HIT_compl()$Condition), function(x){
-        x <- HIT_compl() %>% dplyr::filter(Condition == x) %>%
+      nn <- lapply(unique(HIT_compl()$treatment), function(x){
+        x <- HIT_compl() %>% dplyr::filter(treatment == x) %>%
           dplyr::right_join(dif, by = "id") %>%
           dplyr::filter(is.na(category)) %>%
           dplyr::mutate(category = "NN",
-                              Condition = x);
+                              treatment = x);
         x
       })
       nn <- as.data.frame(Reduce(rbind, nn))
-      nn <- nn[,c("id", "description", "Condition", "category")]
+      nn <- nn[,c("id", "description", "treatment", "category")]
       nn
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
       do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_compl],
-                            function(x) x[,c("id", "description", "Condition", "category")])
+                            function(x) x[,c("id", "description", "treatment", "category")])
               )
     }
     else{
@@ -3993,7 +3989,7 @@ server <- function(input, output, session){
 
   observe({
     if(!is.null(HIT_compl()) & !is.null(NN_compl())){
-      updateSelectInput(session, "condsel_compl", choices = unique(HIT_compl()$Condition))
+      updateSelectInput(session, "condsel_compl", choices = unique(HIT_compl()$treatment))
       updateSelectInput(session, "catego_compl", choices = append(unique(HIT_compl()$category),  "NN"),
                         selected = unique(HIT_compl()$category)[1])
     }
@@ -4018,10 +4014,8 @@ server <- function(input, output, session){
       }
 
       cat_tab <- HIT_compl()
-      colnames(cat_tab)[str_which(colnames(cat_tab), "^[C|c]ondition")] <- "treatment"
 
       cat_tabNN <- NN_compl()
-      colnames(cat_tabNN)[str_which(colnames(cat_tabNN), "^[C|c]ondition")] <- "treatment"
       cat_tabNN <- cat_tabNN %>% dplyr::group_by(id, treatment, category) %>% dplyr::reframe()
 
       cat_tab <- rbind(cat_tab, cat_tabNN)
@@ -4467,7 +4461,7 @@ server <- function(input, output, session){
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
       do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_heat],
-                            function(x) x[,c("id", "Condition", "category")])
+                            function(x) x[,c("id", "treatment", "category")])
               )
     }
     else{
@@ -4485,22 +4479,22 @@ server <- function(input, output, session){
       nn <- NULL
       if(!is.null(HIT_heat()) & !is.null(DIF_heat())){
         dif <- DIF_heat()[,1:2]
-        nn <- lapply(unique(HIT_heat()$Condition), function(x){
-          x <- HIT_heat() %>% dplyr::filter(Condition == x) %>%
+        nn <- lapply(unique(HIT_heat()$treatment), function(x){
+          x <- HIT_heat() %>% dplyr::filter(treatment == x) %>%
             dplyr::right_join(dif, by = "id") %>%
             dplyr::filter(is.na(category)) %>%
             dplyr::mutate(category = "NN",
-                          Condition = x);
+                          treatment = x);
           x
         })
         nn <- as.data.frame(Reduce(rbind, nn))
-        nn <- nn[,c("id", "description", "Condition", "category")]
+        nn <- nn[,c("id", "description", "treatment", "category")]
         nn
       }
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
       do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_heat],
-                            function(x) x[,c("id", "description", "Condition", "category")])
+                            function(x) x[,c("id", "description", "treatment", "category")])
               )
     }
     else{
@@ -4520,7 +4514,7 @@ server <- function(input, output, session){
 
   observe({
     if(!is.null(HIT_heat())){
-      c_idx <- str_which(colnames(HIT_heat()), "^[C|c]ondition")
+      c_idx <- str_which(colnames(HIT_heat()), "treatment")
       cat_idx <- str_which(colnames(HIT_heat()), "^[C|c]ategory")
 
       tr <- NULL
@@ -4840,12 +4834,12 @@ server <- function(input, output, session){
     }
     else if(input$drug_stri == "base" & length(input$drug2_stri) >= 1){
       h <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_stri],
-                                 function(x) x[,c("id", "Condition", "category")])
+                                 function(x) x[,c("id", "treatment", "category")])
                    )
       n <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_stri],
-                                 function(x) x[,c("id", "description", "Condition", "category")])
+                                 function(x) x[,c("id", "description", "treatment", "category")])
                    )
-      n <- unique(n[,c("id", "Condition", "category")])
+      n <- unique(n[,c("id", "treatment", "category")])
 
       rbind(h,n)
     }
@@ -4865,7 +4859,7 @@ server <- function(input, output, session){
     if((input$ishit_stri & input$impfile_stri) | input$drug_stri == "base"){
       HIT <- stri_data()
 
-      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      c_idx <- str_which(colnames(HIT), "treatment")
 
       if(length(c_idx)){
         tr <- HIT[, c_idx]
@@ -4929,11 +4923,11 @@ server <- function(input, output, session){
           if(input$ishit_stri){
             dat <- stri_data()
             if(!is.null(input$cond_fhit_stri)){
-              dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_stri))))
+              dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_stri))))
               a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
             }
             else{
-              showNotification("Don't forget to select some conditions !", type = "error")
+              showNotification("Don't forget to select some treatments !", type = "error")
               a <- NULL
             }
           }
@@ -4948,14 +4942,14 @@ server <- function(input, output, session){
       else if(input$drug_stri == "base"){
         dat <- stri_data()
         if(!is.null(input$cond_fhitB_stri)){
-          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_stri))))
+          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_stri))))
           if(!is.null(input$cat_fhitB_stri)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
           }
           a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
         }
         else{
-          showNotification("Don't forget to select some conditions !", type = "error")
+          showNotification("Don't forget to select some treatments !", type = "error")
           a <- NULL
         }
       }
@@ -4989,7 +4983,7 @@ server <- function(input, output, session){
   observeEvent(input$netbase_stri, {
     if(length(string_res$x$STRING_id) > 2000){
       showNotification(paste("Lists with more than 2000 genes are not supported yet. Your list contains now", length(string_res$x$STRING_id), "genes.",
-                             "Please, try to reduce the size of your input by choosing less categories and/or conditions."),
+                             "Please, try to reduce the size of your input by choosing less categories and/or treatments."),
                        type = "error", duration = 8)
     }
     else{
@@ -5181,7 +5175,7 @@ server <- function(input, output, session){
     if(input$onlyhit_barnet){
       if(input$drug_barnet == "base" & length(input$drug2_barnet) >= 1){
         HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_barnet],
-                                     function(x) x[,c("id", "Condition", "category")])
+                                     function(x) x[,c("id", "treatment", "category")])
         )
       }
       else if(input$drug_barnet == "dat"){
@@ -5189,7 +5183,7 @@ server <- function(input, output, session){
       }
 
       Sel_cond_fhit_SUMMA_barnet$hit <- HIT
-      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      c_idx <- str_which(colnames(HIT), "treatment")
 
       if(length(c_idx)){
         HIT <- HIT[,c_idx]
@@ -5197,7 +5191,7 @@ server <- function(input, output, session){
       }
       else{
         HIT <- NULL
-        showNotification("Your hitlist doesn't contains the column 'Condition'", type = "error")
+        showNotification("Your hitlist doesn't contains the column 'treatment'", type = "error")
       }
     }
     HIT
@@ -5237,7 +5231,7 @@ server <- function(input, output, session){
         if(length(input$drug2_barnet) == 1){
           if(input$onlyhit_barnet & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
-            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_barnet))))
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
             pr <- pr$id
             pr <- unique(pr)
           }
@@ -5248,7 +5242,7 @@ server <- function(input, output, session){
         else if(length(input$drug2_barnet) > 1){
           if(input$onlyhit_barnet & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
-            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_barnet))))
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
             pr <- pr$id
             pr <- unique(pr)
           }
@@ -5282,7 +5276,7 @@ server <- function(input, output, session){
         if(!is.null(barnet_data()) & !is.null(barnethit_data())){
           if(input$onlyhit_barnet  & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
-            pr <- pr %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_barnet))))
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
             pr <- pr$id
             pr <- unique(pr)
           }
@@ -5342,7 +5336,7 @@ server <- function(input, output, session){
   # handling color selection
   output$n_cond_sel_barnet <- renderText({
     if(input$ch_own_col_barnet){
-      paste("You selected", length(input$condition_barnet), "conditions, please enter the same number of colors")
+      paste("You selected", length(input$condition_barnet), "treatments, please enter the same number of colors")
     }
     else{
       NULL
@@ -5386,7 +5380,7 @@ server <- function(input, output, session){
 
     if(is.null(sel_prot_barnet())){
       if(input$onlyhit_barnet  & is.null(input$cond_fhit_barnet)){
-        showNotification("Select some conditions to filter your hits !", type = "error")
+        showNotification("Select some treatments to filter your hits !", type = "error")
       }
       else{
         showNotification("No data detected !", type = "error")
@@ -5415,7 +5409,7 @@ server <- function(input, output, session){
       withCallingHandlers({
         shinyjs::html("diag_barnet", "")
         thenet$n <- imprints_network(data, hits = input$prot_barnet, GOterm = GOterm,
-                                     condition = input$condition_barnet,
+                                     treatment = input$condition_barnet,
                                      colorbar = colorbar,
                                      required_score = input$reqscore_barnet,
                                      species = input$species_barnet, witherrorbar = input$werb_barnet,
@@ -5639,7 +5633,7 @@ server <- function(input, output, session){
     if(input$ishit_clus | input$drug_clus == "base"){
       HIT <- clus_data()
 
-      c_idx <- str_which(colnames(HIT), "^[C|c]ondition")
+      c_idx <- str_which(colnames(HIT), "treatment")
 
       if(length(c_idx)){
         tr <- HIT[, c_idx]
@@ -5672,16 +5666,16 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
           }
           else{
-            showNotification("Don't forget to select some conditions !", type = "error")
+            showNotification("Don't forget to select some treatments !", type = "error")
             dat <- NULL
           }
           if(!is.null(dat)){
             showNotification("Starting enrichment analysis !", type = "message")
             res <- compare_enrich(dat, gene_column = "Genes", species = input$species_clus,
-                                  n_pathway = input$npath_clus, condition_column = "Condition",
+                                  n_pathway = input$npath_clus, treatment_column = "treatment",
                                   pval_cutoff = input$pvcut_clus, database = input$database_clus)
           }
         }
@@ -5695,19 +5689,19 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
+          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
         }
         else{
-          showNotification("Don't forget to select some conditions !", type = "error")
+          showNotification("Don't forget to select some treatments !", type = "error")
           dat <- NULL
         }
         if(!is.null(dat)){
           showNotification("Starting pathway analysis !", type = "message")
           res <- compare_enrich(dat, gene_column = "Genes", species = input$species_clus,
-                                n_pathway = input$npath_clus, condition_column = "Condition",
+                                n_pathway = input$npath_clus, treatment_column = "treatment",
                                 pval_cutoff = input$pvcut_clus, database = input$database_clus)
         }
       }
@@ -5776,10 +5770,10 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
           }
           else{
-            showNotification("Don't forget to select some conditions !", type = "error")
+            showNotification("Don't forget to select some treatments !", type = "error")
             dat <- NULL
           }
           if(!is.null(dat)){
@@ -5821,13 +5815,13 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
+          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
         }
         else{
-          showNotification("Don't forget to select some conditions !", type = "error")
+          showNotification("Don't forget to select some treatments !", type = "error")
           dat <- NULL
         }
         if(!is.null(dat)){
@@ -5877,7 +5871,7 @@ server <- function(input, output, session){
   })
   output$downgsealot_clus <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GSEAplot", ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GSEAplot_", input$database_clus, ".png")
     },
     content = function(file){
       png(file, width = 1720, height = 1080)
@@ -5914,10 +5908,10 @@ server <- function(input, output, session){
         if(input$ishit_clus){
           dat <- clus_data()
           if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhit_clus))))
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
           }
           else{
-            showNotification("Don't forget to select some conditions !", type = "error")
+            showNotification("Don't forget to select some treatments !", type = "error")
             dat <- NULL
           }
           if(!is.null(dat)){
@@ -5959,13 +5953,13 @@ server <- function(input, output, session){
       else if(input$drug_clus == "base"){
         dat <- clus_data()
         if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(Condition, c(input$cond_fhitB_clus))))
+          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
           if(!is.null(input$cat_fhitB_clus)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
           }
         }
         else{
-          showNotification("Don't forget to select some conditions !", type = "error")
+          showNotification("Don't forget to select some treatments !", type = "error")
           dat <- NULL
         }
         if(!is.null(dat)){
@@ -5997,7 +5991,7 @@ server <- function(input, output, session){
   })
   output$downgenelot_clus <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GSEAplot_", input$database_clus, ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GeneConceptNet_", input$database_clus, ".png")
     },
     content = function(file){
       ggsave(file, plot = clusgene_res$x, device = "png",
@@ -6024,12 +6018,12 @@ server <- function(input, output, session){
     }
     else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
       h <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_cell],
-                                 function(x) x[,c("id", "Condition", "category")])
+                                 function(x) x[,c("id", "treatment", "category")])
                    )
       n <- do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_cell],
-                                 function(x) x[,c("id", "description", "Condition", "category")])
+                                 function(x) x[,c("id", "description", "treatment", "category")])
                    )
-      n <- unique(n[,c("id", "Condition", "category")])
+      n <- unique(n[,c("id", "treatment", "category")])
 
       rbind(h,n)
     }
@@ -6044,7 +6038,7 @@ server <- function(input, output, session){
 
   observe({
     if(!is.null(hitdata_cell())){
-      updateSelectInput(session, "condhit_cell", choices = unique(hitdata_cell()$Condition), selected = unique(hitdata_cell()$Condition)[1])
+      updateSelectInput(session, "condhit_cell", choices = unique(hitdata_cell()$treatment), selected = unique(hitdata_cell()$treatment)[1])
       updateSelectInput(session, "cathit_cell", choices = unique(hitdata_cell()$category), selected = unique(hitdata_cell()$category)[1])
     }
   })
@@ -6057,7 +6051,7 @@ server <- function(input, output, session){
     showNotification("Getting subcellular locations", type = "message")
 
     data_hit <- hitdata_cell() %>%
-      dplyr::filter(!is.na(match(Condition, c(input$condhit_cell))))
+      dplyr::filter(!is.na(match(treatment, c(input$condhit_cell))))
 
     if(!is.null(input$cathit_cell)){
       data_hit <- data_hit %>% dplyr::filter(!is.na(match(category, input$cathit_cell)))
@@ -6093,7 +6087,7 @@ server <- function(input, output, session){
       }
     )
 
-    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$Condition), selected = input$condhit_cell)
+    updateSelectInput(session, "condp_cell", choices = unique(resdata_cell$ch$treatment), selected = input$condhit_cell)
     updateSelectInput(session, "selorga_cell", choices = unique(resdata_cell$ch$main.location.cell))
   })
   output$resdata_cell_up <- reactive({
@@ -6233,7 +6227,7 @@ server <- function(input, output, session){
     tr <- NULL
     if(!is.null(barpdata_cell())){
       if(input$cond_sel_cell == "cat" & !is.null(hitdata_cell())){
-        tr <- hitdata_cell()[which(!is.na(match(hitdata_cell()$id,pr))),c("Condition", "category")]
+        tr <- hitdata_cell()[which(!is.na(match(hitdata_cell()$id,pr))),c("treatment", "category")]
       }
       else {
         tr <- get_treat_level(barpdata_cell())
@@ -6278,7 +6272,7 @@ server <- function(input, output, session){
 
       }
       else if(input$cond_sel_cell == "cat"){
-        sele_cond <- Sel_cond_cell()$Condition[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
+        sele_cond <- Sel_cond_cell()$treatment[which(!is.na(match(Sel_cond_cell()$category, input$cond_cell)))]
         notsel_cond <- TREAT[!(TREAT %in% sele_cond)]
         if(length(notsel_cond)){
           notsel_cond <- paste(notsel_cond, collapse = "|")
@@ -6339,10 +6333,10 @@ server <- function(input, output, session){
   output$n_cond_sel_cell <- renderText({
     if(input$ch_own_col_cell){
       if (input$cond_sel_cell  == "all_cond"){
-        paste("You selected", length(get_treat_level(data_cell())), "conditions, please enter the same number of colors")
+        paste("You selected", length(get_treat_level(data_cell())), "treatments, please enter the same number of colors")
       }
       else{
-        paste("You selected", length(input$cond_cell), "conditions, please enter the same number of colors")
+        paste("You selected", length(input$cond_cell), "treatments, please enter the same number of colors")
       }
     }
     else{
@@ -6394,7 +6388,7 @@ server <- function(input, output, session){
                                pdfname = input$pdftit_cell)
         }
         else{
-          showNotification("The number of colors given doesn't match the number of condition selected !", type = "error")
+          showNotification("The number of colors given doesn't match the number of treatment selected !", type = "error")
         }
 
       }
@@ -6432,7 +6426,7 @@ server <- function(input, output, session){
     else{
       if (input$cond_sel_cell != "all_cond"){
         if (is.null(input$cond_cell)){
-          showNotification("Don't forget to select a condition !", type = "error")
+          showNotification("Don't forget to select a treatment !", type = "error")
         }
         else{
           BAR_cell$ch <- Bar_one_cell()
@@ -6515,7 +6509,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag", "")
       pub <- find_in_pubmed(data, feat = input$feat_pubmed, imp_by_hitlist = input$hit_pubmed,
-                            language = LA_, year_rg = Y_, condition = input$cond_pubmed,
+                            language = LA_, year_rg = Y_, treatment = input$cond_pubmed,
                             your_API = api_, newfolder_name = input$fname_pubmed)
     },
     message = function(m) {

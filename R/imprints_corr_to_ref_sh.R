@@ -34,7 +34,7 @@ imprints_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, 
     stop("Pls provide a numeric reading vector as the reference profile")
   }
   if (inherits(data, "data.frame")) {
-    subset <- grep(treatment, names(data))
+    subset <- grep(paste0("_", treatment, "$"), names(data))
     if (length(set)) {
       subset_set <- grep(set, names(data))
       subset <- intersect(subset, subset_set)

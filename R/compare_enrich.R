@@ -1,11 +1,11 @@
 #' compare_enrich
 #'
 #' Function to run enrichment analysis on your hits and return
-#' a plot that compare the pathways found between your conditions.
+#' a plot that compare the pathways found between your treatments.
 #'
-#' @param hits The hitlist; a data.frame containing the genes id and preferably a condition column but not necessary.
+#' @param hits The hitlist; a data.frame containing the genes id and preferably a treatment column but not necessary.
 #' @param gene_column The name of the coulumn that contains the genes. Default is 'Genes'.
-#' @param condition_column The name of the column that contains the conditions. Default is NULL.
+#' @param treatment_column The name of the column that contains the treatments. Default is NULL.
 #' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param n_pathway Number of pathway to show on plot. Default is 5.
 #'                  For more info you, see \code{\link{compareCluster}}.
@@ -18,7 +18,7 @@
 #'
 #' @seealso \code{\link{clusterProfiler}}
 
-compare_enrich <- function(hits, gene_column = "Genes", condition_column = NULL,
+compare_enrich <- function(hits, gene_column = "Genes", treatment_column = NULL,
                        species = c("human", "mouse"), n_pathway = 5,
                        pval_cutoff = 0.01,
                        database = c("WikiPathway", "KEGG", "GO")){
@@ -56,17 +56,17 @@ compare_enrich <- function(hits, gene_column = "Genes", condition_column = NULL,
 
   hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
 
-  if(is.null(condition_column)){
-    hits$Condition <- "condition"
+  if(is.null(treatment_column)){
+    hits$treatment <- "treatment"
   }
   else{
-    colnames(hits)[stringr::str_which(colnames(hits), condition_column)] <- "Condition"
+    colnames(hits)[stringr::str_which(colnames(hits), treatment_column)] <- "treatment"
   }
 
   # cluster compare enrichment analysis
   if(database == "WikiPathway"){
     wp <- get_wikipath(species = species) # wiki pathway
-    hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
+    hits_enrich <- clusterProfiler::compareCluster(Genes_id~treatment,
                                                    data = hits, fun = "enricher",
                                                    TERM2GENE=wp[,c("wpid", "gene")],
                                                    TERM2NAME=wp[,c("wpid", "name")],
@@ -74,12 +74,12 @@ compare_enrich <- function(hits, gene_column = "Genes", condition_column = NULL,
   }
   else if(database == "KEGG"){
     if(species == "human"){
-      hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
+      hits_enrich <- clusterProfiler::compareCluster(Genes_id~treatment,
                                                      data = hits, fun = "enrichKEGG",
                                                      organism = "hsa", pvalueCutoff = pval_cutoff)
     }
     else if(species == "mouse"){
-      hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
+      hits_enrich <- clusterProfiler::compareCluster(Genes_id~treatment,
                                                      data = hits, fun = "enrichKEGG",
                                                      organism = "mmu", pvalueCutoff = pval_cutoff)
     }
@@ -90,7 +90,7 @@ compare_enrich <- function(hits, gene_column = "Genes", condition_column = NULL,
         message("Installing org.Hs.eg.db package")
         BiocManager::install("org.Hs.eg.db")
       }
-      hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
+      hits_enrich <- clusterProfiler::compareCluster(Genes_id~treatment,
                                                      data = hits, fun = "enrichGO",
                                                      OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff)
     }
@@ -99,36 +99,52 @@ compare_enrich <- function(hits, gene_column = "Genes", condition_column = NULL,
         message("Installing org.Mm.eg.db package")
         BiocManager::install("org.Mm.eg.db")
       }
-      hits_enrich <- clusterProfiler::compareCluster(Genes_id~Condition,
+      hits_enrich <- clusterProfiler::compareCluster(Genes_id~treatment,
                                                      data = hits, fun = "enrichGO",
                                                      OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff)
     }
   }
 
-  res <- fortify(hits_enrich, showCategory = 6)
-  res$Condition <- factor(res$Condition, levels = unique(res$Condition))
-  graph <- ggplot(res, aes(Condition, Description,
-                color = p.adjust,
-                size = GeneRatio)) +
-    geom_point() +
-    scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
-    scale_color_continuous(low = "#B2ECBF", high = "#3821A3", name = "p.adjust",
-                           guide = guide_colorbar(reverse = TRUE)) +
-    scale_size(range = c(3,8)) +
-    DOSE::theme_dose(12) +
-    labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
-    theme(axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.85)),
-          axis.text.y = element_text(angle = 30, size = rel(0.85)))
+  if(is.null(hits_enrich)){
+    #no term enriched under specific pvalueCutoff...
+    graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = paste("No term enriched \nunder p-value of", pval_cutoff), size = 10) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
 
-  res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
-  g <- hits_gene_id$Genes[which(!is.na(match(hits_gene_id$Genes_id, x)))]
-  g <- paste(g, collapse = "/");
-  g
+    return(list("res" = NULL, "graph" = graph))
   }
-  ))
+  else{
+    res <- fortify(hits_enrich, showCategory = 6)
+    res$treatment <- factor(res$treatment, levels = unique(res$treatment))
+    graph <- ggplot(res, aes(treatment, Description,
+                             color = p.adjust,
+                             size = GeneRatio)) +
+      geom_point() +
+      scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
+      scale_color_continuous(low = "#B2ECBF", high = "#3821A3", name = "p.adjust",
+                             guide = guide_colorbar(reverse = TRUE)) +
+      scale_size(range = c(3,8)) +
+      DOSE::theme_dose(12) +
+      labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.85)),
+            axis.text.y = element_text(angle = 30, size = rel(0.85)))
 
-  return(list("res" = res, "graph" = graph))
+    res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
+    g <- hits_gene_id$Genes[which(!is.na(match(hits_gene_id$Genes_id, x)))]
+    g <- paste(g, collapse = "/");
+    g
+    }
+    ))
+
+    return(list("res" = res, "graph" = graph))
+  }
 }
 
 # function to always get most recent wiki pathway database (update every 10 of month)
@@ -168,3 +184,7 @@ get_wikipath <- function(wp = TRUE, species = "human"){
   close(url_wiki)
   return(wikipath)
 }
+
+
+
+

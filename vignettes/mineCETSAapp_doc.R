@@ -34,7 +34,7 @@
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  mydata_hit <- drug_data$hitlist$elutriation
-#  #will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)
+#  #will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)
 #  map_compl <- imprints_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
 #                                        targetcategory = c("CN", "CC", "NC"))
 #  View(map_compl) #if you want to check the data
@@ -84,7 +84,7 @@
 #                response = "both",
 #                select_cat = c("CC", "CN", "NC"),
 #                saveHeat = TRUE, file_type = "png")
-#  #Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S
+#  #Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the treatment S
 #  
 #  # According to their protein complex
 #  some_complex <- unique(map_compl$ComplexName)
@@ -98,7 +98,7 @@
 #                treatment = "S", max_na = 0,
 #                response = "both",
 #                saveHeat = TRUE, file_type = "png")
-#  #Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S
+#  #Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the treatment S
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  norm_data <- readr::read_tsv("path_to_your_normalized_data.txt")
@@ -112,7 +112,7 @@
 #                             input_directory=  file.path(getwd(), "STRING_data")) #will save the data in a folder named STRING_data
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  data <- mydata_hit %>% dplyr::filter(Condition == "S")
+#  data <- mydata_hit %>% dplyr::filter(treatment == "S")
 #  network_hit <- string_db$map(data, "id", removeUnmappedRows = TRUE)         #will map the proteins to the string ID
 #  
 #  My_net(network_hit$STRING_id , inter = FALSE) #will plot the network
@@ -150,8 +150,8 @@
 #  My_net(ribosome_net , inter = FALSE)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  # Let's test it on the S condition
-#  data <- mydata_hit %>% dplyr::filter(Condition == "S")
+#  # Let's test it on the S treatment
+#  data <- mydata_hit %>% dplyr::filter(treatment == "S")
 #  data <- data %>% dplyr::filter(!is.na(match(category, c("CC", "CN", "NC")))) #filter the category, but you could have take them all, even add also the NN
 #  
 #  cell_result <- hit_for_cell(data, organism = "HUMAN")
@@ -168,7 +168,7 @@
 #  # to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name
 #  mydata_hit$description <- mydata_caldiff$description[which(!is.na(match(mydata_hit$id, mydata_caldiff$id)))]
 #  mydata_hit <- mydata_hit[1:20,] # take a sample of the proteins
-#  find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, condition = "S",
+#  find_in_pubmed(mydata_hit, feat = "cell", imp_by_hitlist = TRUE, treatment = "S",
 #                 language = "english", year_rg = "2021:2022", your_API = NULL,
 #                 newfolder_name = "elutriation_pubmed_search")
 
@@ -181,7 +181,7 @@
 #  new_data <- join_cetsa(dl, new_names = c("elutriation", "chemarrest"))
 #  new_data_nosuffix <- join_cetsa(dl, new_names = c("", "")) #without new names
 #  
-#  #just rename conditions
+#  #just rename treatments
 #  chemarrest_new_name <- join_cetsa(chemarrest, "new")
 
 ## ---- eval=FALSE--------------------------------------------------------------
@@ -196,11 +196,11 @@
 #  result_common <- com_protein_loop(pr_list)
 #  result_common #A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both
 #  
-#  #check hits between conditions
+#  #check hits between treatments
 #  all_hits <- rbind(hitlist_elutriation, hitlist_chemarrest)
 #  pr_list <- list()
-#  for(i in unique(all_hits$Condition)){
-#    pr_list[[i]] <- (all_hits %>% dplyr::filter(Condition == i))$id  #get hits for each condition in a hit
+#  for(i in unique(all_hits$treatment)){
+#    pr_list[[i]] <- (all_hits %>% dplyr::filter(treatment == i))$id  #get hits for each treatment in a hit
 #  }
 #  pr_list
 #  pr_list <- com_protein_loop(pr_list)  #A list which contains all the common and unique hits between all the condtions
@@ -246,7 +246,7 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #  peptides <- imprints_read_peptides(peptides_files = list.files("Analysis_files",     # your files
 #                                                                 pattern = "Peptide",
 #                                                                 full.names = T),
-#                                     treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the conditions corresponding to your channel
+#                                     treatment = c("B1_Vehicle", "B1_DrugA", "B1_DrugB",  # the treatments corresponding to your channel
 #                                                   "B2_Vehicle","B2_DrugA", "B2_DrugB",
 #                                                   "B3_Vehicle", "B3_DrugA", "B3_DrugB",
 #                                                   "Mix"),
@@ -271,7 +271,7 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #  # keeping only drug A
 #  peptides_norm_drugA <- peptides_norm[,-stringr::str_which(colnames(peptides_norm), "_DrugB$")]
 #  potential_cleaved_drugA <- potential_cleaved %>%
-#    dplyr::filter(Condition == "DrugA")
+#    dplyr::filter(treatment == "DrugA")
 #  
 #  peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
 #                                                        proteins =  potential_cleaved_drugA$protein,

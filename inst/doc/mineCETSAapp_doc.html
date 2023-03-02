@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2023-02-27" />
+<meta name="date" content="2023-03-02" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2023-02-27</h4>
+<h4 class="date">2023-03-02</h4>
 
 </div>
 
@@ -1743,7 +1743,7 @@ our data according to the protein complex. For this, you’ll need the
 function imprints_complex_mapping_sh (which is also based on
 imprints_complex_mapping from IMPRINTS.CETSA).</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>elutriation</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S condition to some protein complex (core Corum database)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">imprints_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">targetcategory =</span> <span class="fu">c</span>(<span class="st">&quot;CN&quot;</span>, <span class="st">&quot;CC&quot;</span>, <span class="st">&quot;NC&quot;</span>))</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(map_compl) <span class="co">#if you want to check the data</span></span>
@@ -1814,7 +1814,7 @@ or their protein complex.</p>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">select_cat =</span> <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>),  </span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the condition S</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the treatment S</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># According to their protein complex</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
@@ -1828,7 +1828,7 @@ or their protein complex.</p>
 <span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>, </span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the condition S</span></span></code></pre></div>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the treatment S</span></span></code></pre></div>
 </div>
 <div id="underline4.space-hitlistspace-space-getspace-yourspace-hitsspace-basedspace-onspace-aspace-newspace-scorespace-thespace-stabilityspace-ratespace-andspace-aspace-p-value" class="section level4">
 <h4><span class="math inline">\(\underline{4.\space Hitlist\space
@@ -1862,8 +1862,8 @@ STRINGdb package and import the database from STRING.</p>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
 <p>Now we can start the analysis on a group of protein. Let’s take the
-hits from the S condition.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
+hits from the S treatment.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>network_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">map</span>(data, <span class="st">&quot;id&quot;</span>, <span class="at">removeUnmappedRows =</span> <span class="cn">TRUE</span>)         <span class="co">#will map the proteins to the string ID</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(network_hit<span class="sc">$</span>STRING_id , <span class="at">inter =</span> <span class="cn">FALSE</span>) <span class="co">#will plot the network</span></span></code></pre></div>
@@ -1916,11 +1916,11 @@ main location.</p>
 <p>Then, it will generate random coordinates for each proteins
 <strong>according to their cellular location</strong> on the cell image
 already present in the package. It will return a data frame containing
-the protein ID, the condition, the category, the gene name, the main
+the protein ID, the treatment, the category, the gene name, the main
 location, the number of location found and the coordinates
 generated.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the S condition</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the S treatment</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(category, <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>)))) <span class="co">#filter the category, but you could have take them all, even add also the NN</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>cell_result <span class="ot">&lt;-</span> <span class="fu">hit_for_cell</span>(data, <span class="at">organism =</span> <span class="st">&quot;HUMAN&quot;</span>)</span>
@@ -1943,7 +1943,7 @@ drug you used and the proteins you found. For this, you can use the
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>mydata_hit<span class="sc">$</span>description <span class="ot">&lt;-</span> mydata_caldiff<span class="sc">$</span>description[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(mydata_hit<span class="sc">$</span>id, mydata_caldiff<span class="sc">$</span>id)))]</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> mydata_hit[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,] <span class="co"># take a sample of the proteins</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">condition =</span> <span class="st">&quot;S&quot;</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2021:2022&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
 <p>This will save the results in the folder named
@@ -1952,10 +1952,10 @@ found), you will have a word file which contains the title, the authors,
 the date of publication and the abstract of each publication found in
 PubMed. When you set ‘imp_by_hitlist’ to TRUE, it means that your data
 are a hitlist (or any data frames) that contains the column description.
-In this example, we match every protein name found under the condition S
+In this example, we match every protein name found under the treatment S
 with the word “cell”. Then we search for articles which contains those
 words in the title and/or the abstract, written in english and published
-between 2021 and 2022. If condition was set to ““, then it would have
+between 2021 and 2022. If treatment was set to ““, then it would have
 taken all the protein names from your hitlist. You can also set
 ‘language’ and ‘year_rg’ to NULL to not filter on those criterias; same
 if you set ‘feat’ to”“. Your data can also be any character vector or
@@ -1988,7 +1988,7 @@ you to add character at the end of the column names.</p>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;elutriation&quot;</span>, <span class="st">&quot;chemarrest&quot;</span>))</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>new_data_nosuffix <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)) <span class="co">#without new names</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#just rename conditions</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#just rename treatments</span></span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>chemarrest_new_name <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(chemarrest, <span class="st">&quot;new&quot;</span>)</span></code></pre></div>
 <p>Remember you’ll always need to add the same number of new names as
 you have data frames in your list. Also, to avoid any problems in the
@@ -2015,11 +2015,11 @@ list of the proteins identified in each drug experiment/condition.</p>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>result_common <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>result_common <span class="co">#A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both</span></span>
 <span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">#check hits between conditions</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">#check hits between treatments</span></span>
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>all_hits <span class="ot">&lt;-</span> <span class="fu">rbind</span>(hitlist_elutriation, hitlist_chemarrest)</span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(all_hits<span class="sc">$</span>Condition)){</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  pr_list[[i]] <span class="ot">&lt;-</span> (all_hits <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> i))<span class="sc">$</span>id  <span class="co">#get hits for each condition in a hit</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(all_hits<span class="sc">$</span>treatment)){</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  pr_list[[i]] <span class="ot">&lt;-</span> (all_hits <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> i))<span class="sc">$</span>id  <span class="co">#get hits for each treatment in a hit</span></span>
 <span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>pr_list</span>
 <span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)  <span class="co">#A list which contains all the common and unique hits between all the condtions</span></span></code></pre></div>
@@ -2082,7 +2082,7 @@ peptide file in a folder named ‘Analysis_files’ for example.</p>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>peptides <span class="ot">&lt;-</span> <span class="fu">imprints_read_peptides</span>(<span class="at">peptides_files =</span> <span class="fu">list.files</span>(<span class="st">&quot;Analysis_files&quot;</span>,     <span class="co"># your files</span></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">pattern =</span> <span class="st">&quot;Peptide&quot;</span>, </span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">full.names =</span> T),</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;B1_Vehicle&quot;</span>, <span class="st">&quot;B1_DrugA&quot;</span>, <span class="st">&quot;B1_DrugB&quot;</span>,  <span class="co"># the conditions corresponding to your channel</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;B1_Vehicle&quot;</span>, <span class="st">&quot;B1_DrugA&quot;</span>, <span class="st">&quot;B1_DrugB&quot;</span>,  <span class="co"># the treatments corresponding to your channel</span></span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B2_Vehicle&quot;</span>,<span class="st">&quot;B2_DrugA&quot;</span>, <span class="st">&quot;B2_DrugB&quot;</span>,</span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B3_Vehicle&quot;</span>, <span class="st">&quot;B3_DrugA&quot;</span>, <span class="st">&quot;B3_DrugB&quot;</span>,</span>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;Mix&quot;</span>),</span>
@@ -2140,7 +2140,7 @@ sequences. Here, we will do it only for DrugA.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span>stringr<span class="sc">::</span><span class="fu">str_which</span>(<span class="fu">colnames</span>(peptides_norm), <span class="st">&quot;_DrugB$&quot;</span>)]</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Condition <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>)</span>
 <span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
 <span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  </span>

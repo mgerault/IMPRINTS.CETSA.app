@@ -47,7 +47,7 @@
 #'
 #' @return The ms 2D barplot
 #'
-#' @seealso \code{\link{imprints_barplotting}} , \code{\link{imprints_corr_to_ref_sh}}
+#' @seealso \code{\link{imprints_barplotting_app}} , \code{\link{imprints_corr_to_ref_sh}}
 #'
 #' @export
 #'
@@ -104,7 +104,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
       stop("You must select a  protein present in your data")
     }
     idx_cond <- get_treat_level(target_profile)[(get_treat_level(target_profile) %in% treatmentlevel)]
-    target_profile <- as.numeric(target_profile[,str_which(names(target_profile), idx_cond)])
+    target_profile <- as.numeric(target_profile[,str_which(names(target_profile), paste0("_", idx_cond, "$"))])
 
     if(sum(is.na(target_profile)) == length(target_profile)){
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +

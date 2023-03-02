@@ -124,5 +124,5 @@ proteins which have similar profile from a selected protein.
 It is based on the function imprints_barplotting from the IMPRINTS.CETSA package.
 }
 \seealso{
-\code{\link{imprints_barplotting}} , \code{\link{imprints_corr_to_ref_sh}}
+\code{\link{imprints_barplotting_app}} , \code{\link{imprints_corr_to_ref_sh}}
 }

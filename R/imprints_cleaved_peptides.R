@@ -21,7 +21,7 @@
 #' @param R2 The R-squared cutoff. It characterize the linearity of the cumulative sum of the fold changes
 #'           from every peptide from each protein. The higher it is, the less stringent you are on the decision
 #'           of taking a protein as cleaved. Default is 0.9.
-#' @param control The control condition from your dataset. If the condition is found in your data, then it is removed from it.
+#' @param control The control treatment from your dataset. If the treatment is found in your data, then it is removed from it.
 #' @param min_ValidValue The minimum proportion of valid values per peptides.
 #'                       Default is 0.4; so if 7 temperatures need at least 3 valid values.
 #'
@@ -49,14 +49,14 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidV
 
   # get summed value from all temperature for every peptide
   data <- data %>%
-    tidyr::gather("Condition", "value", -id, -description) %>%
-    tidyr::separate(Condition, into = c("temp", "biorep", "Condition"), sep = "_") %>%
-    dplyr::group_by(id, description, temp, Condition) %>%
+    tidyr::gather("treatment", "value", -id, -description) %>%
+    tidyr::separate(treatment, into = c("temp", "biorep", "treatment"), sep = "_") %>%
+    dplyr::group_by(id, description, temp, treatment) %>%
     dplyr::reframe(mean_value = mean(value, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>% dplyr::group_by(id, description, Condition) %>%
+    dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
     dplyr::filter(length(na.omit(mean_value))/length(mean_value) >= min_ValidValue) %>%  # keeping peptides with more than 40% of valid values
     dplyr::reframe(sum_profile = sum(mean_value, na.rm = TRUE)) %>%  # get sum value for each peptides --> sum all temperatures values
-    dplyr::ungroup() %>% dplyr::group_by(description, Condition) %>%
+    dplyr::ungroup() %>% dplyr::group_by(description, treatment) %>%
     dplyr::filter(length(sum_profile) > 3)  # only keeping proteins with more than 3 peptides
 
   # separate id in protein and sequence
@@ -96,7 +96,7 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidV
   data$factor <- NULL
 
   # compute cumulative sum for each protein
-  data <- data %>% dplyr::group_by(protein, description, Condition) %>%
+  data <- data %>% dplyr::group_by(protein, description, treatment) %>%
     dplyr::mutate(cumsum_profile = cumsum(tidyr::replace_na(sum_profile, 0))
            )
 
@@ -134,7 +134,7 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidV
     }
   }
 
-  data <- data %>% dplyr::ungroup() %>% dplyr::group_by(protein, description, Condition) %>%
+  data <- data %>% dplyr::ungroup() %>% dplyr::group_by(protein, description, treatment) %>%
     dplyr::reframe(cleaved_site = sequence[inflex(cumsum_profile)]) %>%  # get back potential cleaved site
     dplyr::filter(!is.na(cleaved_site))  # if NA --> not cleaved
 

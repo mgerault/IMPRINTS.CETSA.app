@@ -8,23 +8,23 @@ gene_conceptNet(
   hits,
   gene_column = "Genes",
   score_column = "SR",
-  condition_column = NULL,
-  condition = NULL,
+  treatment_column = NULL,
+  treatment = NULL,
   species = c("human", "mouse"),
   pval_cutoff = 0.01,
   database = c("WikiPathway", "KEGG", "GO")
 )
 }
 \arguments{
-\item{hits}{A data.frame containing the genes id, a score value and preferably a condition column but not necessary.}
+\item{hits}{A data.frame containing the genes id, a score value and preferably a treatment column but not necessary.}
 
 \item{gene_column}{The name of the coulumn that contains the genes. Default is 'Genes'.}
 
 \item{score_column}{The name of the coulumn that contains the score values. Default is 'SR'.}
 
-\item{condition_column}{The name of the column that contains the conditions. Default is NULL.}
+\item{treatment_column}{The name of the column that contains the treatments. Default is NULL.}
 
-\item{condition}{The name of the condition you ant to keep. Default is NULL.}
+\item{treatment}{The name of the treatment you ant to keep. Default is NULL.}
 
 \item{species}{Specify the species. Currently, only 'human' and 'mouse' are available.}
 

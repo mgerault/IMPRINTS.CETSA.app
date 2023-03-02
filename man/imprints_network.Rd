@@ -7,7 +7,7 @@
 imprints_network(
   data,
   hits = NULL,
-  condition = NULL,
+  treatment = NULL,
   GOterm = NULL,
   required_score = 400,
   witherrorbar = TRUE,
@@ -26,8 +26,8 @@ imprints_network(
 \item{hits}{The Uniprots ids from which you want to plot the network.
 If NULL, it will take all the proteins from the data.}
 
-\item{condition}{The condition from which you want to plot to plot the barplots.
-If NULL, it will plot all the conditions present in the data.}
+\item{treatment}{The treatment from which you want to plot to plot the barplots.
+If NULL, it will plot all the treatments present in the data.}
 
 \item{GOterm}{Either a data frame containing the columns 'id', 'GOterm' and eventually 'color';
 a character corresponding to a data base or a NULL object.
@@ -44,7 +44,7 @@ for the interectation in the STRING network.}
 \item{FC_border}{Logical to tell if you want to color the nodes borders according to the
 mean Fold-Change from each protein.}
 
-\item{colorbar}{A vector of colors corresponding to each condition.}
+\item{colorbar}{A vector of colors corresponding to each treatment.}
 
 \item{colorFC}{If FC_border is set to TRUE, a vector of three color corresponding
 to the min, mid and max value from the mean fold change.}

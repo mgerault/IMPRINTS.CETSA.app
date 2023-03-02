@@ -7,7 +7,7 @@
 #'             the dataframe hitlist output from the Hitlist function.
 #' @param feat A second word that will be match to every word from data, can be NULL.
 #' @param imp_by_hitlist Logical to tell if the data are in the hitlist format.
-#' @param condition A character vector for selecting specific condition. Use when data are in hitlist format.
+#' @param treatment A character vector for selecting specific treatment. Use when data are in hitlist format.
 #' @param language A character to tell if you want to select publications in a specific language like 'english'.
 #' @param year_rg A character to tell a range of year of publication. The format is '2000:2020'
 #' @param your_API A character taht is your NCBI API key. If you don't have an account, use NULL.
@@ -29,7 +29,7 @@
 #' @seealso \code{\link{hitlist}} and \code{\link{pmApi2df}} for more details
 #'
 
-find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, condition = "",
+find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, treatment = "",
                            language = NULL, year_rg = NULL, your_API = NULL,
                            newfolder_name = "PI3K_pubmed_search"){
 
@@ -46,16 +46,16 @@ find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, conditio
   }
 
   if (imp_by_hitlist){
-    condi <- unique(data$Condition)
-    if (str_length(condition) != 0){
-      condi <- condition
+    condi <- unique(data$treatment)
+    if (str_length(treatment) != 0){
+      condi <- treatment
     }
-    prot_description_list <- unique(as.character(sapply(data$description[which(!is.na(match(data$Condition, condi)))],
+    prot_description_list <- unique(as.character(sapply(data$description[which(!is.na(match(data$treatment, condi)))],
                                                         mineCETSAapp:::getProteinName)))
 
-    gene_list <- unique(as.character(sapply(data$description[which(!is.na(match(data$Condition, condi)))],
+    gene_list <- unique(as.character(sapply(data$description[which(!is.na(match(data$treatment, condi)))],
                                             mineCETSAapp:::getGeneName)))
-    prot_list <- unique(data$id[which(!is.na(match(data$Condition, condi)))])
+    prot_list <- unique(data$id[which(!is.na(match(data$treatment, condi)))])
   }
   else{
     prot_description_list <- data

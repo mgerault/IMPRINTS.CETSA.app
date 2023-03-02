@@ -4,7 +4,7 @@
 #' of each protein on the pplot cell (img2) according to their location
 #'
 #' @param HIT Usually, the output from hitlist function; but just has to be a data frame with the
-#'             columns id, Condition and category
+#'             columns id, treatment and category
 #' @param organism The organism on whi you did your experiment. For now, only 'HUMAN' and 'MOUSE' are available.
 #'
 #' @return Dataframe (format for hit_plotcell)
@@ -88,7 +88,7 @@ hit_for_cell <- function(HIT, organism = c("HUMAN", "MOUSE")){
   HIT$txt <- paste("Uniprot ID :", HIT$id,
                     "<br> Gene name :", HIT$gene.name,
                     "<br> Category :", HIT$category,
-                    "<br> Condition :", HIT$Condition,
+                    "<br> treatment :", HIT$treatment,
                     "<br> Organelle :", HIT$main.location.cell,
                     "<br> Located in", HIT$nb_location, "organelles" )
 

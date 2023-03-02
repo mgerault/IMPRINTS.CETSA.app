@@ -13,7 +13,7 @@ imprints_cleaved_peptides(data, R2 = 0.9, control = NULL, min_ValidValue = 0.4)
 from every peptide from each protein. The higher it is, the less stringent you are on the decision
 of taking a protein as cleaved. Default is 0.9.}
 
-\item{control}{The control condition from your dataset. If the condition is found in your data, then it is removed from it.}
+\item{control}{The control treatment from your dataset. If the treatment is found in your data, then it is removed from it.}
 
 \item{min_ValidValue}{The minimum proportion of valid values per peptides.
 Default is 0.4; so if 7 temperatures need at least 3 valid values.}

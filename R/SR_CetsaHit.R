@@ -9,7 +9,7 @@
 #' @param data The input data set from which categorization is performed on and hitlist is produced from.
 #' @param data_diff The output from imprints_caldiff; can be NULL and if so will compute it; can also be a path to the data.
 #' @param ctrl The name of the control.
-#' @param valid_val The percentage of valid values you want per condition. If less, score will be set to NA,
+#' @param valid_val The percentage of valid values you want per treatment. If less, score will be set to NA,
 #'                  i.e. the protein will not be a hit
 #' @param SR_cutoff The stability rate cutoff
 #' @param curvature The curvature used for the curve on the volcano plot
@@ -52,7 +52,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   cond <- stringr::str_split(name_cond, "_")
   cond <- unique(unlist(lapply(cond, function(x) x[3])))
   if(!(ctrl %in% cond)){
-    stop("'ctrl' is not in the conditions. Please, check spelling or column names.")
+    stop("'ctrl' is not in the treatments. Please, check spelling or column names.")
   }
   cond <- cond[-which(cond == ctrl)]
 
@@ -136,14 +136,14 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   message("Computing mean values...")
   # get average value among bioreplicate for each protein
   diff_SR <- data_diff[,-stringr::str_which(colnames(data_diff), paste0("_", ctrl, "$"))]
-  diff_SR <- tidyr::gather(diff_SR, Condition, reading, -id, -description, -sumUniPeps, -sumPSMs, -countNum)
-  diff_SR <- tidyr::separate(diff_SR, Condition, into = c("temperature",
+  diff_SR <- tidyr::gather(diff_SR, treatment, reading, -id, -description, -sumUniPeps, -sumPSMs, -countNum)
+  diff_SR <- tidyr::separate(diff_SR, treatment, into = c("temperature",
                                                           "replicate", "treatment"), sep = "_")
   diff_SR <- diff_SR %>% dplyr::group_by(id, description, temperature, treatment) %>%
     dplyr::reframe(reading.mean = mean(reading, na.rm = T))
-  diff_SR <- tidyr::unite(diff_SR, Condition, temperature, treatment,
+  diff_SR <- tidyr::unite(diff_SR, treatment, temperature, treatment,
                           sep = "_")
-  diff_SR <- tidyr::spread(diff_SR, Condition, reading.mean)
+  diff_SR <- tidyr::spread(diff_SR, treatment, reading.mean)
 
 
   message("Computing p-values...")
@@ -255,12 +255,12 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_SR <- as.data.frame(cbind(info, diff_SR))
 
   diff_SR_plot <- diff_SR[,c("id", "Genes", stringr::str_subset(colnames(diff_SR), "^SR_|^Fisher_"))]
-  diff_SR_plot <- tidyr::gather(diff_SR_plot, Condition, reading, -id, -Genes)
-  diff_SR_plot <- tidyr::separate(diff_SR_plot, Condition, into = c("Value", "Condition"))
+  diff_SR_plot <- tidyr::gather(diff_SR_plot, treatment, reading, -id, -Genes)
+  diff_SR_plot <- tidyr::separate(diff_SR_plot, treatment, into = c("Value", "treatment"))
   diff_SR_plot <- tidyr::spread(diff_SR_plot, Value, reading)
-  diff_SR_plot$Condition <- factor(diff_SR_plot$Condition)
+  diff_SR_plot$treatment <- factor(diff_SR_plot$treatment)
 
-  cutoff <- diff_SR_plot %>% dplyr::group_by(Condition) %>%
+  cutoff <- diff_SR_plot %>% dplyr::group_by(treatment) %>%
     dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
     dplyr::reframe(pval = find_cutoff(Fisher, BH),
                      SR_pos = SR_cutoff + median(SR[which(Fisher < quantile(Fisher, 0.5))], na.rm = TRUE),
@@ -272,25 +272,25 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   write(extra_info, cutoff_file, sep = "\n", append = TRUE)
 
 
-  diff_SR_plot <- diff_SR_plot %>% dplyr::group_by(id, Genes, Condition) %>%
-    dplyr::mutate(criteria = Fisher <= cutoff$pval[which(cutoff$Condition == Condition)] &
-                    (SR >= cutoff$SR_pos[which(cutoff$Condition == Condition)] | SR <= cutoff$SR_neg[which(cutoff$Condition == Condition)]),
-                  curve = curve(SR, cutoff$SR_neg[which(cutoff$Condition == Condition)],
-                                cutoff$SR_pos[which(cutoff$Condition == Condition)],
-                                cutoff$pval[which(cutoff$Condition == Condition)],
+  diff_SR_plot <- diff_SR_plot %>% dplyr::group_by(id, Genes, treatment) %>%
+    dplyr::mutate(criteria = Fisher <= cutoff$pval[which(cutoff$treatment == treatment)] &
+                    (SR >= cutoff$SR_pos[which(cutoff$treatment == treatment)] | SR <= cutoff$SR_neg[which(cutoff$treatment == treatment)]),
+                  curve = curve(SR, cutoff$SR_neg[which(cutoff$treatment == treatment)],
+                                cutoff$SR_pos[which(cutoff$treatment == treatment)],
+                                cutoff$pval[which(cutoff$treatment == treatment)],
                                 curvature = curvature
                   ),
                   criteria_curve = -log10(Fisher) >= curve
     )
   diff_SR_plot$criteria_curve <- tidyr::replace_na(diff_SR_plot$criteria_curve, FALSE)
 
-  cond <- unique(diff_SR_plot$Condition)
+  cond <- unique(diff_SR_plot$treatment)
   n_cond <- length(cond)
   df_curve <- data.frame(SR = rep(seq(min(diff_SR_plot$SR, na.rm = TRUE), max(diff_SR_plot$SR, na.rm = TRUE), 0.01), n_cond))
-  df_curve$Condition <- rep(cond, each = nrow(df_curve)/n_cond)
-  df_curve <- df_curve %>% dplyr::group_by(Condition, rownames(df_curve)) %>%
-    dplyr::mutate(curve = curve(SR, cutoff$SR_neg[which(cutoff$Condition == Condition)],
-                                cutoff$SR_pos[which(cutoff$Condition == Condition)], cutoff$pval[which(cutoff$Condition == Condition)],
+  df_curve$treatment <- rep(cond, each = nrow(df_curve)/n_cond)
+  df_curve <- df_curve %>% dplyr::group_by(treatment, rownames(df_curve)) %>%
+    dplyr::mutate(curve = curve(SR, cutoff$SR_neg[which(cutoff$treatment == treatment)],
+                                cutoff$SR_pos[which(cutoff$treatment == treatment)], cutoff$pval[which(cutoff$treatment == treatment)],
                                 curvature = curvature)
     )
 
@@ -304,7 +304,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
          x = "Stability rate") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     theme(plot.title = element_text(hjust = 0.5)) +
-    facet_wrap(~Condition) +
+    facet_wrap(~treatment) +
     ggrepel::geom_label_repel(data = diff_SR_plot[diff_SR_plot$criteria_curve,],
                               aes(SR, -log10(Fisher),
                                   label = Genes), show.legend = FALSE)
@@ -330,7 +330,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
          x = "Stability rate") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     theme(plot.title = element_text(hjust = 0.5)) +
-    facet_wrap(~Condition)
+    facet_wrap(~treatment)
 
   g_I <- plotly::ggplotly(g_I, tooltip = "text", width = 1080, height = 560)
   htmltools::save_html(g_I, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_plotInt.html"))
@@ -343,19 +343,19 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   for_categorize <- diff_SR[,stringr::str_which(colnames(diff_SR), "^id|Genes|^\\d{1,}|^pval37")]
   for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Genes) %>%
-    tidyr::separate(key, into = c("key", "Condition"), sep = "_") %>%
+    tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
     tidyr::spread(key, value)
 
-  cutoff <- for_categorize %>% dplyr::group_by(Condition) %>%
+  cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
     dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
     dplyr::reframe(pval = find_cutoff(pval37C, BH))
 
-  diff_SR_plot <- left_join(diff_SR_plot, for_categorize, by = c("id", "Genes", "Condition"))
+  diff_SR_plot <- left_join(diff_SR_plot, for_categorize, by = c("id", "Genes", "treatment"))
   diff_SR_plot$category <- NA
   diff_SR_plot$category[which(is.na(diff_SR_plot$pval37C))] <- "ND"
 
-  diff_SR_plot <- diff_SR_plot %>% group_by(id, Genes, Condition) %>%
-    mutate(is_C = pval37C <= cutoff$pval[which(cutoff$Condition == Condition)])
+  diff_SR_plot <- diff_SR_plot %>% group_by(id, Genes, treatment) %>%
+    mutate(is_C = pval37C <= cutoff$pval[which(cutoff$treatment == treatment)])
 
   diff_SR_plot$category[which(!diff_SR_plot$is_C)] <- "NC"
   diff_SR_plot$category[which(is.na(diff_SR_plot$category) & is.na(diff_SR_plot[[temp[length(temp)]]]))] <- "CC" #denatured in the end but significant 37
@@ -371,10 +371,10 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                               })
   diff_SR_plot$category[which(is.na(diff_SR_plot$category) & diff_SR_plot$coeff <= 1e-2)] <- "CN"
   diff_SR_plot$category[which(is.na(diff_SR_plot$category))] <- "CC"
-  diff_SR_plot <- diff_SR_plot[,c("id", "Genes", "Condition", "Fisher", "SR", "category")]
+  diff_SR_plot <- diff_SR_plot[,c("id", "Genes", "treatment", "Fisher", "SR", "category")]
 
-  for_categorize <- diff_SR_plot[,c("id", "Genes", "Condition", "category")] %>%
-    tidyr::spread(Condition, category)
+  for_categorize <- diff_SR_plot[,c("id", "Genes", "treatment", "category")] %>%
+    tidyr::spread(treatment, category)
   colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
   diff_SR <- diff_SR %>% dplyr::left_join(for_categorize, by = c("id", "Genes"))
 
@@ -387,13 +387,13 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   openxlsx::write.xlsx(diff_SR_plot, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_summary.xlsx"))
 
   if(nrow(diff_SR_plot) > 1 & length(cond) > 1){
-    diff_SR_plot$Condition <- factor(diff_SR_plot$Condition)
+    diff_SR_plot$treatment <- factor(diff_SR_plot$treatment)
     vennlist <- diff_SR_plot
     vennlist$category <- NULL
-    vennlist <- (vennlist %>% dplyr::ungroup() %>% dplyr::group_by(Condition) %>%
+    vennlist <- (vennlist %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
                    dplyr::summarize(vennlist = list(id)) %>%
                    dplyr::select(vennlist))[[1]]
-    names(vennlist) <- levels(diff_SR_plot$Condition)
+    names(vennlist) <- levels(diff_SR_plot$treatment)
     VennDiagram::venn.diagram(vennlist, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "VennDiagram.png"),
                               output = TRUE,
                               fill = RColorBrewer::brewer.pal(length(names(vennlist)), "Pastel2")[1:length(vennlist)],

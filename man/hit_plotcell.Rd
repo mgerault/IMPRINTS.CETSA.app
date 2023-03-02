@@ -17,7 +17,7 @@ hit_plotcell(
 
 \item{tit}{The title of the plot}
 
-\item{cond}{The conditions you want to keep. If NULL, will take it all}
+\item{cond}{The treatments you want to keep. If NULL, will take it all}
 
 \item{cat_col_list}{A list containing the color for each category (CC, CN, NC, ND, NN)}
 }

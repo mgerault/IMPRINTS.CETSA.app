@@ -11,6 +11,7 @@ library(officer)
 library(magrittr)
 library(STRINGdb)
 library(visNetwork)
+library(clusterProfiler)
 
 library(shiny)
 library(shinyjs)

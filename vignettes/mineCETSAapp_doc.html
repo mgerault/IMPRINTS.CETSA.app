@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2023-03-02" />
+<meta name="date" content="2023-03-03" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2023-03-02</h4>
+<h4 class="date">2023-03-03</h4>
 
 </div>
 
@@ -1592,26 +1592,29 @@ you already installed it. The main goal of mineCETSAapp package is to
 provide a “user-friendly” interface of the IMPRINTS.CETSA package thanks
 to a shiny app. The app contains 6 tabs :</p>
 <ol style="list-style-type: decimal">
-<li>IMPRINTS.CETSA analysis
+<li>Analysis
 <ul>
-<li>Do the whole analysis of your IMPRINTS MS-CETSA datasets</li>
+<li>Do the whole analysis of your IMPRINTS MS-CETSA datasets on the
+protein and peptide level</li>
 </ul></li>
-<li>Hit proteins and bar plots
+<li>Database
 <ul>
-<li>Modify the database</li>
-<li>Get the bar plots according to the hits, the protein complex,
-similar profiles of a selected protein</li>
+<li>Save, remove or rename as many datasets as you want in the app</li>
 </ul></li>
-<li>Heatmap
+<li>Visualization
 <ul>
-<li>Get heatmap of your datasets according to the category or the
+<li>Plot the barplots from your datasets, check for protein complexes
+and similar IMPRINTS profiles</li>
+<li>Get heatmap from your datasets according to the category or the
 protein complex</li>
 </ul></li>
-<li>Network
+<li>Gene Ontology
 <ul>
-<li>Get the STRING network and the enrichment analysis</li>
+<li>Get the STRING network and peform enrichment analysis.</li>
+<li>Get interactive STRING network with barplots inside each node</li>
+<li>Peform GSEA analysis using clusterProfiler package</li>
 </ul></li>
-<li>Interactive cell
+<li>Cell
 <ul>
 <li>Print the proteins on an interactive cell according to their
 cellular location (depends on the Protein Atlas database)</li>
@@ -1622,10 +1625,10 @@ cellular location (depends on the Protein Atlas database)</li>
 your criterias</li>
 </ul></li>
 </ol>
-<p>In the tabs 2 to 5, you will be able to use the data from the
-database. But you will still be able to import your own data. The
-package contains also other functions that you can use directly on
-Rstudio; we will get through those in this vignette.</p>
+<p>In every features of the app, you will be able to use the data from
+the database but also be able to import your own data. The package
+contains also other functions that you can use with R commands workflow;
+we will get through those in this vignette.</p>
 <hr />
 </div>
 <div id="prerequisites" class="section level2">
@@ -1634,23 +1637,28 @@ Rstudio; we will get through those in this vignette.</p>
 <li>R version &gt; 4.0.0</li>
 <li>Rstudio version &gt; 1.0</li>
 <li>Dependent packages:<br />
-“IMPRINTS.CETSA”, “STRINGdb”, “EBImage”, “ggplot2”, “stringr”, “tidyr”,
-“magick”, “shiny”, “shinydashboard”, “shinycssloaders”, “DT”, “rio”,
-“purrr”, “dplyr”, “plyr”, “shinyjs”, “cowplot”, “plotly”, “pubmedR”,
-“rentrez”, “XML”, “gridExtra”, “rjson”, “bibliometrix”, “officer”,
-“colourpicker”, “openxlsx”</li>
+“IMPRINTS.CETSA”, “ggplot2”, “stringr”, “tidyr”, “magick”, “shiny”,
+“shinydashboard”, “shinycssloaders”, “DT”, “rio”, “purrr”, “dplyr”,
+“plyr”, “shinyjs”, “cowplot”, “plotly”, “pubmedR”, “rentrez”, “XML”,
+“gridExtra”, “rjson”, “bibliometrix”, “officer”, “colourpicker”,
+“openxlsx”, “visNetwork”, “STRINGdb”, “EBImage”, “clusterProfiler”,
+“biomaRt”, “enrichplot”, “multtest”</li>
 </ul>
-<p>Three packages are not from CRAN and hence will not be installed when
+<p>Some packages are not from CRAN and hence will not be installed when
 you will install mineCETSAapp package :<br />
-“IMPRINTS.CETSA”, “STRINGdb”, “EBImage”. For the IMPRINTS.CETSA package,
-you’ll need the last version from github. For the two others, you can
-install them from BioConductor. For this, type this command in the R
-console :</p>
+“IMPRINTS.CETSA”, “STRINGdb”, “EBImage”, “clusterProfiler”, “biomaRt”,
+“enrichplot”, “multtest”. For the IMPRINTS.CETSA package, you’ll need
+the last version from github. For the others, you can install them from
+BioConductor. For this, type these commands in the R console :</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;BiocManager&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)){ <span class="co">#check if you already have the BiocManager package</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">install.packages</span>(<span class="st">&quot;BiocManager&quot;</span>)  <span class="co">#if not, install it</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;STRINGdb&quot;</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;EBImage&quot;</span>)</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;EBImage&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;clusterProfiler&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;biomaRt&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;enrichplot&quot;</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;multtest&quot;</span>)</span></code></pre></div>
 <p>The mineCETSAapp package is currently on github, so for installing it
 you’ll also need the “devtools” package. You can install the
 mineCETSAapp package with this commands :</p>
@@ -1658,6 +1666,9 @@ mineCETSAapp package with this commands :</p>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">install.packages</span>(<span class="st">&quot;devtools&quot;</span>)  <span class="co">#if not, install it</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;mgerault/mineCETSAapp&quot;</span>)</span></code></pre></div>
+<p>To install the IMPRINTS.CETSA package (if not already done), you can
+use the same command :</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;nkdailingyun/IMPRINTS.CETSA&quot;</span>)</span></code></pre></div>
 <p>You can access the same informations (and the source code) on the <a href="https://github.com/mgerault/mineCETSAapp">github
 repository</a></p>
 <hr />
@@ -1676,10 +1687,9 @@ the package, it will save the path of your working directory under the
 variable WD. You can modify it if you want to quickly change your saving
 directory, but only do it if you are sure and of course if your file
 exists.</p></li>
-<li><p>Activate <code>mineCETSAapp</code> package by library
-it.</p></li>
+<li><p>Call <code>mineCETSAapp</code> package</p></li>
 </ol>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;mineCETSAapp&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;mineCETSAapp&quot;</span>)</span></code></pre></div>
 <hr />
 </div>
 <div id="analysis" class="section level2">
@@ -1687,7 +1697,7 @@ it.</p></li>
 <div id="run-the-shiny-app" class="section level3">
 <h3>Run the shiny app</h3>
 <hr />
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">runCETSAapp</span>()      <span class="co">#this function will directly start the app</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">runCETSAapp</span>()      <span class="co">#this function will directly start the app</span></span></code></pre></div>
 <p>If you want more informations on how to use the app, I recommend you
 to watch the <a href="https://youtu.be/cOlOzU7-S3A">tutorial</a>.</p>
 </div>
@@ -1697,26 +1707,27 @@ to watch the <a href="https://youtu.be/cOlOzU7-S3A">tutorial</a>.</p>
 <div id="underline1.space-thespace-dataspace" class="section level4">
 <h4><span class="math inline">\(\underline{1.\space The\space
 data\space}\)</span></h4>
-<p>The package contains also some data that you can play with. The are
-from the paper “Modulation of Protein-Interaction States through the
-Cell Cycle” from Dai Lingyun and al. 2018. Let’s take a look at the data
-called “drug_data”. “drug_data” is list that contains datasets :
-“elutriation” and “chemarrest”.</p>
+<p>The package contains also some data from “Modulation of
+Protein-Interaction States through the Cell Cycle” from Dai Lingyun and
+al. 2018, that you can play with. Let’s take a look at the data called
+<code>drug_data</code>. <code>drug_data</code> is a list that contains
+two datasets : “elutriation” and “chemarrest”.</p>
 <p>For each dataset, you will find :</p>
 <ul>
 <li>The caldiff output (the protein abundance difference); access it
-with ‘$data’</li>
+with <code>$data</code></li>
 <li>The imprints_average output (the average from the caldiff output
-among the bioreplicates); access it with ‘$data_ave’</li>
-<li>The hitlist; access it with ‘$hitlist’</li>
-<li>The proteins categorized as “NN”; access it with ‘$NN’</li>
-<li>The trement level; access it with ‘$treat_level’</li>
+among the bioreplicates); access it with <code>$data_ave</code></li>
+<li>The hitlist; access it with <code>$hitlist</code></li>
+<li>The proteins categorized as “NN”; access it with
+<code>$NN</code></li>
+<li>The trement level; access it with <code>$treat_level</code></li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mydata_caldiff <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>elutriation  <span class="co">#save your data    </span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mydata_ave <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data_ave<span class="sc">$</span>elutriation</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_caldiff)  <span class="co">#take a look at the data</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_ave)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mydata_caldiff <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>elutriation  <span class="co">#save your data    </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mydata_ave <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data_ave<span class="sc">$</span>elutriation</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_caldiff)  <span class="co">#take a look at the data</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(mydata_ave)</span></code></pre></div>
 </div>
 <div id="underline2.space-seesavespace-thespace-barplot" class="section level4">
 <h4><span class="math inline">\(\underline{2.\space See/save\space
@@ -1732,48 +1743,48 @@ cellular location for example). Also, the bar plots will not be
 generated in an external window; however to keep information on how the
 function is running, the remaining number of pages to be saved is
 printed.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(mydata_caldiff, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>mydata_caldiff_chemarrest <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>chemarrest</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>all_drug <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> mydata_caldiff, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> mydata_caldiff_chemarrest)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(all_drug, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#here, it will &quot;join&quot; the two pdf in one</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(mydata_caldiff, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>mydata_caldiff_chemarrest <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>data<span class="sc">$</span>chemarrest</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>all_drug <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> mydata_caldiff, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> mydata_caldiff_chemarrest)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(all_drug, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>) <span class="co">#will save all the barplots from the data</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#here, it will &quot;join&quot; the two pdf in one</span></span></code></pre></div>
 <p>Instead of doing a list of all our data, we could also get list of
 our data according to the protein complex. For this, you’ll need the
-function imprints_complex_mapping_sh (which is also based on
-imprints_complex_mapping from IMPRINTS.CETSA).</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>elutriation</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">imprints_complex_mapping_sh</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">targetcategory =</span> <span class="fu">c</span>(<span class="st">&quot;CN&quot;</span>, <span class="st">&quot;CC&quot;</span>, <span class="st">&quot;NC&quot;</span>))</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(map_compl) <span class="co">#if you want to check the data</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> map_compl[, <span class="fu">c</span>(<span class="st">&quot;ComplexName&quot;</span>, <span class="st">&quot;subunitsNum&quot;</span>, <span class="st">&quot;subunitsIdentifiedNum&quot;</span>,  <span class="co">#keep columns of interest</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;gene&quot;</span>, <span class="st">&quot;category&quot;</span>)]</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>     </span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">nrow</span>(map_compl) <span class="sc">!=</span><span class="dv">0</span>){</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  map_compl<span class="sc">$</span>description <span class="ot">&lt;-</span> <span class="fu">unname</span>(<span class="fu">unlist</span>(<span class="fu">sapply</span>(map_compl<span class="sc">$</span>description, mineCETSAapp<span class="sc">:::</span>getProteinName))) <span class="co">#keep only protein names in description</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+function imprints_complex_mapping from IMPRINTS.CETSA.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(IMPRINTS.CETSA)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> drug_data<span class="sc">$</span>hitlist<span class="sc">$</span>elutriation</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> <span class="fu">imprints_complex_mapping</span>(mydata_ave, mydata_hit, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,  </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">targetcategory =</span> <span class="fu">c</span>(<span class="st">&quot;CN&quot;</span>, <span class="st">&quot;CC&quot;</span>, <span class="st">&quot;NC&quot;</span>))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(map_compl) <span class="co">#if you want to check the data</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>map_compl <span class="ot">&lt;-</span> map_compl[, <span class="fu">c</span>(<span class="st">&quot;ComplexName&quot;</span>, <span class="st">&quot;subunitsNum&quot;</span>, <span class="st">&quot;subunitsIdentifiedNum&quot;</span>,  <span class="co">#keep columns of interest</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;gene&quot;</span>, <span class="st">&quot;category&quot;</span>)]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">nrow</span>(map_compl) <span class="sc">!=</span><span class="dv">0</span>){</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  map_compl<span class="sc">$</span>description <span class="ot">&lt;-</span> <span class="fu">unname</span>(<span class="fu">unlist</span>(<span class="fu">sapply</span>(map_compl<span class="sc">$</span>description, mineCETSAapp<span class="sc">:::</span>getProteinName))) <span class="co">#keep only protein names in description</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Now that we know some protein complexes, we can build our list.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>data_l <span class="ot">&lt;-</span> <span class="fu">list</span>() <span class="co">#initialize list</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> some_complex[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(some_complex), <span class="dv">4</span>)]</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> some_complex){</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  cate_ <span class="ot">&lt;-</span> map_compl[<span class="fu">which</span>(map_compl<span class="sc">$</span>ComplexName <span class="sc">==</span> i), ]</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  pr_comp <span class="ot">&lt;-</span> <span class="fu">unique</span>(cate_<span class="sc">$</span>id)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  data_l[[i]] <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_caldiff, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  data_l[[i]]<span class="sc">$</span>category <span class="ot">&lt;-</span> cate_<span class="sc">$</span>category[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(cate_<span class="sc">$</span>id, data_l[[i]]<span class="sc">$</span>id)))] <span class="co">#keep category </span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data_l</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#each element of the list contains data from caldiff output for each protein complex selected</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(data_l,<span class="at">save_pdf =</span> <span class="cn">TRUE</span>, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">toplabel =</span> <span class="st">&quot;IMPRINTS-CETSA bar plotting </span><span class="sc">\n</span><span class="st">Protein complex :&quot;</span>,  <span class="co">#title on each page (will add the complex name, cf. the names of the list)</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">pdfname =</span> <span class="st">&quot;complex_barplot&quot;</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                     )</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>data_l <span class="ot">&lt;-</span> <span class="fu">list</span>() <span class="co">#initialize list</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> some_complex[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(some_complex), <span class="dv">4</span>)]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> some_complex){</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  cate_ <span class="ot">&lt;-</span> map_compl[<span class="fu">which</span>(map_compl<span class="sc">$</span>ComplexName <span class="sc">==</span> i), ]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  pr_comp <span class="ot">&lt;-</span> <span class="fu">unique</span>(cate_<span class="sc">$</span>id)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  data_l[[i]] <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_caldiff, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  data_l[[i]]<span class="sc">$</span>category <span class="ot">&lt;-</span> cate_<span class="sc">$</span>category[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(cate_<span class="sc">$</span>id, data_l[[i]]<span class="sc">$</span>id)))] <span class="co">#keep category </span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data_l</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#each element of the list contains data from caldiff output for each protein complex selected</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(data_l,<span class="at">save_pdf =</span> <span class="cn">TRUE</span>, <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">toplabel =</span> <span class="st">&quot;IMPRINTS-CETSA bar plotting </span><span class="sc">\n</span><span class="st">Protein complex :&quot;</span>,  <span class="co">#title on each page (will add the complex name, cf. the names of the list)</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">pdfname =</span> <span class="st">&quot;complex_barplot&quot;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                     )</span></code></pre></div>
 <p>When you looked at your barplots from different protein complex, you
 noticed that the protein profiles are quite similar among each complex.
 But if you want only to find similar profiles from a selected protein,
@@ -1787,16 +1798,16 @@ the values, so the similar profiles will have a similar shape AND
 similar values. This is not the case with the Peasron correlation score
 since you divide the covariance by the standard deviation. Indeed the
 value are all scaled by this division, so you will find more similar
-profiles and not necessarily with similar values.</p>
+profiles but not necessarily with similar values.</p>
 <p>For more informations on this scores : <a href="https://nakkaya.com/2009/11/11/euclidean-distance-score/">Euclidean</a>
 ; <a href="https://www.questionpro.com/blog/pearson-correlation-coefficient/">Pearson</a></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_simprof</span>(mydata_caldiff, mydata_ave, <span class="co">#here we have the average data, but if it wasn&#39;t the case we would have let it NULL and let the function calculate it for us</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">treatmentlevel =</span> <span class="st">&quot;S&quot;</span>, <span class="at">protein_profile =</span> <span class="st">&quot;O43776&quot;</span>,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">pdfname =</span> <span class="st">&quot;similar_O43776&quot;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">use_score =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">score_threshold =</span> <span class="fl">0.65</span>, <span class="at">max_na_prow =</span> <span class="dv">0</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                          )</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Here we choose the Euclidean distance score with a threshold of 0.65 and no missing values</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_simprof</span>(mydata_caldiff, mydata_ave, <span class="co">#here we have the average data, but if it wasn&#39;t the case we would have let it NULL and let the function calculate it for us</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">treatmentlevel =</span> <span class="st">&quot;S&quot;</span>, <span class="at">protein_profile =</span> <span class="st">&quot;O43776&quot;</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">pdfname =</span> <span class="st">&quot;similar_O43776&quot;</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">use_score =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">score_threshold =</span> <span class="fl">0.65</span>, <span class="at">max_na_prow =</span> <span class="dv">0</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                          )</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Here we choose the Euclidean distance score with a threshold of 0.65 and no missing values</span></span></code></pre></div>
 <p>The function will find the similar profiles and inform you of how
 many it found. If you’re satistfied with the number, you can continue
 and so save the plots or you can stop here and change the method or the
@@ -1807,28 +1818,28 @@ threshold.</p>
 Heatmap}\)</span></h4>
 <p>You can also get heatmap of your data according to their categories
 or their protein complex.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># According their category</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#here we need the average data</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(mydata_ave, <span class="at">hit_summary =</span> mydata_hit,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">select_cat =</span> <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>),  </span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the treatment S</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># According to their protein complex</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> some_complex[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(some_complex), <span class="dv">4</span>)]</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>cate_ <span class="ot">&lt;-</span> map_compl[<span class="fu">which</span>(map_compl<span class="sc">$</span>ComplexName <span class="sc">==</span> i), ]</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>pr_comp <span class="ot">&lt;-</span> cate_<span class="sc">$</span>id</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_ave, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(data, <span class="at">PRcomplex_data =</span> cate_,</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>, </span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the treatment S</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># According their category</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#here we need the average data</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(mydata_ave, <span class="at">hit_summary =</span> mydata_hit,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">select_cat =</span> <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>),  </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins categorized as CN, CC or NC under the treatment S</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># According to their protein complex</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> <span class="fu">unique</span>(map_compl<span class="sc">$</span>ComplexName)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>some_complex <span class="ot">&lt;-</span> some_complex[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(some_complex), <span class="dv">4</span>)]</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>cate_ <span class="ot">&lt;-</span> map_compl[<span class="fu">which</span>(map_compl<span class="sc">$</span>ComplexName <span class="sc">==</span> i), ]</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>pr_comp <span class="ot">&lt;-</span> cate_<span class="sc">$</span>id</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">ms_subsetting</span>(mydata_ave, <span class="at">isfile =</span> F, <span class="at">hitidlist =</span> <span class="fu">c</span>(pr_comp)) <span class="co">#filter the proteins from those complexes</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_heatmap</span>(data, <span class="at">PRcomplex_data =</span> cate_,</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>, <span class="at">max_na =</span> <span class="dv">0</span>,</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>              <span class="at">response =</span> <span class="st">&quot;both&quot;</span>, </span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>              <span class="at">saveHeat =</span> <span class="cn">TRUE</span>, <span class="at">file_type =</span> <span class="st">&quot;png&quot;</span>)</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Will save a heatmap in a png file, of the proteins of the complex from some_complex, under the treatment S</span></span></code></pre></div>
 </div>
 <div id="underline4.space-hitlistspace-space-getspace-yourspace-hitsspace-basedspace-onspace-aspace-newspace-scorespace-thespace-stabilityspace-ratespace-andspace-aspace-p-value" class="section level4">
 <h4><span class="math inline">\(\underline{4.\space Hitlist\space
@@ -1844,8 +1855,8 @@ data. The caldiff output is not necessary since it can be calculated
 automatically. You just need to set an FDR and a cutoff for the SR but
 you can let the default value. For more details, check the documentation
 of the function.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>norm_data <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_tsv</span>(<span class="st">&quot;path_to_your_normalized_data.txt&quot;</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">SR_CetsaHit</span>(norm_data, <span class="at">ctrl =</span> <span class="st">&quot;Vehicle&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>norm_data <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_tsv</span>(<span class="st">&quot;path_to_your_normalized_data.txt&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>new_hits <span class="ot">&lt;-</span> <span class="fu">SR_CetsaHit</span>(norm_data, <span class="at">ctrl =</span> <span class="st">&quot;Vehicle&quot;</span>)</span></code></pre></div>
 <p>Since we didn’t put the caldiff data, it will calculate it. Then it
 will save all the results (volcano plots, file output, venndiagram) in
 file named by default ‘Hits_analysis’.</p>
@@ -1856,118 +1867,141 @@ network}\)</span></h4>
 <p>In this section, you will learn how to plot a string network from
 your data and start an enrichment analysis. First, you need to load the
 STRINGdb package and import the database from STRING.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(STRINGdb)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;STRING_data&quot;</span>)   <span class="co"># create folder to stor STRING data</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>string_db <span class="ot">&lt;-</span> STRINGdb<span class="sc">$</span><span class="fu">new</span>(<span class="at">version=</span><span class="st">&quot;11&quot;</span>, <span class="at">species=</span><span class="dv">9606</span>,               <span class="co">#ID 9606 correspond to human</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(STRINGdb)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;STRING_data&quot;</span>)   <span class="co"># create folder to stor STRING data</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>string_db <span class="ot">&lt;-</span> STRINGdb<span class="sc">$</span><span class="fu">new</span>(<span class="at">version=</span><span class="st">&quot;11&quot;</span>, <span class="at">species=</span><span class="dv">9606</span>,               <span class="co">#ID 9606 correspond to human</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">score_threshold=</span><span class="dv">200</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">input_directory=</span>  <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;STRING_data&quot;</span>)) <span class="co">#will save the data in a folder named STRING_data</span></span></code></pre></div>
 <p>Now we can start the analysis on a group of protein. Let’s take the
 hits from the S treatment.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>network_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">map</span>(data, <span class="st">&quot;id&quot;</span>, <span class="at">removeUnmappedRows =</span> <span class="cn">TRUE</span>)         <span class="co">#will map the proteins to the string ID</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(network_hit<span class="sc">$</span>STRING_id , <span class="at">inter =</span> <span class="cn">FALSE</span>) <span class="co">#will plot the network</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>network_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">map</span>(data, <span class="st">&quot;id&quot;</span>, <span class="at">removeUnmappedRows =</span> <span class="cn">TRUE</span>)         <span class="co">#will map the proteins to the string ID</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(network_hit<span class="sc">$</span>STRING_id , <span class="at">inter =</span> <span class="cn">FALSE</span>) <span class="co">#will plot the network</span></span></code></pre></div>
 <p>You can also choose to set the variable ‘inter’ to ‘TRUE’ in order to
 zoom into the plot.</p>
 <p>Now, let’s start the enrichment analysis.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>enrich_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">get_enrichment</span>(network_hit<span class="sc">$</span>STRING_id)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(enrich_hit) <span class="co">#take a look at the data</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Each protein has been mapped to a category (Component, function, ...) with a description of this category.</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#For example, with the category component we can have the description ribosome</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#sum up the result, will take only the category &quot;Component&quot;</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">Get_GO</span>(enrich_hit, <span class="at">enrich =</span> <span class="cn">TRUE</span>, <span class="at">all_cat =</span> <span class="cn">FALSE</span>, <span class="at">sing_cat =</span> <span class="st">&quot;Component&quot;</span>) <span class="co">#a list of data frame</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>d_n <span class="ot">&lt;-</span> <span class="fu">as.list</span>(<span class="fu">lapply</span>(df, names)[[<span class="st">&quot;Component&quot;</span>]]) <span class="co">#get names of the list : the string ID and the gene name</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#as.list() to keep the class list and use it in mapply after</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#add the column id in each data frame (the names we got at the last step)</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(x,y) {x<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">rep</span>(y, <span class="fu">nrow</span>(x)); x},</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                     df[[<span class="st">&quot;Component&quot;</span>]],</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                     d_n, <span class="at">SIMPLIFY =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, df)                    <span class="co">#put all the data frame in one </span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(df) <span class="co">#take a look at the data</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#keep the id and separate the gene name from the string ID</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>id_string <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, stringr<span class="sc">::</span><span class="fu">str_split</span>(df<span class="sc">$</span>id, <span class="st">&quot;,&quot;</span>))</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(id_string) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;gene.names&quot;</span>, <span class="st">&quot;STRING_id&quot;</span>)</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="co">#bind the two data frames</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">cbind</span>(id_string, df[,<span class="sc">-</span><span class="fu">ncol</span>(df)])</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(df) <span class="co">#take a look at the final data</span></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="co">#Let&#39;s see the network from some proteins mapped to a specific description</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">#for example the ribosome and the cytosolic ribosome</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>ribosome_net <span class="ot">&lt;-</span> df<span class="sc">$</span>STRING_id[stringr<span class="sc">::</span><span class="fu">str_which</span>(df<span class="sc">$</span>description, <span class="st">&quot;^Ribosome$&quot;</span>)]</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(ribosome_net , <span class="at">inter =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>enrich_hit <span class="ot">&lt;-</span> string_db<span class="sc">$</span><span class="fu">get_enrichment</span>(network_hit<span class="sc">$</span>STRING_id)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(enrich_hit) <span class="co">#take a look at the data</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Each protein has been mapped to a category (Component, function, ...) with a description of this category.</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#For example, with the category component we can have the description ribosome</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#sum up the result, will take only the category &quot;Component&quot;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">Get_GO</span>(enrich_hit, <span class="at">enrich =</span> <span class="cn">TRUE</span>, <span class="at">all_cat =</span> <span class="cn">FALSE</span>, <span class="at">sing_cat =</span> <span class="st">&quot;Component&quot;</span>) <span class="co">#a list of data frame</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>d_n <span class="ot">&lt;-</span> <span class="fu">as.list</span>(<span class="fu">lapply</span>(df, names)[[<span class="st">&quot;Component&quot;</span>]]) <span class="co">#get names of the list : the string ID and the gene name</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#as.list() to keep the class list and use it in mapply after</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#add the column id in each data frame (the names we got at the last step)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(x,y) {x<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">rep</span>(y, <span class="fu">nrow</span>(x)); x},</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                     df[[<span class="st">&quot;Component&quot;</span>]],</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                     d_n, <span class="at">SIMPLIFY =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, df)                    <span class="co">#put all the data frame in one </span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(df) <span class="co">#take a look at the data</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">#keep the id and separate the gene name from the string ID</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>id_string <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, stringr<span class="sc">::</span><span class="fu">str_split</span>(df<span class="sc">$</span>id, <span class="st">&quot;,&quot;</span>))</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(id_string) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;gene.names&quot;</span>, <span class="st">&quot;STRING_id&quot;</span>)</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="co">#bind the two data frames</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">cbind</span>(id_string, df[,<span class="sc">-</span><span class="fu">ncol</span>(df)])</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(df) <span class="co">#take a look at the final data</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co">#Let&#39;s see the network from some proteins mapped to a specific description</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="co">#for example the ribosome and the cytosolic ribosome</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>ribosome_net <span class="ot">&lt;-</span> df<span class="sc">$</span>STRING_id[stringr<span class="sc">::</span><span class="fu">str_which</span>(df<span class="sc">$</span>description, <span class="st">&quot;^Ribosome$&quot;</span>)]</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="fu">My_net</span>(ribosome_net , <span class="at">inter =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <p>Now you can try with other category and/or description, save the
-plots and the results with the function ‘ggsave’ and
-‘openxlsx::write.xlsx()’.</p>
+plots and the results with the function <code>ggsave</code> and
+<code>openxlsx::write.xlsx()</code>.</p>
 <p>If you want more information, go check the <a href="http://www.bioconductor.org/packages/release/bioc/html/STRINGdb.html">STRINGdb
 documentation</a>.</p>
+</div>
+<div id="underline5.space-barplotspace-network" class="section level4">
+<h4><span class="math inline">\(\underline{5.\space Barplot\space
+network}\)</span></h4>
+<p>Instead of plotting classic STRING network, here the goal is to plot
+in each node of the STRING network its corresponding barplot from your
+data. Using the visNetwork package which uses javascript, we can plot
+this network in an interactive way and modify it easily. To handle the
+network, the easiest way is to use the app but you can plot it with R
+command using the <code>imprints_network</code> function.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>hits_G2 <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;G2&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>network <span class="ot">&lt;-</span> <span class="fu">imprints_network</span>(mydata_caldiff, hits_G2<span class="sc">$</span>id, </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">GOterm =</span> <span class="st">&quot;Component&quot;</span>,      <span class="co"># perform enrichment analysis from &#39;Component&#39; database</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">required_score =</span> <span class="dv">900</span>) </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>network  <span class="co"># to see it</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># it returns a visNetwork object so you can modify it with visNetwork functions</span></span></code></pre></div>
+<p>A lot of options are possible with this function. To see more
+details, go check the documentation from <code>imprints_network</code>
+function and <code>visNetwork</code> package.</p>
 </div>
 <div id="underline6.space-thespace-interactivespace-cell" class="section level4">
 <h4><span class="math inline">\(\underline{6.\space The\space
 interactive\space cell}\)</span></h4>
 <p>Now, if you want to check where your hits could be located, you may
-want to use the ‘hit_for_cell’ function. This function will check if you
-proteins are in the Protein Atlas database and will map them to their
-main location.</p>
+want to use the <code>hit_for_cell</code> function. This function will
+check if you proteins are in the Protein Atlas database and will map
+them to their main location.</p>
 <p>Then, it will generate random coordinates for each proteins
 <strong>according to their cellular location</strong> on the cell image
 already present in the package. It will return a data frame containing
 the protein ID, the treatment, the category, the gene name, the main
 location, the number of location found and the coordinates
 generated.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the S treatment</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(category, <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>)))) <span class="co">#filter the category, but you could have take them all, even add also the NN</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>cell_result <span class="ot">&lt;-</span> <span class="fu">hit_for_cell</span>(data, <span class="at">organism =</span> <span class="st">&quot;HUMAN&quot;</span>)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(cell_result) <span class="co">#take a look at the data</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Let&#39;s test it on the S treatment</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> mydata_hit <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;S&quot;</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(category, <span class="fu">c</span>(<span class="st">&quot;CC&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;NC&quot;</span>)))) <span class="co">#filter the category, but you could have take them all, even add also the NN</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>cell_result <span class="ot">&lt;-</span> <span class="fu">hit_for_cell</span>(data, <span class="at">organism =</span> <span class="st">&quot;HUMAN&quot;</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(cell_result) <span class="co">#take a look at the data</span></span></code></pre></div>
 <p>Now let’s plot our result on the cell ! It will generate an
 interactive plot thanks to the package <a href="https://plotly.com/r/">plotly</a>.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hit_plotcell</span>(cell_result, </span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">cat_col_list =</span> <span class="fu">list</span>(<span class="st">&quot;CC&quot;</span> <span class="ot">=</span> <span class="st">&quot;#FB4F0B&quot;</span>, </span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;CN&quot;</span> <span class="ot">=</span> <span class="st">&quot;#0FAEB9&quot;</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;NC&quot;</span> <span class="ot">=</span> <span class="st">&quot;#E7B700&quot;</span>))</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#it takes some time to run, since the plot contains a lot of information</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hit_plotcell</span>(cell_result, </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">cat_col_list =</span> <span class="fu">list</span>(<span class="st">&quot;CC&quot;</span> <span class="ot">=</span> <span class="st">&quot;#FB4F0B&quot;</span>, </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;CN&quot;</span> <span class="ot">=</span> <span class="st">&quot;#0FAEB9&quot;</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">&quot;NC&quot;</span> <span class="ot">=</span> <span class="st">&quot;#E7B700&quot;</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">#it takes some time to run, since the plot contains a lot of information</span></span></code></pre></div>
 </div>
 <div id="underline7.space-pubmedspace-search" class="section level4">
 <h4><span class="math inline">\(\underline{7.\space PubMed\space
 search}\)</span></h4>
-<p>Let’s say you just finish to analyzed your data and now you want to
+<p>Let’s say you just finish to analyze your data and now you want to
 check if there are already papers published in PubMed talking about the
 drug you used and the proteins you found. For this, you can use the
-‘find_in_pubmed’ function. Here’s how you can can use it :</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>mydata_hit<span class="sc">$</span>description <span class="ot">&lt;-</span> mydata_caldiff<span class="sc">$</span>description[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(mydata_hit<span class="sc">$</span>id, mydata_caldiff<span class="sc">$</span>id)))]</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> mydata_hit[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,] <span class="co"># take a sample of the proteins</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2021:2022&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
+<code>find_in_pubmed</code> function. Here’s how you can can use it
+:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># to use find_in_pubmed with parameter imp_by_hitlist set to TRUE, need the description column, i.e. the protein name</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>mydata_hit<span class="sc">$</span>description <span class="ot">&lt;-</span> mydata_caldiff<span class="sc">$</span>description[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(mydata_hit<span class="sc">$</span>id, mydata_caldiff<span class="sc">$</span>id)))]</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>mydata_hit <span class="ot">&lt;-</span> mydata_hit[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,] <span class="co"># take a sample of the proteins</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">find_in_pubmed</span>(mydata_hit, <span class="at">feat =</span> <span class="st">&quot;cell&quot;</span>, <span class="at">imp_by_hitlist =</span> <span class="cn">TRUE</span>, <span class="at">treatment =</span> <span class="st">&quot;S&quot;</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">language =</span> <span class="st">&quot;english&quot;</span>, <span class="at">year_rg =</span> <span class="st">&quot;2021:2022&quot;</span>, <span class="at">your_API =</span> <span class="cn">NULL</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">newfolder_name =</span> <span class="st">&quot;elutriation_pubmed_search&quot;</span>)</span></code></pre></div>
 <p>This will save the results in the folder named
 “elutriation_pubmed_search”. For each protein names (if a paper has been
 found), you will have a word file which contains the title, the authors,
 the date of publication and the abstract of each publication found in
-PubMed. When you set ‘imp_by_hitlist’ to TRUE, it means that your data
-are a hitlist (or any data frames) that contains the column description.
+PubMed. When <code>imp_by_hitlist = TRUE</code>, it means that your data
+is a hitlist (or any data frames) that contains the column description.
 In this example, we match every protein name found under the treatment S
 with the word “cell”. Then we search for articles which contains those
 words in the title and/or the abstract, written in english and published
 between 2021 and 2022. If treatment was set to ““, then it would have
 taken all the protein names from your hitlist. You can also set
-‘language’ and ‘year_rg’ to NULL to not filter on those criterias; same
-if you set ‘feat’ to”“. Your data can also be any character vector or
-another file (tab or comma separated) which contains one column of words
-that you want to search for publications; if so you need to set
-‘imp_by_hitlist’ to FALSE.</p>
-<p>‘your_API’ is your API key from NCBI. By default, the access to NCBI
-API system is free and does not necessarily require an “API key”. In
-this case, NCBI limits users to making only 3 requests per second. Users
-who register for an “API key” are able to make up to ten requests per
-second. Obtaing a key is very simple, you just need to register for <a href="https://www.ncbi.nlm.nih.gov/account/">“my ncbi account”</a> then
-click on a button in the <a href="https://www.ncbi.nlm.nih.gov/account/?back_url=https://www.ncbi.nlm.nih.gov/account/settings/">“account
+<code>language</code> and <code>year_rg</code> to NULL to not filter on
+those criterias; same if you set <code>feat&#39;</code> to”“. Your data can
+also be any character vector or any other file (tab or comma separated)
+which contains one column of words that you want to search for
+publications; if so you need to set <code>imp_by_hitlist</code> to
+FALSE.</p>
+<p><code>your_API</code> is your API key from NCBI. By default, the
+access to NCBI API system is free and does not necessarily require an
+API key. In this case, NCBI limits users to make only 3 requests per
+second. Users who register for an API key are able to make up to ten
+requests per second. Obtaining a key is very simple, you just need to
+register for <a href="https://www.ncbi.nlm.nih.gov/account/">“my ncbi
+account”</a> then click on a button in the <a href="https://www.ncbi.nlm.nih.gov/account/?back_url=https://www.ncbi.nlm.nih.gov/account/settings/">“account
 settings page”</a>.</p>
 </div>
 <div id="underline8.space-otherspace-functions" class="section level4">
@@ -1977,29 +2011,29 @@ functions}\)</span></h4>
 which can be useful for the user.</p>
 <p><strong>get_treat_level</strong> function</p>
 <p>This function allow you to get the treatment level of your data. The
-input can be the output from ‘caldiff’ function or ‘imprints_average’
-function.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_caldiff)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_ave)</span></code></pre></div>
+input can be the output from <code>imprints_caldiff</code> function or
+<code>imprints_average</code> function.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_caldiff)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">get_treat_level</span>(mydata_ave)</span></code></pre></div>
 <p><strong>join_cetsa</strong> function</p>
 <p>This function take a list of data frame and join them. It also allow
 you to add character at the end of the column names.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dl <span class="ot">&lt;-</span> <span class="fu">list</span>(elutriation, chemarrest)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;elutriation&quot;</span>, <span class="st">&quot;chemarrest&quot;</span>))</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>new_data_nosuffix <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)) <span class="co">#without new names</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co">#just rename treatments</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>chemarrest_new_name <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(chemarrest, <span class="st">&quot;new&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>dl <span class="ot">&lt;-</span> <span class="fu">list</span>(elutriation, chemarrest)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;elutriation&quot;</span>, <span class="st">&quot;chemarrest&quot;</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>new_data_nosuffix <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(dl, <span class="at">new_names =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)) <span class="co">#without new names</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">#just rename treatments</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>chemarrest_new_name <span class="ot">&lt;-</span> <span class="fu">join_cetsa</span>(chemarrest, <span class="st">&quot;new&quot;</span>)</span></code></pre></div>
 <p>Remember you’ll always need to add the same number of new names as
 you have data frames in your list. Also, to avoid any problems in the
 other function, the character ’_’ and ‘/’ are not allowed.</p>
 <p><strong>join_drugdata</strong> function</p>
-<p>As join_cetsa, this function will simply joined a list of data frame
+<p>As join_cetsa, this function will simply join a list of data frame
 but without renaming. It is the same as the ‘join_all’ function from the
 ‘plyr’ package but allow to use the ‘full_join’ function from the
 ‘dplyr’ package and so to add suffixes to duplicated names not selecting
 by the argument ‘by.’</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">join_drugdata</span>(drug_data<span class="sc">$</span>data, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">join_drugdata</span>(drug_data<span class="sc">$</span>data, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>))</span></code></pre></div>
 <p><strong>com_protein_loop</strong> function</p>
 <p>Let’s say you have several data frames or a hitlist with many
 conditions and you want to check for each protein if it has been
@@ -2007,29 +2041,29 @@ identified in one, two or n conditions.</p>
 <p>This is the goal of this function. In order to use it, you’ll need a
 named list which contains numeric or character elements. In our case a
 list of the proteins identified in each drug experiment/condition.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check between two data frames</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pr_elutriation <span class="ot">&lt;-</span> <span class="fu">unique</span>(elutriation<span class="sc">$</span>id)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pr_chemarrest <span class="ot">&lt;-</span> <span class="fu">unique</span>(chemarrest<span class="sc">$</span>id)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> pr_elutriation, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> pr_chemarrest)</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>result_common <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>result_common <span class="co">#A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">#check hits between treatments</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>all_hits <span class="ot">&lt;-</span> <span class="fu">rbind</span>(hitlist_elutriation, hitlist_chemarrest)</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(all_hits<span class="sc">$</span>treatment)){</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  pr_list[[i]] <span class="ot">&lt;-</span> (all_hits <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> i))<span class="sc">$</span>id  <span class="co">#get hits for each treatment in a hit</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>pr_list</span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)  <span class="co">#A list which contains all the common and unique hits between all the condtions</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#check between two data frames</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>pr_elutriation <span class="ot">&lt;-</span> <span class="fu">unique</span>(elutriation<span class="sc">$</span>id)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>pr_chemarrest <span class="ot">&lt;-</span> <span class="fu">unique</span>(chemarrest<span class="sc">$</span>id)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;elutriation&quot;</span> <span class="ot">=</span> pr_elutriation, <span class="st">&quot;chemarrest&quot;</span> <span class="ot">=</span> pr_chemarrest)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>result_common <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>result_common <span class="co">#A list which contains the proteins only identified in the elutriation experiment, the chemarrest experiment and both</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co">#check hits between treatments</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>all_hits <span class="ot">&lt;-</span> <span class="fu">rbind</span>(hitlist_elutriation, hitlist_chemarrest)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">unique</span>(all_hits<span class="sc">$</span>treatment)){</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  pr_list[[i]] <span class="ot">&lt;-</span> (all_hits <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> i))<span class="sc">$</span>id  <span class="co">#get hits for each treatment in a hit</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>pr_list</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>pr_list <span class="ot">&lt;-</span> <span class="fu">com_protein_loop</span>(pr_list)  <span class="co">#A list which contains all the common and unique hits between all the condtions</span></span></code></pre></div>
 <p>Of course, you can then play with this list and reshape it. For
 example, just add the information in your hitlist :</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>all_hits<span class="sc">$</span>drug <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">&quot;c&quot;</span>, <span class="fu">nrow</span>(all_hits))</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">names</span>(pr_list)){</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  all_hits<span class="sc">$</span>drug[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(all_hits<span class="sc">$</span>id, pr_list[[i]])))] <span class="ot">&lt;-</span> i</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(all_hits) <span class="co">#take a look at the data</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>all_hits<span class="sc">$</span>drug <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">&quot;c&quot;</span>, <span class="fu">nrow</span>(all_hits))</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">names</span>(pr_list)){</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  all_hits<span class="sc">$</span>drug[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">match</span>(all_hits<span class="sc">$</span>id, pr_list[[i]])))] <span class="ot">&lt;-</span> i</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">View</span>(all_hits) <span class="co">#take a look at the data</span></span></code></pre></div>
 <p>Remember that this function works with any elements (some number,
 gene names, any ID, …). You just need a named list in which you want to
 check the common things, no matter the number of elements in your
@@ -2038,27 +2072,27 @@ list.</p>
 <p>This function has been created for the hit_for_cell function. The aim
 is to check if a point is in a given delimited zone.</p>
 <ul>
-<li>The principle is as follow : If you take a square for example, and
-put a point in it. Now, link this point to all the points from the
-square. Then sum up the angles that you created; like this :
+<li>The principle is as follow : take a square for example, and put a
+point in it. Now, link this point to all the points from the square.
+Then sum up the angles that you created; like this :
 <img src="data:image/png;base64,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6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLBC9vp5NqOAMnkEsEL2+nk2o4AyeQSwQvb6eTajgDJ5BLB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lgDJxC9QhwB97q9fPN8L0NObb5b/3f/VTAF66E9cE8Jut4EAaWydC12gPk9C76Xm47fvHnp98Mb9k0CfukP8z4fjoT8AXu6s630LaAQBGsedCl1NhOtka13vW0Ajagfo8IX4tnfnfDzq0PskJwm73QYegmnk865xgA5fh297YYyE9yDwdrcESCaddwRIJLoHkbcjQDrZvGsRoCt4Fez2NtsbwrwQIJlk3jUJ0P37fxK/D+iWG9Ec2E4n13ZNAnQN74TOJoIXttPJtV2TAH389s3n0n8vWDIRvLCdTq7tKgfogzfKnZ4Pr+G74XOJ4IXtdHJt1yZALz78zro/Xzm8/0OAjIQ+Hdvp5NquUoDG0vbCeMklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1HQGSySWCF7bTybUdAZLJJYIXttPJtR0Bksklghe208m1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" width="576" /></li>
 </ul>
-<p>If your point is in the square, you should have a sum of 360° (or
--360°); if not you will have a different value. Now, instead of a square
-take any shape and apply this same principle. For every point, you will
-check if the sum of angle will be close to 360°. To be very confident,
-in this function, this sum of angle divided by 360 needs to be between 0
-and 1e-20 or between 359.9995/360 and 1. This threshold are arbitrary
-but very tight which allow almost any mistakes.</p>
+<p>If your point is in the square, then the sum of of the angles formed
+should be 360° (or -360°). Now, instead of a square take any shape and
+apply this same principle. For every point, you will check if the sum of
+angles will be close to 360°. To be very confident, in this function,
+this sum of angle divided by 360 needs to be between 359.9995/360 and 1.
+This threshold is arbitrary but very tight which allow almost any
+mistakes.</p>
 <p>If we continue with our example of our square :</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>square <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">1</span>))</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>point_in <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.5</span>,<span class="fl">1.5</span>)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>point_out <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.1</span>,<span class="dv">2</span>)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">is_in_zone</span>(square, point_in)  <span class="co">#TRUE</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">is_in_zone</span>(square, point_out) <span class="co">#FALSE</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co">#You can create way more complicated border. You&#39;ll just need a data frame of 2 columns named x and y.</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>square <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">1</span>))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>point_in <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.5</span>,<span class="fl">1.5</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>point_out <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.1</span>,<span class="dv">2</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">is_in_zone</span>(square, point_in)  <span class="co">#TRUE</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">is_in_zone</span>(square, point_out) <span class="co">#FALSE</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co">#You can create way more complicated border. You&#39;ll just need a data frame of 2 columns named x and y.</span></span></code></pre></div>
 <p><a href="http://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html">More
 information</a></p>
 </div>
@@ -2068,8 +2102,8 @@ information</a></p>
 <hr />
 <p>mineCETSAapp also contains functions to analyse IMPRINTS-CETSA on the
 peptide level. Their names always start with ‘imprints’ and ends with
-‘peptides’. One of the main question for example is the search for
-potential cleaved peptides.</p>
+‘peptides’. One of the main goal is the search for potential cleaved
+peptides.</p>
 <div id="underline1.space-readspace-yourspace-data" class="section level4">
 <h4><span class="math inline">\(\underline{1.\space Read\space
 your\space data}\)</span></h4>
@@ -2077,17 +2111,17 @@ your\space data}\)</span></h4>
 the PeptideGroup files from Proteome Discoverer and the function
 ‘imprints_read_peptides’. For easier handle, you can put all your
 peptide file in a folder named ‘Analysis_files’ for example.</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mineCETSAapp)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>peptides <span class="ot">&lt;-</span> <span class="fu">imprints_read_peptides</span>(<span class="at">peptides_files =</span> <span class="fu">list.files</span>(<span class="st">&quot;Analysis_files&quot;</span>,     <span class="co"># your files</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">pattern =</span> <span class="st">&quot;Peptide&quot;</span>, </span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">full.names =</span> T),</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;B1_Vehicle&quot;</span>, <span class="st">&quot;B1_DrugA&quot;</span>, <span class="st">&quot;B1_DrugB&quot;</span>,  <span class="co"># the treatments corresponding to your channel</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B2_Vehicle&quot;</span>,<span class="st">&quot;B2_DrugA&quot;</span>, <span class="st">&quot;B2_DrugB&quot;</span>,</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B3_Vehicle&quot;</span>, <span class="st">&quot;B3_DrugA&quot;</span>, <span class="st">&quot;B3_DrugB&quot;</span>,</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;Mix&quot;</span>),</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">temperatures =</span> <span class="fu">c</span>(<span class="st">&quot;37C&quot;</span>, <span class="st">&quot;47C&quot;</span>, <span class="st">&quot;50C&quot;</span>, <span class="st">&quot;52C&quot;</span>, <span class="st">&quot;54C&quot;</span>, <span class="st">&quot;57C&quot;</span>), <span class="co"># temperatures from your corresponding files</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">proteins =</span> <span class="st">&quot;Analysis_files/proteins_imprints_caldiff.txt&quot;</span>) <span class="co"># The proteins from which you want to analyze the peptides, can be a dataframe</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mineCETSAapp)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>peptides <span class="ot">&lt;-</span> <span class="fu">imprints_read_peptides</span>(<span class="at">peptides_files =</span> <span class="fu">list.files</span>(<span class="st">&quot;Analysis_files&quot;</span>,     <span class="co"># your files</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">pattern =</span> <span class="st">&quot;Peptide&quot;</span>, </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                                                               <span class="at">full.names =</span> T),</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;B1_Vehicle&quot;</span>, <span class="st">&quot;B1_DrugA&quot;</span>, <span class="st">&quot;B1_DrugB&quot;</span>,  <span class="co"># the treatments corresponding to your channel</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B2_Vehicle&quot;</span>,<span class="st">&quot;B2_DrugA&quot;</span>, <span class="st">&quot;B2_DrugB&quot;</span>,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;B3_Vehicle&quot;</span>, <span class="st">&quot;B3_DrugA&quot;</span>, <span class="st">&quot;B3_DrugB&quot;</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">&quot;Mix&quot;</span>),</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">temperatures =</span> <span class="fu">c</span>(<span class="st">&quot;37C&quot;</span>, <span class="st">&quot;47C&quot;</span>, <span class="st">&quot;50C&quot;</span>, <span class="st">&quot;52C&quot;</span>, <span class="st">&quot;54C&quot;</span>, <span class="st">&quot;57C&quot;</span>), <span class="co"># temperatures from your corresponding files</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">proteins =</span> <span class="st">&quot;Analysis_files/proteins_imprints_caldiff.txt&quot;</span>) <span class="co"># The proteins from which you want to analyze the peptides, can be a dataframe</span></span></code></pre></div>
 <p>All peptides files are now joined and only the peptides from the
 proteins you analyzed are kept. A file is also saved.</p>
 </div>
@@ -2097,7 +2131,7 @@ your\space data}\)</span></h4>
 <p>Second step is now to normalize the peptides data the same way it is
 done for protein using the ‘imprints_normalization’ function from
 IMPRINTS.CETSA package.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>peptides_norm <span class="ot">&lt;-</span> <span class="fu">imprints_normalize_peptides</span>(peptides)</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>peptides_norm <span class="ot">&lt;-</span> <span class="fu">imprints_normalize_peptides</span>(peptides)</span></code></pre></div>
 <p>It returns the normalize, non log2 transformed, peptide data. A file
 is also saved.</p>
 </div>
@@ -2106,11 +2140,11 @@ is also saved.</p>
 check\space your\space data}\)</span></h4>
 <p>You can now start to plot imprints of your peptides. It’s a lot of
 data, so it’s better to select some proteins first.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one of your hitlist</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>proteins <span class="ot">&lt;-</span> hitlist<span class="sc">$</span>id</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>peptides_norm_diff <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm,</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">proteins =</span>  proteins,</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one of your hitlist</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>proteins <span class="ot">&lt;-</span> hitlist<span class="sc">$</span>id</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>peptides_norm_diff <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">proteins =</span>  proteins,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
 <p>The function returns the caldiff output from all peptides from each
 protein you selected. It also save it as a file and plot the barplots
 from all these peptides.</p>
@@ -2118,13 +2152,14 @@ from all these peptides.</p>
 <div id="underline4.space-searchingspace-forspace-cleavedspace-peptides" class="section level4">
 <h4><span class="math inline">\(\underline{4.\space Searching\space
 for\space cleaved\space peptides}\)</span></h4>
-<p>From the ‘peptides_norm_diff’, you can search for potential cleaved
-peptides. If it is cleaved, it means that first peptides (or the last)
-from the proteins are more abundant than the other from the same
-protein. For this, you can use the ‘imprints_cleaved_peptides’ function.
-For more details, look into the documentation of the same function.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>potential_cleaved <span class="ot">&lt;-</span>  <span class="fu">imprints_cleaved_peptides</span>(peptides_norm_diff,</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>                                                <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># if you want to remove the control from you data (advised)</span></span></code></pre></div>
+<p>From <code>peptides_norm_diff</code>, you can search for potential
+cleaved peptides. If it is cleaved, it means that first peptides (or the
+last) from the proteins are more abundant than the other from the same
+protein. For this, you can use the
+<code>imprints_cleaved_peptides</code> function. For more details, look
+into the documentation of the same function.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>potential_cleaved <span class="ot">&lt;-</span>  <span class="fu">imprints_cleaved_peptides</span>(peptides_norm_diff,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                                                <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># if you want to remove the control from you data (advised)</span></span></code></pre></div>
 <p>This function returns a data frame that contains the proteins that
 are potentially cleaved and their respective potential cleaved
 sites.</p>
@@ -2135,20 +2170,21 @@ the\space cleaved\space peptides}\)</span></h4>
 <p>You can now sum all the fold changes from all the peptides before the
 cleaved site found and after, and this for all poteins found to be
 potentially cleaved. For this, you can use again the
-‘imprints_sequence_peptides’ function but this time, input some
-sequences. Here, we will do it only for DrugA.</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span>stringr<span class="sc">::</span><span class="fu">str_which</span>(<span class="fu">colnames</span>(peptides_norm), <span class="st">&quot;_DrugB$&quot;</span>)]</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  </span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleaved sites</span></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
+<code>imprints_sequence_peptides</code> function but this time, input
+some sequences. Here, we will do it only for DrugA.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span>stringr<span class="sc">::</span><span class="fu">str_which</span>(<span class="fu">colnames</span>(peptides_norm), <span class="st">&quot;_DrugB$&quot;</span>)]</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleaved sites</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span></code></pre></div>
 <p>You can now check the barplots obtained and see if the proteins found
-are cleaved. In ‘imprints_sequence_peptides’, you can put any sequence.
-Check the documentation from the function for more details.</p>
+are cleaved. In <code>imprints_sequence_peptides</code>, you can put any
+sequence. Check the documentation from the function for more
+details.</p>
 </div>
 <div id="underline6.space-multiplespace-datasetspace-analysis" class="section level4">
 <h4><span class="math inline">\(\underline{6.\space Multiple\space
@@ -2156,32 +2192,32 @@ dataset\space analysis}\)</span></h4>
 <p>If you do the exact same analysis for another dataset, or here with
 Drug B; you’ll maybe want to compare your results between each drug.</p>
 <p>For more clarity, let’s remove the peptide cleaved site.</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugA, </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugB, </span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugA, </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugB, </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span></code></pre></div>
 <p>Then, you can join your datasets (can be more than 2). Usually, the
 exact same peptide sequence is not found between the datasets. Since the
-fold change are summed, we can join ‘early sequence’ protein together,
-same for ‘late sequence’.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">list</span>(peptides_cleaved_drugA, peptides_cleaved_drugB) <span class="co"># you could add more datasets</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">imprints_join_peptides</span>(peptides_cleaved)</span></code></pre></div>
+fold change are summed, we can join ‘early sequences’ protein together,
+same for ‘late sequences’.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">list</span>(peptides_cleaved_drugA, peptides_cleaved_drugB) <span class="co"># you could add more datasets</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">imprints_join_peptides</span>(peptides_cleaved)</span></code></pre></div>
 </div>
 <div id="underline7.space-plotspace-yourspace-results" class="section level4">
 <h4><span class="math inline">\(\underline{7.\space Plot\space
 your\space results}\)</span></h4>
-<p>You can use the ‘imprints_barplotting_app’ function to plot your
-final results.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prepare data for function</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Master Protein Accessions</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">paste</span>(peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Positions in Master Proteins</span><span class="st">`</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(peptides_cleaved)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;sumUniPeps&quot;</span>, <span class="st">&quot;sumPSMs&quot;</span>, <span class="st">&quot;countNum&quot;</span>)</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(peptides_cleaved, <span class="at">layout =</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
+<p>You can use the <code>imprints_barplotting_app</code> function to
+plot your final results.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prepare data for function</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Master Protein Accessions</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">paste</span>(peptides_cleaved<span class="sc">$</span><span class="st">`</span><span class="at">Positions in Master Proteins</span><span class="st">`</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(peptides_cleaved)[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;description&quot;</span>, <span class="st">&quot;sumUniPeps&quot;</span>, <span class="st">&quot;sumPSMs&quot;</span>, <span class="st">&quot;countNum&quot;</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="fu">imprints_barplotting_app</span>(peptides_cleaved, <span class="at">layout =</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>), <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
 </div>
 </div>
 </div>

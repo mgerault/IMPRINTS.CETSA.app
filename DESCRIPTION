@@ -1,7 +1,7 @@
 Package: mineCETSAapp
 Type: Package
 Title: A shiny app for IMPRINTS.CETSA package 
-Version: 3.1.1
+Version: 3.1.2
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for mineCETSA R package, in a user friendly way.

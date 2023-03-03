@@ -641,7 +641,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                        checkboxInput("gave_daba", "Don't have the imprints_average output
                                                                          (will calculate and save it)", TRUE),
                                                        conditionalPanel(condition = "!input.gave_daba",
-                                                                        fileInput("AVE_dabafile", "Import the output from imprints_average_sh")
+                                                                        fileInput("AVE_dabafile", "Import the output from imprints_average")
                                                        )
                                        ),
                                        column(6, fileInput("hitsum_daba", "Import the summary file OR the analysis tab from the hitlist outputs")),
@@ -1066,7 +1066,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                                          fileInput("filedif_heat", "Choose a imprints_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
-                                                                                                                         fileInput("fileave_heat", "Choose a imprints_average_sh output")
+                                                                                                                         fileInput("fileave_heat", "Choose a imprints_average output")
                                                                                                         )
                                                                                                         ),
                                                                                                  column(6, fileInput("summary_heat", "Choose the summary file from the hitlist output"))
@@ -1146,7 +1146,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "40px"),
                                                                                                                          fileInput("filedif_heatcom", "Choose a imprints_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heatcom",
-                                                                                                                         fileInput("fileave_heatcom", "Choose a imprints_average_sh output")
+                                                                                                                         fileInput("fileave_heatcom", "Choose a imprints_average output")
                                                                                                         )
                                                                                                  )
                                                                                         )
@@ -2859,7 +2859,7 @@ server <- function(input, output, session){
       tr_level <- get_treat_level(cetsa_isoform$norm)
       tr_level <- tr_level[-which(tr_level == input$ctrl_name2)]
       tr_level <- c(input$ctrl_name2, tr_level)
-      d <- imprints_caldiff(cetsa_isoform$norm,
+      d <- imprints_caldiff_f(cetsa_isoform$norm,
                            treatmentlevel = tr_level,
                            withinrep = input$wit_rep
                          )
@@ -3214,7 +3214,7 @@ server <- function(input, output, session){
       }
       else{
         showNotification("Getting average dataset, this may take a while.", type = "message")
-        ave_data <- imprints_average_sh(DIF_daba())
+        ave_data <- imprints_average(DIF_daba())
         showNotification("Average calculation succeed !", type = "message")
       }
       showNotification("Start saving dataset, this may take a while.", type = "message")
@@ -4006,7 +4006,7 @@ server <- function(input, output, session){
       showNotification("Start mapping proteins, this may take a while", type = "message")
 
       if(input$gave_compl & input$drug_compl == "dat"){
-        data_ave <- imprints_average_sh(DIF_compl())
+        data_ave <- imprints_average(DIF_compl())
         showNotification("Average calculation succeed !", type = "message")
       }
       else{
@@ -4022,7 +4022,7 @@ server <- function(input, output, session){
 
       withCallingHandlers({
         shinyjs::html("diagmapping_compl", "")
-        map_compl <- imprints_complex_mapping_sh(data_ave, cat_tab, treatment = input$condsel_compl,
+        map_compl <- imprints_complex_mapping(data_ave, cat_tab, treatment = input$condsel_compl,
                                               targetcategory = input$catego_compl,
                                               organism = input$organism_compl)
       },
@@ -4561,7 +4561,7 @@ server <- function(input, output, session){
     }
     else if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
       showNotification("Start average calculation, this mays take a while.", type = "message")
-      dat <- imprints_average_sh(DIF_heat())
+      dat <- imprints_average(DIF_heat())
     }
 
     withCallingHandlers({
@@ -4667,7 +4667,7 @@ server <- function(input, output, session){
     showNotification("Start mapping proteins, this may take a while", type = "message")
 
     if(input$gave_heatcom  & input$drug_heatcom == "dat"){
-      data_ave <- imprints_average_sh(DIF_heatcom())
+      data_ave <- imprints_average(DIF_heatcom())
       resAVE_heatcom$d <- data_ave
       showNotification("Average calculation succeed !", type = "message")
     }
@@ -4677,7 +4677,7 @@ server <- function(input, output, session){
 
     withCallingHandlers({
       shinyjs::html("diagmapping_heatcom", "")
-      map_heatcom <- imprints_complex_mapping_sh(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
+      map_heatcom <- imprints_complex_mapping(data_ave, categorytable = NULL, treatment = input$cond_heatcom,
                                               targetcategory = NULL,
                                               organism = input$organism_heatcom)
     },

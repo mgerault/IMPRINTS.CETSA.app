@@ -4,12 +4,19 @@
 #  }
 #  BiocManager::install("STRINGdb")
 #  BiocManager::install("EBImage")
+#  BiocManager::install("clusterProfiler")
+#  BiocManager::install("biomaRt")
+#  BiocManager::install("enrichplot")
+#  BiocManager::install("multtest")
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  if(!requireNamespace("devtools", quietly = TRUE)){ #check if you already have the devtools package
 #   install.packages("devtools")  #if not, install it
 #  }
 #  devtools::install_github("mgerault/mineCETSAapp")
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  devtools::install_github("nkdailingyun/IMPRINTS.CETSA")
 
 ## ---- message=FALSE, eval=FALSE-----------------------------------------------
 #  library("mineCETSAapp")
@@ -33,9 +40,10 @@
 #  #here, it will "join" the two pdf in one
 
 ## ---- eval=FALSE--------------------------------------------------------------
+#  library(IMPRINTS.CETSA)
 #  mydata_hit <- drug_data$hitlist$elutriation
 #  #will map the proteins categorized as CN, CC and NC in S treatment to some protein complex (core Corum database)
-#  map_compl <- imprints_complex_mapping_sh(mydata_ave, mydata_hit, treatment = "S",
+#  map_compl <- imprints_complex_mapping(mydata_ave, mydata_hit, treatment = "S",
 #                                        targetcategory = c("CN", "CC", "NC"))
 #  View(map_compl) #if you want to check the data
 #  
@@ -148,6 +156,15 @@
 #  #for example the ribosome and the cytosolic ribosome
 #  ribosome_net <- df$STRING_id[stringr::str_which(df$description, "^Ribosome$")]
 #  My_net(ribosome_net , inter = FALSE)
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  hits_G2 <- mydata_hit %>% dplyr::filter(treatment == "G2")
+#  network <- imprints_network(mydata_caldiff, hits_G2$id,
+#                              GOterm = "Component",      # perform enrichment analysis from 'Component' database
+#                              required_score = 900)
+#  
+#  network  # to see it
+#  # it returns a visNetwork object so you can modify it with visNetwork functions
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  # Let's test it on the S treatment

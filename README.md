@@ -1,4 +1,4 @@
-# mineCETSAapp
+# IMPRINTS.CETSA.app
 This is a package to complete the IMRPRINTS.CETSA package from Dai Lingyun (https://github.com/nkdailingyun/IMRPRINTS.CETSA), more specifically the CETSA IMPRINTS analysis.
 The goal of this package is to provide a user friendly interface of this package. With this shiny app, you can do the complete IMPRINTS CETSA analysis on the protein and peptide level; visualize the 2D bar plot or heatmap of many proteins from drug experiment available in the database; add new dataset or remove old ones from this database; get STRING network and extract other GO analysis from your data; plot interactive barplots networks; start a PubMed search based on the protein names or any character you want and save the results in word files; etc.
 
@@ -25,7 +25,7 @@ please refer to the [CETSA website](https://www.cetsa.org/about).
 This package is specifically conceived to analyse the IMPRINTS-CETSA data. With this technique, less temperatures are required; only fold change bar plot are computed not the melt curve. With this informative technique, you can compare different cell state by temperature in one experiment set.
  
 
-## How to install mineCETSAapp?  
+## How to install IMPRINTS.CETSA.app ?  
 First go to Rstudio. This package totally depends on the last version of the IMRPRINTS.CETSA package. If you havn't donwload it yet, please do so.
 For installation from github https://github.com/nkdailingyun/IMRPRINTS.CETSA .
 Moreover, you need to install some packages from BioConductor especially for the gene ontology analysis :
@@ -43,9 +43,9 @@ When all of this is done, type and run the following commands in R console:
 if(!requireNamespace("devtools", quietly = TRUE)){
    install.packages("devtools")
 } 
-devtools::install_github("mgerault/mineCETSAapp")
+devtools::install_github("mgerault/IMPRINTS.CETSA.app")
 
-library(mineCETSAapp)
+library(IMPRINTS.CETSA.app)
 ```
 
 If you want now to use the app just type :

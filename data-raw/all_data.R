@@ -1,5 +1,5 @@
-library(mineCETSAapp)
-library(mineCETSA)
+library(IMPRINTS.CETSA.app)
+library(IMPRINTS.CETSA)
 library(stringr)
 
 #add data from cell cyle paper from Dai Lingyun 2018

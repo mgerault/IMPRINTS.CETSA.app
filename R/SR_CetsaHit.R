@@ -408,8 +408,10 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
       for(n in too_long){
         name_toolong <- names(vennlist)[n]
         in_common <- Reduce(intersect, stringr::str_split(stringr::str_split(name_toolong, " & ")[[1]], ""))
-        name_toolong <- stringr::str_remove_all(name_toolong,
-                                       paste(in_common, collapse = "|"))
+        if(length(in_common)){
+          name_toolong <- stringr::str_remove_all(name_toolong,
+                                                  paste(in_common, collapse = "|"))
+        }
         if(stringr::str_length(name_toolong) > 31){
           name_toolong <- stringr::str_remove_all(name_toolong, " ")
         }

@@ -42,12 +42,7 @@ ev_null_print <-
 
 
 #the interactive cell
-library(EBImage)
-img2 <- readImage("./data-raw/Animal_Cell.png")
-
-img2@.Data <- aperm(img2@.Data, c(2,1,3))
-
-
+img2 <- png::readPNG("./data-raw/Animal_Cell.png")
 
 
 ###get location

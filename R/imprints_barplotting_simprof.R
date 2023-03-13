@@ -91,7 +91,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
   if(!got_it){
     if(is.null(data_average)){
       message("Start average calculation")
-      data_ave <- imprints_average(data)
+      data_ave <- imprints_average(data, savefile = TRUE)
       message("Average calculation done !")
     }
     else{

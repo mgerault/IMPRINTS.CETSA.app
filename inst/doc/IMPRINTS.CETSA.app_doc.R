@@ -3,7 +3,6 @@
 #   install.packages("BiocManager")  #if not, install it
 #  }
 #  BiocManager::install("STRINGdb")
-#  BiocManager::install("EBImage")
 #  BiocManager::install("clusterProfiler")
 #  BiocManager::install("biomaRt")
 #  BiocManager::install("enrichplot")

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2023-03-08" />
+<meta name="date" content="2023-03-13" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1577,7 +1577,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2023-03-08</h4>
+<h4 class="date">2023-03-13</h4>
 
 </div>
 
@@ -1641,12 +1641,12 @@ we will get through those in this vignette.</p>
 “shinydashboard”, “shinycssloaders”, “DT”, “rio”, “purrr”, “dplyr”,
 “plyr”, “shinyjs”, “cowplot”, “plotly”, “pubmedR”, “rentrez”, “XML”,
 “gridExtra”, “rjson”, “bibliometrix”, “officer”, “colourpicker”,
-“openxlsx”, “visNetwork”, “STRINGdb”, “EBImage”, “clusterProfiler”,
-“biomaRt”, “enrichplot”, “multtest”</li>
+“openxlsx”, “visNetwork”, “STRINGdb”, “clusterProfiler”, “biomaRt”,
+“enrichplot”, “multtest”</li>
 </ul>
 <p>Some packages are not from CRAN and hence will not be installed when
 you will install IMPRINTS.CETSA .app package :<br />
-“IMPRINTS.CETSA”, “STRINGdb”, “EBImage”, “clusterProfiler”, “biomaRt”,
+“IMPRINTS.CETSA”, “STRINGdb”, “clusterProfiler”, “biomaRt”,
 “enrichplot”, “multtest”. For the IMPRINTS.CETSA package, you’ll need
 the last version from github. For the others, you can install them from
 BioConductor. For this, type these commands in the R console :</p>
@@ -1654,11 +1654,10 @@ BioConductor. For this, type these commands in the R console :</p>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">install.packages</span>(<span class="st">&quot;BiocManager&quot;</span>)  <span class="co">#if not, install it</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;STRINGdb&quot;</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;EBImage&quot;</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;clusterProfiler&quot;</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;biomaRt&quot;</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;enrichplot&quot;</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;multtest&quot;</span>)</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;clusterProfiler&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;biomaRt&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;enrichplot&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;multtest&quot;</span>)</span></code></pre></div>
 <p>The IMPRINTS.CETSA .app package is currently on github, so for
 installing it you’ll also need the “devtools” package. You can install
 the IMPRINTS.CETSA .app package with this commands :</p>

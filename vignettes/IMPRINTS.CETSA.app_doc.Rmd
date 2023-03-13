@@ -47,17 +47,16 @@ The package contains also other functions that you can use with R commands workf
 * R version > 4.0.0 
 * Rstudio version > 1.0
 * Dependent packages:  
-"IMPRINTS.CETSA", "ggplot2",  "stringr", "tidyr", "magick", "shiny", "shinydashboard", "shinycssloaders", "DT", "rio", "purrr", "dplyr", "plyr", "shinyjs", "cowplot", "plotly", "pubmedR", "rentrez", "XML", "gridExtra", "rjson", "bibliometrix", "officer", "colourpicker", "openxlsx", "visNetwork", "STRINGdb", "EBImage", "clusterProfiler", "biomaRt", "enrichplot", "multtest"
+"IMPRINTS.CETSA", "ggplot2",  "stringr", "tidyr", "magick", "shiny", "shinydashboard", "shinycssloaders", "DT", "rio", "purrr", "dplyr", "plyr", "shinyjs", "cowplot", "plotly", "pubmedR", "rentrez", "XML", "gridExtra", "rjson", "bibliometrix", "officer", "colourpicker", "openxlsx", "visNetwork", "STRINGdb", "clusterProfiler", "biomaRt", "enrichplot", "multtest"
  
 Some packages are not from CRAN and hence will not be installed when you will install IMPRINTS.CETSA .app package :  
-"IMPRINTS.CETSA", "STRINGdb", "EBImage", "clusterProfiler", "biomaRt", "enrichplot", "multtest". For the IMPRINTS.CETSA package, you'll need the last version from github. For the others, you can install them from BioConductor. For this, type these commands in the R console :
+"IMPRINTS.CETSA", "STRINGdb", "clusterProfiler", "biomaRt", "enrichplot", "multtest". For the IMPRINTS.CETSA package, you'll need the last version from github. For the others, you can install them from BioConductor. For this, type these commands in the R console :
 
 ```{r, eval=FALSE}
 if(!requireNamespace("BiocManager", quietly = TRUE)){ #check if you already have the BiocManager package
  install.packages("BiocManager")  #if not, install it
 }
 BiocManager::install("STRINGdb")
-BiocManager::install("EBImage")
 BiocManager::install("clusterProfiler")
 BiocManager::install("biomaRt")
 BiocManager::install("enrichplot")

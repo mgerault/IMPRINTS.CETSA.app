@@ -37,11 +37,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                  theme = "paper.css", # file in www
                  collapsible = TRUE, # usefull when viewing on smaller screen
                  inverse = FALSE, # true: use a dark background and light text for the navigation bar
-                 windowTitle = "IMPRINTS.CETSA.app", # just name of onglet
+                 windowTitle = "IMPRINTS.CETSA.app", # just name of tab
                  position = "fixed-top",
                  footer = includeHTML("./www/include_footer.html"), # bottom of the page/site
                  header = tagList(
-                   shinyWidgets::useShinydashboard(),      # allow to render the boxes from shinydachboard
+                   shinyWidgets::useShinydashboard(),      # allow to render the boxes from shinydashboard
                    tags$style("body {padding-top: 75px;}")
                  ),
 
@@ -85,12 +85,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                             column(12,
                                    shiny::HTML("<h1>IMPRINTS.CETSA.app</h1><br>"),
                                    shiny::HTML("<h5>IMPRINTS.CETSA.app is an R package that include a shiny app that you can use to
-                                                    easily analyse your imprints-CETSA data. In this app, you will be able
+                                                    easily analyse your IMPRINTS CETSA data. In this app, you will be able
                                                     to process your quantification files, get your drug targets, visualize your
                                                     barplots, run some gene ontology analysis and more. <br>
-                                                    The app also contains a database of more than 100 drugs tested by our lab.
+                                                    The app also contains 2 datasets comparing different phase of the cell cycle
+                                                    published in Dai et al. 2018, Cell.
                                                     You can already visualize and compare these. You can also modify this database by
-                                                    adding or removing new datasets. <br>
+                                                    adding or removing new datasets in your local machine. <br>
                                                     You can learn how to use the app by seeing the tutorial video which you can
                                                     access by clicking on the question mark icon in the top right corner.
                                                     <br><br><br>
@@ -176,7 +177,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                    This data frame should contain the column 'id' and the column 'description',
                                                                                                                    the Uniprot IDs and the protein description respectively.<br>
                                                                                                                    So you can use the caldiff file output you have from your protein analysis.
-                                                                                                                   <br><br>If yoou upload nothing, all proteins from the pepetides files
+                                                                                                                   <br><br>If you upload nothing, all proteins from the pepetides files
                                                                                                                    will be kept but the protein description will be missing.</h5>")),
                                                                                              column(8, fileInput("prot_data_pep", "Select a protein file",
                                                                                                                  accept = ".txt", multiple = TRUE))
@@ -223,7 +224,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    tags$hr(),
                                                                    conditionalPanel(condition = "input.sequence_file",
                                                                                     fluidRow(column(4, shiny::HTML("<br><h5>This file needs to contains at leats one column named
-                                                                                                                    'protein' and at most another one named 'sequence'.
+                                                                                                                    'protein' and eventually another one named 'sequence'.
                                                                                                                     <br>The 'protein' column contains the Uniprot ID from the
                                                                                                                     protein you want to compute fold changes at the peptide level.
                                                                                                                     <br>The 'sequence' column contains the peptide position you want to highlight.
@@ -319,7 +320,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                   tags$hr(),
                                                   tags$u(h3("Join your datasets")),
-                                                  shiny::HTML("<br><h5>Here you can import as much peptides dataset as you want an join them.
+                                                  shiny::HTML("<br><h5>Here you can import as much peptides dataset as you want and join them.
                                                               <br>This feature has been mainly made to join dataset after you checked for cleaved sites
                                                               and computed fold changes. For example if you checked for the same potential cleaved site for
                                                               one protein for several drugs and you want now to compare their effect.
@@ -506,7 +507,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                               numericInput("rep_thr", "Type the minimal percentage threshold of
                                                                                                                                            protein being sampled from multiple runs", value = 0.1, min = 0, max = 1, step = 0.01),
                                                                                                                               numericInput("count_thr", "Type the minimal threshold number
-                                                                                                                                                                      of associated abundance count of proteins", value = 1, min = 0, step = 1),
+                                                                                                                                                         of associated abundance count of proteins", value = 1, min = 0, step = 1),
                                                                                                                               checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
                                                                                                              )
                                                                                                       )
@@ -549,7 +550,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                      checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
                                                                                      conditionalPanel(condition = "!input.got_diff_cetsa",
-                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control.",
+                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control",
                                                                                                                                      choices = NULL)
                                                                                                                       ),
                                                                                                                column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
@@ -651,7 +652,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, fileInput("caldif_daba", "Import the output from imprints_caldiff"),
                                                        checkboxInput("gave_daba", "Don't have the imprints_average output
-                                                                         (will calculate and save it)", TRUE),
+                                                                                   (will calculate and save it)", TRUE),
                                                        conditionalPanel(condition = "!input.gave_daba",
                                                                         fileInput("AVE_dabafile", "Import the output from imprints_average")
                                                        )
@@ -718,7 +719,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug == 'dat' ",
 
-                                                                                        fluidRow(column(4, fileInput("data_barplot", "Upload your own data (output from IMPRINTS.CETSA package)",
+                                                                                        fluidRow(column(4, fileInput("data_barplot", "Upload your own data (log2 fold change)",
                                                                                                                      accept = c(".txt", ".csv", ".xlsx"))
                                                                                         ),
                                                                                         column(8, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
@@ -755,7 +756,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                          column(4, conditionalPanel(condition = "input.cond_sel != 'cat' ",
                                                                                                     checkboxInput("rem_con", "Remove the controls", FALSE),
                                                                                                     conditionalPanel(condition = "input.rem_con",
-                                                                                                                     textInput("con_name", "Type the name of your controls (if sevral names, separate them by |)", "G1")
+                                                                                                                     textInput("con_name", "Type the name of your controls (if several names, separate them by |)", "G1")
                                                                                                                      )
                                                                                                     )
                                                                                 ),
@@ -844,7 +845,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                  column(6, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs"))
                                                                                                  ),
                                                                                         fluidRow(column(6, checkboxInput("gave_compl", "Don't have the imprints_average output
-                                                                                     (will calculate and save it)", TRUE)),
+                                                                                                                                        (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_compl",
                                                                                                                   column(6, fileInput("avef_compl", "Import the output from imprints_average"))
                                                                                                  )
@@ -873,7 +874,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           ),
 
                                                           conditionalPanel(condition = "output.resmappingcompl_fileup",
-                                                                           fluidRow(box(title = "2D bar plot paramter", status = "primary",
+                                                                           fluidRow(box(title = "2D bar plot parameter", status = "primary",
                                                                                         solidHeader = TRUE, collapsible = TRUE, width = 12,
 
                                                                                         fluidRow(column(4,selectInput("allcomplex_compl", "Select some protein complex", choices = NULL, multiple = TRUE)),
@@ -888,9 +889,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                  column(4, conditionalPanel(condition = "input.ch_own_col_compl",
                                                                                                                             colourpicker::colourInput("own_color_pick_compl", NULL, "#FF2B00",
                                                                                                                                         allowTransparent = TRUE, closeOnClick = TRUE)
-                                                                                                 )
-                                                                                                 )
-                                                                                        ),
+                                                                                                                            )
+                                                                                                        )
+                                                                                                 ),
 
                                                                                         tags$hr(),
 
@@ -945,7 +946,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        conditionalPanel(condition = "input.drug_simpf == 'dat' ",
                                                                                         fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from imprints_caldiff")),
                                                                                                  column(4, checkboxInput("gave_simpf", "Don't have the imprints_average output
-                                                                                     (will calculate and save it)", TRUE)),
+                                                                                                                                       (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_simpf",
                                                                                                                   column(4, fileInput("avef_simpf", "Import the output from imprints_average"))
                                                                                                  )
@@ -956,9 +957,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        conditionalPanel(condition = "output.AVEsimpf_fileup & output.DIFsimpf_fileup",
                                                                                         fluidRow(column(3, selectInput("treat_simpf", "Select a treatment", choices = NULL)),
                                                                                                  column(3, selectizeInput("prot_simpf", "Select a protein from which you want to get
-                                                                                          the similar profiles", choices = NULL)),
+                                                                                                                                         the similar profiles", choices = NULL)),
                                                                                                  column(3, sliderInput("maxna_simpf", "Choose a maximum number of
-                                                                                                      missing values per rows", value = 0, min = 0, max = 10, step = 1)),
+                                                                                                                                       missing values per rows", value = 0, min = 0, max = 10, step = 1)),
                                                                                                  column(3, selectInput("scoremeth_simpf", "Select a method for calculating the similarity score",
                                                                                                                        choices = c("Euclidean distance score" = "euclidean",
                                                                                                                                    "Pearson correlation" = "pearson"), selected = "euclidean"),
@@ -970,25 +971,23 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         checkboxInput("infoscmeth_simpf", h4("See some informations about the method for calculating the similarity score"), FALSE),
                                                                                         conditionalPanel(condition = "input.infoscmeth_simpf",
                                                                                                          HTML("<p><h5>You have actually two methods for calculating the similarity score : <br>
-                                                                                     - The euclidean distance score <br>
-                                                                                     - The Pearson correlation <br>
-                                                                                     This score will determine which proteins got a similar profile from the one you selected. <br>
-                                                                                     The euclidean distance score : <br>
-                                                                                     With this method, every euclidean distance between the value from each protein profile and the
-                                                                                     selected will be calculate. Then for each distance we calculate a score between 0 and 1
-                                                                                     by dividing 1 by 1 + d, where d is the euclidean distance. <br>
-                                                                                     This score means that you will search for protein profile with similar values from the the one you selected.
-                                                                                     So the profile with a similar shape but with lower or higher values will not have a good score.
-                                                                                     It also means that with a high score (~0.9) you're not very likely to find a lot of proteins.<br>
-                                                                                     <br>
-                                                                                     This is not the case with Pearson correlation. For this score, each covariance and standard deviation
-                                                                                     between the protein you selected and all the other proteins will be calculated. Then, the covariance is divided
-                                                                                     by the product of the two standard devation. It gives you score between -1 and 1. -1 means the data are negatively
-                                                                                     correlated, 1 positively correlated and 0 not correlated. <br>
-                                                                                     Because you calculate a correlation score, you will search for all proteins profile with a similar shape from the one
-                                                                                     you selected, not matter their values. It's like searching mountains with similar shapes, no matter their height.
-                                                                                     It also means that with a high score (~0.95) you may find a lot of proteins.
-                                                                             </h5></p>")),
+                                                                                                               - The euclidean distance score <br>
+                                                                                                               - The Pearson correlation <br>
+                                                                                                               This score will determine which proteins got a similar profile from the one you selected. <br>
+                                                                                                               The euclidean distance score : <br>
+                                                                                                               With this method, every euclidean distance between the value from each protein profile and the
+                                                                                                               selected one will be calculated. Then for each distance a score between 0 and 1 is calculated
+                                                                                                               by dividing 1 by 1 + d, where d is the euclidean distance. <br>
+                                                                                                               This score means that you will search for protein profile with similar values from the the one you selected.
+                                                                                                               So the profile with a similar shape but with lower or higher values will not have a good score.
+                                                                                                               It also means that with a high score (~0.9) you're not very likely to find a lot of proteins.<br><br>
+                                                                                                               This is not the case with Pearson correlation. For this score, each covariance and standard deviation
+                                                                                                               between the protein you selected and all the other proteins will be calculated. Then, the covariance is divided
+                                                                                                               by the product of the two standard devation. It gives you score between -1 and 1. -1 means the data are negatively
+                                                                                                               correlated, 1 positively correlated and 0 not correlated. <br>
+                                                                                                               Because you calculate a correlation score, you will search for all proteins profile with a similar shape from the one
+                                                                                                               you selected, no matter their values. It also means that with a high score (~0.95) you may find a lot of proteins.
+                                                                                                              </h5></p>")),
 
 
                                                                                         tags$hr(),
@@ -1004,7 +1003,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         tags$hr(),
 
                                                                                         fluidRow(column(4, checkboxInput("save_bar_simpf", "Save the bar plots in a pdf file", TRUE),
-                                                                                                        checkboxInput("save_prot_simpf", "Save the list of proteins ID with similar profile (will save in a xlsx file)", TRUE)),
+                                                                                                        checkboxInput("save_prot_simpf", "Save the list of proteins ID with similar profiles (will save in a xlsx file)", TRUE)),
                                                                                                  conditionalPanel(condition = "input.save_bar_simpf",
                                                                                                                   column(4, numericInput("lay_bar1_simpf", "Type the number of plot per row",
                                                                                                                                          min = 1, max = 10, step = 1, value = 4),
@@ -1073,12 +1072,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug_heat == 'dat' ",
                                                                                         fluidRow(column(6, checkboxInput("gave_heat", "Don't have the imprints_average output
-                                                                                                  (will calculate and save it)", TRUE),
+                                                                                                                                       (will calculate and save it)", TRUE),
                                                                                                         conditionalPanel(condition = "input.gave_heat",
-                                                                                                                         fileInput("filedif_heat", "Choose a imprints_caldiff output")
+                                                                                                                         fileInput("filedif_heat", "Choose an imprints_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
-                                                                                                                         fileInput("fileave_heat", "Choose a imprints_average output")
+                                                                                                                         fileInput("fileave_heat", "Choose an imprints_average output")
                                                                                                         )
                                                                                                         ),
                                                                                                  column(6, fileInput("summary_heat", "Choose the summary file from the hitlist output"))
@@ -1095,8 +1094,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                    "Both" = "both"), selected = "both")),
                                                                                                  column(3, selectInput("catego_heat", "Select some categories", choices = NULL, multiple = TRUE)),
                                                                                                  column(3, sliderInput("maxna_heat", "Choose a maximum number of
-                                                                                         missing values per rows", value = 0, min = 0, max = 7, step = 1))
-                                                                                        ),
+                                                                                                                                      missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                                                                 ),
 
                                                                                         fluidRow(column(3, textInput("titleH_heat", "Type a title for your heatmap", "Heatmap")),
                                                                                                  column(3, colourpicker::colourInput("backcol_heat", "Choose a background color", "#FFFFFF",
@@ -1114,7 +1113,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                         fluidRow(column(4, checkboxInput("saveH_heat", "Save the heatmap", TRUE)),
                                                                                                  conditionalPanel(condition = "input.saveH_heat",
-                                                                                                                  column(4, textInput("fnameH_heat", "Type a your file name", "My_heatmap")),
+                                                                                                                  column(4, textInput("fnameH_heat", "Type your file name", "My_heatmap")),
                                                                                                                   column(4, selectInput("formatH_heat", "Choose a format for your file",
                                                                                                                                         choices = c("png", "pdf"), selected = "png"))
                                                                                                  )
@@ -1152,13 +1151,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug_heatcom == 'dat' ",
                                                                                         fluidRow(column(4, checkboxInput("gave_heatcom", "Don't have the imprints_average output
-                                                                                                  (will calculate and save it)", TRUE)),
+                                                                                                                                          (will calculate and save it)", TRUE)),
                                                                                                  column(4,
                                                                                                         conditionalPanel(condition = "input.gave_heatcom",
-                                                                                                                         fileInput("filedif_heatcom", "Choose a imprints_caldiff output")
+                                                                                                                         fileInput("filedif_heatcom", "Choose an imprints_caldiff output")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heatcom",
-                                                                                                                         fileInput("fileave_heatcom", "Choose a imprints_average output")
+                                                                                                                         fileInput("fileave_heatcom", "Choose an imprints_average output")
                                                                                                         )
                                                                                                  )
                                                                                         )
@@ -1179,8 +1178,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         conditionalPanel(condition = "output.resmappingheatcom_fileup",
                                                                                                          DT::dataTableOutput("tabmap_heatcom"),
                                                                                                          downloadButton("downrestab_heatcom")
+                                                                                                         )
                                                                                         )
-                                                                       )
                                                           )
                                                           ),
 
@@ -1194,8 +1193,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                    "Destabilization" = "D",
                                                                                                                                    "Both" = "both"), selected = "both")),
                                                                                                  column(4, sliderInput("maxna_heatcom", "Choose a maximum number of
-                                                                                    missing values per rows", value = 0, min = 0, max = 7, step = 1))
-                                                                                        ),
+                                                                                                                                         missing values per rows", value = 0, min = 0, max = 7, step = 1))
+                                                                                                 ),
 
                                                                                         fluidRow(column(3, textInput("titleH_heatcom", "Type a title for your heatmap", "Heatmap")),
                                                                                                  column(3, colourpicker::colourInput("backcol_heatcom", "Choose a background color", "#FFFFFF",
@@ -1209,15 +1208,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                     allowTransparent = TRUE, closeOnClick = TRUE),
                                                                                                         colourpicker::colourInput("grad3col_heatcom", "Choose the high gradient color", "#FF0000",
                                                                                                                     allowTransparent = TRUE, closeOnClick = TRUE))
-                                                                                        ),
+                                                                                                 ),
 
                                                                                         fluidRow(column(4, checkboxInput("saveH_heatcom", "Save the heatmap", TRUE)),
                                                                                                  conditionalPanel(condition = "input.saveH_heatcom",
-                                                                                                                  column(4, textInput("fnameH_heatcom", "Type a your file name", "My_heatmap")),
+                                                                                                                  column(4, textInput("fnameH_heatcom", "Type your file name", "My_heatmap")),
                                                                                                                   column(4, selectInput("formatH_heatcom", "Choose a format for your file",
                                                                                                                                         choices = c("png", "pdf"), selected = "png"))
+                                                                                                                  )
                                                                                                  )
-                                                                                        )
                                                                            )
                                                                            ),
 
@@ -1273,7 +1272,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                   column(4, checkboxInput("ishit_stri", "Do you import a hitlist ?", TRUE),
                                                                                                                          conditionalPanel(condition = "!input.ishit_stri",
                                                                                                                                           textInput("idfile_stri", "What is the name of the column of
-                                                                                                                                                    your file which contains the proteins ID ?")
+                                                                                                                                                    your file which contains the protein IDs ?")
                                                                                                                                           )
                                                                                                                          ),
                                                                                                                   conditionalPanel(condition = "input.ishit_stri",
@@ -1401,7 +1400,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        fluidRow(
                                                                          column(4, checkboxInput("importprot_barnet", "Import a protein list", FALSE),
                                                                                 conditionalPanel(condition = "!input.importprot_barnet",
-                                                                                                 checkboxInput("onlyhit_barnet", "Only take the hited proteins", FALSE),
+                                                                                                 checkboxInput("onlyhit_barnet", "Only take the hits proteins", FALSE),
                                                                                                  conditionalPanel(condition = "input.onlyhit_barnet",
                                                                                                                   selectInput("cond_fhit_barnet", "Select hits treatment", choices = NULL, multiple = TRUE))
                                                                                                  ),
@@ -1540,7 +1539,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                      fluidRow(style = "height:20px;"),
 
-                                     h1(tags$u(class = "main-1", "Enrichment analysis from wiki-pathway")),
+                                     h1(tags$u(class = "main-1", "Enrichment analysis and visualization")),
                                      tags$hr(),
 
                                      fluidRow(box(title = "Import your data and start the analysis", status = "primary",
@@ -1603,7 +1602,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    )
                                                           ),
                                                  tabPanel("GSEA",
-                                                          fluidRow(box(title = "Make a GSEA on your data", status = "primary",
+                                                          fluidRow(box(title = "Perform GSEA on your data", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                        fluidRow(column(4, uiOutput("scorenameui_clus")),
                                                                                 column(4, checkboxInput("onlypos_clus", "Show only enrcihment set with positive enrichment score", TRUE)),
@@ -1618,7 +1617,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    )
                                                           ),
                                                  tabPanel("Gene concept network",
-                                                          fluidRow(box(title = "View a gene concept network from your data", status = "primary",
+                                                          fluidRow(box(title = "Plot a gene concept network from your data", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                        fluidRow(column(6, uiOutput("scorename2ui_clus")),
                                                                                 column(6, actionButton("gogeneconc_clus", "See gene concept network", class = "btn-primary btn-lg"))
@@ -1699,7 +1698,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
                                 conditionalPanel(condition = "input.drug_cell == 'dat'",
                                                  fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
-                                              please import the cal_diff output file which correspond to your hitlist.")
+                                                                             please import the imprints_caldiff output file which correspond to your hitlist.")
                                 ),
                                 conditionalPanel(condition = "!input.selpr_loca_cell",
                                                  htmlOutput("prsel_p_cell")
@@ -1708,7 +1707,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                 conditionalPanel(condition = "output.barpdata_cell_up | input.drug_cell == 'base'",
                                                  fluidRow(column(4, checkboxInput("selpr_loca_cell", "Select proteins according to their subcellular location", FALSE)),
                                                           conditionalPanel(condition = "input.selpr_loca_cell",
-                                                                           column(4, selectInput("selorga_cell", "Select some organelle", multiple = TRUE, choices = NULL)),
+                                                                           column(4, selectInput("selorga_cell", "Select some organelles", multiple = TRUE, choices = NULL)),
                                                                            column(4, checkboxInput("allpr_cell", "Select all the proteins from the organelles you selected", FALSE),
                                                                                   conditionalPanel(condition = "!input.allpr_cell",
                                                                                                    selectizeInput("selectpr_cell", "Select some proteins", multiple = TRUE, choices = NULL)
@@ -2727,7 +2726,7 @@ server <- function(input, output, session){
                                      nread = input$n_chan2,
                                      matchtable = File$datapath)
         cetsa_isoform$conso <- d2
-        showNotification("Consolidating succeed !", type = "message", duration = 5)
+        showNotification("Consolidation succeed !", type = "message", duration = 5)
       }
 
       if(input$iso_rearr){
@@ -2736,7 +2735,7 @@ server <- function(input, output, session){
                               repthreshold = input$rep_thr, countthreshold = input$count_thr,
                               withabdreading = input$wit_37)
         cetsa_isoform$rearr <- d2
-        showNotification("Rearranging succeed !", type = "message", duration = 5)
+        showNotification("Rearrangement succeed !", type = "message", duration = 5)
       }
 
       cetsa_isoform$y <- d2
@@ -2961,7 +2960,7 @@ server <- function(input, output, session){
                     We then only keep the two p-values from the two biggest mean fold changes (in absolute value) from
                     each protein <var>p</var>. We now compute a Fisher’s t-test on these two p-values which return
                     one final p-value. (Figure 1. A.)
-                    <br>Finally, we have 𝑛 p-values for each treatment <var>c</var> = 1, ..., <var>C</var>.
+                    <br>Finally, we have <var>n</var> p-values for each treatment <var>c</var> = 1, ..., <var>C</var>.
                     <br><br><u>2. SR</u><br><br>
                     For each protein <var>p</var> = 1, ..., <var>n</var> and for each treatment <var>c</var> = 1, ..., <var>C</var>,
                     we extract the <var>T</var> mean fold changes. We take the absolute value from these and then order them in
@@ -2972,7 +2971,7 @@ server <- function(input, output, session){
                     <br>From this regression we extract the intercept with the y-axis. This intercept will
                     always be positive and to keep track if the protein is destabilized or stabilized, we
                     multiply this value by the sign of the mean of all the fold changes (either -1 or 1).
-                    <br>Finally, we apply a z-score normalization on this 𝑛 SR for each treatment <var>c</var> = 1, ..., <var>C</var>.
+                    <br>Finally, we apply a z-score normalization on all SR for each treatment <var>c</var> = 1, ..., <var>C</var>.
                     <br><br>In the end, we plot the -log10(p-value) vs SR which gives us a volcano plot. (Figure 1. B.)
                     <br><br><img src='SR_figure1.jpg' alt='SR figure', width='1180' height='660'>
                     <br><br><u>Set the cutoffs</u><br><br>
@@ -3257,7 +3256,7 @@ server <- function(input, output, session){
       }
       else{
         showNotification("Getting average dataset, this may take a while.", type = "message")
-        ave_data <- imprints_average(DIF_daba())
+        ave_data <- imprints_average(DIF_daba(), savefile = TRUE)
         showNotification("Average calculation succeed !", type = "message")
       }
       showNotification("Start saving dataset, this may take a while.", type = "message")
@@ -3287,7 +3286,7 @@ server <- function(input, output, session){
 
       cd_info <- paste(paste(cd_1, collapse = ", "), cd_e, sep = " and ")
     }
-    HTML(paste("<p>Your current condtion names for the drug", input$davai2_daba, "are :", paste0("<b>", cd_info, "</b>"), "</p>"))
+    HTML(paste("<p>Your current condition names for the drug", input$davai2_daba, "are :", paste0("<b>", cd_info, "</b>"), "</p>"))
   })
 
   observeEvent(input$changename_daba, {
@@ -4050,7 +4049,7 @@ server <- function(input, output, session){
       showNotification("Start mapping proteins, this may take a while", type = "message")
 
       if(input$gave_compl & input$drug_compl == "dat"){
-        data_ave <- imprints_average(DIF_compl())
+        data_ave <- imprints_average(DIF_compl(), savefile = TRUE)
         showNotification("Average calculation succeed !", type = "message")
       }
       else{
@@ -4440,7 +4439,7 @@ server <- function(input, output, session){
 
   output$downbar_simpf <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"),, "2D_barplot_", paste0("similar_", input$prot_simpf), ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_", paste0("similar_", input$prot_simpf), ".png")
     },
     content = function(file){
       ggsave(file, plot = BAR_simpf$ch[[1]], device = "png")
@@ -4606,7 +4605,7 @@ server <- function(input, output, session){
     }
     else if(!is.null(DIF_heat()) & input$drug_heat == "dat"){
       showNotification("Start average calculation, this mays take a while.", type = "message")
-      dat <- imprints_average(DIF_heat())
+      dat <- imprints_average(DIF_heat(), savefile = TRUE)
     }
 
     withCallingHandlers({
@@ -4712,7 +4711,7 @@ server <- function(input, output, session){
     showNotification("Start mapping proteins, this may take a while", type = "message")
 
     if(input$gave_heatcom  & input$drug_heatcom == "dat"){
-      data_ave <- imprints_average(DIF_heatcom())
+      data_ave <- imprints_average(DIF_heatcom(), savefile = TRUE)
       resAVE_heatcom$d <- data_ave
       showNotification("Average calculation succeed !", type = "message")
     }
@@ -4756,7 +4755,7 @@ server <- function(input, output, session){
     }
     else{
       showNotification("No proteins could be mapped !
-                         Try to add more category in order to have more proteins", type = "error")
+                         Try to add more categories in order to have more proteins", type = "error")
     }
 
 
@@ -4928,7 +4927,7 @@ server <- function(input, output, session){
     x = NULL
   )
   observeEvent(input$start_string, {
-    showNotification("Getting the STRING id, this may take a while", type = "message")
+    showNotification("Getting the STRING ids, this may take a while", type = "message")
 
     if(!file.exists("STRING_data")){
       dir.create("STRING_data")
@@ -5155,7 +5154,7 @@ server <- function(input, output, session){
       }
     }
     else{
-      showNotification("No match has been found. Try another description or contact me vie the e-mail button.", type = "error")
+      showNotification("No matches has been found, try another description", type = "error")
     }
   })
 
@@ -5584,7 +5583,7 @@ server <- function(input, output, session){
           else{
             h <- NULL
             showNotification("Your hitlist doesn't contain neither a Genes column, neither a description column.
-                             Are you sure imported a hitlist ?", type = "error")
+                             Are you sure you imported a hitlist ?", type = "error")
           }
         }
       }

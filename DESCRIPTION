@@ -22,7 +22,6 @@ Imports: ggplot2,  stringr, tidyr, magick,
    bibliometrix, officer, colourpicker, openxlsx
 Suggests: 
     IMPRINTS.CETSA,
-    EBImage,
     STRINGdb,
     clusterProfiler,
     biomaRt,

@@ -1415,7 +1415,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                 ),
                                                                          column(4, checkboxInput("importGO_barnet", "Import a file with GO terms", FALSE),
                                                                                 conditionalPanel(condition = "input.importGO_barnet",
-                                                                                                 HTML("<h5>This file must contain the column 'id' and the column 'Goterm'
+                                                                                                 HTML("<h5>This file must contain the column 'id' and the column 'GOterm'
                                                                                                       corresponding to the Uniprot IDs and some GO terms or any other terms
                                                                                                       respectively. Optionnally, it can contain a column 'color' to specify the
                                                                                                       node colors.</h5>"),

@@ -1,5 +1,5 @@
 # IMPRINTS.CETSA.app
-This is a package to complete the IMRPRINTS.CETSA package from Dai Lingyun (https://github.com/nkdailingyun/IMRPRINTS.CETSA), more specifically the CETSA IMPRINTS analysis.
+This is a package to complete the IMRPRINTS.CETSA package from Dai Lingyun (https://github.com/nkdailingyun/IMPRINTS.CETSA), more specifically the CETSA IMPRINTS analysis.
 The goal of this package is to provide a user friendly interface of this package. With this shiny app, you can do the complete IMPRINTS CETSA analysis on the protein and peptide level; visualize the 2D bar plot or heatmap of many proteins from drug experiment available in the database; add new dataset or remove old ones from this database; get STRING network and extract other GO analysis from your data; plot interactive barplots networks; start a PubMed search based on the protein names or any character you want and save the results in word files; etc.
 
 The app contains also a tab called "Interactive cell". The goal of this one is to visualize proteins directly into the cell and get information on it when clicking one. The subcellular location is obtained thanks to the protein Atlas data base.
@@ -27,7 +27,7 @@ This package is specifically conceived to analyse the IMPRINTS-CETSA data. With 
 
 ## How to install IMPRINTS.CETSA.app ?  
 First go to Rstudio. This package totally depends on the last version of the IMRPRINTS.CETSA package. If you havn't donwload it yet, please do so.
-For installation from github https://github.com/nkdailingyun/IMRPRINTS.CETSA .
+For installation from github https://github.com/nkdailingyun/IMPRINTS.CETSA .
 Moreover, you need to install some packages from BioConductor especially for the gene ontology analysis :
 
 ```c

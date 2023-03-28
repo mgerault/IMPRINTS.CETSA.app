@@ -719,7 +719,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug == 'dat' ",
 
-                                                                                        fluidRow(column(4, fileInput("data_barplot", "Upload your own data (log2 fold change)",
+                                                                                        fluidRow(column(4, fileInput("data_barplot", "Upload the 'imprints_caldiff' file (log2 fold change)",
                                                                                                                      accept = c(".txt", ".csv", ".xlsx"))
                                                                                         ),
                                                                                         column(8, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
@@ -1373,7 +1373,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           ),
 
                                                  tabPanel("Barplots network",
-                                                          h1(tags$u(class = "main-1", "Intractive barplots network")),
+                                                          h1(tags$u(class = "main-1", "Interactive barplots network")),
+                                                          tags$hr(),
+                                                          HTML("<h5>In this tab, you can select some proteins and plot their STRING network.<br>
+                                                               The network will be interactive and inside each node, their corresponding barplots
+                                                               with the treatments you selected will be plotted. You can also color the node
+                                                               according GO term from an enrichment analysis or any other category and color the
+                                                               nodes border accoring their corresponding mean fold change.</h5>"),
                                                           tags$hr(),
 
                                                           fluidRow(box(title = "Networks data parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
@@ -1638,6 +1644,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           h1(tags$u(class = "main-1", "Proteins localization")),
                           tags$hr(),
+                          HTML("<h5>In this tab, you can assign protins to their subcellular location
+                               from Protein Atlas database and then plot them on a cell.<br>
+                               By clicking on the points on the plot, you  select a protein and then
+                               can plot its IMPRINTS profile.</h5>"),
+                          tags$hr(),
                           fluidRow(
                             box(title = "Get subcellular location from your hitlist", status = "primary",
                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
@@ -1781,6 +1792,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           shinyjs::useShinyjs(),
 
                           h1(tags$u(class = "main-1", "Search publications in PubMed")),
+                          tags$hr(),
+                          HTML("<h5>In this tab, you can look for potential pubmed publication
+                               related to the keywords you selected. <br>
+                               If a/some publicaitons are found, their title, author and abstract are saved in
+                               one word file in the folder you named.</h5>"),
                           tags$hr(),
 
                           fluidRow(box(title = "Search parameters", status = "primary",

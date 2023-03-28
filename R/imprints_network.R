@@ -169,9 +169,17 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
 
   message("Get STRING network...")
   interact <- string_db$get_interactions(string_id$STRING_id)
+  if(nrow(interact) == 0){
+    message("Warning: No interactions were found between the proteins you selected !")
+    return(NULL)
+  }
   interact$from <- sapply(interact$from, function(x) string_id$id[which(string_id$STRING_id == x)])
   interact$to <- sapply(interact$to, function(x) string_id$id[which(string_id$STRING_id == x)])
   interact <- interact[-which(duplicated(interact)),] # remove potential duplicated rows
+  if(length(which(interact$combined_score >= required_score)) == 0){
+    message("Warning: No interactions passed the required interaction score ! Try to decrease it")
+    return(NULL)
+  }
 
   message("Generates barplots...")
   if(is.null(colorbar)){
@@ -251,6 +259,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
     enrich <- string_db$get_enrichment(string_id$STRING_id, category = GOterm)
 
     if(nrow(enrich) == 0){
+      message("Warning: No enrichment were found !")
       enrich <- NULL
     }
     else{

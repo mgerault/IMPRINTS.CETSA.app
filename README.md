@@ -54,6 +54,7 @@ If you want now to use the app just type :
 runCETSAapp()
 ```
  
+For more information on how to use the app, go check the [tutorial](https://youtu.be/djpP8nc_JUE) video !
  
  
  

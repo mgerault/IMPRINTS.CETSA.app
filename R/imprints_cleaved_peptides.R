@@ -103,10 +103,10 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidV
   # get cleaved site
   # if cumulative abundance concave --> first derivative is decreasing globally --> inflexion point is where second derivative is minimum
   # if cumulative abundance convex --> first derivative is increasing globally --> inflexion point is where second derivative is maximum
-  inflex <- function(x, R2 = R2){
-    R2 <- cor(1:length(x), x)  # if linear relationship --> ~ constantly increasing/decreasing --> no cleaved
-    R2 <- R2**2
-    if(R2 <= 0.9){
+  inflex <- function(x, R2_cut = R2){
+    R2_calc <- cor(1:length(x), x)  # if linear relationship --> ~ constantly increasing/decreasing --> no cleaved
+    R2_calc <- R2_calc**2
+    if(R2_calc <= R2_cut){
       x <- diff(x) # get first 'first derivative'
       # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
       df <- data.frame(x = 1:length(x),

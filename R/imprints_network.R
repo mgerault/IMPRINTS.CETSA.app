@@ -17,10 +17,10 @@
 #'   for the interectation in the STRING network.
 #' @param witherrorbar Logical to tell if you want to print the error bar or not on the bar plots.
 #' @param FC_border Logical to tell if you want to color the nodes borders according to the
-#'   mean Fold-Change from each protein.
+#'   maximum Fold-Change from each protein.
 #' @param colorbar A vector of colors corresponding to each treatment.
 #' @param colorFC If FC_border is set to TRUE, a vector of three color corresponding
-#'   to the min, mid and max value from the mean fold change.
+#'   to the min, mid and max value from the maximum fold change.
 #' @param species The species; either human, mouse or rat.
 #' @param physics_type A string corresponding to the solver of the network; default is forceAtlas2Based.
 #'   Possible options: 'barnesHut', 'repulsion', 'hierarchicalRepulsion', 'forceAtlas2Based'.
@@ -219,7 +219,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
     }
 
     if(length(treatment) > 1){
-      message("More than one treatment has been selected. The biggest mean FC in absolute value will be taken.")
+      message("More than one treatment has been selected. The biggest maximum FC in absolute value will be taken.")
     }
 
     FC <- data %>%
@@ -227,7 +227,8 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
       tidyr::gather("treatment", "value", -id, -description) %>%
       tidyr::separate(treatment, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
       dplyr::group_by(id, description, treatment) %>%
-      dplyr::reframe(FC = mean(value, na.rm = TRUE)) %>%
+      dplyr::reframe(FC = ifelse(max(value, na.rm = TRUE) < abs(min(value, na.rm = TRUE)),
+                                 min(value, na.rm = TRUE), max(value, na.rm = TRUE))) %>%
       dplyr::group_by(id, description) %>%
       dplyr::reframe(FC = FC[which.max(abs(FC))]) %>%
       dplyr::mutate(description = stringr::word(stringr::str_extract(description, "(?<=GN=).*(?=)"), 1)) %>%

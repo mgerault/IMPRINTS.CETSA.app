@@ -27,6 +27,10 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
     message("Installing KEGGREST package")
     BiocManager::install("KEGGREST")
   }
+  if(!("biomaRt" %in% installed.packages())){
+    message("Installing biomaRt package")
+    BiocManager::install("biomaRt")
+  }
 
   species <- tolower(species)
   species <- match.arg(species)
@@ -78,6 +82,7 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
       hits_enrich <- clusterProfiler::enrichKEGG(hits$Genes_id,
                                                  organism = "mmu")
     }
+    rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
   else if(database == "GO"){
     if(species == "human"){
@@ -96,6 +101,7 @@ gene_conceptNet <- function(hits, gene_column = "Genes", score_column = "SR",
       hits_enrich <- clusterProfiler::enrichGO(hits$Genes_id,
                                                OrgDb = "org.Mm.eg.db")
     }
+    rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
 
   if(nrow(hits_enrich@result) == 0){

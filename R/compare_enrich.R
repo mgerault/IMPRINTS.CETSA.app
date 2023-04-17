@@ -27,6 +27,10 @@ compare_enrich <- function(hits, gene_column = "Genes", treatment_column = NULL,
     message("Installing KEGGREST package")
     BiocManager::install("KEGGREST")
   }
+  if(!("biomaRt" %in% installed.packages())){
+    message("Installing biomaRt package")
+    BiocManager::install("biomaRt")
+  }
 
   species <- tolower(species)
   species <- match.arg(species)
@@ -84,6 +88,7 @@ compare_enrich <- function(hits, gene_column = "Genes", treatment_column = NULL,
                                                      data = hits, fun = "enrichKEGG",
                                                      organism = "mmu", pvalueCutoff = pval_cutoff)
     }
+    rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
   else if(database == "GO"){
     if(species == "human"){
@@ -104,6 +109,7 @@ compare_enrich <- function(hits, gene_column = "Genes", treatment_column = NULL,
                                                      data = hits, fun = "enrichGO",
                                                      OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff)
     }
+    rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
 
   if(is.null(hits_enrich)){

@@ -42,12 +42,12 @@ for the interectation in the STRING network.}
 \item{witherrorbar}{Logical to tell if you want to print the error bar or not on the bar plots.}
 
 \item{FC_border}{Logical to tell if you want to color the nodes borders according to the
-mean Fold-Change from each protein.}
+maximum Fold-Change from each protein.}
 
 \item{colorbar}{A vector of colors corresponding to each treatment.}
 
 \item{colorFC}{If FC_border is set to TRUE, a vector of three color corresponding
-to the min, mid and max value from the mean fold change.}
+to the min, mid and max value from the maximum fold change.}
 
 \item{species}{The species; either human, mouse or rat.}
 

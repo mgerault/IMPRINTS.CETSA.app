@@ -218,6 +218,7 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       return(q)
     }
   }
+  message("Preparing data for plotting...")
   if(inherits(data, "list")){
     if(!save_pdf){
       stop("Your input data is a list. The aim is to save in the same pdf with diffrent data sets.

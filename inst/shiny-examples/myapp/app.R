@@ -719,16 +719,16 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug == 'dat' ",
 
-                                                                                        fluidRow(column(4, fileInput("data_barplot", "Upload the 'imprints_caldiff' file (log2 fold change)",
+                                                                                        fluidRow(column(6, fileInput("data_barplot", "Upload the 'imprints_caldiff' file (log2 fold change)",
                                                                                                                      accept = c(".txt", ".csv", ".xlsx"))
                                                                                         ),
-                                                                                        column(8, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
+                                                                                        column(6, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
                                                                                                conditionalPanel(condition = "!input.calc_hitlist",
                                                                                                                 fileInput("data_hitlist", "Upload your own hitlist, the summary file from the hitlist outputs",
                                                                                                                           accept = c(".txt", ".csv", ".xlsx"), multiple = TRUE)),
                                                                                                conditionalPanel(condition = "input.calc_hitlist",
-                                                                                                                fluidRow(column(3, numericInput("meancut_bar", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
-                                                                                                                         column(3, numericInput("bound_bar", "Choose the boundedness", value = 4)),
+                                                                                                                fluidRow(column(2, numericInput("meancut_bar", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                                                         column(2, numericInput("bound_bar", "Choose the boundedness", value = 4)),
                                                                                                                          column(2, checkboxInput("save_hit_bar", "Save the hitlist", FALSE))
                                                                                                                 ),
                                                                                                                 actionButton("str_calchit", "Start calculation"))
@@ -820,7 +820,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           tags$hr(),
 
                                                           withSpinner(plotOutput("bar_plot", height = "800px"), type = 6),
-                                                          downloadButton("downbar", "Download the plot as png file"),
+                                                          fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                      tags$br()
+                                                                                      ),
+                                                                             downloadButton("downbar", "Download plot")),
+                                                                   column(2, selectInput("downbar_format", "Download as", choices = c("png", "pdf")))
+                                                                   ),
 
                                                           tags$hr()
                                                  ),
@@ -919,7 +924,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         tags$hr(),
 
                                                                                         withSpinner(plotOutput("bar_plot_compl", height = "800px"), type = 6),
-                                                                                        downloadButton("downbar_compl", "Download the plot as png file")
+                                                                                        fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                                    tags$br()
+                                                                                                                    ),
+                                                                                                        downloadButton("downbar_compl", "Download plot")),
+                                                                                                 column(2, selectInput("downbar_compl_format", "Download as", choices = c("png", "pdf")))
+                                                                                        )
                                                                            )
                                                                            ),
 
@@ -1034,7 +1044,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
 
                                                                                         withSpinner(plotOutput("bar_plot_simpf", height = "800px"), type = 6),
-                                                                                        downloadButton("downbar_simpf", "Download the plot as png file")
+                                                                                        fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                                    tags$br()
+                                                                                                                    ),
+                                                                                                        downloadButton("downbar_simpf", "Download plot")),
+                                                                                                 column(2, selectInput("downbar_simpf_format", "Download as", choices = c("png", "pdf")))
+                                                                                        )
                                                                        )
 
                                                           )
@@ -1071,14 +1086,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_heat == 'dat' ",
-                                                                                        fluidRow(column(6, checkboxInput("gave_heat", "Don't have the imprints_average output
-                                                                                                                                       (will calculate and save it)", TRUE),
-                                                                                                        conditionalPanel(condition = "input.gave_heat",
+                                                                                        fluidRow(column(6, conditionalPanel(condition = "input.gave_heat",
                                                                                                                          fileInput("filedif_heat", "Choose an imprints_caldiff output")
-                                                                                                        ),
+                                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
                                                                                                                          fileInput("fileave_heat", "Choose an imprints_average output")
-                                                                                                        )
+                                                                                                                         ),
+                                                                                                        checkboxInput("gave_heat", "Don't have the imprints_average output
+                                                                                                                                       (will calculate and save it)", TRUE)
                                                                                                         ),
                                                                                                  column(6, fileInput("summary_heat", "Choose the summary file from the hitlist output"))
                                                                                                  )
@@ -1269,7 +1284,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         checkboxInput("impfile_stri", "Import a file", TRUE),
                                                                                         conditionalPanel(condition = "input.impfile_stri",
                                                                                                          fluidRow(column(4, fileInput("file_stri", "Choose a file")),
-                                                                                                                  column(4, checkboxInput("ishit_stri", "Do you import a hitlist ?", TRUE),
+                                                                                                                  column(4, checkboxInput("ishit_stri", "Do you import a hitlist ? (needs a column named 'treatment')", TRUE),
                                                                                                                          conditionalPanel(condition = "!input.ishit_stri",
                                                                                                                                           textInput("idfile_stri", "What is the name of the column of
                                                                                                                                                     your file which contains the protein IDs ?")
@@ -1317,7 +1332,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                           ),
                                                                                                          conditionalPanel(condition = "!input.intnet_stri",
                                                                                                                           withSpinner(plotOutput("net_stri", height = "800px"), type = 6),
-                                                                                                                          downloadButton("downnet_stri", "Download the plot as png file")
+                                                                                                                          fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                                                                      tags$br()
+                                                                                                                                                      ),
+                                                                                                                                          downloadButton("downnet_stri", "Download plot")),
+                                                                                                                                   column(2, selectInput("downnet_stri_format", "Download as", choices = c("png", "pdf")))
+                                                                                                                                   )
                                                                                                                           )
                                                                                                          )
                                                                                         )
@@ -1362,7 +1382,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                                             ),
                                                                                                                                            conditionalPanel(condition = "!input.intnet_stri",
                                                                                                                                                             withSpinner(plotOutput("net2_stri", height = "800px"), type = 6),
-                                                                                                                                                            downloadButton("downnetfilt_stri", "Download the plot as png file")
+                                                                                                                                                            fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                                                                                                        tags$br()
+                                                                                                                                                                                        ),
+                                                                                                                                                                            downloadButton("downnetfilt_stri", "Download plot")),
+                                                                                                                                                                     column(2, selectInput("downnetfilt_stri_format", "Download as", choices = c("png", "pdf")))
+                                                                                                                                                                     )
                                                                                                                                                             )
                                                                                                                                            )
                                                                                                                           )
@@ -1379,7 +1404,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                The network will be interactive and inside each node, their corresponding barplots
                                                                with the treatments you selected will be plotted. You can also color the node
                                                                according GO term from an enrichment analysis or any other category and color the
-                                                               nodes border accoring their corresponding mean fold change.</h5>"),
+                                                               nodes border accoring their corresponding maximum fold change.</h5>"),
                                                           tags$hr(),
 
                                                           fluidRow(box(title = "Networks data parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
@@ -1463,7 +1488,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        tags$hr(),
 
-                                                                       fluidRow(column(3, checkboxInput("FCborder_barnet", "Color node border according mean Fold-Change", TRUE)),
+                                                                       fluidRow(column(3, checkboxInput("FCborder_barnet", "Color node border according maximum Fold-Change", TRUE)),
                                                                                 conditionalPanel(condition = "input.FCborder_barnet",
                                                                                                  column(3, colourpicker::colourInput("FCbordercolorlow_barnet", NULL, "#0041FF",
                                                                                                                                      allowTransparent = TRUE, closeOnClick = TRUE)
@@ -1582,7 +1607,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                  choices = c("Human", "Mouse"), selected = "Human")),
                                                            column(4, selectInput("database_clus", "Choose a database to peform the enrichment analysis",
                                                                                  choices = c("WikiPathway", "KEGG", "GO"), selected = "WikiPathway")),
-                                                           column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for the gene concept network",
+                                                           column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for gene set enrichment analysis",
                                                                                   value = 0.01, min = 0, max = 1, step = 0.01))
                                                            )
 
@@ -1603,7 +1628,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        downloadButton("downcomptab_clus"),
                                                                        tags$hr(),
                                                                        withSpinner(plotOutput("compplot_clus", height = "800px"), type = 6),
-                                                                       downloadButton("downcomplot_clus", "Download the plot as png file")
+                                                                       fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                   tags$br()
+                                                                                                   ),
+                                                                                       downloadButton("downcomplot_clus", "Download plot")),
+                                                                                column(2, selectInput("downcomplot_clus_format", "Download as", choices = c("png", "pdf")))
+                                                                                )
                                                                        )
                                                                    )
                                                           ),
@@ -1618,7 +1648,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        downloadButton("downgseatab_clus"),
                                                                        tags$hr(),
                                                                        withSpinner(plotOutput("gseaplot_clus", height = "800px"), type = 6),
-                                                                       downloadButton("downgsealot_clus", "Download the plot as png file")
+                                                                       fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                   tags$br()
+                                                                                                   ),
+                                                                                       downloadButton("downgsealot_clus", "Download plot")),
+                                                                                column(2, selectInput("downgsealot_clus_format", "Download as", choices = c("png", "pdf")))
+                                                                                )
                                                                        )
                                                                    )
                                                           ),
@@ -1629,7 +1664,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                 column(6, actionButton("gogeneconc_clus", "See gene concept network", class = "btn-primary btn-lg"))
                                                                                 ),
                                                                        withSpinner(plotOutput("geneplot_clus", height = "800px"), type = 6),
-                                                                       downloadButton("downgenelot_clus", "Download the plot as png file")
+                                                                       fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                                   tags$br()
+                                                                                                   ),
+                                                                                       downloadButton("downgenelot_clus", "Download plot")),
+                                                                                column(2, selectInput("downgenelot_clus_format", "Download as", choices = c("png", "pdf")))
+                                                                                )
                                                                        )
                                                                    )
                                                           )
@@ -1781,7 +1821,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  tags$hr(),
 
                                                  withSpinner(plotOutput("bar_pr_cell", height = "800px"), type = 6),
-                                                 downloadButton("downbar_cell", "Download the plot as png file")
+                                                 fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                             tags$br()
+                                                                             ),
+                                                                 downloadButton("downbar_cell", "Download plot")),
+                                                          column(2, selectInput("downbar_cell_format", "Download as", choices = c("png", "pdf")))
+                                                 )
                                 )
                             )
                           )
@@ -1842,7 +1887,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                  bslib::nav_item(tags$a(href = "https://github.com/mgerault/IMPRINTS.CETSA.app",
                         icon("github"),
                         title = "See source code to the github repository"), class = "icon1"),
-                 bslib::nav_item(tags$a(href = "https://youtu.be/cOlOzU7-S3A",
+                 bslib::nav_item(tags$a(href = "https://youtu.be/djpP8nc_JUE",
                         icon("question-circle"),
                         title = "See the tutorial video of the app"), class = "icon2"),
                  bslib::nav_item(tags$a(href = "mailto:marco.gerault@gmail.com",
@@ -2204,7 +2249,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_pep_cleaved", "")
       cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(treatment == input$conditioncleaved_pep)
-      sequence_pep_data$x <- imprints_sequence_peptides(norm_pep_data$x,
+      foo <- imprints_sequence_peptides(norm_pep_data$x,
                                                         proteins = cleaved_pepTab$protein,
                                                         sequence = cleaved_pepTab$cleaved_site,
                                                         control = input$controlcleaved_pep,
@@ -2962,7 +3007,7 @@ server <- function(input, output, session){
   })
   observeEvent(input$see9_cetsa,{
     showModal(tags$div(id="modal9_SR",modalDialog(
-        shiny::HTML("<h1>Hitlist generation: using fold-change cutoff</h1><br>
+        shiny::HTML("<h1>Hitlist generation: Stability Rate</h1><br>
                     <br>This method compute a score for each protein and returns a volcano plot.
                     Since it will compute p-value, it needs the post-normalization file. It will
                     also compute the fold-changes but if you already have the caldiff output, you
@@ -3411,6 +3456,15 @@ server <- function(input, output, session){
       return(NULL)
 
     d <- import(File$datapath, header = TRUE)
+    if(!all(c("id", "treatment", "category") %in% colnames(d))){
+      missing_columns <- c("id", "treatment", "category")
+      missing_columns <- missing_columns[!(c("id", "treatment", "category") %in% colnames(d))]
+      missing_columns <- paste(missing_columns, collapse = ", ")
+      verb <- ifelse(length(missing_columns) > 1, "are", "is")
+      showNotification(paste(missing_columns, verb, "not in your summary file. Please check your columns names !"),
+                       type = "error", duration = 8)
+      d <- NULL
+    }
     d
   })
   #check if a file is upload
@@ -3500,41 +3554,82 @@ server <- function(input, output, session){
 
           prcheck <- ""
           if(length(input$drug2) == 1){
-            prcheck <- drug_data_sh$y$data[[input$drug2]]$id
+            prcheck <- drug_data_sh$y$data[[input$drug2]][,c("id", "description")]
           }
           else if(length(input$drug2) > 1){
-            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
+            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")[,c("id", "description")]
           }
 
-          a <- pr[!(pr %in% prcheck)]
+          a <- pr[!(pr %in% prcheck$id)]
           if(length(a)){
-            pr <- pr[(pr %in% prcheck)]
+            pr <- pr[(pr %in% prcheck$id)]
             showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
                              type = "error")
           }
+
+          pr <- data.frame(id = pr)
+          pr <- unique(pr)
+          pr <- dplyr::left_join(pr, prcheck,
+                                 by = "id")
+          pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+          pr <- pr %>%
+            group_by(description) %>%
+            mutate(id = paste0(id, ":", description))
+          pr <- pr$id
+          pr <- unique(pr)
         }
       }
       else{
-        if(length(input$drug2) == 1){
+        if(length(input$drug2) == 1 & all(input$drug2 %in% names(drug_data_sh$y$data))){
+          df <- drug_data_sh$y$data[[input$drug2]][,c("id", "description")]
           if(input$hit & !is.null(input$cond_fhit)){
             pr <- Sel_cond_fhit_SUMMA$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
             pr <- pr$id
             pr <- unique(pr)
           }
           else{
-            pr <- drug_data_sh$y$data[[input$drug2]]$id
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
           }
         }
-        else if(length(input$drug2) > 1){
+        else if(length(input$drug2) > 1 & all(input$drug2 %in% names(drug_data_sh$y$data))){
+          df <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")
           if(input$hit & !is.null(input$cond_fhit)){
             pr <- Sel_cond_fhit_SUMMA$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
             pr <- pr$id
             pr <- unique(pr)
           }
           else{
-            pr <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")$id
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
           }
         }
       }
@@ -3550,25 +3645,53 @@ server <- function(input, output, session){
           pr <- unique(read.delim(File$datapath, header = FALSE)[[1]])
 
           prcheck <- ""
-          prcheck <- barplot_data()$id
+          prcheck <- barplot_data()[,c("id", "description")]
 
-          a <- pr[!(pr %in% prcheck)]
+          a <- pr[!(pr %in% prcheck$id)]
           if(length(a)){
-            pr <- pr[(pr %in% prcheck)]
+            pr <- pr[(pr %in% prcheck$id)]
             showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
                              type = "error")
           }
-        }
-      }
-      else{
-        if(input$hit  & !is.null(input$cond_fhit)){
-          pr <- Sel_cond_fhit_SUMMA$hit
-          pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
+
+          pr <- data.frame(id = pr)
+          pr <- unique(pr)
+          pr <- dplyr::left_join(pr, prcheck,
+                                 by = "id")
+          pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+          pr <- pr %>%
+            group_by(description) %>%
+            mutate(id = paste0(id, ":", description))
           pr <- pr$id
           pr <- unique(pr)
         }
-        else{
-          pr <- barplot_data()$id
+      }
+      else{
+        df <- barplot_data()[,c("id", "description")]
+        if(!is.null(df)){
+          if(input$hit  & !is.null(input$cond_fhit)){
+            pr <- Sel_cond_fhit_SUMMA$hit
+            pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
+          }
+          else{
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
+          }
         }
       }
     }
@@ -3585,6 +3708,9 @@ server <- function(input, output, session){
     }
     else{
       PROT <- input$prot
+    }
+    if(!is.null(PROT)){
+      PROT <- unname(sapply(PROT, function(x) strsplit(x, ":")[[1]][1]))
     }
 
     if(input$drug == "base" & length(input$drug2) >= 1){
@@ -3676,6 +3802,9 @@ server <- function(input, output, session){
     else{
       PROT <- input$prot
     }
+    if(!is.null(PROT)){
+      PROT <- unname(sapply(PROT, function(x) strsplit(x, ":")[[1]][1]))
+    }
 
     if (input$drug == "base"){
       data <- join_drugdata(drug_data_sh$y$data[input$drug2], by = c("id", "description"))
@@ -3751,8 +3880,11 @@ server <- function(input, output, session){
     else{
       PROT <- input$prot
     }
+    if(!is.null(PROT)){
+      PROT <- unname(sapply(PROT, function(x) strsplit(x, ":")[[1]][1]))
+    }
     DR <- NULL
-    if(input$drug == "base" & !is.null(PROT)){
+    if(input$drug == "base" & length(PROT)){
       if(length(input$drug2) > 1){
         DR <- DAT_text()[which(!is.na(match(DAT_text()$id, PROT))),]
         DR$drug <- paste("has been identified in the experiment", DR$drug)
@@ -3923,10 +4055,10 @@ server <- function(input, output, session){
 
   output$downbar <- downloadHandler(
     filename = function() {
-      paste(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_",  input$prot, ".png", sep = "")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_",  sub(":", "%", input$prot[length(input$prot)]), ".", input$downbar_format)
     },
     content = function(file){
-      ggsave(file, plot = BAR$ch[[1]], device = "png")
+      ggsave(file, plot = BAR$ch[[1]], device = input$downbar_format)
     }
   )
 
@@ -3971,6 +4103,15 @@ server <- function(input, output, session){
       if(length(nv_nam)){
         dat <- dat[, !(names(dat) %in% nv_nam)]
       }
+      if(!all(c("id", "treatment", "category") %in% colnames(dat))){
+        missing_columns <- c("id", "treatment", "category")
+        missing_columns <- missing_columns[!(c("id", "treatment", "category") %in% colnames(dat))]
+        missing_columns <- paste(missing_columns, collapse = ", ")
+        verb <- ifelse(length(missing_columns) > 1, "are", "is")
+        showNotification(paste(missing_columns, verb, "not in your summary file. Please check your columns names !"),
+                         type = "error", duration = 8)
+        dat <- NULL
+      }
       dat
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
@@ -3991,19 +4132,20 @@ server <- function(input, output, session){
   NN_compl <- reactive({
     if(input$drug_compl == "dat"){
       nn <- NULL
-      if(!is.null(HIT_compl()) & !is.null(DIF_compl()))
-      dif <- DIF_compl()[,1:2]
-      nn <- lapply(unique(HIT_compl()$treatment), function(x){
-        x <- HIT_compl() %>% dplyr::filter(treatment == x) %>%
-          dplyr::right_join(dif, by = "id") %>%
-          dplyr::filter(is.na(category)) %>%
-          dplyr::mutate(category = "NN",
-                              treatment = x);
-        x
-      })
-      nn <- as.data.frame(Reduce(rbind, nn))
-      nn <- nn[,c("id", "description", "treatment", "category")]
-      nn
+      if(!is.null(HIT_compl()) & !is.null(DIF_compl())){
+        dif <- DIF_compl()[,1:2]
+        nn <- lapply(unique(HIT_compl()$treatment), function(x){
+          x <- HIT_compl() %>% dplyr::filter(treatment == x) %>%
+            dplyr::right_join(dif, by = "id") %>%
+            dplyr::filter(is.na(category)) %>%
+            dplyr::mutate(category = "NN",
+                          treatment = x);
+          x
+        })
+        nn <- as.data.frame(Reduce(rbind, nn))
+        nn <- nn[,c("id", "description", "treatment", "category")]
+        nn
+      }
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
       do.call(rbind, lapply(drug_data_sh$y$NN[input$drug2_compl],
@@ -4072,7 +4214,7 @@ server <- function(input, output, session){
         data_ave <- AVE_compl()
       }
 
-      cat_tab <- HIT_compl()
+      cat_tab <- HIT_compl() %>% dplyr::group_by(id, treatment, category) %>% dplyr::reframe()
 
       cat_tabNN <- NN_compl()
       cat_tabNN <- cat_tabNN %>% dplyr::group_by(id, treatment, category) %>% dplyr::reframe()
@@ -4094,7 +4236,7 @@ server <- function(input, output, session){
                                  "id", "description", "gene", "category")]
 
       if(nrow(map_compl) !=0){
-        map_compl$description <- IMPRINTS.CETSA.app:::getProteinName(map_compl$description)
+        map_compl$description <- unname(sapply(map_compl$description, IMPRINTS.CETSA.app:::getProteinName))
       }
 
 
@@ -4143,8 +4285,9 @@ server <- function(input, output, session){
   sel_prot_compl <- reactive({
     pr <- NULL
     if(!is.null(resmapping_compl$ch)){
-      pr <- resmapping_compl$ch$id[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl)))]
-      pr <- unique(pr)
+      pr <- resmapping_compl$ch[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl))), c("id", "gene")]
+      pr$id <- paste0(pr$id, ":", pr$gene)
+      pr <- unique(pr$id)
     }
 
   })
@@ -4159,6 +4302,9 @@ server <- function(input, output, session){
     }
     else{
       PROT <- input$prot_compl
+    }
+    if(!is.null(PROT)){
+      PROT <- unname(sapply(PROT, function(x) strsplit(x, ":")[[1]][1]))
     }
 
     data <- DIF_compl()
@@ -4179,7 +4325,8 @@ server <- function(input, output, session){
         data_l[[i]] <- data[which(!is.na(match(data$id, pr_comp))),]
 
         data_l[[i]] <- data_l[[i]][,-str_which(names(data_l[[i]]), notsel_cond)]
-        data_l[[i]]$category <- cate_$category[which(!is.na(match(cate_$id, data_l[[i]]$id)))]
+        data_l[[i]] <- dplyr::left_join(data_l[[i]], unique(cate_[,c("id", "category")]),
+                                        by = "id")
       }
 
       data <- data_l
@@ -4189,7 +4336,8 @@ server <- function(input, output, session){
       data <- data[which(!is.na(match(data$id, PROT))),]
 
       data <- data[,-str_which(names(data), notsel_cond)]
-      data$category <- cate$category[which(!is.na(match(cate$id, data$id)))]
+      data <- dplyr::left_join(data, unique(cate[,c("id", "category")]),
+                                        by = "id")
     }
 
     data
@@ -4241,10 +4389,10 @@ server <- function(input, output, session){
 
   output$downbar_compl <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_", paste(str_remove_all(input$allcomplex_compl, " "), sep = "_"), ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_", paste(str_remove_all(input$allcomplex_compl, " "), sep = "_"), ".", input$downbar_compl_format)
     },
     content = function(file){
-      ggsave(file, plot = BAR_compl$ch[[1]], device = "png")
+      ggsave(file, plot = BAR_compl$ch[[1]], device = input$downbar_compl_format)
     }
   )
 
@@ -4307,7 +4455,12 @@ server <- function(input, output, session){
   observe({
     if(!is.null(DIF_simpf())){
       updateSelectInput(session, "treat_simpf", choices = get_treat_level(DIF_simpf()))
-      updateSelectizeInput(session, "prot_simpf", choices = DIF_simpf()$id, server = TRUE)
+      x <- DIF_simpf()[,c("id", "description")]
+      x$description <- unname(sapply(x$description, IMPRINTS.CETSA.app:::getGeneName))
+      x <- x %>%
+        group_by(description) %>%
+        mutate(id = paste0(id, ":", description))
+      updateSelectizeInput(session, "prot_simpf", choices = unique(x$id), server = TRUE)
     }
   })
   observe({
@@ -4337,7 +4490,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
       imprints_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
-                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                treatmentlevel = input$treat_simpf, protein_profile = strsplit(input$prot_simpf, ":")[[1]][1],
                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
                                 max_na_prow = input$maxna_simpf,
@@ -4376,7 +4529,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
       geting_data_simpf$ch <- imprints_barplotting_simprof(DIF_simpf(), average, witherrorbar = input$werb_simpf,
-                                                        treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                        treatmentlevel = input$treat_simpf, protein_profile = strsplit(input$prot_simpf, ":")[[1]][1],
                                                         usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                         use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
                                                         max_na_prow = input$maxna_simpf,
@@ -4407,7 +4560,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
       BAR_simpf$ch <- imprints_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
-                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = strsplit(input$prot_simpf, ":")[[1]][1],
                                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
                                                 max_na_prow = input$maxna_simpf,
@@ -4431,7 +4584,7 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_bar_simpf", "")
       BAR_simpf$ch <- imprints_barplotting_simprof(geting_data_simpf$ch, witherrorbar = input$werb_simpf,
-                                                treatmentlevel = input$treat_simpf, protein_profile = input$prot_simpf,
+                                                treatmentlevel = input$treat_simpf, protein_profile = strsplit(input$prot_simpf, ":")[[1]][1],
                                                 usegradient = input$grad_simpf, linegraph = input$line_simpf,
                                                 use_score = input$scoremeth_simpf, score_threshold = input$scothr_simpf,
                                                 max_na_prow = input$maxna_simpf,
@@ -4455,10 +4608,10 @@ server <- function(input, output, session){
 
   output$downbar_simpf <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_", paste0("similar_", input$prot_simpf), ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot_", paste0("similar_", sub(":", "%", input$prot_simpf)), ".", input$downbar_simpf_format)
     },
     content = function(file){
-      ggsave(file, plot = BAR_simpf$ch[[1]], device = "png")
+      ggsave(file, plot = BAR_simpf$ch[[1]], device = input$downbar_simpf_format)
     }
   )
 
@@ -4517,6 +4670,15 @@ server <- function(input, output, session){
       if(length(nv_nam)){
         dat <- dat[, !(names(dat) %in% nv_nam)]
       }
+      if(!all(c("id", "treatment", "category") %in% colnames(dat))){
+        missing_columns <- c("id", "treatment", "category")
+        missing_columns <- missing_columns[!(c("id", "treatment", "category") %in% colnames(dat))]
+        missing_columns <- paste(missing_columns, collapse = ", ")
+        verb <- ifelse(length(missing_columns) > 1, "are", "is")
+        showNotification(paste(missing_columns, verb, "not in your summary file. Please check your columns names !"),
+                         type = "error", duration = 8)
+        dat <- NULL
+      }
       dat
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
@@ -4564,7 +4726,7 @@ server <- function(input, output, session){
   #check if a file is upload
   output$NNheat_fileup <- reactive({
     if(input$drug_heat == "dat"){
-      return(!is.null(NN_heat()) | !input$impNN_heat)
+      return(!is.null(NN_heat()) & !is.null(HIT_heat()))
     }
     else{
       return(!is.null(NN_heat()))
@@ -5070,10 +5232,10 @@ server <- function(input, output, session){
 
   output$downnet_stri <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "Network", ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "Network", ".", input$downnet_stri_format)
     },
     content = function(file){
-      ggsave(file, plot = OUT_plot$g, device = "png")
+      ggsave(file, plot = OUT_plot$g, device = input$downnet_stri_format)
     }
   )
 
@@ -5196,10 +5358,10 @@ server <- function(input, output, session){
 
   output$downnetfilt_stri <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "Network_", input$descri_stri, ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "Network_", input$descri_stri, ".", input$downnetfilt_stri_format)
     },
     content = function(file){
-      ggsave(file, plot = OUT_plot_filt$g, device = "png")
+      ggsave(file, plot = OUT_plot_filt$g, device = input$downnetfilt_stri_format)
     }
   )
 
@@ -5273,41 +5435,82 @@ server <- function(input, output, session){
 
           prcheck <- ""
           if(length(input$drug2_barnet) == 1){
-            prcheck <- drug_data_sh$y$data[[input$drug2_barnet]]$id
+            prcheck <- drug_data_sh$y$data[[input$drug2_barnet]][,c("id", "description")]
           }
           else if(length(input$drug2_barnet) > 1){
-            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")$id
+            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")[,c("id", "description")]
           }
 
-          a <- pr[!(pr %in% prcheck)]
+          a <- pr[!(pr %in% prcheck$id)]
           if(length(a)){
-            pr <- pr[(pr %in% prcheck)]
+            pr <- pr[(pr %in% prcheck$id)]
             showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
                              type = "error")
           }
+
+          pr <- data.frame(id = pr)
+          pr <- unique(pr)
+          pr <- dplyr::left_join(pr, prcheck,
+                                 by = "id")
+          pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+          pr <- pr %>%
+            group_by(description) %>%
+            mutate(id = paste0(id, ":", description))
+          pr <- pr$id
+          pr <- unique(pr)
         }
       }
       else{
-        if(length(input$drug2_barnet) == 1){
+        if(length(input$drug2_barnet) == 1 & all(input$drug2_barnet %in% names(drug_data_sh$y$data))){
+          df <- drug_data_sh$y$data[[input$drug2_barnet]][,c("id", "description")]
           if(input$onlyhit_barnet & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
             pr <- pr$id
             pr <- unique(pr)
           }
           else{
-            pr <- drug_data_sh$y$data[[input$drug2_barnet]]$id
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
           }
         }
-        else if(length(input$drug2_barnet) > 1){
+        else if(length(input$drug2_barnet) > 1 & all(input$drug2_barnet %in% names(drug_data_sh$y$data))){
+          df <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")[,c("id", "description")]
           if(input$onlyhit_barnet & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
             pr <- pr$id
             pr <- unique(pr)
           }
           else{
-            pr <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")$id
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
           }
         }
       }
@@ -5322,26 +5525,52 @@ server <- function(input, output, session){
           pr <- unique(read.delim(File$datapath, header = FALSE)[[1]])
 
           prcheck <- ""
-          prcheck <- barnet_data()$id
+          prcheck <- barnet_data()[,c("id", "description")]
 
-          a <- pr[!(pr %in% prcheck)]
+          a <- pr[!(pr %in% prcheck$id)]
           if(length(a)){
-            pr <- pr[(pr %in% prcheck)]
+            pr <- pr[(pr %in% prcheck$id)]
             showNotification(paste(paste(a, collapse = ", "), "wasn't in the data and had to be removed."),
                              type = "error")
           }
+
+          pr <- data.frame(id = pr)
+          pr <- unique(pr)
+          pr <- dplyr::left_join(pr, prcheck,
+                                 by = "id")
+          pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+          pr <- pr %>%
+            group_by(description) %>%
+            mutate(id = paste0(id, ":", description))
+          pr <- pr$id
+          pr <- unique(pr)
         }
       }
       else{
         if(!is.null(barnet_data()) & !is.null(barnethit_data())){
+          df <- barnet_data()[,c("id", "description")]
           if(input$onlyhit_barnet  & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
+            pr <- pr[,"id", drop = FALSE]
+            pr <- unique(pr)
+            pr <- dplyr::left_join(pr, df,
+                                   by = "id")
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
             pr <- pr$id
             pr <- unique(pr)
           }
           else{
-            pr <- barnet_data()$id
+            pr <- df
+            pr$description <- unname(sapply(pr$description, IMPRINTS.CETSA.app:::getGeneName))
+            pr <- pr %>%
+              group_by(description) %>%
+              mutate(id = paste0(id, ":", description))
+            pr <- pr$id
+            pr <- unique(pr)
           }
         }
       }
@@ -5391,6 +5620,7 @@ server <- function(input, output, session){
     }
     g
   })
+  observe(GOterm_data())
 
 
   # handling color selection
@@ -5434,7 +5664,7 @@ server <- function(input, output, session){
       data <- barnet_data()
     }
     if(input$onlyhit_barnet  & !is.null(input$cond_fhit_barnet)){
-      pr <- sel_prot_barnet()
+      pr <- unname(sapply(sel_prot_barnet(), function(x) strsplit(x, ":")[[1]][1]))
       data <- data[which(!is.na(match(data$id, pr))),]
     }
 
@@ -5468,7 +5698,13 @@ server <- function(input, output, session){
 
       withCallingHandlers({
         shinyjs::html("diag_barnet", "")
-        thenet$n <- imprints_network(data, hits = input$prot_barnet, GOterm = GOterm,
+        if(!is.null(input$prot_barnet)){
+          pr <- unname(sapply(input$prot_barnet, function(x) strsplit(x, ":")[[1]][1]))
+        }
+        else{
+          pr <- NULL
+        }
+        thenet$n <- imprints_network(data, hits = pr, GOterm = GOterm,
                                      treatment = input$condition_barnet,
                                      colorbar = colorbar,
                                      required_score = input$reqscore_barnet,
@@ -5794,10 +6030,10 @@ server <- function(input, output, session){
   })
   output$downcomplot_clus <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "CompareCluster_", input$database_clus, ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "CompareCluster_", input$database_clus, ".", input$downcomplot_clus_format)
     },
     content = function(file){
-      ggsave(file, plot = cluscomp_res$x$graph, device = "png",
+      ggsave(file, plot = cluscomp_res$x$graph, device = input$downcomplot_clus_format,
              width = 16, height = 12, dpi = 600)
     }
   )
@@ -5931,12 +6167,19 @@ server <- function(input, output, session){
   })
   output$downgsealot_clus <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GSEAplot_", input$database_clus, ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GSEAplot_", input$database_clus, ".", input$downgsealot_clus_format)
     },
     content = function(file){
-      png(file, width = 1720, height = 1080)
-      print(clusgsea_res$x$graph)
-      dev.off()
+      if(input$downgsealot_clus_format == "png"){
+        png(file, width = 1720, height = 1080)
+        print(clusgsea_res$x$graph)
+        dev.off()
+      }
+      else if(input$downgsealot_clus_format == "pdf"){
+        pdf(file, onefile = TRUE, width = 12, height = 7)
+        print(clusgsea_res$x$graph)
+        dev.off()
+      }
     }
   )
 
@@ -6051,10 +6294,10 @@ server <- function(input, output, session){
   })
   output$downgenelot_clus <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GeneConceptNet_", input$database_clus, ".png")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "GeneConceptNet_", input$database_clus, ".", input$downgenelot_clus_format)
     },
     content = function(file){
-      ggsave(file, plot = clusgene_res$x, device = "png",
+      ggsave(file, plot = clusgene_res$x, device = input$downgenelot_clus_format,
              width = 10, height = 6)
     }
   )
@@ -6074,7 +6317,17 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      import_list(File$datapath, header = TRUE)[[1]]
+      d <- import(File$datapath, header = TRUE)
+      if(!all(c("id", "treatment", "category") %in% colnames(d))){
+        missing_columns <- c("id", "treatment", "category")
+        missing_columns <- missing_columns[!(c("id", "treatment", "category") %in% colnames(d))]
+        missing_columns <- paste(missing_columns, collapse = ", ")
+        verb <- ifelse(length(missing_columns) > 1, "are", "is")
+        showNotification(paste(missing_columns, verb, "not in your summary file. Please check your columns names !"),
+                         type = "error", duration = 8)
+        d <- NULL
+      }
+      d
     }
     else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
       h <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2_cell],
@@ -6261,7 +6514,8 @@ server <- function(input, output, session){
     pr <- NULL
     if(input$selpr_loca_cell){
       if(!is.null(resdata_cell$ch)){
-        pr <- resdata_cell$ch$id[which(!is.na(match(resdata_cell$ch$main.location.cell, input$selorga_cell)))]
+        pr <- resdata_cell$ch[which(!is.na(match(resdata_cell$ch$main.location.cell, input$selorga_cell))), c("id", "gene.name")]
+        pr <- paste0(pr$id, ":", pr$gene.name)
         pr <- unique(pr)
       }
     }
@@ -6278,6 +6532,9 @@ server <- function(input, output, session){
       }
       else{
         pr <- input$selectpr_cell
+      }
+      if(!is.null(pr)){
+        pr <- unname(sapply(pr, function(x) strsplit(x, ":")[[1]][1]))
       }
     }
     else{
@@ -6360,6 +6617,9 @@ server <- function(input, output, session){
         }
         else{
           pr <- input$selectpr_cell
+        }
+        if(!is.null(pr)){
+          pr <- unname(sapply(pr, function(x) strsplit(x, ":")[[1]][1]))
         }
       }
       else{
@@ -6476,6 +6736,9 @@ server <- function(input, output, session){
       else{
         pr <- input$selectpr_cell
       }
+      if(!is.null(pr)){
+        pr <- unname(sapply(pr, function(x) strsplit(x, ":")[[1]][1]))
+      }
     }
     else{
       pr <- PR_event()
@@ -6507,10 +6770,10 @@ server <- function(input, output, session){
 
   output$downbar_cell <- downloadHandler(
     filename = function() {
-      paste(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot", ".png", sep = "")
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "2D_barplot", ".", input$downbar_cell_format)
     },
     content = function(file){
-      ggsave(file, plot = BAR_cell$ch[[1]], device = "png")
+      ggsave(file, plot = BAR_cell$ch[[1]], device = input$downbar_cell_format)
     }
   )
 

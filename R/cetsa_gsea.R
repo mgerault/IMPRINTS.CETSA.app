@@ -29,6 +29,10 @@ cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
     message("Installing KEGGREST package")
     BiocManager::install("KEGGREST")
   }
+  if(!("biomaRt" %in% installed.packages())){
+    message("Installing biomaRt package")
+    BiocManager::install("biomaRt")
+  }
 
   species <- tolower(species)
   species <- match.arg(species)
@@ -93,6 +97,7 @@ cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
     else if(species == "mouse"){
       gsea_res <- clusterProfiler::gseKEGG(hits, organism = "mmu", pvalueCutoff = pval_cutoff)
     }
+    rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
   else if(database == "GO"){
     if(species == "human"){
@@ -109,6 +114,7 @@ cetsa_gsea <- function(hits, gene_column = "Genes", score_column = "SR",
       }
       gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff)
     }
+    rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
 
   if(nrow(gsea_res@result) == 0){

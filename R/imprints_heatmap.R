@@ -89,16 +89,15 @@ imprints_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
                                                  "condition"))
   }
 
-
   message("Filtering your data")
   treatment = unique(datal$condition)
   datal$condition <- NULL
 
-
   pr_axis <- list(element_blank(), element_blank())
   face_sw <- "y"
   if(!is.null(hit_summary)){
-    df_hits <- hit_summary %>% dplyr::filter(treatment == treatment)
+    df_hits <- hit_summary %>% dplyr::filter(treatment == treatment) %>%
+      dplyr::group_by(id,treatment,category) %>%  dplyr::reframe()
     if(!is.null(NN_data)){
       df_NN <- NN_data %>% dplyr::filter(treatment == treatment) %>%
         dplyr::group_by(id,treatment,category) %>%  dplyr::reframe()

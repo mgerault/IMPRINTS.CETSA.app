@@ -43,6 +43,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     data <- data[,-QP_column]
   }
 
+  data <- data[order(data$id),] # to prevent bad matching between data and data_diff
   n <- nrow(data)
   name_cond <- stringr::str_subset(colnames(data), "^\\d{2}")
   if(ncol(data) - length(name_cond) != 5){
@@ -107,6 +108,7 @@ SR_CetsaHit <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   else if(!inherits(data_diff, "data.frame")){
     stop("data_diff is neither a file, neither a data frame !")
   }
+  data_diff <- data_diff[order(data_diff$id),]
 
 
   QP_column <- stringr::str_which(colnames(data_diff), "^36C_")

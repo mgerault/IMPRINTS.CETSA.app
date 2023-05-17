@@ -495,23 +495,32 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        (output after rarranging your data) ?", FALSE),
                                                                                      conditionalPanel(condition = "!input.got_rearr_cetsa",
                                                                                                       fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
+                                                                                                                      tags$hr(),
                                                                                                                       conditionalPanel(condition = "input.iso_conso",
                                                                                                                                        numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
                                                                                                                                        fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
                                                                                                                                                  accept = ".txt")
-                                                                                                                      )
-                                                                                                      ),
-                                                                                                      column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
-                                                                                                             conditionalPanel(condition = "input.iso_rearr",
-                                                                                                                              numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
-                                                                                                                              numericInput("rep_thr", "Type the minimal percentage threshold of
-                                                                                                                                           protein being sampled from multiple runs", value = 0.1, min = 0, max = 1, step = 0.01),
-                                                                                                                              numericInput("count_thr", "Type the minimal threshold number
-                                                                                                                                                         of associated abundance count of proteins", value = 1, min = 0, step = 1),
-                                                                                                                              checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
-                                                                                                             )
-                                                                                                      )
-                                                                                                      ),
+                                                                                                                                       ),
+                                                                                                                      conditionalPanel(condition = "!input.iso_conso",
+                                                                                                                                       tags$br()
+                                                                                                                                       )
+                                                                                                                      ),
+                                                                                                               column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE), tags$hr()),
+                                                                                                               conditionalPanel(condition = "input.iso_rearr",
+                                                                                                                                column(3, numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                                          numericInput("count_thr", "Type the minimal threshold number
+                                                                                                                                                        of associated abundance count of proteins",
+                                                                                                                                                       value = 2, min = 1, step = 1),
+                                                                                                                                       checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
+                                                                                                                                       ),
+                                                                                                                                column(3, numericInput("rep_thr", "Type the minimal percentage threshold of
+                                                                                                                                                                   protein being sampled from multiple runs",
+                                                                                                                                                       value = 0.1, min = 0, max = 1, step = 0.01),
+                                                                                                                                          checkboxInput("avgcount_abd", "Take the median average of abundance count
+                                                                                                                                                      across temperature", TRUE)
+                                                                                                                                       )
+                                                                                                                                )
+                                                                                                               ),
                                                                                                       actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary")
                                                                                      ),
                                                                                      conditionalPanel(condition = "input.got_rearr_cetsa",
@@ -2793,8 +2802,10 @@ server <- function(input, output, session){
       if(input$iso_rearr){
         showNotification("Start rearranging data", type = "message", duration = 3)
         d2 <- imprints_rearrange(d2, nread = input$n_chan3,
-                              repthreshold = input$rep_thr, countthreshold = input$count_thr,
-                              withabdreading = input$wit_37)
+                                 repthreshold = input$rep_thr,
+                                 averagecount = input$avgcount_abd,
+                                 countthreshold = input$count_thr,
+                                 withabdreading = input$wit_37)
         cetsa_isoform$rearr <- d2
         showNotification("Rearrangement succeed !", type = "message", duration = 5)
       }

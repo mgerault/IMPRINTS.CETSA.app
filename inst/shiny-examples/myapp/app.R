@@ -452,6 +452,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
 
                                                    conditionalPanel(condition = "output.cetsa_fileup",
+                                                                    textOutput("diag_rawread"),
                                                                     actionButton("see1_cetsa", "View data uploaded"),
                                                                     tags$hr(),
                                                                     tags$u(h3("Rename your treatments and clean your data")),
@@ -521,7 +522,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                        )
                                                                                                                                 )
                                                                                                                ),
-                                                                                                      actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary")
+                                                                                                      actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary"),
+                                                                                                      textOutput("diag_rearrange")
                                                                                      ),
                                                                                      conditionalPanel(condition = "input.got_rearr_cetsa",
                                                                                                       fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
@@ -2583,13 +2585,27 @@ server <- function(input, output, session){
       return(NULL)
     }
 
-    imprints_rawread(File$datapath,
-                  #the name of each treatment
-                  treatment = as.character(input$treat_name[,1]),
-                  #number of channel and the name of it
-                  nread = as.numeric(input$n_chan),
-                  channels = rownames(input$treat_name)
+    withCallingHandlers({
+      shinyjs::html("diag_rawread", "")
+      df <- imprints_rawread(File$datapath,
+                             #the name of each treatment
+                             treatment = as.character(input$treat_name[,1]),
+                             #number of channel and the name of it
+                             nread = as.numeric(input$n_chan),
+                             channels = rownames(input$treat_name)
+                             )
+    },
+    message = function(m) {
+      m <- m$message
+      if(grepl('protein', m)){
+        shinyjs::html(id = "diag_rawread",
+                      html = paste0("<span style='color:red;'>", m, "</span><br>"),
+                      add = TRUE)
+      }
+    }
     )
+
+    df
   })
 
   #check if a file is upload
@@ -2801,11 +2817,19 @@ server <- function(input, output, session){
 
       if(input$iso_rearr){
         showNotification("Start rearranging data", type = "message", duration = 3)
-        d2 <- imprints_rearrange(d2, nread = input$n_chan3,
-                                 repthreshold = input$rep_thr,
-                                 averagecount = input$avgcount_abd,
-                                 countthreshold = input$count_thr,
-                                 withabdreading = input$wit_37)
+        withCallingHandlers({
+          shinyjs::html("diag_rearrange", "")
+          d2 <- imprints_rearrange(d2, nread = input$n_chan3,
+                                   repthreshold = input$rep_thr,
+                                   averagecount = input$avgcount_abd,
+                                   countthreshold = input$count_thr,
+                                   withabdreading = input$wit_37)
+          message("Done rearranging !")
+        },
+        message = function(m) {
+          shinyjs::html(id = "diag_rearrange", html = paste(m$message, "<br>", sep = ""), add = TRUE)
+        }
+        )
         cetsa_isoform$rearr <- d2
         showNotification("Rearrangement succeed !", type = "message", duration = 5)
       }

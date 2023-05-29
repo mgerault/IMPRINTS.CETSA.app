@@ -63,18 +63,19 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           fluidRow(
                             column(12,
                                    shiny::HTML("<h1>About CETSA</h1><br>"),
-                                   shiny::HTML("<h5>In 2013 we published the first paper describing the transformative Cellular Thermal Shift Assay (CETSA, Martinez Molina, Science, 41:84).
-                                                    CETSA constitutes the first broadly applicable method to assess direct drug binding in cells and tissues.
-                                                    The method has had a big impact in drug discovery and is now being broadly applied in academia and
-                                                    industry to improve efficiency and quality of drug candidates and has the potential to serve as an
-                                                    important clinical diagnostic for drug efficacy in the future. Recently we have published papers demonstrating
-                                                    that CETSA constitutes a highly resolved means to study interactions of proteins with other cellular
-                                                    components in intact cells and tissues at the proteome level. This approach gives a completely novel
-                                                    perspective on how cellular processes are executed and we predict that it will have a very big impact on
-                                                    understanding disease processes and drug action in the future. The method also constitutes a way to
-                                                    uncover novel drug targets and therapeutic biomarkers with future applications in cancer therapy.
+                                   shiny::HTML("<h5>In 2013, we published the first paper describing the transformative Cellular Thermal Shift Assay (CETSA, Martinez Molina et al, 2013, Science).
+                                                    CETSA is the first widely applicable method for assessing direct drug binding in cells and tissues.
+                                                    This method has had a major impact on drug discovery and is broadly applied in academia and
+                                                    industry to establish the correct ligand-protein relationship, improve the efficacy and quality of drug
+                                                    candidates, and has the potential to serve as an important clinical diagnostic of drug efficacy in the future.
+                                                    Recently we have published papers demonstrating that a new generation of multi-dimensional CETSA
+                                                    provides a highly resolved means to study the interactions of proteins with other cellular components
+                                                    (including metabolites, nucleic acids and other proteins) in intact cells and tissues at the proteome level.
+                                                    This approach provides a completely new perspective on how cellular processes are executed and we expect
+                                                    it to have a large impact on understanding disease processes and drug action in the future.
+                                                    It is also a new way to discover new functional protein targets and biomarkers for intervention and therapy.
 
-                                                    <br><br> If you want to learn more about CETSA and our lab, click <a href='https://www.cetsa.org/'>here</a></h5>"
+                                                    <br><br> To learn more about CETSA and our lab, click <a href='https://www.cetsa.org/'>here</a></h5>"
                                                )
                                    )
                             ),
@@ -84,16 +85,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           fluidRow(
                             column(12,
                                    shiny::HTML("<h1>IMPRINTS.CETSA.app</h1><br>"),
-                                   shiny::HTML("<h5>IMPRINTS.CETSA.app is an R package that include a shiny app that you can use to
-                                                    easily analyse your IMPRINTS CETSA data. In this app, you will be able
-                                                    to process your quantification files, get your drug targets, visualize your
-                                                    barplots, run some gene ontology analysis and more. <br>
-                                                    The app also contains 2 datasets comparing different phase of the cell cycle
-                                                    published in Dai et al. 2018, Cell.
-                                                    You can already visualize and compare these. You can also modify this database by
-                                                    adding or removing new datasets in your local machine. <br>
-                                                    You can learn how to use the app by seeing the tutorial video which you can
-                                                    access by clicking on the question mark icon in the top right corner.
+                                   shiny::HTML("<h5>IMPRINTS.CETSA.app is an R package that includes a shiny app that can help you
+                                                    easily analyze your IMPRINTS-CETSA data. In this app, you will be able
+                                                    to process the TMT multiplexing-based quantification files, narrow down protein targets,
+                                                    visualize the results in bar plot or heat map formats, run gene ontology enrichment analysis and more. <br>
+                                                    The app also includes 2 sample datasets comparing different phases of the cell cycle
+                                                    originally published in Dai et al. 2018, Cell, for easy visualization and comparison.
+                                                    You can add new datasets at your ease from your local machine. <br>
+                                                    To learn how to use the app, you are encouraged to watch the tutorial video by clicking
+                                                    on the question mark icon in the upper right corner.
                                                     <br><br><br>
                                                     <center> Otherwise, start your analysis here ! </center></h5>")
                                    )

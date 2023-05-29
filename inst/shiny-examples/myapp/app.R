@@ -1571,7 +1571,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  )
                                      ),
 
-                            tabPanel("ClusterProfile", value = "clusprof",
+                            tabPanel("ClusterProfiler", value = "clusprof",
                                      shinyjs::useShinyjs(),
                                      tags$style(HTML(".tabbable > .nav > li > a                  {background-color: #A1BAC8;  color:#FFFFFF}
                                                                   .tabbable > .nav > li[class=active]    > a {background-color: #3C8DBC; color:#FFFFFF}
@@ -1616,7 +1616,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    ),
                                                   fluidRow(column(4, selectInput("species_clus", "Specify the species from your data",
                                                                                  choices = c("Human", "Mouse"), selected = "Human")),
-                                                           column(4, selectInput("database_clus", "Choose a database to peform the enrichment analysis",
+                                                           column(4, selectInput("database_clus", "Choose a database to perform the enrichment analysis",
                                                                                  choices = c("WikiPathway", "KEGG", "GO"), selected = "WikiPathway")),
                                                            column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for gene set enrichment analysis",
                                                                                   value = 0.01, min = 0, max = 1, step = 0.01))

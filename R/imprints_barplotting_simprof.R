@@ -110,7 +110,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
         geom_text(x=0.5, y=0.5, label = "The profile you selected
                                        \ncontains only missing values !", size = 6) +
-        theme_cowplot() +
+        cowplot::theme_cowplot() +
         theme(axis.text.x = element_blank(),
               axis.title.x = element_blank(),
               axis.ticks.x = element_blank(),
@@ -182,7 +182,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
                                                          as.character(unique(d2$id)), sep = "\n"))
           }
           q <- q + labs(subtitle = subt$category[n_loop]) +
-            theme_cowplot() + theme(text = element_text(size = 10),
+            cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                     strip.text.x = element_text(size = 5),
                                     plot.title = element_text(hjust = 0.5,
                                                               size = rel(0.8)),
@@ -280,7 +280,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
         q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
       }
       q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
-        theme_cowplot() + theme(text = element_text(size = 10),
+        cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                 strip.text.x = element_text(size = 5),
                                 plot.title = element_text(hjust = 0.5,size = rel(0.8)),
                                 legend.background = element_rect(fill = NULL),
@@ -312,7 +312,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
         g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
           geom_text(x=0.5, y=0.5, label = "Try to change the threshold or
                                          \nthe score method then", size = 6) +
-          theme_cowplot() +
+          cowplot::theme_cowplot() +
           theme(axis.text.x = element_blank(),
                 axis.title.x = element_blank(),
                 axis.ticks.x = element_blank(),
@@ -366,7 +366,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
         geom_text(x=0.5, y=0.5, label = "Try to change the threshold or
                                          \nthe score method then", size = 6) +
-        theme_cowplot() +
+        cowplot::theme_cowplot() +
         theme(axis.text.x = element_blank(),
               axis.title.x = element_blank(),
               axis.ticks.x = element_blank(),
@@ -567,7 +567,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
         geom_text(x=0.5, y=0.5, label = "All the barplots has been saved succesfully !
                                          \nGo check your files", size = 6) +
-        theme_cowplot() +
+        cowplot::theme_cowplot() +
         theme(axis.text.x = element_blank(),
               axis.title.x = element_blank(),
               axis.ticks.x = element_blank(),

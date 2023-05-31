@@ -113,7 +113,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
       return()
     }
     if(any(!hits_in)){
-      message(paste(paste(hits[!hits_in], collapse = ", "), "were not found in your data and hance, have been removed."))
+      message(paste(paste(hits[!hits_in], collapse = ", "), "were not found in your data and hence, have been removed."))
       hits <- hits[hits_in]
     }
 
@@ -173,8 +173,8 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
     message("Warning: No interactions were found between the proteins you selected !")
     return(NULL)
   }
-  interact$from <- sapply(interact$from, function(x) string_id$id[which(string_id$STRING_id == x)])
-  interact$to <- sapply(interact$to, function(x) string_id$id[which(string_id$STRING_id == x)])
+  interact$from <- sapply(interact$from, function(x) string_id$id[which(string_id$STRING_id == x)][1])
+  interact$to <- sapply(interact$to, function(x) string_id$id[which(string_id$STRING_id == x)][1])
   interact <- interact[-which(duplicated(interact)),] # remove potential duplicated rows
   if(length(which(interact$combined_score >= required_score)) == 0){
     message("Warning: No interactions passed the required interaction score ! Try to decrease it")
@@ -404,3 +404,4 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
 
   return(net)
 }
+

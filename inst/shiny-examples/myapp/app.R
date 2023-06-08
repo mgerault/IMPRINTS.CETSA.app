@@ -3230,7 +3230,7 @@ server <- function(input, output, session){
                 selected = "elutriation")
   })
   output$drug2_ui <- renderUI({
-    selectInput("drug2", "Choose a drug", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "elutriation")
+    selectInput("drug2", "Choose a dataset", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "elutriation")
   })
 
   observeEvent(input$up_daba,{
@@ -3258,7 +3258,7 @@ server <- function(input, output, session){
       d <- paste(c(paste(d[1:(dn-1)], collapse = ", "), d[dn]), collapse = " and ")
     }
 
-    HTML(paste("<p><h4>Your dataset contains at the moment", dn, "drugs :", d, ".</h4></p>"))
+    HTML(paste("<p><h4>Your database contains at the moment", dn, "datasets :", d, ".</h4></p>"))
   })
 
 
@@ -5216,6 +5216,42 @@ server <- function(input, output, session){
     }
 
     string_res$x <- a
+    if(!is.null(string_res$x)){ # check that no duplicate string ids per id
+      if(any(duplicated(string_res$x[[1]]))){ # first column returned by map from STRINGdb is the identifier used to map genes
+        showNotification("Some ids returned several STRINGids; trying to map genes if in data",
+                         type = "error", duration = 5)
+        duplicated_ids <- unique(string_res$x[[1]][which(duplicated(string_res$x[[1]]))])
+        for(d_id in duplicated_ids){
+          info_d_ids <- string_res$x[which(string_res$x[[1]] == d_id),]
+
+          string_res$x <- string_res$x[-which(string_res$x[[1]] == d_id),]
+
+          where_gene <- grep("^[Gg]en(e$|es$)", colnames(info_d_ids))
+          where_descr <- grep("^[dD]escription$", colnames(info_d_ids))
+
+          if(length(where_gene) == 1){
+            info_d_ids$STRING_id <- NULL
+            info_d_ids <- info_d_ids[1,]
+            info_d_ids <- string_db$map(dat, colnames(info_d_ids)[where_gene], removeUnmappedRows = TRUE)
+          }
+          else if(length(where_descr) == 1){
+            info_d_ids$STRING_id <- NULL
+            info_d_ids <- info_d_ids[1,]
+            info_d_ids[,where_descr] <- IMPRINTS.CETSA.app:::getGeneName(info_d_ids[,where_descr])
+            info_d_ids <- string_db$map(dat, colnames(info_d_ids)[where_descr], removeUnmappedRows = TRUE)
+          }
+          else{# if no gene info can't map and take first row
+            showNotification("No gene informations has been found in your data; only first identifier is taken",
+                             type = "error", duration = 5)
+            info_d_ids <- info_d_ids[1,]
+          }
+
+          if(nrow(info_d_ids) != 0){
+            string_res$x <- rbind.data.frame(string_res$x, info_d_ids, make.row.names = FALSE)
+          }
+        }
+      }
+    }
 
     showNotification("Mapping succeed !", type = "message")
   })

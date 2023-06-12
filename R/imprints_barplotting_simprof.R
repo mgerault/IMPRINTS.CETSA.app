@@ -45,7 +45,7 @@
 #' @param pdfwidth a number indicate the width of pdf file, default value 12
 #'
 #'
-#' @return The ms 2D barplot
+#' @return The similar barplots
 #'
 #' @seealso \code{\link{imprints_barplotting_app}} , \code{\link{imprints_corr_to_ref}}
 #'
@@ -134,9 +134,10 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
 
     data <- data[which(!is.na(match(data$id, data_simi$id))),]
     tr_data <- get_treat_level(data)[!(get_treat_level(data) %in% treatmentlevel)]
-    tr_data <- paste(tr_data, collapse = "|")
+    tr_data <- paste0("_", tr_data, "$", collapse = "|")
     data <- data[,-str_which(names(data), tr_data)]
-    data$score <- data_simi$score
+    data_simi <- data_simi[,c("id", "score")]
+    data <- dplyr::left_join(data, data_simi, by = "id")
     message("Filtering done !")
   }
 
@@ -181,7 +182,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
             q <- q + ylab("fold change") + ggtitle(paste(j,
                                                          as.character(unique(d2$id)), sep = "\n"))
           }
-          q <- q + labs(subtitle = subt$category[n_loop]) +
+          q <- q + labs(subtitle = subt$score[n_loop]) +
             cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                     strip.text.x = element_text(size = 5),
                                     plot.title = element_text(hjust = 0.5,
@@ -279,7 +280,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
       else {
         q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
       }
-      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
+      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "score"]) +
         cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                 strip.text.x = element_text(size = 5),
                                 plot.title = element_text(hjust = 0.5,size = rel(0.8)),
@@ -385,11 +386,13 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
 
   if(continue){
     if(save_prlist){
-      tab_sim <- data[,c("id", "description")]
+      tab_sim <- data[,c("id", "description", "score")]
       tab_sim$Gene.name <- as.character(lapply(tab_sim$description, getGeneName))
       tab_sim$Protein.name <- as.character(lapply(tab_sim$description, function(x) getProteinName(x, pfdatabase)))
       tab_sim$description <- NULL
       colnames(tab_sim)[1] <- "UniprotID"
+      tab_sim <- tab_sim[order(tab_sim$score, decreasing = TRUE),]
+      tab_sim <- tab_sim[,c("UniprotID", "Protein.name", "Gene.name", "score")]
 
       openxlsx::write.xlsx(tab_sim, paste0(format(Sys.time(), "%y%m%d_%H%M_"), dataname, "_ProteinList.xlsx"))
     }
@@ -426,6 +429,7 @@ imprints_barplotting_simprof <- function (data, data_average = NULL,
 
 
     data$description <- NULL
+    data <- data[order(data$score, decreasing = TRUE),]
     data1 <- tidyr::gather(data[, -str_which(names(data), "^sumPSM|^countNum|^sumUniPeps|^drug$|^score")],
                            condition, reading, -id)
     if (!log2scale) {

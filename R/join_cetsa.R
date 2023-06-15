@@ -35,7 +35,7 @@ join_cetsa <- function(list_data, new_names = c("1h", "6h")){
                            any(z)
                          })
   )
-  if(length(unique(is_OX)) > 1){   # if in description OX is precised and for other not, remove it
+  if(any(is_OX)){   # if in description OX is precised and for other not, remove it
     list_data[is_OX] <- lapply(list_data[is_OX],
                                  function(z){
                                    z$description <- stringr::str_remove_all(z$description, "OX=\\d{1,} ");

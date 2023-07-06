@@ -676,9 +676,9 @@ PaletteWithoutGrey <- function(treatment){
   mycol <- x[which(is.na(stringr::str_extract(x, "gr(e|a)y")))]   #keep only colors that are not grey
 
   listcolor <- c()
-  for (i in 0:(n-1))
-    listcolor <- append(listcolor, mycol[(i*20 + 9) %% length(mycol)])      #save a color from the list (the number 20 and 9 were chosen in order to have distincts colors, this is empirical, can be changed)
-
+  for (i in 0:(n-1)){
+    listcolor <- append(listcolor, mycol[((i*20 + 9) %% length(mycol)) + 1])      #save a color from the list (the number 20 and 9 were chosen in order to have distincts colors, this is empirical, can be changed)
+  }
   return(listcolor)
 }
 

@@ -438,9 +438,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                   will be used as a separator between temperatures, bioreplicates and
                                                                                   treatments in all further functions, so make sure of your spelling.
                                                                                   <br><br>Here, you'll need to type first the bioreplicate and then
-                                                                                  the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
-                                                                                  <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
-                                                                                  as 'Mix'.</h5>")
+                                                                                  the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc. Make sure that
+                                                                                  all names are different !
+                                                                                  <br>If you have a 'Mix' channel; it needs to explicitely start with
+                                                                                      'Mix'.
+                                                                                  <br>If you have any 'Empty' channels; it needs to explicitely start with
+                                                                                      'Empty'.</h5>")
                                                                    ),
 
                                                             column(8, uiOutput("treat_nameui"))
@@ -464,8 +467,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                    advised to name its 'temperature' as '36C' for easier handle
                                                                                                    in the other functions from IMPRINTS.CETSA.app.</h5>")),
                                                                              column(4, uiOutput("temp_nameui")),
-                                                                             column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel", TRUE),
-                                                                                      checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
+                                                                             column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel if any", TRUE),
+                                                                                       checkboxInput("rem_empty", "Remove the 'Empty' channels if any", TRUE),
+                                                                                       checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
                                                                              column(2, actionButton("str_ren", "Rename the treatments", class = "btn-primary")),
                                                                              column(2, actionButton("see2_cetsa", "View data renamed"))
                                                                              )
@@ -2587,6 +2591,9 @@ server <- function(input, output, session){
     else if(any(apply(input$treat_name, 1, function(x) stringr::str_length(x) == 0))){
       return(NULL)
     }
+    else if(length(unique(as.character(input$treat_name[,1]))) != nrow(input$treat_name)){
+      return(NULL)
+    }
 
     withCallingHandlers({
       shinyjs::html("diag_rawread", "")
@@ -2669,26 +2676,29 @@ server <- function(input, output, session){
                                incondition = unique(cetsa_data()$condition),
                                outcondition = temp
                                )
+      showNotification("Renaming done !", type = "message", duration = 3)
 
       if(input$rem_mix){
-        if(!("Mix" %in% names(d1))){
-          showNotification("The coolumn 'Mix' was not found in your data !", type = "error", duration = 5)
-          d1 <- NULL
+        if(length(grep("^Mix", names(d1)))){
+          d1 <- d1[, -grep("^Mix", names(d1))]
         }
         else{
-          d1 <- d1[, !(names(d1) %in% "Mix")]
-          if(input$clean_data){
-            d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
-          }
-          showNotification("Renaming done !", type = "message", duration = 3)
+          showNotification("The column 'Mix' was not found in your data !", type = "warning", duration = 5)
         }
       }
-      else if(input$clean_data){
+
+      if(input$rem_empty){
+        if(length(grep("^Empty", names(d1)))){
+          d1 <- d1[, -grep("^Empty", names(d1))]
+        }
+        else{
+          showNotification("The column 'Empty' was not found in your data !", type = "warning", duration = 5)
+        }
+      }
+
+      if(input$clean_data){
         d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
         showNotification("Cleaning done !", type = "message", duration = 3)
-      }
-      else{
-        showNotification("Renaming done !", type = "message", duration = 3)
       }
     }
     d1

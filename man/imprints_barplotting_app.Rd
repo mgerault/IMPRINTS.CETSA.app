@@ -14,6 +14,7 @@ imprints_barplotting_app(
   printGeneName = FALSE,
   pfdatabase = FALSE,
   witherrorbar = TRUE,
+  withpoint = FALSE,
   layout = NULL,
   colorpanel = PaletteWithoutGrey(treatmentlevel),
   usegradient = FALSE,
@@ -51,6 +52,8 @@ group would be the first group}
 \item{pfdatabase}{A logical for using pdf database or not}
 
 \item{witherrorbar}{A logical to print or not the error bar on the plot}
+
+\item{withpoint}{A logical to print or not the data point of each replicate on the plot on top of the bars}
 
 \item{layout}{a vector indicating the panel layout for multi-panel plots per page,
 default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE}

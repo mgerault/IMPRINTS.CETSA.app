@@ -586,11 +586,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                                       conditionalPanel(condition = "!input.calc_diff",
                                                                                                                        radioButtons("hitmethod_cetsa", "Choose a method to get your hitlist",
-                                                                                                                                    choices = c("IMPRINTS score" = "ImpS",
-                                                                                                                                                "Intercept Score" = "IS",
+                                                                                                                                    choices = c("Intercept Score" = "IS",
+                                                                                                                                                "IMPRINTS score" = "ImpS",
                                                                                                                                                 "Fold Change cutoff" = "FC"
                                                                                                                                                 ),
-                                                                                                                                    selected = "ImpS",
+                                                                                                                                    selected = "IS",
                                                                                                                                     inline = TRUE),
                                                                                                                        conditionalPanel(condition = "input.hitmethod_cetsa == 'ImpS'",
                                                                                                                                         tags$hr(),
@@ -806,19 +806,27 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        tags$hr(),
 
-                                                                       fluidRow(column(4, checkboxInput("save_bar", "Save the bar plots in a pdf file", FALSE)),
+                                                                       fluidRow(column(4, checkboxInput("save_bar", "Save the bar plots in a pdf file", FALSE),
+                                                                                       conditionalPanel(condition = "input.save_bar",
+                                                                                                        textInput("pdftit", "Choose a name for your pdf file", "barplot")
+                                                                                                        )
+                                                                                       ),
                                                                                 conditionalPanel(condition = "input.save_bar",
                                                                                                  column(4, numericInput("lay_bar1", "Type the number of plot per row",
                                                                                                                         min = 1, max = 10, step = 1, value = 4),
-                                                                                                        numericInput("lay_bar2", "Type the number of plot per column",
-                                                                                                                     min = 1, max = 10, step = 1, value = 3)),
-                                                                                                 column(4, textInput("pdftit", "Choose a name for your pdf file", "barplot"))
+                                                                                                          numericInput("lay_bar2", "Type the number of plot per column",
+                                                                                                                       min = 1, max = 10, step = 1, value = 3)),
+                                                                                                 column(4, numericInput("pdfw", "Type the width of the pdf page",
+                                                                                                                        min = 1, step = 1, value = 12),
+                                                                                                        numericInput("pdfh", "Type the height of the pdf page",
+                                                                                                                     min = 1, step = 1, value = 12))
                                                                                 )
                                                                        ),
 
                                                                        tags$hr(),
 
-                                                                       fluidRow(column(4, checkboxInput("werb", "Print error bar", TRUE)),
+                                                                       fluidRow(column(4, checkboxInput("werb", "Print error bar", TRUE),
+                                                                                          checkboxInput("wpts", "Print point of each replicate", FALSE)),
                                                                                 column(4, checkboxInput("grad", "Use color gradient", FALSE)),
                                                                                 column(4, checkboxInput("line", "Use line instead of bar", FALSE))
                                                                        )
@@ -915,19 +923,27 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                         tags$hr(),
 
-                                                                                        fluidRow(column(4, checkboxInput("save_bar_compl", "Save the bar plots in a pdf file", FALSE)),
+                                                                                        fluidRow(column(4, checkboxInput("save_bar_compl", "Save the bar plots in a pdf file", FALSE),
+                                                                                                        conditionalPanel(condition = "input.save_bar_compl",
+                                                                                                                         textInput("pdftit_compl", "Choose a name for your pdf file", "barplot")
+                                                                                                                         )
+                                                                                                        ),
                                                                                                  conditionalPanel(condition = "input.save_bar_compl",
                                                                                                                   column(4, numericInput("lay_bar1_compl", "Type the number of plot per row",
                                                                                                                                          min = 1, max = 10, step = 1, value = 4),
                                                                                                                          numericInput("lay_bar2_compl", "Type the number of plot per column",
                                                                                                                                       min = 1, max = 10, step = 1, value = 3)),
-                                                                                                                  column(4, textInput("pdftit_compl", "Choose a name for your pdf file", "barplot"))
+                                                                                                                  column(4, numericInput("pdfw_compl", "Type the width of the pdf page",
+                                                                                                                                         min = 1, step = 1, value = 12),
+                                                                                                                         numericInput("pdfh_compl", "Type the height of the pdf page",
+                                                                                                                                      min = 1, step = 1, value = 12))
                                                                                                  )
                                                                                         ),
 
                                                                                         tags$hr(),
 
-                                                                                        fluidRow(column(4, checkboxInput("werb_compl", "Print error bar", TRUE)),
+                                                                                        fluidRow(column(4, checkboxInput("werb_compl", "Print error bar", TRUE),
+                                                                                                           checkboxInput("wpts_compl", "Print point of each replicate", FALSE)),
                                                                                                  column(4, checkboxInput("grad_compl", "Use color gradient", FALSE)),
                                                                                                  column(4, checkboxInput("line_compl", "Use line instead of bar", FALSE))
                                                                                         ),
@@ -1028,15 +1044,20 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         tags$hr(),
 
                                                                                         fluidRow(column(4, checkboxInput("save_bar_simpf", "Save the bar plots in a pdf file", TRUE),
-                                                                                                        checkboxInput("save_prot_simpf", "Save the list of proteins ID with similar profiles (will save in a xlsx file)", TRUE)),
+                                                                                                        checkboxInput("save_prot_simpf", "Save the list of proteins ID with similar profiles (will save in a xlsx file)", TRUE),
+                                                                                                        conditionalPanel(condition = "input.save_bar_simpf",
+                                                                                                                         textInput("pdftit_simpf", "Choose a name for your pdf file", "barplot"))
+                                                                                                        ),
                                                                                                  conditionalPanel(condition = "input.save_bar_simpf",
                                                                                                                   column(4, numericInput("lay_bar1_simpf", "Type the number of plot per row",
                                                                                                                                          min = 1, max = 10, step = 1, value = 4),
                                                                                                                          numericInput("lay_bar2_simpf", "Type the number of plot per column",
-                                                                                                                                      min = 1, max = 10, step = 1, value = 3)
-                                                                                                                  ),
-                                                                                                                  column(4, textInput("pdftit_simpf", "Choose a name for your pdf file", "barplot"))
-                                                                                                 )
+                                                                                                                                      min = 1, max = 10, step = 1, value = 3)),
+                                                                                                                  column(4, numericInput("pdfw_simpf", "Type the width of the pdf page",
+                                                                                                                                         min = 1, step = 1, value = 12),
+                                                                                                                         numericInput("pdfh_simpf", "Type the height of the pdf page",
+                                                                                                                                      min = 1, step = 1, value = 12))
+                                                                                                                  )
                                                                                         ),
 
                                                                                         checkboxInput("seeprsel_simpf", "See barplot from the selected protein", FALSE),
@@ -1797,14 +1818,21 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                  tags$hr(),
 
-                                                 fluidRow(column(4, checkboxInput("save_bar_cell", "Save the bar plots in a pdf file", FALSE)),
+                                                 fluidRow(column(4, checkboxInput("save_bar_cell", "Save the bar plots in a pdf file", FALSE),
+                                                                 conditionalPanel(condition = "input.save_bar_cell",
+                                                                                  textInput("pdftit_cell", "Choose a name for your pdf file", "barplot")
+                                                                                  )
+                                                                 ),
                                                           conditionalPanel(condition = "input.save_bar_cell",
                                                                            column(4, numericInput("lay_bar1_cell", "Type the number of plot per row",
                                                                                                   min = 1, max = 10, step = 1, value = 4),
                                                                                   numericInput("lay_bar2_cell", "Type the number of plot per column",
                                                                                                min = 1, max = 10, step = 1, value = 3)),
-                                                                           column(4, textInput("pdftit_cell", "Choose a name for your pdf file", "barplot"))
-                                                          )
+                                                                           column(4, numericInput("pdfw_cell", "Type the width of the pdf page",
+                                                                                                  min = 1, step = 1, value = 12),
+                                                                                  numericInput("pdfh_cell", "Type the height of the pdf page",
+                                                                                               min = 1, step = 1, value = 12))
+                                                                           )
                                                  ),
 
                                                  tags$hr(),
@@ -1823,7 +1851,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  ),
                                                  tags$hr(),
 
-                                                 fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE)),
+                                                 fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE),
+                                                                    checkboxInput("wpts_cell", "Print point of each replicate", FALSE)),
                                                           column(4, checkboxInput("grad_cell", "Use color gradient", FALSE)),
                                                           column(4, checkboxInput("line_cell", "Use line instead of bar", FALSE))
                                                  ),
@@ -2999,7 +3028,7 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_diff_cetsa)
       return(NULL)
 
-    read.delim(File$datapath)
+    read.delim(File$datapath, check.names = FALSE)
   })
   observe({
     if(input$got_diff_cetsa){
@@ -3082,7 +3111,7 @@ server <- function(input, output, session){
                     multiply this value by the sign of the mean of all the fold changes (either -1 or 1).
                     <br>Finally, we apply a z-score normalization on all IS for each treatment <var>c</var> = 1, ..., <var>C</var>.
                     <br><br>In the end, we plot the -log10(p-value) vs IS which gives us a volcano plot. (Figure 1. B.)
-                    <br><br><img ISc='IS_figure1.jpg' alt='IS figure', width='1180' height='660'>
+                    <br><br><img src='IS_figure1.png' alt='IS figure', width='1180' height='660'>
                     <br><br><u>Set the cutoffs</u><br><br>
                     We have two cutoffs to set in order to choose what are the significant hits: an IS cutoff and
                     a p-value cutoff.
@@ -3152,11 +3181,12 @@ server <- function(input, output, session){
             bad_col <- stringr::str_which(colnames(Dif), "^X\\d{2}C_")
             colnames(Dif)[bad_col] <- stringr::str_remove_all(colnames(Dif)[bad_col], "^X")
           }
+          xx <<- Dif
           ctrl <- Dif[,stringr::str_which(colnames(Dif), "^\\d{1,}")]
           idx_ctrl <- which(apply(ctrl, 1, function(x) all(!is.na(x))))[1]
           ctrl <- ctrl[idx_ctrl,]
           ctrl <- ctrl %>% tidyr::gather("key", "value") %>%
-            tidyr::separate(key, into = c("t", "b", "cond")) %>%
+            tidyr::separate(key, into = c("t", "b", "cond"), sep = "_") %>%
             dplyr::group_by(cond) %>%
             dplyr::reframe(ctrl = all(value == 0))
           ctrl <- ctrl$cond[ctrl$ctrl]
@@ -4029,11 +4059,13 @@ server <- function(input, output, session){
         COL <- OWN_color$ch
         if(nbc == length(COL)){
           imprints_barplotting_app(data(), witherrorbar = input$werb,
-                               usegradient = input$grad, linegraph = input$line,
-                               save_pdf = input$save_bar, ret_plot = !input$save_bar,
-                               colorpanel = COL,
-                               layout = c(input$lay_bar1, input$lay_bar2),
-                               pdfname = input$pdftit)
+                                   withpoint = input$wpts,
+                                   usegradient = input$grad, linegraph = input$line,
+                                   save_pdf = input$save_bar, ret_plot = !input$save_bar,
+                                   colorpanel = COL,
+                                   layout = c(input$lay_bar1, input$lay_bar2),
+                                   pdfname = input$pdftit,
+                                   pdfwidth = input$pdfw, pdfheight = input$pdfh)
         }
         else{
           showNotification("The number of colors given doesn't match the number of treatment selected !", type = "error")
@@ -4042,10 +4074,12 @@ server <- function(input, output, session){
       }
       else{
         imprints_barplotting_app(data(), witherrorbar = input$werb,
-                             usegradient = input$grad, linegraph = input$line,
-                             save_pdf = input$save_bar, ret_plot = !input$save_bar,
-                             layout = c(input$lay_bar1, input$lay_bar2),
-                             pdfname = input$pdftit)
+                                 withpoint = input$wpts,
+                                 usegradient = input$grad, linegraph = input$line,
+                                 save_pdf = input$save_bar, ret_plot = !input$save_bar,
+                                 layout = c(input$lay_bar1, input$lay_bar2),
+                                 pdfname = input$pdftit,
+                                 pdfwidth = input$pdfw, pdfheight = input$pdfh)
       }
 
     },
@@ -4403,13 +4437,15 @@ server <- function(input, output, session){
 
 
       imprints_barplotting_app(data_compl(), witherrorbar = input$werb_compl,
-                           usegradient = input$grad_compl, linegraph = input$line_compl,
-                           save_pdf = input$save_bar_compl, colorpanel = COL,
-                           ret_plot = !input$save_bar_compl,
-                           layout = c(input$lay_bar1_compl, input$lay_bar2_compl),
-                           toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",
-                           pdfname = input$pdftit_compl
-      )
+                               withpoint = input$wpts_compl,
+                               usegradient = input$grad_compl, linegraph = input$line_compl,
+                               save_pdf = input$save_bar_compl, colorpanel = COL,
+                               ret_plot = !input$save_bar_compl,
+                               layout = c(input$lay_bar1_compl, input$lay_bar2_compl),
+                               toplabel = "IMPRINTS-CETSA bar plotting \nProtein complex :",
+                               pdfname = input$pdftit_compl,
+                               pdfwidth = input$pdfw_compl, pdfheight = input$pdfh_compl
+                               )
 
     },
     message = function(m) {
@@ -6785,12 +6821,14 @@ server <- function(input, output, session){
         COL <- OWN_color_cell$ch
         if(nbc == length(COL)){
           imprints_barplotting_app(data_cell(), witherrorbar = input$werb_cell,
-                               usegradient = input$grad_cell, linegraph = input$line_cell,
-                               save_pdf = input$save_bar_cell, colorpanel = COL,
-                               ret_plot = !input$save_bar_cell,
-                               layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
-                               toplabel = loca_cell_lab,
-                               pdfname = input$pdftit_cell)
+                                   withpoint = input$wpts_cell,
+                                   usegradient = input$grad_cell, linegraph = input$line_cell,
+                                   save_pdf = input$save_bar_cell, colorpanel = COL,
+                                   ret_plot = !input$save_bar_cell,
+                                   layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                                   toplabel = loca_cell_lab,
+                                   pdfname = input$pdftit_cell,
+                                   pdfwidth = input$pdfw_cell, pdfheight = input$pdfh_cell)
         }
         else{
           showNotification("The number of colors given doesn't match the number of treatment selected !", type = "error")
@@ -6799,11 +6837,13 @@ server <- function(input, output, session){
       }
       else{
         imprints_barplotting_app(data_cell(), witherrorbar = input$werb_cell,
-                             usegradient = input$grad_cell, linegraph = input$line_cell,
-                             save_pdf = input$save_bar_cell, ret_plot = !input$save_bar_cell,
-                             layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
-                             toplabel = loca_cell_lab,
-                             pdfname = input$pdftit_cell)
+                                 withpoint = input$wpts_cell,
+                                 usegradient = input$grad_cell, linegraph = input$line_cell,
+                                 save_pdf = input$save_bar_cell, ret_plot = !input$save_bar_cell,
+                                 layout = c(input$lay_bar1_cell, input$lay_bar2_cell),
+                                 toplabel = loca_cell_lab,
+                                 pdfname = input$pdftit_cell,
+                                 pdfwidth = input$pdfw_cell, pdfheight = input$pdfh_cell)
       }
 
     },

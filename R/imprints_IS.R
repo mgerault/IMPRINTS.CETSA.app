@@ -255,7 +255,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   diff_IS_plot <- diff_IS[,c("id", "Gene", stringr::str_subset(colnames(diff_IS), "^IS_|^Fisher_"))]
   diff_IS_plot <- tidyr::gather(diff_IS_plot, treatment, reading, -id, -Gene)
-  diff_IS_plot <- tidyr::separate(diff_IS_plot, treatment, into = c("Value", "treatment"))
+  diff_IS_plot <- tidyr::separate(diff_IS_plot, treatment, into = c("Value", "treatment"), sep = "_")
   diff_IS_plot <- tidyr::spread(diff_IS_plot, Value, reading)
   diff_IS_plot$treatment <- factor(diff_IS_plot$treatment)
 

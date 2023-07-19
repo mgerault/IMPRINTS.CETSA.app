@@ -15,6 +15,7 @@
 #' @param printGeneName A logical to tell if you want to print the gene names on the plot
 #' @param pfdatabase A logical for using pdf database or not
 #' @param witherrorbar A logical to print or not the error bar on the plot
+#' @param withpoint A logical to print or not the data point of each replicate on the plot on top of the bars
 #' @param colorpanel a vector of customizable color scheme provided by default with the function PaletteWithoutGrey
 #' @param usegradient whether the barplot should be draw in color gradient format
 #' @param colorgradient the color scheme of gradient applied, default value c("#4575B4","ivory", "#D73027")
@@ -50,7 +51,8 @@
 
 imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(data), setlevel = NULL, corrtable = NULL,
                                   plotseq = NULL, printBothName = TRUE, printGeneName = FALSE,
-                                  pfdatabase = FALSE, witherrorbar = TRUE, layout = NULL,
+                                  pfdatabase = FALSE, witherrorbar = TRUE, withpoint = FALSE,
+                                  layout = NULL,
                                   colorpanel = PaletteWithoutGrey(treatmentlevel),
                                   usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
                                   linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
@@ -76,16 +78,32 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
           if (!log2scale) {
             minreading = 0.5
             maxreading = 2
-            legendscale = c(min(max(min(d2$mean, na.rm = T) -
-                                      0.5, 0), minreading), max(max(d2$mean,
-                                                                    na.rm = T) + 0.5, maxreading))
+            if(withpoint){
+              pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
+              legendscale = c(min(max(min(pts, na.rm = T) -
+                                        0.5, 0), minreading), max(max(pts, na.rm = T) +
+                                                                    0.5, maxreading))
+            }
+            else{
+              legendscale = c(min(max(min(d1$mean, na.rm = T) -
+                                        0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
+                                                                    0.5, maxreading))
+            }
           }
           else {
             minreading = -0.5
             maxreading = 0.5
-            legendscale = c(min(min(d2$mean, na.rm = T) -
-                                  0.1, minreading), max(max(d2$mean, na.rm = T) +
-                                                          0.1, maxreading))
+            if(withpoint){
+              pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
+              legendscale = c(min(max(min(pts, na.rm = T) -
+                                        0.5, 0), minreading), max(max(pts, na.rm = T) +
+                                                                    0.5, maxreading))
+            }
+            else{
+              legendscale = c(min(max(min(d1$mean, na.rm = T) -
+                                        0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
+                                                                    0.5, maxreading))
+            }
           }
           q <- ggplot(d2, aes(x = condition, y = mean,
                               fill = treatment)) + geom_bar(stat = "identity") +
@@ -103,6 +121,26 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
             q <- q + ylab("fold change") + ggtitle(paste(j,
                                                          as.character(unique(d2$id)), sep = "\n"))
           }
+
+          if(withpoint){
+            d1_pts <- d1 %>%
+              group_by(id, temperature, treatment, condition) %>%
+              group_modify(~ {
+                pts <- as.numeric(unlist(strsplit(.x$pts, "; ")))
+
+                df <- .x
+                df$pts <- NULL
+                df <- Reduce(rbind, lapply(1:length(pts), function(x) df))
+                df$pts <- pts
+
+                return(df)
+              })
+
+            q <- q +
+              geom_point(data = d1_pts, aes(x = condition, y = pts),
+                         show.legend = FALSE, size = rel(0.85))
+          }
+
           q <- q + labs(subtitle = subt$category[n_loop]) +
             cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                     strip.text.x = element_text(size = 5),
@@ -134,16 +172,32 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       if (!log2scale) {
         minreading = 0.5
         maxreading = 2
-        legendscale = c(min(max(min(d1$mean, na.rm = T) -
-                                  0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
-                                                              0.5, maxreading))
+        if(withpoint){
+          pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
+          legendscale = c(min(max(min(pts, na.rm = T) -
+                                    0.5, 0), minreading), max(max(pts, na.rm = T) +
+                                                                0.5, maxreading))
+        }
+        else{
+          legendscale = c(min(max(min(d1$mean, na.rm = T) -
+                                    0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
+                                                                0.5, maxreading))
+        }
       }
       else {
         minreading = -0.5
         maxreading = 0.5
-        legendscale = c(min(min(d1$mean, na.rm = T) -
-                              0.1, minreading), max(max(d1$mean, na.rm = T) +
-                                                      0.1, maxreading))
+        if(withpoint){
+          pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
+          legendscale = c(min(max(min(pts, na.rm = T) -
+                                    0.5, 0), minreading), max(max(pts, na.rm = T) +
+                                                                0.5, maxreading))
+        }
+        else{
+          legendscale = c(min(max(min(d1$mean, na.rm = T) -
+                                    0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
+                                                                0.5, maxreading))
+        }
       }
       d1$QP <- FALSE
       if("36C" %in% d1$temperature){
@@ -201,6 +255,26 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       else {
         q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
       }
+
+      if(withpoint){
+        d1_pts <- d1 %>%
+          group_by(id, temperature, treatment, condition) %>%
+          group_modify(~ {
+            pts <- as.numeric(unlist(strsplit(.x$pts, "; ")))
+
+            df <- .x
+            df$pts <- NULL
+            df <- Reduce(rbind, lapply(1:length(pts), function(x) df))
+            df$pts <- pts
+
+            return(df)
+          })
+
+        q <- q +
+          geom_point(data = d1_pts, aes(x = condition, y = pts),
+                     show.legend = FALSE, size = rel(0.85))
+      }
+
       q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
         cowplot::theme_cowplot() + theme(text = element_text(size = 10),
                                 strip.text.x = element_text(size = 5),
@@ -321,10 +395,24 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
             temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
           }
           data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-          cdata <- plyr::ddply(data1, c("id", "set", "temperature",
-                                        "treatment"),
-                               summarise, N = length(na.omit(reading)),
-                               mean = mean(reading, na.rm = T), sd = sd(reading, na.rm = T), se = sd/sqrt(N))
+
+          if(withpoint){
+            cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
+                                 summarise,
+                                 N = length(na.omit(reading)),
+                                 mean = mean(reading,na.rm = T),
+                                 sd = sd(reading, na.rm = T),
+                                 se = sd/sqrt(N),
+                                 pts = paste0(reading, collapse = "; ")
+            )
+          }
+          else{
+            cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
+                                 summarise, N = length(na.omit(reading)),
+                                 mean = mean(reading,na.rm = T),
+                                 sd = sd(reading, na.rm = T),
+                                 se = sd/sqrt(N))
+          }
           cdata$id <- as.character(cdata$id)
           if (length(layout) == 0) {
             layout <- c(2, 3)
@@ -341,9 +429,24 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
             temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
           }
           data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-          cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
-                               summarise, N = length(na.omit(reading)), mean = mean(reading,na.rm = T),
-                               sd = sd(reading, na.rm = T), se = sd/sqrt(N))
+
+          if(withpoint){
+            cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
+                                 summarise,
+                                 N = length(na.omit(reading)),
+                                 mean = mean(reading,na.rm = T),
+                                 sd = sd(reading, na.rm = T),
+                                 se = sd/sqrt(N),
+                                 pts = paste0(reading, collapse = "; ")
+                                 )
+          }
+          else{
+            cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
+                                 summarise, N = length(na.omit(reading)),
+                                 mean = mean(reading,na.rm = T),
+                                 sd = sd(reading, na.rm = T), se = sd/sqrt(N))
+          }
+
           cdata$id <- as.character(cdata$id)
           if (length(layout) == 0) {
             layout <- c(4, 3)
@@ -537,10 +640,24 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
         temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
       }
       data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-      cdata <- plyr::ddply(data1, c("id", "set", "temperature",
-                                    "treatment"),
-                           summarise, N = length(na.omit(reading)),
-                           mean = mean(reading, na.rm = T), sd = sd(reading, na.rm = T), se = sd/sqrt(N))
+
+      if(withpoint){
+        cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
+                             summarise,
+                             N = length(na.omit(reading)),
+                             mean = mean(reading,na.rm = T),
+                             sd = sd(reading, na.rm = T),
+                             se = sd/sqrt(N),
+                             pts = paste0(reading, collapse = "; ")
+        )
+      }
+      else{
+        cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
+                             summarise, N = length(na.omit(reading)),
+                             mean = mean(reading,na.rm = T),
+                             sd = sd(reading, na.rm = T),
+                             se = sd/sqrt(N))
+      }
       cdata$id <- as.character(cdata$id)
       if (length(layout) == 0) {
         layout <- c(2, 3)
@@ -557,9 +674,25 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
         temperature <- c(sort(temperature[-temp_idx]), sort(temperature[temp_idx]))
       }
       data1$id <- factor(data1$id, levels = unique(data1$id), ordered = TRUE) #preserve order
-      cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
-                           summarise, N = length(na.omit(reading)), mean = mean(reading,na.rm = T),
-                           sd = sd(reading, na.rm = T), se = sd/sqrt(N))
+
+      if(withpoint){
+        cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
+                             summarise,
+                             N = length(na.omit(reading)),
+                             mean = mean(reading,na.rm = T),
+                             sd = sd(reading, na.rm = T),
+                             se = sd/sqrt(N),
+                             pts = paste0(reading, collapse = "; ")
+                             )
+      }
+      else{
+        cdata <- plyr::ddply(data1, c("id", "temperature", "treatment"),
+                             summarise, N = length(na.omit(reading)),
+                             mean = mean(reading,na.rm = T),
+                             sd = sd(reading, na.rm = T),
+                             se = sd/sqrt(N))
+      }
+
       cdata$id <- as.character(cdata$id)
 
       if (length(layout) == 0) {
@@ -679,6 +812,7 @@ PaletteWithoutGrey <- function(treatment){
   for (i in 0:(n-1)){
     listcolor <- append(listcolor, mycol[((i*20 + 9) %% length(mycol)) + 1])      #save a color from the list (the number 20 and 9 were chosen in order to have distincts colors, this is empirical, can be changed)
   }
+
   return(listcolor)
 }
 
@@ -707,7 +841,4 @@ getProteinName <- function (x, pfdatabase = FALSE)
     return(protein)
   }
 }
-
-
-
 

@@ -80,14 +80,12 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
             maxreading = 2
             if(withpoint){
               pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
-              legendscale = c(min(max(min(pts, na.rm = T) -
-                                        0.5, 0), minreading), max(max(pts, na.rm = T) +
-                                                                    0.5, maxreading))
+              legendscale = c(min(max(min(pts, na.rm = T) -  0.5, 0), minreading),
+                              max(max(pts, na.rm = T) +  0.5, maxreading))
             }
             else{
-              legendscale = c(min(max(min(d1$mean, na.rm = T) -
-                                        0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
-                                                                    0.5, maxreading))
+              legendscale = c(min(max(min(d1$mean, na.rm = T) -  0.5, 0), minreading),
+                              max(max(d1$mean, na.rm = T) + 0.5, maxreading))
             }
           }
           else {
@@ -95,14 +93,12 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
             maxreading = 0.5
             if(withpoint){
               pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
-              legendscale = c(min(max(min(pts, na.rm = T) -
-                                        0.5, 0), minreading), max(max(pts, na.rm = T) +
-                                                                    0.5, maxreading))
+              legendscale = c(min(min(pts, na.rm = T) - 0.1, minreading),
+                              max(max(pts, na.rm = T) + 0.1, maxreading))
             }
             else{
-              legendscale = c(min(max(min(d1$mean, na.rm = T) -
-                                        0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
-                                                                    0.5, maxreading))
+              legendscale = c(min(min(d1$mean, na.rm = T) - 0.1, minreading),
+                              max(max(d1$mean, na.rm = T) + 0.1, maxreading))
             }
           }
           q <- ggplot(d2, aes(x = condition, y = mean,
@@ -174,14 +170,12 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
         maxreading = 2
         if(withpoint){
           pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
-          legendscale = c(min(max(min(pts, na.rm = T) -
-                                    0.5, 0), minreading), max(max(pts, na.rm = T) +
-                                                                0.5, maxreading))
+          legendscale = c(min(max(min(pts, na.rm = T) - 0.5, 0), minreading),
+                          max(max(pts, na.rm = T) + 0.5, maxreading))
         }
         else{
-          legendscale = c(min(max(min(d1$mean, na.rm = T) -
-                                    0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
-                                                                0.5, maxreading))
+          legendscale = c(min(max(min(d1$mean, na.rm = T) -  0.5, 0), minreading),
+                          max(max(d1$mean, na.rm = T) + 0.5, maxreading))
         }
       }
       else {
@@ -189,14 +183,12 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
         maxreading = 0.5
         if(withpoint){
           pts <- as.numeric(unlist(strsplit(d1$pts, "; ")))
-          legendscale = c(min(max(min(pts, na.rm = T) -
-                                    0.5, 0), minreading), max(max(pts, na.rm = T) +
-                                                                0.5, maxreading))
+          legendscale = c(min(min(pts, na.rm = T) - 0.1, minreading),
+                          max(max(pts, na.rm = T) + 0.1, maxreading))
         }
         else{
-          legendscale = c(min(max(min(d1$mean, na.rm = T) -
-                                    0.5, 0), minreading), max(max(d1$mean, na.rm = T) +
-                                                                0.5, maxreading))
+          legendscale = c(min(min(d1$mean, na.rm = T) - 0.1, minreading),
+                          max(max(d1$mean, na.rm = T) + 0.1, maxreading))
         }
       }
       d1$QP <- FALSE

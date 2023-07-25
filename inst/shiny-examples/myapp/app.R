@@ -3181,7 +3181,6 @@ server <- function(input, output, session){
             bad_col <- stringr::str_which(colnames(Dif), "^X\\d{2}C_")
             colnames(Dif)[bad_col] <- stringr::str_remove_all(colnames(Dif)[bad_col], "^X")
           }
-          xx <<- Dif
           ctrl <- Dif[,stringr::str_which(colnames(Dif), "^\\d{1,}")]
           idx_ctrl <- which(apply(ctrl, 1, function(x) all(!is.na(x))))[1]
           ctrl <- ctrl[idx_ctrl,]

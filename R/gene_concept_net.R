@@ -71,16 +71,19 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
   if(database == "WikiPathway"){
     wp <- get_wikipath(FALSE, species = species) # wiki pathway
     hits_enrich <- clusterProfiler::enricher(hits$Gene_id,
-                                             TERM2GENE = wp)
+                                             TERM2GENE = wp,
+                                             pvalueCutoff = pval_cutoff)
   }
   else if(database == "KEGG"){
     if(species == "human"){
       hits_enrich <- clusterProfiler::enrichKEGG(hits$Gene_id,
-                                                 organism = "hsa")
+                                                 organism = "hsa",
+                                                 pvalueCutoff = pval_cutoff)
     }
     else if(species == "mouse"){
       hits_enrich <- clusterProfiler::enrichKEGG(hits$Gene_id,
-                                                 organism = "mmu")
+                                                 organism = "mmu",
+                                                 pvalueCutoff = pval_cutoff)
     }
     rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -91,7 +94,8 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
         BiocManager::install("org.Hs.eg.db")
       }
       hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
-                                               OrgDb = "org.Hs.eg.db")
+                                               OrgDb = "org.Hs.eg.db",
+                                               pvalueCutoff = pval_cutoff)
     }
     else if(species == "mouse"){
       if(!("org.Mm.eg.db" %in% installed.packages())){
@@ -99,7 +103,8 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
         BiocManager::install("org.Mm.eg.db")
       }
       hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
-                                               OrgDb = "org.Mm.eg.db")
+                                               OrgDb = "org.Mm.eg.db",
+                                               pvalueCutoff = pval_cutoff)
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -119,6 +124,22 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
     return(graph)
   }
   else{
+    n_toshow <- length(which(hits_enrich@result$p.adjust <= pval_cutoff))
+    if(n_toshow == 0){
+      #no term enriched under specific pvalueCutoff...
+      graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+        geom_text(x=0.5, y=0.5, label = paste("No term enriched \nunder p-value of", pval_cutoff), size = 10) +
+        cowplot::theme_cowplot() +
+        theme(axis.text.x = element_blank(),
+              axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.ticks.y = element_blank())
+
+      return(graph)
+    }
+
     hits_enrich@result$geneSymbol <- unlist(lapply(strsplit(hits_enrich@result$geneID, "/"),
                                                    function(x){x <- as.numeric(x)
                                                    g <- hits[[gene_column]][which(!is.na(match(hits$Gene_id, x)))]
@@ -128,7 +149,6 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
     ))
     hits_enrich@result$Description <- stringr::str_remove_all(hits_enrich@result$Description, "%.{1,}")
     colnames(hits_enrich@result)[c(8,10)] <- c("geneNumber", "geneID")
-    n_toshow <- length(which(hits_enrich@result$p.adjust <= pval_cutoff))
 
     fold <- hits[,c(gene_column, score_column)]
     fold <- as.data.frame(fold)
@@ -140,8 +160,9 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
     fold <- unlist(as.list(as.data.frame(t(fold))))
 
 
-    graph <- enrichplot::cnetplot(hits_enrich, showCategory = n_toshow, foldChange = fold,
-                                  color_category = "#0059FE") +
+    graph <- enrichplot::cnetplot(hits_enrich, showCategory = n_toshow,
+                                  color_category = "#0059FE",
+                                  foldChange = fold) +
       scale_color_gradient(low = "#87FE00", high = "#FE0000") +
       labs(title = paste("Gene-concept network", treatment, "hits"),
            subtitle = paste(database, "p-value cutoff:", pval_cutoff),

@@ -5229,6 +5229,9 @@ server <- function(input, output, session){
             dat <- stri_data()
             if(!is.null(input$cond_fhit_stri)){
               dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_stri))))
+              if(any(duplicated(dat$id))){
+                dat <- dat[-which(duplicated(dat$id)),]
+              }
               a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
             }
             else{
@@ -5237,11 +5240,19 @@ server <- function(input, output, session){
             }
           }
           else{
-            a <- string_db$map(stri_data(), input$idfile_stri, removeUnmappedRows = TRUE)
+            dat <- stri_data()
+            if(any(duplicated(dat[[input$idfile_stri]]))){
+              dat <- dat[-which(duplicated(dat[[input$idfile_stri]])),]
+            }
+            a <- string_db$map(dat, input$idfile_stri, removeUnmappedRows = TRUE)
           }
         }
         else{
-          a <- string_db$map(stri_data(), "id", removeUnmappedRows = TRUE)
+          dat <- stri_data()
+          if(any(duplicated(dat$id))){
+            dat <- dat[-which(duplicated(dat$id)),]
+          }
+          a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
         }
       }
       else if(input$drug_stri == "base"){
@@ -5250,6 +5261,10 @@ server <- function(input, output, session){
           dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_stri))))
           if(!is.null(input$cat_fhitB_stri)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
+          }
+          dat <- stri_data()
+          if(any(duplicated(dat$id))){
+            dat <- dat[-which(duplicated(dat$id)),]
           }
           a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
         }
@@ -5277,7 +5292,7 @@ server <- function(input, output, session){
           if(length(where_gene) == 1){
             info_d_ids$STRING_id <- NULL
             info_d_ids <- info_d_ids[1,]
-            info_d_ids <- string_db$map(dat, colnames(info_d_ids)[where_gene], removeUnmappedRows = TRUE)
+            info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_gene], removeUnmappedRows = TRUE)
           }
           else if(length(where_descr) == 1){
             info_d_ids$STRING_id <- NULL

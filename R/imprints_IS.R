@@ -394,7 +394,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                    dplyr::select(vennlist))[[1]]
     names(vennlist) <- levels(diff_IS_plot$treatment)
     VennDiagram::venn.diagram(vennlist, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "VennDiagram.png"),
-                              output = TRUE, disable.logging = TRUE,
+                              output = TRUE, disable.logging = TRUE, imagetype = "png",
                               fill = RColorBrewer::brewer.pal(length(names(vennlist)), "Pastel2")[1:length(vennlist)],
                               fontface = "bold",
                               fontfamiliy = "sans",

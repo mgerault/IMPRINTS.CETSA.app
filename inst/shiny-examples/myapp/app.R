@@ -1642,7 +1642,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                   fluidRow(column(4, selectInput("species_clus", "Specify the species from your data",
                                                                                  choices = c("Human", "Mouse"), selected = "Human")),
                                                            column(4, selectInput("database_clus", "Choose a database to perform the enrichment analysis",
-                                                                                 choices = c("WikiPathway", "KEGG", "GO"), selected = "WikiPathway")),
+                                                                                 choices = c("WikiPathway", "KEGG", "GO", "CETSA"), selected = "WikiPathway")),
                                                            column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for gene set enrichment analysis",
                                                                                   value = 0.01, min = 0, max = 1, step = 0.01))
                                                            )
@@ -5948,6 +5948,15 @@ server <- function(input, output, session){
 
 
   ### Cluster Profiler
+  observe({
+    if(input$database_clus == "CETSA"){
+      updateSelectInput(session, "species_clus", choices = c("Human"))
+    }
+    else{
+      updateSelectInput(session, "species_clus", choices = c("Human", "Mouse"))
+    }
+  })
+
   output$drug2ui_clus <- renderUI({
     selectInput("drug2_clus", "Choose a drug", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")

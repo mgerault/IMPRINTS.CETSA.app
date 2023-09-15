@@ -114,6 +114,30 @@ for(i in levels(loca_orga$organelle)){
 }
 rg_list
 
+
+### adding CETSA cluster database to run gene set enrichment analysis base on this database
+cetsa_gsea_database <- openxlsx::read.xlsx("./data-raw/Inital_CETSA_clusters.xlsx")
+cetsa_gsea_database$cetsa.id <- paste0("CETSA", 1:nrow(cetsa_gsea_database))
+cetsa_gsea_database <- cetsa_gsea_database %>%
+  group_by(Name.of.cluster, cetsa.id) %>%
+  group_modify(~ {
+    p <- .x$Proteins.in.cluster
+    p <- strsplit(p, ", | |,")[[1]]
+    p <- gsub(" ", "", p)
+    p <- p[nzchar(p)]
+
+    p <- data.frame(Function = .x$Function,
+                    Proteins.in.cluster = p,
+                    Functional.hypothesis.for.shifts = .x$Functional.hypothesis.for.shifts)
+
+    return(p)
+  })
+
+colnames(cetsa_gsea_database) <- c("name", "cetsa.id", "function", "gene", "functional.hypothesis")
+cetsa_gsea_database$species <- "Homo sapiens"
+
+
+### save data created
 usethis::use_data(elutriation, overwrite = TRUE)
 usethis::use_data(elutriation_ave, overwrite = TRUE)
 usethis::use_data(hitlist_elutriation, overwrite = TRUE)
@@ -130,5 +154,5 @@ usethis::use_data(pr_atlas_mouse, overwrite = TRUE)
 usethis::use_data(orgatlas_match, overwrite = TRUE)
 usethis::use_data(loca_orga, overwrite = TRUE)
 usethis::use_data(rg_list, overwrite = TRUE)
-
+usethis::use_data(cetsa_gsea_database, overwrite = TRUE)
 

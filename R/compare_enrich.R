@@ -10,6 +10,7 @@
 #' @param n_pathway Number of pathway to show on plot. Default is 5.
 #'                  For more info you, see \code{\link{compareCluster}}.
 #' @param pval_cutoff The p-value cutoff for the enrichment analysis.
+#' @param minGSSize minimal size of each geneSet for analyzing. default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, Go and CETSA are available.
 #'
 #' @return A list that contains the results and the plot.
@@ -20,7 +21,7 @@
 
 compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                        species = c("human", "mouse"), n_pathway = 5,
-                       pval_cutoff = 0.01,
+                       pval_cutoff = 0.01, minGSSize = 3,
                        database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
   if(!("KEGGREST" %in% installed.packages())){
@@ -78,18 +79,21 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                                                    data = hits, fun = "enricher",
                                                    TERM2GENE=wp[,c("wpid", "gene")],
                                                    TERM2NAME=wp[,c("wpid", "name")],
-                                                   pvalueCutoff = pval_cutoff)
+                                                   pvalueCutoff = pval_cutoff,
+                                                   minGSSize = minGSSize)
   }
   else if(database == "KEGG"){
     if(species == "human"){
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
                                                      data = hits, fun = "enrichKEGG",
-                                                     organism = "hsa", pvalueCutoff = pval_cutoff)
+                                                     organism = "hsa", pvalueCutoff = pval_cutoff,
+                                                     minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
                                                      data = hits, fun = "enrichKEGG",
-                                                     organism = "mmu", pvalueCutoff = pval_cutoff)
+                                                     organism = "mmu", pvalueCutoff = pval_cutoff,
+                                                     minGSSize = minGSSize)
     }
     rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -101,7 +105,8 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
       }
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
                                                      data = hits, fun = "enrichGO",
-                                                     OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff)
+                                                     OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff,
+                                                     minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       if(!("org.Mm.eg.db" %in% installed.packages())){
@@ -110,7 +115,8 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
       }
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
                                                      data = hits, fun = "enrichGO",
-                                                     OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff)
+                                                     OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff,
+                                                     minGSSize = minGSSize)
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -123,7 +129,8 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                                                    data = hits, fun = "enricher",
                                                    TERM2GENE=cetsa_gsea_database[,c("cetsa.id", "gene")],
                                                    TERM2NAME=cetsa_gsea_database[,c("cetsa.id", "name")],
-                                                   pvalueCutoff = pval_cutoff)
+                                                   pvalueCutoff = pval_cutoff,
+                                                   minGSSize = minGSSize)
   }
 
   if(is.null(hits_enrich)){

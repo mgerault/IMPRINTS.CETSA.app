@@ -11,6 +11,7 @@
 #' @param pos_enrichment Logical to tell if you want to only look at positive enrichment score.
 #'                       If FALSE, show only negative.
 #' @param pval_cutoff The p-value cutoff for the enrichment analysis.
+#' @param minGSSize minimal size of each geneSet for analyzing. default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
 #'
 #' @return A list that contains the results and the plot.
@@ -22,7 +23,7 @@
 run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
                      treatment_column = NULL, treatment = NULL,
                      species = c("human", "mouse"), pos_enrichment = TRUE,
-                     pval_cutoff = 0.01,
+                     pval_cutoff = 0.01, minGSSize = 3,
                      database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
   if(!("KEGGREST" %in% installed.packages())){
@@ -93,14 +94,17 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
     gsea_res <- clusterProfiler::GSEA(hits,
                                       TERM2GENE=wp[,c("wpid", "gene")],
                                       TERM2NAME=wp[,c("wpid", "name")],
-                                      scoreType = "pos", pvalueCutoff = pval_cutoff)
+                                      scoreType = "pos", pvalueCutoff = pval_cutoff,
+                                      minGSSize = minGSSize)
   }
   else if(database == "KEGG"){
     if(species == "human"){
-      gsea_res <- clusterProfiler::gseKEGG(hits, organism = "hsa", pvalueCutoff = pval_cutoff)
+      gsea_res <- clusterProfiler::gseKEGG(hits, organism = "hsa", pvalueCutoff = pval_cutoff,
+                                           minGSSize = minGSSize)
     }
     else if(species == "mouse"){
-      gsea_res <- clusterProfiler::gseKEGG(hits, organism = "mmu", pvalueCutoff = pval_cutoff)
+      gsea_res <- clusterProfiler::gseKEGG(hits, organism = "mmu", pvalueCutoff = pval_cutoff,
+                                           minGSSize = minGSSize)
     }
     rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -110,14 +114,16 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
         message("Installing org.Hs.eg.db package")
         BiocManager::install("org.Hs.eg.db")
       }
-      gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff)
+      gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff,
+                                         minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       if(!("org.Mm.eg.db" %in% installed.packages())){
         message("Installing org.Mm.eg.db package")
         BiocManager::install("org.Mm.eg.db")
       }
-      gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff)
+      gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff,
+                                         minGSSize = minGSSize)
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -125,7 +131,8 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
     gsea_res <- clusterProfiler::GSEA(hits,
                                       TERM2GENE=cetsa_gsea_database[,c("cetsa.id", "gene")],
                                       TERM2NAME=cetsa_gsea_database[,c("cetsa.id", "name")],
-                                      scoreType = "pos", pvalueCutoff = pval_cutoff)
+                                      scoreType = "pos", pvalueCutoff = pval_cutoff,
+                                      minGSSize = minGSSize)
   }
 
   if(nrow(gsea_res@result) == 0){

@@ -10,6 +10,7 @@
 #' @param treatment The name of the treatment you ant to keep. Default is NULL.
 #' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param pval_cutoff The p-value cutoff for the gene concept network.
+#' @param minGSSize minimal size of each geneSet for analyzing. default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
 #'
 #' @return The gene concept network plot.
@@ -20,7 +21,8 @@
 
 gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
                             treatment_column = NULL, treatment = NULL,
-                            species = c("human", "mouse"), pval_cutoff = 0.01,
+                            species = c("human", "mouse"),
+                            pval_cutoff = 0.01, minGSSize = 3,
                             database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
   if(!("KEGGREST" %in% installed.packages())){
@@ -74,18 +76,21 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     wp <- get_wikipath(FALSE, species = species) # wiki pathway
     hits_enrich <- clusterProfiler::enricher(hits$Gene_id,
                                              TERM2GENE = wp,
-                                             pvalueCutoff = pval_cutoff)
+                                             pvalueCutoff = pval_cutoff,
+                                             minGSSize = minGSSize)
   }
   else if(database == "KEGG"){
     if(species == "human"){
       hits_enrich <- clusterProfiler::enrichKEGG(hits$Gene_id,
                                                  organism = "hsa",
-                                                 pvalueCutoff = pval_cutoff)
+                                                 pvalueCutoff = pval_cutoff,
+                                                 minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       hits_enrich <- clusterProfiler::enrichKEGG(hits$Gene_id,
                                                  organism = "mmu",
-                                                 pvalueCutoff = pval_cutoff)
+                                                 pvalueCutoff = pval_cutoff,
+                                                 minGSSize = minGSSize)
     }
     rm(.KEGG_clusterProfiler_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -97,7 +102,8 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
       }
       hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
                                                OrgDb = "org.Hs.eg.db",
-                                               pvalueCutoff = pval_cutoff)
+                                               pvalueCutoff = pval_cutoff,
+                                               minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       if(!("org.Mm.eg.db" %in% installed.packages())){
@@ -106,17 +112,35 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
       }
       hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
                                                OrgDb = "org.Mm.eg.db",
-                                               pvalueCutoff = pval_cutoff)
+                                               pvalueCutoff = pval_cutoff,
+                                               minGSSize = minGSSize)
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
   else if(database == "CETSA"){
+    print(hits)
     hits_enrich <- clusterProfiler::enricher(hits[[gene_column]],
                                              TERM2GENE = cetsa_gsea_database[,c("name", "gene")], # data.frame of 2 columns with term and corresponding gene
-                                             pvalueCutoff = pval_cutoff)
+                                             pvalueCutoff = pval_cutoff,
+                                             minGSSize = minGSSize)
+    print(hits_enrich)
   }
 
-  if(nrow(hits_enrich@result) == 0){
+  if(is.null(hits_enrich)){
+    #no term enriched under specific pvalueCutoff...
+    graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+      geom_text(x=0.5, y=0.5, label = paste("No term enriched \nunder p-value of", pval_cutoff), size = 10) +
+      cowplot::theme_cowplot() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank())
+
+    return(graph)
+  }
+  else if(nrow(hits_enrich@result) == 0){
     #no term enriched under specific pvalueCutoff...
     graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
       geom_text(x=0.5, y=0.5, label = paste("No term enriched \nunder p-value of", pval_cutoff), size = 10) +

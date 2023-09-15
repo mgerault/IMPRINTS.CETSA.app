@@ -1639,12 +1639,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                              )
                                                                             )
                                                                    ),
-                                                  fluidRow(column(4, selectInput("species_clus", "Specify the species from your data",
+                                                  fluidRow(column(3, selectInput("species_clus", "Specify the species from your data",
                                                                                  choices = c("Human", "Mouse"), selected = "Human")),
-                                                           column(4, selectInput("database_clus", "Choose a database to perform the enrichment analysis",
+                                                           column(3, selectInput("database_clus", "Choose a database to perform the enrichment analysis",
                                                                                  choices = c("WikiPathway", "KEGG", "GO", "CETSA"), selected = "WikiPathway")),
-                                                           column(4, numericInput("pvcut_clus", "Choose a p-value cutoff for gene set enrichment analysis",
-                                                                                  value = 0.01, min = 0, max = 1, step = 0.01))
+                                                           column(3, numericInput("pvcut_clus", "Choose a p-value cutoff for gene set enrichment analysis",
+                                                                                  value = 0.01, min = 0, max = 1, step = 0.01)),
+                                                           column(3, numericInput("minGNsize_clus", "Choose a minimal size of genes annotated for testing",
+                                                                                  value = 3, min = 1, max = 100, step = 1))
                                                            )
 
                                                   )
@@ -6115,14 +6117,16 @@ server <- function(input, output, session){
             showNotification("Starting enrichment analysis !", type = "message")
             res <- compare_enrich(dat, gene_column = "Gene", species = input$species_clus,
                                   n_pathway = input$npath_clus, treatment_column = "treatment",
-                                  pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                                  pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                  database = input$database_clus)
           }
         }
         else{
           showNotification("Starting pathway analysis !", type = "message")
           res <- compare_enrich(dat, gene_column = input$idfile_clus,
                                 species = input$species_clus, n_pathway = input$npath_clus,
-                                pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                                pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                database = input$database_clus)
         }
       }
       else if(input$drug_clus == "base"){
@@ -6141,7 +6145,8 @@ server <- function(input, output, session){
           showNotification("Starting pathway analysis !", type = "message")
           res <- compare_enrich(dat, gene_column = "Gene", species = input$species_clus,
                                 n_pathway = input$npath_clus, treatment_column = "treatment",
-                                pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                                pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                database = input$database_clus)
         }
       }
     }
@@ -6224,7 +6229,8 @@ server <- function(input, output, session){
                                 species = input$species_clus,
                                 score_column = input$scorenameDAT_clus,
                                 pos_enrichment = input$onlypos_clus,
-                                pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                                pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                database = input$database_clus)
             }
             else{
               showNotification(paste(input$scorenameDAT_clus,
@@ -6242,7 +6248,8 @@ server <- function(input, output, session){
                               species = input$species_clus,
                               score_column = input$scorenameDAT_clus,
                               pos_enrichment = input$onlypos_clus,
-                              pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                              pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                              database = input$database_clus)
           }
           else{
             showNotification(paste(input$scorenameDAT_clus,
@@ -6272,7 +6279,8 @@ server <- function(input, output, session){
                               species = input$species_clus,
                               score_column = input$scorenameBASE_clus,
                               pos_enrichment = input$onlypos_clus,
-                              pval_cutoff = input$pvcut_clus, database = input$database_clus)
+                              pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                              database = input$database_clus)
           }
           else{
             showNotification(paste(input$scorenameBASE_clus,
@@ -6368,7 +6376,7 @@ server <- function(input, output, session){
               res <- gene_concept_net(dat, gene_column = "Gene",
                                      species = input$species_clus,
                                      score_column = input$scorename2DAT_clus,
-                                     pval_cutoff = input$pvcut_clus,
+                                     pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                                      database = input$database_clus)
             }
             else{
@@ -6386,7 +6394,7 @@ server <- function(input, output, session){
             res <- gene_concept_net(dat, gene_column = input$idfile_clus,
                                    species = input$species_clus,
                                    score_column = input$scorename2DAT_clus,
-                                   pval_cutoff = input$pvcut_clus,
+                                   pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                                    database = input$database_clus)
           }
           else{
@@ -6416,7 +6424,7 @@ server <- function(input, output, session){
             res <- gene_concept_net(dat, gene_column = "Gene",
                                    species = input$species_clus,
                                    score_column = input$scorename2BASE_clus,
-                                   pval_cutoff = input$pvcut_clus,
+                                   pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                                    database = input$database_clus)
           }
           else{

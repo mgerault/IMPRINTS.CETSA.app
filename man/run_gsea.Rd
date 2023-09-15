@@ -7,13 +7,13 @@
 run_gsea(
   hits,
   gene_column = "Gene",
-  score_column = "SR",
+  score_column = "IS",
   treatment_column = NULL,
   treatment = NULL,
   species = c("human", "mouse"),
   pos_enrichment = TRUE,
   pval_cutoff = 0.01,
-  database = c("WikiPathway", "KEGG", "GO")
+  database = c("WikiPathway", "KEGG", "GO", "CETSA")
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ run_gsea(
 
 \item{gene_column}{The name of the coulumn that contains the genes. Default is 'Gene'.}
 
-\item{score_column}{The name of the coulumn that contains the score values. Default is 'SR'.}
+\item{score_column}{The name of the coulumn that contains the score values. Default is 'IS'.}
 
 \item{treatment_column}{The name of the column that contains the treatments. Default is NULL.}
 
@@ -34,7 +34,7 @@ If FALSE, show only negative.}
 
 \item{pval_cutoff}{The p-value cutoff for the enrichment analysis.}
 
-\item{database}{Specify the database. Currently, WikiPathway, KEGG and GO ar available.}
+\item{database}{Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.}
 }
 \value{
 A list that contains the results and the plot.

@@ -11,7 +11,7 @@ compare_enrich(
   species = c("human", "mouse"),
   n_pathway = 5,
   pval_cutoff = 0.01,
-  database = c("WikiPathway", "KEGG", "GO")
+  database = c("WikiPathway", "KEGG", "GO", "CETSA")
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ For more info you, see \code{\link{compareCluster}}.}
 
 \item{pval_cutoff}{The p-value cutoff for the enrichment analysis.}
 
-\item{database}{Specify the database. Currently, WikiPathway, KEGG and GO ar available.}
+\item{database}{Specify the database. Currently, WikiPathway, KEGG, Go and CETSA are available.}
 }
 \value{
 A list that contains the results and the plot.

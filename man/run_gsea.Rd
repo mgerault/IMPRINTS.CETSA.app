@@ -13,6 +13,7 @@ run_gsea(
   species = c("human", "mouse"),
   pos_enrichment = TRUE,
   pval_cutoff = 0.01,
+  minGSSize = 3,
   database = c("WikiPathway", "KEGG", "GO", "CETSA")
 )
 }
@@ -33,6 +34,8 @@ run_gsea(
 If FALSE, show only negative.}
 
 \item{pval_cutoff}{The p-value cutoff for the enrichment analysis.}
+
+\item{minGSSize}{minimal size of each geneSet for analyzing. default here is 3}
 
 \item{database}{Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.}
 }

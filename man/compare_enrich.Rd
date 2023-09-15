@@ -11,6 +11,7 @@ compare_enrich(
   species = c("human", "mouse"),
   n_pathway = 5,
   pval_cutoff = 0.01,
+  minGSSize = 3,
   database = c("WikiPathway", "KEGG", "GO", "CETSA")
 )
 }
@@ -27,6 +28,8 @@ compare_enrich(
 For more info you, see \code{\link{compareCluster}}.}
 
 \item{pval_cutoff}{The p-value cutoff for the enrichment analysis.}
+
+\item{minGSSize}{minimal size of each geneSet for analyzing. default here is 3}
 
 \item{database}{Specify the database. Currently, WikiPathway, KEGG, Go and CETSA are available.}
 }

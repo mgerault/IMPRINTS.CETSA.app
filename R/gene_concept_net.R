@@ -5,12 +5,12 @@
 #'
 #' @param hits A data.frame containing the genes id, a score value and preferably a treatment column but not necessary.
 #' @param gene_column The name of the coulumn that contains the genes. Default is 'Gene'.
-#' @param score_column The name of the coulumn that contains the score values. Default is 'SR'.
+#' @param score_column The name of the coulumn that contains the score values. Default is 'IS'.
 #' @param treatment_column The name of the column that contains the treatments. Default is NULL.
 #' @param treatment The name of the treatment you ant to keep. Default is NULL.
 #' @param species Specify the species. Currently, only 'human' and 'mouse' are available.
 #' @param pval_cutoff The p-value cutoff for the gene concept network.
-#' @param database Specify the database. Currently, WikiPathway, KEGG and GO ar available.
+#' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
 #'
 #' @return The gene concept network plot.
 #'
@@ -18,10 +18,10 @@
 #'
 #' @seealso \code{\link{clusterProfiler}}
 
-gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
+gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
                             treatment_column = NULL, treatment = NULL,
                             species = c("human", "mouse"), pval_cutoff = 0.01,
-                            database = c("WikiPathway", "KEGG", "GO")){
+                            database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
@@ -39,14 +39,6 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
 
   biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
 
-  ### load database
-  ensembl <- NULL
-  while(is.null(ensembl)){
-    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
-                        error = function(e) message("Timeout reached for getting gene ensemble,
-                                                    fetching it again.")) # genes_id / gene symbols
-  }
-
   if(!is.null(treatment_column) & !is.null(treatment)){
     hits <- hits[which(hits[[treatment_column]] == treatment),]
   }
@@ -57,15 +49,25 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
     hits <- hits[which(!is.na(hits[[gene_column]])),]
   }
 
-  # get genes id from gene symbol
-  hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
-                                 filters = "uniprot_gn_symbol",
-                                 values = unique(sort(hits[[gene_column]])),
-                                 bmHeader = TRUE,
-                                 mart = ensembl)
-  colnames(hits_gene_id) <- c(gene_column, "Gene_id")
+  if(database != "CETSA"){
+    ### load database
+    ensembl <- NULL
+    while(is.null(ensembl)){
+      ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
+                          error = function(e) message("Timeout reached for getting gene ensemble,
+                                                    fetching it again.")) # genes_id / gene symbols
+    }
 
-  hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+    # get genes id from gene symbol
+    hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
+                                   filters = "uniprot_gn_symbol",
+                                   values = unique(sort(hits[[gene_column]])),
+                                   bmHeader = TRUE,
+                                   mart = ensembl)
+    colnames(hits_gene_id) <- c(gene_column, "Gene_id")
+
+    hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+  }
 
   # start enrichment analysis
   if(database == "WikiPathway"){
@@ -108,6 +110,11 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
+  else if(database == "CETSA"){
+    hits_enrich <- clusterProfiler::enricher(hits[[gene_column]],
+                                             TERM2GENE = cetsa_gsea_database[,c("name", "gene")], # data.frame of 2 columns with term and corresponding gene
+                                             pvalueCutoff = pval_cutoff)
+  }
 
   if(nrow(hits_enrich@result) == 0){
     #no term enriched under specific pvalueCutoff...
@@ -140,13 +147,19 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "SR",
       return(graph)
     }
 
-    hits_enrich@result$geneSymbol <- unlist(lapply(strsplit(hits_enrich@result$geneID, "/"),
-                                                   function(x){x <- as.numeric(x)
-                                                   g <- hits[[gene_column]][which(!is.na(match(hits$Gene_id, x)))]
-                                                   g <- paste(g, collapse = "/");
-                                                   g
-                                                   }
-    ))
+    if(database != "CETSA"){
+      hits_enrich@result$geneSymbol <- unlist(lapply(strsplit(hits_enrich@result$geneID, "/"),
+                                                     function(x){x <- as.numeric(x)
+                                                     g <- hits[[gene_column]][which(!is.na(match(hits$Gene_id, x)))]
+                                                     g <- paste(g, collapse = "/");
+                                                     g
+                                                     }
+      ))
+    }
+    else{
+      hits_enrich@result$geneSymbol <- hits_enrich@result$geneID
+    }
+
     hits_enrich@result$Description <- stringr::str_remove_all(hits_enrich@result$Description, "%.{1,}")
     colnames(hits_enrich@result)[c(8,10)] <- c("geneNumber", "geneID")
 

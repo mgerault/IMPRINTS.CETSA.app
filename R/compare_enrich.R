@@ -10,7 +10,7 @@
 #' @param n_pathway Number of pathway to show on plot. Default is 5.
 #'                  For more info you, see \code{\link{compareCluster}}.
 #' @param pval_cutoff The p-value cutoff for the enrichment analysis.
-#' @param database Specify the database. Currently, WikiPathway, KEGG and GO ar available.
+#' @param database Specify the database. Currently, WikiPathway, KEGG, Go and CETSA are available.
 #'
 #' @return A list that contains the results and the plot.
 #'
@@ -21,7 +21,7 @@
 compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                        species = c("human", "mouse"), n_pathway = 5,
                        pval_cutoff = 0.01,
-                       database = c("WikiPathway", "KEGG", "GO")){
+                       database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
@@ -39,27 +39,30 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
 
   biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
 
-  ### load database
-  ensembl <- NULL
-  while(is.null(ensembl)){
-    ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
-                        error = function(e) message("Timeout reached for getting gene ensemble, fetching it again.")) # genes_id / gene symbols
-  }
-
   if(any(is.na(hits[[gene_column]]))){
     hits <- hits[which(!is.na(hits[[gene_column]])),]
   }
 
-  # get genes id from gene symbol
-  hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
-                                 filters = "uniprot_gn_symbol",
-                                 curl = curl::handle_setopt(curl::new_handle(), timeout = 30000),
-                                 values = unique(sort(hits[[gene_column]])),
-                                 bmHeader = TRUE,
-                                 mart = ensembl)
-  colnames(hits_gene_id) <- c(gene_column, "Gene_id")
+  if(database != "CETSA"){
+    ### load database
+    ensembl <- NULL
+    while(is.null(ensembl)){
+      ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
+                          error = function(e) message("Timeout reached for getting gene ensemble, fetching it again.")) # genes_id / gene symbols
+    }
 
-  hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+    # get genes id from gene symbol
+    hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
+                                   filters = "uniprot_gn_symbol",
+                                   curl = curl::handle_setopt(curl::new_handle(), timeout = 30000),
+                                   values = unique(sort(hits[[gene_column]])),
+                                   bmHeader = TRUE,
+                                   mart = ensembl)
+    colnames(hits_gene_id) <- c(gene_column, "Gene_id")
+
+    hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+  }
+
 
   if(is.null(treatment_column)){
     hits$treatment <- "treatment"
@@ -111,6 +114,17 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
+  else if(database == "CETSA"){
+    if(species != "human"){
+      stop("Only human is available for CETSA database.")
+    }
+    hits$Gene_id <- hits[[gene_column]]
+    hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
+                                                   data = hits, fun = "enricher",
+                                                   TERM2GENE=cetsa_gsea_database[,c("cetsa.id", "gene")],
+                                                   TERM2NAME=cetsa_gsea_database[,c("cetsa.id", "name")],
+                                                   pvalueCutoff = pval_cutoff)
+  }
 
   if(is.null(hits_enrich)){
     #no term enriched under specific pvalueCutoff...
@@ -143,12 +157,15 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
             axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.85)),
             axis.text.y = element_text(angle = 30, size = rel(0.85)))
 
-    res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
-    g <- hits_gene_id$Gene[which(!is.na(match(hits_gene_id$Gene_id, x)))]
-    g <- paste(g, collapse = "/");
-    g
+    if(database != "CETSA"){
+      res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
+                                        g <- hits_gene_id$Gene[which(!is.na(match(hits_gene_id$Gene_id, x)))]
+                                        g <- paste(g, collapse = "/");
+                                        g
+                                        }
+                                      )
+                               )
     }
-    ))
 
     return(list("res" = res, "graph" = graph))
   }

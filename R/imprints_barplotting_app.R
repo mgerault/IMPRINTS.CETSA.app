@@ -34,7 +34,7 @@
 #' @param pdfwidth a number indicate the width of pdf file, default value 12
 #'
 #'
-#' @return The ms 2D barplot
+#' @return The imprints barplot
 #'
 #' @examples
 #' library(IMPRINTS.CETSA)
@@ -798,7 +798,7 @@ PaletteWithoutGrey <- function(treatment){
 
   n = length(unique(treatment))
   x <- grDevices::colors(distinct = TRUE)                           #all the color from R
-  mycol <- x[which(is.na(stringr::str_extract(x, "gr(e|a)y")))]   #keep only colors that are not grey
+  mycol <- x[-grep("gr(e|a)y", x)]   #keep only colors that are not grey
 
   listcolor <- c()
   for (i in 0:(n-1)){
@@ -809,7 +809,7 @@ PaletteWithoutGrey <- function(treatment){
 }
 
 getGeneName <- function (x){
-  gene = stringr::str_split(stringr::str_split(x, "GN=")[[1]][2], " ")[[1]][1]
+  gene = strsplit(strsplit(x, "GN=")[[1]][2], " ")[[1]][1]
   if (length(gene) == 0) {
     return(" ")
   }
@@ -821,10 +821,10 @@ getGeneName <- function (x){
 getProteinName <- function (x, pfdatabase = FALSE)
 {
   if (pfdatabase) {
-    protein = gsub("gene_product=", "", stringr::str_split(x, "\\|")[[1]][4])
+    protein = gsub("gene_product=", "", strsplit(x, "\\|")[[1]][4])
   }
   else {
-    protein = stringr::str_split(x, " OS=")[[1]][1]
+    protein = strsplit(x, " OS=")[[1]][1]
   }
   if (length(protein) == 0) {
     return(" ")

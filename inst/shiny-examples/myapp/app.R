@@ -5264,7 +5264,6 @@ server <- function(input, output, session){
           if(!is.null(input$cat_fhitB_stri)){
             dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
           }
-          dat <- stri_data()
           if(any(duplicated(dat$id))){
             dat <- dat[-which(duplicated(dat$id)),]
           }
@@ -5300,7 +5299,7 @@ server <- function(input, output, session){
             info_d_ids$STRING_id <- NULL
             info_d_ids <- info_d_ids[1,]
             info_d_ids[,where_descr] <- IMPRINTS.CETSA.app:::getGeneName(info_d_ids[,where_descr])
-            info_d_ids <- string_db$map(dat, colnames(info_d_ids)[where_descr], removeUnmappedRows = TRUE)
+            info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_descr], removeUnmappedRows = TRUE)
           }
           else{# if no gene info can't map and take first row
             showNotification("No gene informations has been found in your data; only first identifier is taken",

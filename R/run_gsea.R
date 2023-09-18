@@ -160,6 +160,11 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
                                                   )
                                            )
     }
+    else{
+      extra_info <- unique(cetsa_gsea_database[,c("cetsa.id", "function", "functional.hypothesis")])
+      colnames(extra_info)[1] <- "ID"
+      gsea_res@result <- dplyr::left_join(gsea_res@result, extra_info, by = "ID")
+    }
 
     if(pos_enrichment){
       if(length(which(gsea_res@result$enrichmentScore > 0))){

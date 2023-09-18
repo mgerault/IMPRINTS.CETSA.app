@@ -173,6 +173,11 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                                       )
                                )
     }
+    else{
+      extra_info <- unique(cetsa_gsea_database[,c("cetsa.id", "function", "functional.hypothesis")])
+      colnames(extra_info)[1] <- "ID"
+      res <- dplyr::left_join(res, extra_info, by = "ID")
+    }
 
     return(list("res" = res, "graph" = graph))
   }

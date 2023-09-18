@@ -150,8 +150,9 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
     return(list("res" = NULL, "graph" = graph))
   }
   else{
+    res <- gsea_res@result
     if(database != "CETSA"){
-      gsea_res@result$geneSymbol <- unlist(lapply(strsplit(gsea_res@result$core_enrichment, "/"),
+      res$geneSymbol <- unlist(lapply(strsplit(res$core_enrichment, "/"),
                                                   function(x){x <- as.numeric(x)
                                                   g <- hits_gene_id$Gene[which(!is.na(match(hits_gene_id$Gene_id, x)))]
                                                   g <- paste(g, collapse = "/");
@@ -163,7 +164,7 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
     else{
       extra_info <- unique(cetsa_gsea_database[,c("cetsa.id", "function", "functional.hypothesis")])
       colnames(extra_info)[1] <- "ID"
-      gsea_res@result <- dplyr::left_join(gsea_res@result, extra_info, by = "ID")
+      res <- dplyr::left_join(res, extra_info, by = "ID")
     }
 
     if(pos_enrichment){
@@ -190,7 +191,7 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
     }
     graph[[1]]$labels$subtitle <- paste(database, " pvalueCutoff:", pval_cutoff)
 
-    return(list("res" = gsea_res@result, "graph" = graph))
+    return(list("res" = res, "graph" = graph))
   }
 }
 

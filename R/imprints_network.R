@@ -312,6 +312,14 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   colnames(graph)[3] <- "value"
 
   edges <- data.frame(graph)
+  itself <- which(edges$from == edges$to)
+  if(length(itself)){
+    edges <- edges[-itself,]
+  }
+  dup_edge <- duplicated(edges[,c("from", "to")])
+  if(any(dup_edge)){
+    edges <- edges[-which(dup_edge),]
+  }
 
   # adding info
   data_genes <- data_genes %>%

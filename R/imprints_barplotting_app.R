@@ -123,18 +123,22 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
               group_by(id, temperature, treatment, condition) %>%
               group_modify(~ {
                 pts <- as.numeric(unlist(strsplit(.x$pts, "; ")))
+                rep <- unlist(strsplit(.x$biorep, "; "))
 
                 df <- .x
                 df$pts <- NULL
+                df$biorep <- NULL
                 df <- Reduce(rbind, lapply(1:length(pts), function(x) df))
                 df$pts <- pts
+                df$replicate <- rep
 
                 return(df)
               })
 
             q <- q +
-              geom_point(data = d1_pts, aes(x = condition, y = pts),
-                         show.legend = FALSE, size = rel(0.85))
+              geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
+                         size = rel(1.5), fill = NA) +
+              scale_shape_manual(values = c(1,2,4,5,6,7,8))
           }
 
           q <- q + labs(subtitle = subt$category[n_loop]) +
@@ -210,18 +214,18 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       }
       else if (!usegradient) {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = treatment)) + geom_bar(stat = "identity", aes(color = QP),
-                                                          size = rel(0.85)) +
-          coord_cartesian(ylim = legendscale) + scale_fill_manual(drop = FALSE,
-                                                                  values = colorpanel) +
+                            fill = treatment)) +
+          geom_bar(stat = "identity", aes(color = QP), size = rel(0.85)) +
+          coord_cartesian(ylim = legendscale) +
+          scale_fill_manual(drop = FALSE, values = colorpanel) +
           scale_color_manual(values = c("TRUE" = "#656565", "FALSE" = "#FFFFFF00")) +
           guides(color = "none") +
           scale_x_discrete(labels = stringr::str_remove_all(levels(d1$condition), "_.{1,}"))
       }
       else {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = mean)) + geom_bar(stat = "identity", aes(color = QP),
-                                                     size = rel(0.85)) +
+                            fill = mean)) +
+          geom_bar(stat = "identity", aes(color = QP), size = rel(0.85)) +
           coord_cartesian(ylim = legendscale) +
           scale_fill_gradient2(limits = legendscale,
                                low = colorgradient[1], mid = colorgradient[2],
@@ -253,18 +257,22 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
           group_by(id, temperature, treatment, condition) %>%
           group_modify(~ {
             pts <- as.numeric(unlist(strsplit(.x$pts, "; ")))
+            rep <- unlist(strsplit(.x$biorep, "; "))
 
             df <- .x
             df$pts <- NULL
+            df$biorep <- NULL
             df <- Reduce(rbind, lapply(1:length(pts), function(x) df))
             df$pts <- pts
+            df$replicate <- rep
 
             return(df)
           })
 
         q <- q +
-          geom_point(data = d1_pts, aes(x = condition, y = pts),
-                     show.legend = FALSE, size = rel(0.85))
+          geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
+                     size = rel(1.5), fill = NA) +
+          scale_shape_manual(values = c(1,2,4,5,6,7,8))
       }
 
       q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
@@ -395,8 +403,9 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
                                  mean = mean(reading,na.rm = T),
                                  sd = sd(reading, na.rm = T),
                                  se = sd/sqrt(N),
-                                 pts = paste0(reading, collapse = "; ")
-            )
+                                 pts = paste0(reading, collapse = "; "),
+                                 biorep = paste0(replicate, collapse = "; ")
+                                 )
           }
           else{
             cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
@@ -429,7 +438,8 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
                                  mean = mean(reading,na.rm = T),
                                  sd = sd(reading, na.rm = T),
                                  se = sd/sqrt(N),
-                                 pts = paste0(reading, collapse = "; ")
+                                 pts = paste0(reading, collapse = "; "),
+                                 biorep = paste0(replicate, collapse = "; ")
                                  )
           }
           else{
@@ -640,8 +650,9 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
                              mean = mean(reading,na.rm = T),
                              sd = sd(reading, na.rm = T),
                              se = sd/sqrt(N),
-                             pts = paste0(reading, collapse = "; ")
-        )
+                             pts = paste0(reading, collapse = "; "),
+                             biorep = paste0(replicate, collapse = "; ")
+                             )
       }
       else{
         cdata <- plyr::ddply(data1, c("id", "set", "temperature", "treatment"),
@@ -674,7 +685,8 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
                              mean = mean(reading,na.rm = T),
                              sd = sd(reading, na.rm = T),
                              se = sd/sqrt(N),
-                             pts = paste0(reading, collapse = "; ")
+                             pts = paste0(reading, collapse = "; "),
+                             biorep = paste0(replicate, collapse = "; ")
                              )
       }
       else{
@@ -736,8 +748,6 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
 
     message("Generating fitted plot, pls wait.")
 
-
-
     plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
                          withset = withset)
 
@@ -790,6 +800,8 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
   }
 
 }
+
+
 
 
 ### PaletteWithoutGrey function ###

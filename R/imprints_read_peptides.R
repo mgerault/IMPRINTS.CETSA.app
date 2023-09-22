@@ -107,7 +107,7 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
   colnames(proteins)[1] <- "Master Protein Accessions"
   peptides_dataset <- left_join(proteins, peptides_dataset, by = "Master Protein Accessions")
 
-  if(stringr::str_length(modification_tokeep)){
+  if(all(stringr::str_length(modification_tokeep) > 0)){
     modification_tokeep <- paste(modification_tokeep, collapse = "|")
 
     ### remove some modifications, only keeping TMT modif

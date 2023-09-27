@@ -2709,8 +2709,10 @@ server <- function(input, output, session){
                                )
       showNotification("Renaming done !", type = "message", duration = 3)
 
+      nc_chan_rm <- 0
       if(input$rem_mix){
         if(length(grep("^Mix", names(d1)))){
+          nc_chan_rm <- nc_chan_rm + length(grep("^Mix", names(d1)))
           d1 <- d1[, -grep("^Mix", names(d1))]
         }
         else{
@@ -2720,6 +2722,7 @@ server <- function(input, output, session){
 
       if(input$rem_empty){
         if(length(grep("^Empty", names(d1)))){
+          nc_chan_rm <- nc_chan_rm + length(grep("^Empty", names(d1)))
           d1 <- d1[, -grep("^Empty", names(d1))]
         }
         else{
@@ -2728,7 +2731,7 @@ server <- function(input, output, session){
       }
 
       if(input$clean_data){
-        d1 <- ms_clean(d1, nread = as.numeric(input$n_chan))
+        d1 <- ms_clean(d1, nread = as.numeric(input$n_chan) - nc_chan_rm)
         showNotification("Cleaning done !", type = "message", duration = 3)
       }
     }

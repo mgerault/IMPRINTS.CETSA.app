@@ -3479,7 +3479,7 @@ server <- function(input, output, session){
         names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df_ave
         dh$treatment <- n_dh
         dnn$treatment <- n_dnn
-        dt <- get_treat_level(df)
+        dt <- data.frame(treatment = get_treat_level(df))
 
         showNotification("Start saving changes, this may take a while.", type = "message")
         save_data(drug_data_sh$y, new_add = list("data" = df,

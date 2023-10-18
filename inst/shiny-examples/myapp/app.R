@@ -3407,7 +3407,9 @@ server <- function(input, output, session){
                                               "data_ave" = ave_data,
                                               "hitlist" = HIT_daba(),
                                               "NN" = NN_daba$x,
-                                              "treat_level" = get_treat_level(DIF_daba())),
+                                              "treat_level" = data.frame(treatment = get_treat_level(DIF_daba())
+                                                                         )
+                                              ),
                input$name_daba)
 
 

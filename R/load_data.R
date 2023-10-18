@@ -16,9 +16,6 @@ load_data <- function() {
     files <- as.list(files)
     data <- lapply(files, import_list)
 
-    # Concatenate all data together into one data.frame
-    data$treat_level <- lapply(data$treat_level, function(x) {x <- append(unname(unlist(as.list(x))),
-                                                                          names(x), after = 0);x})
     message("Data loaded with success !")
     return(data)
   }

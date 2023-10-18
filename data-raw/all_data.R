@@ -17,13 +17,14 @@ colnames(hitlist_chemarrest)[2] <- "treatment"
 NN_chemarrest <- openxlsx::read.xlsx("chemarrest_NN.xlsx")
 colnames(NN_chemarrest)[3] <- "treatment"
 
-elutriation_ave <- imprints_average_sh(elutriation, FALSE)
-chemarrest_ave <- imprints_average_sh(chemarrest, FALSE)
+elutriation_ave <- imprints_average(elutriation, FALSE)
+chemarrest_ave <- imprints_average(chemarrest, FALSE)
 
 #the list named drug_data
 drug_data <- list("data" = list("elutriation" = elutriation, "chemarrest" = chemarrest),
                   "data_ave" = list("elutriation" = elutriation_ave, "chemarrest" = chemarrest_ave),
-                  "treat_level" = list("elutriation" = get_treat_level(elutriation), "chemarrest" = get_treat_level(chemarrest)),
+                  "treat_level" = list("elutriation" = data.frame(treatment = get_treat_level(elutriation)),
+                                       "chemarrest" = data.frame(treatment = get_treat_level(chemarrest))),
                   "hitlist" = list("elutriation" = hitlist_elutriation, "chemarrest" = hitlist_chemarrest),
                   "NN" = list("elutriation" = NN_elutriation, "chemarrest" = NN_chemarrest))
 

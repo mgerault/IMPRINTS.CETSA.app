@@ -167,8 +167,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                     treatments in all further functions, so make sure of your spelling.
                                                                                                                     <br><br>Here, you'll need to type first the bioreplicate and then
                                                                                                                     the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc.
-                                                                                                                    <br>Also, if you have a 'Mix' channel; it needs to be named explicitely
-                                                                                                                    as 'Mix'.</h5>")),
+                                                                                                                    <br>Also, if you have a 'Mix' channel(s); it needs to explicitely
+                                                                                                                    start with 'Mix'.
+                                                                                                                   <br>Same if you have empty channel(s); it needs to explicitely
+                                                                                                                    start with 'Empty'.</h5>")),
                                                                                              column(8, uiOutput("treat_nameui_pep"))
                                                                                              ),
                                                                                     tags$hr(),

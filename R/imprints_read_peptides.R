@@ -19,10 +19,6 @@
 imprints_read_peptides <- function(peptides_files, treatment, temperatures,
                                    proteins, modification_tokeep = c("TMT"),
                                    dataset_name = "Venetoclax6h"){
-  if(!("Mix" %in% treatment)){
-    message("Error: The channel 'Mix' should be in your treatment.")
-    return()
-  }
   n_peptides_files <- length(peptides_files)
   if(length(temperatures) != n_peptides_files){
     message("Error: The number of temperatures doesn't match the number of peptides files !")
@@ -57,7 +53,10 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
                             abundance_columns)]
     peptides <- peptides[order(peptides$`Master Protein Accessions`),]
     colnames(peptides)[5:ncol(peptides)] <- paste0(peptides_temperature, "_", treatment)
-    peptides <- peptides[, -stringr::str_which(colnames(peptides), "_Mix$")]
+
+    if(length(grep("_Mix|_Empty", colnames(peptides)))){
+      peptides <- peptides[, -grep("_Mix|_Empty", colnames(peptides))]
+    }
 
     peptides_dataset[[peptides_temperature]] <- peptides
   }

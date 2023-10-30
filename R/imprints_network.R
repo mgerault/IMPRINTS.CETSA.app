@@ -222,11 +222,15 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
       message("More than one treatment has been selected. The biggest maximum FC in absolute value will be taken.")
     }
 
-    FC <- data %>%
-      dplyr::select(-countNum, -sumUniPeps, -sumPSMs) %>%
+    FC <- data
+    if(length(grep("countNum|sumUniPeps|sumPSMs", colnames(FC)))){
+      FC <- FC[,-grep("countNum|sumUniPeps|sumPSMs", colnames(FC))]
+    }
+    FC <- FC %>%
       tidyr::gather("treatment", "value", -id, -description) %>%
       tidyr::separate(treatment, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
-      dplyr::group_by(id, description, treatment) %>%
+      dplyr::group_by(id, description, temperature, treatment) %>%
+      summarise(value = mean(value, na.rm = TRUE)) %>%
       dplyr::reframe(FC = ifelse(max(value, na.rm = TRUE) < abs(min(value, na.rm = TRUE)),
                                  min(value, na.rm = TRUE), max(value, na.rm = TRUE))) %>%
       dplyr::group_by(id, description) %>%

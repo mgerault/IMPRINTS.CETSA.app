@@ -33,7 +33,7 @@ imprints_join_peptides <- function(data){
                                   function(x){
                                     x <- x$`Positions in Master Proteins`
                                     x_protein <- stringr::str_remove_all(x, "\\s.*")
-                                    x_sequence <- unlist(stringr::str_extract_all(x, "(?<=\\[).+?(?=\\])"))
+                                    x_sequence <- unlist(stringr::str_extract(x, "(?<=\\[).+?(?=\\])"))
                                     x <- data.frame("protein" = x_protein,
                                                     "sequence" = x_sequence)
                                     x <- x %>% dplyr::group_by(protein) %>%

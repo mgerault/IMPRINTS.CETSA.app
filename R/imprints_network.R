@@ -15,6 +15,8 @@
 #'   Keyword, KEGG, SMART, PMID, RCTM, WikiPathways and NetworkNeighborAL
 #' @param required_score A numeric between 0 and 1000 to set the required score
 #'   for the interectation in the STRING network.
+#' @param node_wolink Logical to tell if you want to print node without links in the network.
+#'    Default set to TRUE
 #' @param witherrorbar Logical to tell if you want to print the error bar or not on the bar plots.
 #' @param FC_border Logical to tell if you want to color the nodes borders according to the
 #'   maximum Fold-Change from each protein.
@@ -35,7 +37,8 @@
 #' @export
 
 imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
-                             required_score = 400, witherrorbar = TRUE, FC_border = TRUE,
+                             required_score = 400, node_wolink = TRUE,
+                             witherrorbar = TRUE, FC_border = TRUE,
                              colorbar = NULL, colorFC = c("#0041FF", "#FFFFFF", "#FF0000"),
                              species = c("human", "mouse", "rat"),
                              physics_type = c("forceAtlas2Based", "barnesHut",
@@ -162,7 +165,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   if(!file.exists("STRING_data")){
     dir.create("STRING_data")
   }
-  string_db <- STRINGdb$new(version="11.5", species=species,               #ID 9606 correspond to human
+  string_db <- STRINGdb$new(version="12.0", species=species,               #ID 9606 correspond to human
                             score_threshold=200,
                             input_directory=file.path(getwd(), "STRING_data"))
   string_id <- string_db$map(data_genes, "id", removeUnmappedRows = TRUE)
@@ -178,7 +181,9 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   interact <- interact[-which(duplicated(interact)),] # remove potential duplicated rows
   if(length(which(interact$combined_score >= required_score)) == 0){
     message("Warning: No interactions passed the required interaction score ! Try to decrease it")
-    return(NULL)
+    if(!node_wolink){
+      return(NULL)
+    }
   }
 
   message("Generates barplots...")
@@ -241,6 +246,8 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
     FC$description <- NULL
 
     rng_FC <- round(range(FC$FC, na.rm = TRUE), 1)
+    rng_FC[1] <- rng_FC[1] - 0.1
+    rng_FC[2] <- rng_FC[2] + 0.1
     rng_FC <- append(rng_FC, 0, 1)
 
     FC$colorFC <- scales::gradient_n_pal(colorFC, rng_FC, "Lab")(FC$FC)
@@ -326,16 +333,27 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   }
 
   # adding info
-  data_genes <- data_genes %>%
-    tibble::column_to_rownames(var = "id")
-  graph <-  graph %>% dplyr::select(from, to) %>%
-    tidyr::gather("key", "name") %>%
-    dplyr::select(name) %>%
-    unique() %>%
-    dplyr::group_by(name) %>%
-    dplyr::mutate(bar = bar[[name]],
-                  Gene = data_genes[name,"Gene"]
-                  )
+  if(node_wolink){
+    graph <- data.frame(name = data_genes$id,
+                        Gene = data_genes$Gene) %>%
+      unique() %>%
+      dplyr::group_by(name) %>%
+      dplyr::mutate(bar = bar[[name]]
+                    )
+  }
+  else{
+    data_genes <- data_genes %>%
+      tibble::column_to_rownames(var = "id")
+    graph <-  graph %>% dplyr::select(from, to) %>%
+      tidyr::gather("key", "name") %>%
+      dplyr::select(name) %>%
+      unique() %>%
+      dplyr::group_by(name) %>%
+      dplyr::mutate(bar = bar[[name]],
+                    Gene = data_genes[name,"Gene"]
+      )
+  }
+
   if(FC_border){
     graph <- graph %>%
       dplyr::left_join(FC, by = "name")

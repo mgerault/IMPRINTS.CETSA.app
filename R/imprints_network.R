@@ -433,7 +433,3 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   return(net)
 }
 
-imprints_network(xx, hits = c("P10398", "P11166", "P06400", "P02545", "O95218"),
-                 treatment = c("8h-H358-sot", "8h-AMGR-sot"))
-
-

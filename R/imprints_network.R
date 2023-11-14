@@ -235,11 +235,9 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
       tidyr::gather("treatment", "value", -id, -description) %>%
       tidyr::separate(treatment, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
       dplyr::group_by(id, description, temperature, treatment) %>%
-      summarise(value = mean(value, na.rm = TRUE)) %>%
-      dplyr::reframe(FC = ifelse(max(value, na.rm = TRUE) < abs(min(value, na.rm = TRUE)),
-                                 min(value, na.rm = TRUE), max(value, na.rm = TRUE))) %>%
+      dplyr::summarise(value = mean(value, na.rm = TRUE)) %>%
       dplyr::group_by(id, description) %>%
-      dplyr::reframe(FC = FC[which.max(abs(FC))]) %>%
+      dplyr::reframe(FC = value[which.max(abs(value))]) %>%
       dplyr::mutate(description = stringr::word(stringr::str_extract(description, "(?<=GN=).*(?=)"), 1)) %>%
       dplyr::rename(name = id)
 
@@ -434,4 +432,8 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
 
   return(net)
 }
+
+imprints_network(xx, hits = c("P10398", "P11166", "P06400", "P02545", "O95218"),
+                 treatment = c("8h-H358-sot", "8h-AMGR-sot"))
+
 

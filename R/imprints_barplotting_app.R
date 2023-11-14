@@ -629,7 +629,7 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       data1 <- dplyr::mutate(data1, reading = 2^reading)
     }
     if(length(treatmentlevel) != length(get_treat_level(data))){
-      data1 <- data1 %>% filter(stringr::str_detect(condition, paste(treatmentlevel, collapse = "|")))
+      data1 <- data1[grep(paste0("_", treatmentlevel, "($|_)", collapse = "|"), data1$condition),]
     }
     a <- data1$condition[1]
     if (length(unlist(strsplit(a, "_"))) == 4) {

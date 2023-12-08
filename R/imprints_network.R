@@ -419,7 +419,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
                             }") %>%
     visExport(type = opts$file_type, name = paste0(format(Sys.time(), "%y%m%d_%H%M_"), "network"),
               float = "left", label = paste("Save network as", opts$file_type),
-              background = "#FFFFFF00", style= "") %>%
+              background = "transparent", style= "") %>%
     visOptions(manipulation = TRUE)
 
   if(nrow(lnodes) != 0){

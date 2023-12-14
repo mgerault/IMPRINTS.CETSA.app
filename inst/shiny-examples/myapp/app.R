@@ -491,7 +491,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                      actionButton("ISO", "Resolve isoform", class = "btn-primary")
                                                                     ),
                                                                     conditionalPanel(condition = "input.got_ISO_cetsa",
-                                                                                     fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt")
+                                                                                     fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt"),
+                                                                                     textOutput("ISOresfile_cetsa_check")
                                                                     ),
 
 
@@ -532,7 +533,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                       textOutput("diag_rearrange")
                                                                                      ),
                                                                                      conditionalPanel(condition = "input.got_rearr_cetsa",
-                                                                                                      fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt")
+                                                                                                      fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt"),
+                                                                                                      textOutput("rearrfile_cetsa_check")
                                                                                      ),
                                                                                      tags$hr(),
                                                                                      fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
@@ -548,7 +550,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                          actionButton("NORM", "Start Normalization", class = "btn-primary")
                                                                                               ),
                                                                                               conditionalPanel(condition = "input.got_norm_cetsa",
-                                                                                                               fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt")
+                                                                                                               fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt"),
+                                                                                                               textOutput("normfile_cetsa_check")
                                                                                               )
                                                                                               )
                                                                                      )
@@ -576,7 +579,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                       )
                                                                                      ),
                                                                                      conditionalPanel(condition = "input.got_diff_cetsa",
-                                                                                                      fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt")),
+                                                                                                      fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt"),
+                                                                                                      textOutput("difffile_cetsa_check")),
 
                                                                                      tags$hr(),
 
@@ -668,13 +672,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, fileInput("caldif_daba", "Import the output from imprints_caldiff"),
+                                                       textOutput("caldif_daba_check"),
                                                        checkboxInput("gave_daba", "Don't have the imprints_average output
                                                                                    (will calculate and save it)", TRUE),
                                                        conditionalPanel(condition = "!input.gave_daba",
-                                                                        fileInput("AVE_dabafile", "Import the output from imprints_average")
-                                                       )
+                                                                        fileInput("AVE_dabafile", "Import the output from imprints_average"),
+                                                                        textOutput("AVE_dabafile_check")
+                                                                        )
                                        ),
-                                       column(6, fileInput("hitsum_daba", "Import the summary file OR the analysis tab from the hitlist outputs")),
+                                       column(6, fileInput("hitsum_daba", "Import the summary file OR the analysis tab from the hitlist outputs"),
+                                              htmlOutput("hitsum_daba_check")
+                                              ),
                                        ),
                                        conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup",
                                                         fluidRow(column(6, textInput("name_daba", "Type a name for your new dataset")),
@@ -737,8 +745,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        conditionalPanel(condition = "input.drug == 'dat' ",
 
                                                                                         fluidRow(column(6, fileInput("data_barplot", "Upload the 'imprints_caldiff' file (log2 fold change)",
-                                                                                                                     accept = c(".txt", ".csv", ".xlsx"))
-                                                                                        ),
+                                                                                                                     accept = c(".txt", ".csv", ".xlsx")),
+                                                                                                        textOutput("data_barplot_check")
+                                                                                                        ),
                                                                                         column(6, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
                                                                                                conditionalPanel(condition = "!input.calc_hitlist",
                                                                                                                 fileInput("data_hitlist", "Upload your own hitlist, the summary file from the hitlist outputs",
@@ -871,13 +880,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_compl == 'dat' ",
-                                                                                        fluidRow(column(6, fileInput("caldif_compl", "Import the output from imprints_caldiff")),
+                                                                                        fluidRow(column(6, fileInput("caldif_compl", "Import the output from imprints_caldiff"),
+                                                                                                        textOutput("caldif_compl_check")
+                                                                                                        ),
                                                                                                  column(6, fileInput("hitsum_compl", "Import the summary file from the hitlist outputs"))
                                                                                                  ),
                                                                                         fluidRow(column(6, checkboxInput("gave_compl", "Don't have the imprints_average output
                                                                                                                                         (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_compl",
-                                                                                                                  column(6, fileInput("avef_compl", "Import the output from imprints_average"))
+                                                                                                                  column(6, fileInput("avef_compl", "Import the output from imprints_average"),
+                                                                                                                         textOutput("avef_compl_check")
+                                                                                                                         )
                                                                                                  )
                                                                                         )
                                                                        ),
@@ -987,11 +1000,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        ),
 
                                                                        conditionalPanel(condition = "input.drug_simpf == 'dat' ",
-                                                                                        fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from imprints_caldiff")),
+                                                                                        fluidRow(column(4, fileInput("cdiff_simpf", "Import the output from imprints_caldiff"),
+                                                                                                        textOutput("cdiff_simpf_check")
+                                                                                                        ),
                                                                                                  column(4, checkboxInput("gave_simpf", "Don't have the imprints_average output
                                                                                                                                        (will calculate and save it)", TRUE)),
                                                                                                  conditionalPanel(condition = "!input.gave_simpf",
-                                                                                                                  column(4, fileInput("avef_simpf", "Import the output from imprints_average"))
+                                                                                                                  column(4, fileInput("avef_simpf", "Import the output from imprints_average"),
+                                                                                                                         textOutput("avef_simpf_check")
+                                                                                                                         )
                                                                                                  )
                                                                                         )
                                                                        )
@@ -1125,10 +1142,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug_heat == 'dat' ",
                                                                                         fluidRow(column(6, conditionalPanel(condition = "input.gave_heat",
-                                                                                                                         fileInput("filedif_heat", "Choose an imprints_caldiff output")
+                                                                                                                         fileInput("filedif_heat", "Choose an imprints_caldiff output"),
+                                                                                                                         textOutput("filedif_heat_check")
                                                                                                                          ),
                                                                                                         conditionalPanel(condition = "!input.gave_heat",
-                                                                                                                         fileInput("fileave_heat", "Choose an imprints_average output")
+                                                                                                                         fileInput("fileave_heat", "Choose an imprints_average output"),
+                                                                                                                         textOutput("fileave_heat_check")
                                                                                                                          ),
                                                                                                         checkboxInput("gave_heat", "Don't have the imprints_average output
                                                                                                                                        (will calculate and save it)", TRUE)
@@ -1207,10 +1226,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                           (will calculate and save it)", TRUE)),
                                                                                                  column(4,
                                                                                                         conditionalPanel(condition = "input.gave_heatcom",
-                                                                                                                         fileInput("filedif_heatcom", "Choose an imprints_caldiff output")
+                                                                                                                         fileInput("filedif_heatcom", "Choose an imprints_caldiff output"),
+                                                                                                                         textOutput("filedif_heatcom_check")
                                                                                                         ),
                                                                                                         conditionalPanel(condition = "!input.gave_heatcom",
-                                                                                                                         fileInput("fileave_heatcom", "Choose an imprints_average output")
+                                                                                                                         fileInput("fileave_heatcom", "Choose an imprints_average output"),
+                                                                                                                         textOutput("fileave_heatcom_check")
                                                                                                         )
                                                                                                  )
                                                                                         )
@@ -1457,7 +1478,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "input.drug_barnet == 'dat' ",
                                                                                         fluidRow(column(6, fileInput("caldiff_barnet", "Upload your imprints caldiff file",
-                                                                                                                     accept = c(".txt", ".csv", ".xlsx"))
+                                                                                                                     accept = c(".txt", ".csv", ".xlsx")),
+                                                                                                        textOutput("caldiff_barnet_check")
                                                                                                         ),
                                                                                                  column(6, fileInput("hits_barnet", "Upload your hitlist, the summary file from the hitlist outputs",
                                                                                                                      accept = c(".txt", ".csv", ".xlsx"))
@@ -1790,7 +1812,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
                                 conditionalPanel(condition = "input.drug_cell == 'dat'",
                                                  fileInput("filebarp_cell", "If you want to see the bar plot from the protein you clicked on,
-                                                                             please import the imprints_caldiff output file which correspond to your hitlist.")
+                                                                             please import the imprints_caldiff output file which correspond to your hitlist."),
+                                                 textOutput("filebarp_cell_check")
                                 ),
                                 conditionalPanel(condition = "!input.selpr_loca_cell",
                                                  htmlOutput("prsel_p_cell")
@@ -2794,6 +2817,72 @@ server <- function(input, output, session){
     }
   })
 
+  ### computing function verifying file format
+  imprints_format_verifier <- function(x, is_ave = FALSE, is_iso = FALSE){
+    help_message <- c()
+    needed_column <- c("id", "description", "sumUniPeps", "sumPSMs", "countNum")
+
+    missing_columns <- needed_column[!(needed_column %in% colnames(x))]
+    if(length(missing_columns)){
+      help_message <- c(help_message, paste(paste(missing_columns, collapse = ", "),
+                                            ifelse(length(missing_columns) > 1, "are", "is"),
+                                            "missing in your data !"))
+      message(help_message[length(help_message)])
+    }
+
+    if(is_iso){
+      right_format <- colnames(x)
+    }
+    else{
+      right_format <- grep("^\\d{1,}", colnames(x), value = TRUE)
+    }
+
+    if(length(right_format) == 0){
+      help_message <- c(help_message, "No column names in your data start with a digit ! The column names corresponding to the data should start with the corresonding temperature.")
+      message(help_message[length(help_message)])
+    }
+
+    right_format <- grep("_", right_format, value = TRUE)
+    if(length(right_format) == 0){
+      if(is_iso){
+        help_message <- c(help_message, "No column names has an underscore '_' ! The column names corresponding to the data should have an underscore separating between the bioreplicate and the treatment.")
+      }
+      else{
+        help_message <- c(help_message, "No column names has an underscore '_' ! The column names corresponding to the data should have an underscore separating between the temperature, the bioreplicate and the treatment.")
+      }
+      message(help_message[length(help_message)])
+    }
+    else{
+      right_format <- unique(unlist(lapply(strsplit(right_format, "_"), length)))
+      if(length(right_format) > 1){
+        help_message <- c(help_message,
+                          "The column names corresponding to the data should have the same number of underscores ! 1 if you don't have bioreplicates like after taking the average or 2 if you do have bioreplicates.")
+        message(help_message[length(help_message)])
+      }
+      else{
+        if(right_format != 2 & (is_ave | is_iso)){
+          if(is_ave){
+            help_message <- c(help_message,
+                              "For the averaged data, like the averaged fold-changes, your column names corresponding to the data should only have one underscore separating between the temperature and the treatment.")
+          }
+          if(is_iso){
+            help_message <- c(help_message,
+                              "For the isoform resolved data, your column names corresponding to the data should only have one underscore separating between the bioreplicate and the treatment.")
+          }
+
+          message(help_message[length(help_message)])
+        }
+        if(right_format != 3 & !is_ave & !is_iso){
+          help_message <- c(help_message,
+                            "For the data, like the fold-changes, your column names corresponding to the data should only have two underscores separating between the temperature, the bioreplicate and the treatment, in that order.")
+          message(help_message[length(help_message)])
+        }
+      }
+    }
+
+    return(help_message)
+  }
+
   cetsa_isoform <- reactiveValues(
     x = NULL,
     y = NULL,
@@ -2814,7 +2903,22 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_ISO_cetsa)
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("ISOresfile_cetsa_check", "")
+      check <- imprints_format_verifier(x, is_iso = TRUE)
+    },
+    message = function(m) {
+      shinyjs::html(id = "ISOresfile_cetsa_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   observe({
     if(input$got_ISO_cetsa){
@@ -2890,12 +2994,28 @@ server <- function(input, output, session){
       showNotification("Don't forget to import a file or start the analysis", type = "error")
     }
   })
+
   rearrdata_cetsa <- reactive({
     File <- input$rearrfile_cetsa
     if (is.null(File) | !input$got_rearr_cetsa)
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("rearrfile_cetsa_check", "")
+      check <- imprints_format_verifier(x)
+    },
+    message = function(m) {
+      shinyjs::html(id = "rearrfile_cetsa_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   observe({
     if(input$got_rearr_cetsa){
@@ -2969,7 +3089,22 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_norm_cetsa)
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("normfile_cetsa_check", "")
+      check <- imprints_format_verifier(x)
+    },
+    message = function(m) {
+      shinyjs::html(id = "normfile_cetsa_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   observe({
     if(input$got_norm_cetsa){
@@ -3036,7 +3171,24 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_diff_cetsa)
       return(NULL)
 
-    read.delim(File$datapath, check.names = FALSE)
+    # just for handling problem with first hitlist function
+    x <- read.delim(File$datapath, check.names = FALSE)
+    xv <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("difffile_cetsa_check", "")
+      check <- imprints_format_verifier(xv)
+    },
+    message = function(m) {
+      shinyjs::html(id = "difffile_cetsa_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   observe({
     if(input$got_diff_cetsa){
@@ -3314,7 +3466,22 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("caldif_daba_check", "")
+      check <- imprints_format_verifier(x)
+    },
+    message = function(m) {
+      shinyjs::html(id = "caldif_daba_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   #check if a file is upload
   output$DIFdaba_fileup <- reactive({
@@ -3328,7 +3495,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("AVE_dabafile_check", "")
+        check <- imprints_format_verifier(x, TRUE)
+      },
+      message = function(m) {
+        shinyjs::html(id = "AVE_dabafile_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else{
       1  #simplify treatment is.null
@@ -3354,33 +3536,70 @@ server <- function(input, output, session){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
     if(!("treatment" %in% colnames(dat))){ # means that the analysis tab was imported
-      dat <- dat[,stringr::str_which(colnames(dat), "^id$|^Fisher_|^IS_|^GlobalScore_|^category_")]
-      dat <- dat %>% tidyr::gather("key", "value", -id) %>%
-        tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
-        tidyr::spread(key, value)
+      missing_columns <- sapply(c("^id$","^Fisher_", "^IS_", "^GlobalScore_", "^category_"),
+                                grep, colnames(dat), simplify = FALSE)
+      missing_columns <- lapply(missing_columns, length)
+      names(missing_columns) <- gsub("\\^|\\$", "", names(missing_columns))
+      missing_columns <- unlist(missing_columns)
 
-      nn <- dat %>% dplyr::filter(category == "NN")
-      dif <- DIF_daba()[,1:2]
-      nn <- dplyr::left_join(nn, dif, by = "id")
-      nn <- nn[,c("id", "description", "treatment", "category", "Fisher", "IS", "GlobalScore")]
-      NN_daba$x <- nn
+      if(any(missing_columns == 0)){
+        missing_columns <- names(missing_columns)[which(missing_columns == 0)]
+        missing_columns <- paste(missing_columns, collapse = ", ")
+        err_mess <- paste("Your file doesn't contain the column 'treatment', then it should be the 'analysis_tab' file output from the 'imprints_IS' function. <br>
+                          However your file doesn't contain columns names starting with", missing_columns)
+        output$hitsum_daba_check <- renderText({
+          shiny::HTML(paste0("<span style='color:red;'>", err_mess, "</span><br>"))
+        })
+        dat <- NULL
+      }
+      else{
+        output$hitsum_daba_check <- renderText({
+          shiny::HTML("")
+        })
+        dat <- dat[,stringr::str_which(colnames(dat), "^id$|^Fisher_|^IS_|^GlobalScore_|^category_")]
+        dat <- dat %>% tidyr::gather("key", "value", -id) %>%
+          tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
+          tidyr::spread(key, value)
 
-      dat <- dat %>% dplyr::filter(category != "NN")
+        nn <- dat %>% dplyr::filter(category == "NN")
+        dif <- DIF_daba()[,1:2]
+        nn <- dplyr::left_join(nn, dif, by = "id")
+        nn <- nn[,c("id", "description", "treatment", "category", "Fisher", "IS", "GlobalScore")]
+        NN_daba$x <- nn
+
+        dat <- dat %>% dplyr::filter(category != "NN")
+      }
     }
     else{
-      dif <- DIF_daba()[,1:2]
-      dat <- dat[,c("id", "treatment", "category")]
-      nn <- lapply(unique(dat$treatment), function(x){
-        x <- dat %>% dplyr::filter(treatment == x) %>%
-          dplyr::right_join(dif, by = "id") %>%
-          dplyr::filter(is.na(category)) %>%
-          dplyr::mutate(category = "NN",
-                              treatment = x);
-        x
-      })
-      nn <- as.data.frame(Reduce(rbind, nn))
-      nn <- nn[,c("id", "description", "treatment", "category")]
-      NN_daba$x <- nn
+      if(!all(c("id", "treatment", "category") %in% colnames(dat))){
+        missing_columns <- c("id", "treatment", "category")
+        missing_columns <- missing_columns[!(c("id", "treatment", "category") %in% colnames(d))]
+        missing_columns <- paste(missing_columns, collapse = ", ")
+        verb <- ifelse(length(missing_columns) > 1, "are", "is")
+        err_mess <- paste(missing_columns, verb, "not in your summary file. Please check your columns names !")
+        output$hitsum_daba_check <- renderText({
+          shiny::HTML(paste0("<span style='color:red;'>", err_mess, "</span><br>"))
+        })
+        dat <- NULL
+      }
+      else{
+        output$hitsum_daba_check <- renderText({
+          shiny::HTML("")
+        })
+        dif <- DIF_daba()[,1:2]
+        dat <- dat[,c("id", "treatment", "category")]
+        nn <- lapply(unique(dat$treatment), function(x){
+          x <- dat %>% dplyr::filter(treatment == x) %>%
+            dplyr::right_join(dif, by = "id") %>%
+            dplyr::filter(is.na(category)) %>%
+            dplyr::mutate(category = "NN",
+                          treatment = x);
+          x
+        })
+        nn <- as.data.frame(Reduce(rbind, nn))
+        nn <- nn[,c("id", "description", "treatment", "category")]
+        NN_daba$x <- nn
+      }
     }
     dat
   })
@@ -3529,7 +3748,22 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("data_barplot_check", "")
+      check <- imprints_format_verifier(x)
+    },
+    message = function(m) {
+      shinyjs::html(id = "data_barplot_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   #check if a file is upload
   output$barplot_dataup <- reactive({
@@ -4168,7 +4402,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("caldif_compl_check", "")
+        check <- imprints_format_verifier(x)
+      },
+      message = function(m) {
+        shinyjs::html(id = "caldif_compl_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
       join_drugdata(drug_data_sh$y$data[input$drug2_compl], by = c("id", "description"))
@@ -4259,7 +4508,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("avef_compl_check", "")
+        check <- imprints_format_verifier(x, TRUE)
+      },
+      message = function(m) {
+        shinyjs::html(id = "avef_compl_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_compl == "base" & length(input$drug2_compl) >= 1){
       join_drugdata(drug_data_sh$y$data_ave[input$drug2_compl], by = c("id", "description"))
@@ -4504,7 +4768,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("cdiff_simpf_check", "")
+        check <- imprints_format_verifier(x)
+      },
+      message = function(m) {
+        shinyjs::html(id = "cdiff_simpf_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
       join_drugdata(drug_data_sh$y$data[input$drug2_simpf], by = c("id", "description"))
@@ -4525,7 +4804,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("avef_simpf_check", "")
+        check <- imprints_format_verifier(x, TRUE)
+      },
+      message = function(m) {
+        shinyjs::html(id = "avef_simpf_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_simpf == "base" & length(input$drug2_simpf) >= 1){
       join_drugdata(drug_data_sh$y$data_ave[input$drug2_simpf], by = c("id", "description"))
@@ -4721,7 +5015,22 @@ server <- function(input, output, session){
       if (is.null(File) | !input$gave_heat)
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("filedif_heat_check", "")
+        check <- imprints_format_verifier(x)
+      },
+      message = function(m) {
+        shinyjs::html(id = "filedif_heat_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
       join_drugdata(drug_data_sh$y$data[input$drug2_heat], by = c("id", "description"))
@@ -4737,7 +5046,22 @@ server <- function(input, output, session){
       if (is.null(File)  | input$gave_heat)
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("fileave_heat_check", "")
+        check <- imprints_format_verifier(x, TRUE)
+      },
+      message = function(m) {
+        shinyjs::html(id = "fileave_heat_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_heat == "base" & length(input$drug2_heat) >= 1){
       join_drugdata(drug_data_sh$y$data_ave[input$drug2_heat], by = c("id", "description"))
@@ -4928,7 +5252,22 @@ server <- function(input, output, session){
       if (is.null(File) | !input$gave_heatcom)
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("filedif_heatcom_check", "")
+        check <- imprints_format_verifier(x)
+      },
+      message = function(m) {
+        shinyjs::html(id = "filedif_heatcom_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
       join_drugdata(drug_data_sh$y$data[input$drug2_heatcom], by = c("id", "description"))
@@ -4944,7 +5283,22 @@ server <- function(input, output, session){
       if (is.null(File)  | input$gave_heatcom)
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("fileave_heatcom_check", "")
+        check <- imprints_format_verifier(x, TRUE)
+      },
+      message = function(m) {
+        shinyjs::html(id = "fileave_heatcom_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_heatcom == "base" & length(input$drug2_heatcom) >= 1){
       join_drugdata(drug_data_sh$y$data_ave[input$drug2_heatcom], by = c("id", "description"))
@@ -5520,7 +5874,22 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    ms_fileread(File$datapath)
+    x <- readr::read_tsv(File$datapath)
+    withCallingHandlers({
+      shinyjs::html("caldiff_barnet_check", "")
+      check <- imprints_format_verifier(x)
+    },
+    message = function(m) {
+      shinyjs::html(id = "caldiff_barnet_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      x <- NULL
+    }
+    x
   })
   barnethit_data <- reactive({
     File <- input$hits_barnet
@@ -6658,7 +7027,22 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      ms_fileread(File$datapath)
+      x <- readr::read_tsv(File$datapath)
+      withCallingHandlers({
+        shinyjs::html("filebarp_cell_check", "")
+        check <- imprints_format_verifier(x)
+      },
+      message = function(m) {
+        shinyjs::html(id = "filebarp_cell_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+
+      })
+
+      if(length(check)){
+        x <- NULL
+      }
+      x
     }
     else if(input$drug_cell == "base" & length(input$drug2_cell) >= 1){
       join_drugdata(drug_data_sh$y$data[input$drug2_cell], by = c("id", "description"))

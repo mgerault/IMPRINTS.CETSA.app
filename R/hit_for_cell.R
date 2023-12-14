@@ -85,13 +85,6 @@ hit_for_cell <- function(HIT, organism = c("HUMAN", "MOUSE")){
   HIT$nb_location <- as.factor(HIT$nb_location)
   HIT$category <- as.factor(HIT$category)
 
-  HIT$txt <- paste("Uniprot ID :", HIT$id,
-                    "<br> Gene name :", HIT$gene.name,
-                    "<br> Category :", HIT$category,
-                    "<br> treatment :", HIT$treatment,
-                    "<br> Organelle :", HIT$main.location.cell,
-                    "<br> Located in", HIT$nb_location, "organelles" )
-
   message("Your data are ready !")
 
   return(HIT)

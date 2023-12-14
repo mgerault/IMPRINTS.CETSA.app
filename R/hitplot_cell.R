@@ -18,10 +18,18 @@ hit_plotcell <- function(data, tit = "PI3K data in the cell",
                          cond = NULL, cat_col_list = list("CC" = "red", "CN" = "lightblue",
                                                           "NC" = "yellow", "ND" = "#747474",
                                                           "NN" = "#CCCCCC")){
-  df <- data
+  df <- as.data.frame(data)
   if(!is.null(cond)){
     df <- df[which(!is.na(match(df$treatment, cond))),]
   }
+
+
+  df$txt <- paste("Uniprot ID :", df$id,
+                   "<br> Gene name :", df$gene.name,
+                   "<br> Category :", df$category,
+                   "<br> treatment :", df$treatment,
+                   "<br> Organelle :", df$main.location.cell,
+                   "<br> Located in", df$nb_location, "organelles" )
 
   df <- df[order(df$nb_location),]
   cat_color <- levels(df$category)

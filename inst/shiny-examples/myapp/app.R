@@ -6544,7 +6544,7 @@ server <- function(input, output, session){
     )
 
     output$locatab_cell <- DT::renderDataTable({
-      DT::datatable(resdata_cell$ch,
+      DT::datatable(resdata_cell$ch[,-grep("^x$|^y$", colnames(resdata_cell$ch))],
                     caption = htmltools::tags$caption(
                       style = 'caption-side: top; text-align: left;',
                       htmltools::strong("Subcellular locations from your hitlist")

@@ -138,6 +138,17 @@ colnames(cetsa_gsea_database) <- c("name", "cetsa.id", "function", "gene", "func
 cetsa_gsea_database$species <- "Homo sapiens"
 
 
+### add example data for each analysis step of the app
+elu_example1_raw_joined <- readr::read_tsv("Elu_example_1_raw_joined.txt")
+elu_example2_raw_cleaned <- readr::read_tsv("Elu_example_2_raw_cleaned.txt")
+elu_example3_isoform_resolved <- readr::read_tsv("Elu_example_3_isoform_resolved.txt")
+elu_example4_pre_norm <- readr::read_tsv("Elu_example_4_pre_norm.txt")
+elu_example5_post_norm <- readr::read_tsv("Elu_example_5_post_norm.txt")
+elu_example6_caldiff <- readr::read_tsv("Elu_example_6_caldiff.txt")
+
+tobe_conso_example <- readr::read_tsv("example_tobe_consolidated.txt")
+tobe_conso_example <- tobe_conso_example[1:14,]
+
 ### save data created
 usethis::use_data(elutriation, overwrite = TRUE)
 usethis::use_data(elutriation_ave, overwrite = TRUE)
@@ -156,4 +167,12 @@ usethis::use_data(orgatlas_match, overwrite = TRUE)
 usethis::use_data(loca_orga, overwrite = TRUE)
 usethis::use_data(rg_list, overwrite = TRUE)
 usethis::use_data(cetsa_gsea_database, overwrite = TRUE)
+
+usethis::use_data(elu_example1_raw_joined, overwrite = TRUE)
+usethis::use_data(elu_example2_raw_cleaned, overwrite = TRUE)
+usethis::use_data(elu_example3_isoform_resolved, overwrite = TRUE)
+usethis::use_data(elu_example4_pre_norm, overwrite = TRUE)
+usethis::use_data(elu_example5_post_norm, overwrite = TRUE)
+usethis::use_data(elu_example6_caldiff, overwrite = TRUE)
+usethis::use_data(tobe_conso_example, overwrite = TRUE)
 

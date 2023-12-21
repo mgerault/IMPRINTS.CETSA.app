@@ -408,6 +408,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  #modal7 .modal-body { width: 150vh; overflow-x: auto;}'
                                                  ),
 
+                                     tags$style(type = 'text/css',
+                                                '#modal_tobe .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                 #modal_tobe .modal-body { width: 150vh; overflow-x: auto;}'
+                                     ),
+
                                       tags$style(type = 'text/css',
                                                  '#modal8_FC .modal-dialog { width: fit-content !important; overflow-x: initial !important}
                                                   #modal8_FC .modal-body { width: 150vh; overflow-x: auto;}'
@@ -434,26 +439,30 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                       fluidRow(box(title = "Upload and clean your data", status = "primary",
                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                    tags$u(h3("Upload your data")),
-                                                   fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
-                                                                      shiny::HTML("<br><h5>On the table on your right, you can type the name
-                                                                                  of the sample to the corresponding channel. The underscore '_'
-                                                                                  will be used as a separator between temperatures, bioreplicates and
-                                                                                  treatments in all further functions, so make sure of your spelling.
-                                                                                  <br><br>Here, you'll need to type first the bioreplicate and then
-                                                                                  the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc. Make sure that
-                                                                                  all names are different !
-                                                                                  <br>If you have a 'Mix' channel; it needs to explicitely start with
-                                                                                      'Mix'.
-                                                                                  <br>If you have any 'Empty' channels; it needs to explicitely start with
-                                                                                      'Empty'.</h5>")
-                                                                   ),
+                                                   radioButtons("example1", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                inline = TRUE),
 
-                                                            column(8, uiOutput("treat_nameui"))
-                                                            ),
+                                                   conditionalPanel(condition = "input.example1 == 'up'",
+                                                                    fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
+                                                                                    shiny::HTML("<br><h5>On the table on your right, you can type the name
+                                                                                                 of the sample to the corresponding channel. The underscore '_'
+                                                                                                 will be used as a separator between temperatures, bioreplicates and
+                                                                                                 treatments in all further functions, so make sure of your spelling.
+                                                                                                 <br><br>Here, you'll need to type first the bioreplicate and then
+                                                                                                 the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc. Make sure that
+                                                                                                 all names are different !
+                                                                                                 <br>If you have a 'Mix' channel; it needs to explicitely start with 'Mix'.
+                                                                                                 <br>If you have any 'Empty' channels; it needs to explicitely start with
+                                                                                                'Empty'.</h5>")
+                                                                                    ),
 
+                                                                             column(8, uiOutput("treat_nameui"))
+                                                                             ),
 
-                                                   fileInput("PD_data", "Select txt files for your analysis",
-                                                             accept = ".txt", multiple = TRUE),
+                                                                    fileInput("PD_data", "Select txt files for your analysis",
+                                                                              accept = ".txt", multiple = TRUE)
+                                                                    ),
+
 
 
                                                    conditionalPanel(condition = "output.cetsa_fileup",
@@ -462,19 +471,24 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                     tags$hr(),
                                                                     tags$u(h3("Rename your treatments and clean your data")),
                                                                     tags$hr(),
+                                                                    radioButtons("example2", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                 inline = TRUE),
 
-                                                                    fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
-                                                                                                   For example, like this: '37C', '47C', etc. <br>Remember to not use '_'.
-                                                                                                   <br>Also, if you have a quantitative proteomic file, it is
-                                                                                                   advised to name its 'temperature' as '36C' for easier handle
-                                                                                                   in the other functions from IMPRINTS.CETSA.app.</h5>")),
-                                                                             column(4, uiOutput("temp_nameui")),
-                                                                             column(2, checkboxInput("rem_mix", "Remove the 'Mix' channel if any", TRUE),
-                                                                                       checkboxInput("rem_empty", "Remove the 'Empty' channels if any", TRUE),
-                                                                                       checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
-                                                                             column(2, actionButton("str_ren", "Rename the treatments", class = "btn-primary")),
-                                                                             column(2, actionButton("see2_cetsa", "View data renamed"))
-                                                                             )
+                                                                    conditionalPanel(condition = "input.example2 == 'up'",
+                                                                                     fluidRow(column(2, shiny::HTML("<br><h5>On the table on your right, you can rename your temperatures.
+                                                                                                                     For example, like this: '37C', '47C', etc. <br>Remember to not use '_'.
+                                                                                                                     <br>Also, if you have a quantitative proteomic file, it is
+                                                                                                                     advised to name its 'temperature' as '36C' for easier handle
+                                                                                                                    in the other functions from IMPRINTS.CETSA.app.</h5>")),
+                                                                                              column(4, uiOutput("temp_nameui")),
+                                                                                              column(3, checkboxInput("rem_mix", "Remove the 'Mix' channel if any", TRUE),
+                                                                                                     checkboxInput("rem_empty", "Remove the 'Empty' channels if any", TRUE),
+                                                                                                     checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
+                                                                                              column(3, actionButton("str_ren", "Rename the treatments", class = "btn-primary"))
+                                                                                              )
+                                                                                     ),
+
+                                                                    actionButton("see2_cetsa", "View data renamed")
                                                                     )
                                                    )
                                                ),
@@ -485,76 +499,93 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                     solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                     tags$u(h3("Isoform ambiguity cleanup and rearrange")),
                                                                     tags$hr(),
+                                                                    radioButtons("example3", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                 inline = TRUE),
 
-                                                                    checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
-                                                                    conditionalPanel(condition = "!input.got_ISO_cetsa",
-                                                                                     actionButton("ISO", "Resolve isoform", class = "btn-primary")
-                                                                    ),
-                                                                    conditionalPanel(condition = "input.got_ISO_cetsa",
-                                                                                     fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt"),
-                                                                                     textOutput("ISOresfile_cetsa_check")
-                                                                    ),
+                                                                    conditionalPanel(condition = "input.example3 == 'up'",
+                                                                                     checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
+                                                                                     conditionalPanel(condition = "!input.got_ISO_cetsa",
+                                                                                                      actionButton("ISO", "Resolve isoform", class = "btn-primary")
+                                                                                                      ),
+                                                                                     conditionalPanel(condition = "input.got_ISO_cetsa",
+                                                                                                      fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt"),
+                                                                                                      textOutput("ISOresfile_cetsa_check")
+                                                                                                      )
+                                                                                     ),
 
 
                                                                     conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
                                                                                      tags$hr(),
                                                                                      actionButton("see3_cetsa", "View data with isoform resolved"),
-                                                                                     checkboxInput("got_rearr_cetsa", "Do you already have the file data_pre_normalization
-                                                                                                                       (output after rarranging your data) ?", FALSE),
-                                                                                     conditionalPanel(condition = "!input.got_rearr_cetsa",
-                                                                                                      fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
-                                                                                                                      tags$hr(),
-                                                                                                                      conditionalPanel(condition = "input.iso_conso",
-                                                                                                                                       numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
-                                                                                                                                       fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
-                                                                                                                                                 accept = ".txt")
-                                                                                                                                       ),
-                                                                                                                      conditionalPanel(condition = "!input.iso_conso",
-                                                                                                                                       tags$br()
-                                                                                                                                       )
-                                                                                                                      ),
-                                                                                                               column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE), tags$hr()),
-                                                                                                               conditionalPanel(condition = "input.iso_rearr",
-                                                                                                                                column(3, numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
-                                                                                                                                          numericInput("count_thr", "Type the minimal threshold number
-                                                                                                                                                        of associated abundance count of proteins",
-                                                                                                                                                       value = 2, min = 1, step = 1),
-                                                                                                                                       checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
-                                                                                                                                       ),
-                                                                                                                                column(3, numericInput("rep_thr", "Type the minimal percentage threshold of
-                                                                                                                                                                   protein being sampled from multiple runs",
-                                                                                                                                                       value = 0.1, min = 0, max = 1, step = 0.01),
-                                                                                                                                          checkboxInput("avgcount_abd", "Take the median average of abundance count
-                                                                                                                                                      across temperature", TRUE)
-                                                                                                                                       )
-                                                                                                                                )
-                                                                                                               ),
-                                                                                                      actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary"),
-                                                                                                      textOutput("diag_rearrange")
-                                                                                     ),
-                                                                                     conditionalPanel(condition = "input.got_rearr_cetsa",
-                                                                                                      fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt"),
-                                                                                                      textOutput("rearrfile_cetsa_check")
-                                                                                     ),
                                                                                      tags$hr(),
-                                                                                     fluidRow(column(3, actionButton("see4_cetsa", "View consolidated data")),
+
+                                                                                     radioButtons("example4", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                                  inline = TRUE),
+
+                                                                                     conditionalPanel(condition = "input.example4 == 'up'",
+                                                                                                      checkboxInput("got_rearr_cetsa", "Do you already have the file data_pre_normalization
+                                                                                                                       (output after rarranging your data) ?", FALSE),
+                                                                                                      conditionalPanel(condition = "!input.got_rearr_cetsa",
+                                                                                                                       fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
+                                                                                                                                       tags$hr(),
+                                                                                                                                       conditionalPanel(condition = "input.iso_conso",
+                                                                                                                                                        numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                                                        fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
+                                                                                                                                                                  accept = ".txt"),
+                                                                                                                                                        actionButton("see_tobe_conso", "View small example file"),
+                                                                                                                                                        ),
+                                                                                                                                       conditionalPanel(condition = "!input.iso_conso",
+                                                                                                                                                        tags$br()
+                                                                                                                                                        )
+                                                                                                                                       ),
+                                                                                                                                column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE), tags$hr()),
+                                                                                                                                conditionalPanel(condition = "input.iso_rearr",
+                                                                                                                                                 column(3, numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                                                        numericInput("count_thr", "Type the minimal threshold number of associated abundance count of proteins",
+                                                                                                                                                                     value = 2, min = 1, step = 1),
+                                                                                                                                                        checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
+                                                                                                                                                        ),
+                                                                                                                                                        column(3, numericInput("rep_thr", "Type the minimal percentage threshold of protein being sampled from multiple runs",
+                                                                                                                                                                               value = 0.1, min = 0, max = 1, step = 0.01),
+                                                                                                                                                                               checkboxInput("avgcount_abd", "Take the median average of abundance count
+                                                                                                                                                                                             across temperature", TRUE)
+                                                                                                                                                               )
+                                                                                                                                                 )
+                                                                                                                                ),
+                                                                                                                       actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary"),
+                                                                                                                       textOutput("diag_rearrange")
+                                                                                                                       ),
+                                                                                                      conditionalPanel(condition = "input.got_rearr_cetsa",
+                                                                                                                       fileInput("rearrfile_cetsa", "Select the file named data_pre_normalization", accept = ".txt"),
+                                                                                                                       textOutput("rearrfile_cetsa_check")
+                                                                                                                       )
+                                                                                                      ),
+
+                                                                                     tags$hr(),
+                                                                                     fluidRow(conditionalPanel(condition = "input.example4 == 'up'",
+                                                                                                               column(3, actionButton("see4_cetsa", "View consolidated data"))
+                                                                                                               ),
                                                                                               column(3, actionButton("see5_cetsa", "View rearranged data"))),
 
                                                                                      tags$hr(),
 
                                                                                      tags$u(h3("Normalize your data")),
                                                                                      tags$hr(),
+                                                                                     radioButtons("example5", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                                  inline = TRUE),
 
-                                                                                     fluidRow(column(6, checkboxInput("got_norm_cetsa", "Do you already have the file data_post_normalization ?")),
-                                                                                              column(6, conditionalPanel(condition = "!input.got_norm_cetsa",
-                                                                                                                         actionButton("NORM", "Start Normalization", class = "btn-primary")
-                                                                                              ),
-                                                                                              conditionalPanel(condition = "input.got_norm_cetsa",
-                                                                                                               fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt"),
-                                                                                                               textOutput("normfile_cetsa_check")
-                                                                                              )
-                                                                                              )
-                                                                                     )
+                                                                                     conditionalPanel(condition = "input.example5 == 'up'",
+                                                                                                      fluidRow(column(6, checkboxInput("got_norm_cetsa", "Do you already have the file data_post_normalization ?")),
+                                                                                                               column(6, conditionalPanel(condition = "!input.got_norm_cetsa",
+                                                                                                                                          actionButton("NORM", "Start Normalization", class = "btn-primary")
+                                                                                                                                          ),
+                                                                                                                      conditionalPanel(condition = "input.got_norm_cetsa",
+                                                                                                                                       fileInput("normfile_cetsa", "Select the file named data_post_normalization", accept = ".txt"),
+                                                                                                                                       textOutput("normfile_cetsa_check")
+                                                                                                                                       )
+                                                                                                                      )
+                                                                                                               )
+                                                                                                      )
                                                                     )
                                                        )
                                                        ),
@@ -567,20 +598,24 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                      tags$hr(),
                                                                                      tags$u(h3("Calculate the pair-wise protein abundance differences")),
                                                                                      tags$hr(),
+                                                                                     radioButtons("example6", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                                  inline = TRUE),
 
-                                                                                     checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
-                                                                                     conditionalPanel(condition = "!input.got_diff_cetsa",
-                                                                                                      fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control",
-                                                                                                                                     choices = NULL)
-                                                                                                                      ),
-                                                                                                               column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
-                                                                                                                                       abundance difference should be within the same biorep", TRUE)),
-                                                                                                               column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
-                                                                                                      )
-                                                                                     ),
-                                                                                     conditionalPanel(condition = "input.got_diff_cetsa",
-                                                                                                      fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt"),
-                                                                                                      textOutput("difffile_cetsa_check")),
+                                                                                     conditionalPanel(condition = "input.example6 == 'up'",
+                                                                                                      checkboxInput("got_diff_cetsa", "Do you already have the file imprints_caldiff ?", FALSE),
+                                                                                                      conditionalPanel(condition = "!input.got_diff_cetsa",
+                                                                                                                       fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control",
+                                                                                                                                                      choices = NULL)
+                                                                                                                                       ),
+                                                                                                                                column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
+                                                                                                                                                        abundance difference should be within the same biorep", TRUE)),
+                                                                                                                                column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
+                                                                                                                                )
+                                                                                                                       ),
+                                                                                                      conditionalPanel(condition = "input.got_diff_cetsa",
+                                                                                                                       fileInput("difffile_cetsa", "Select the file named imprints_caldiff", accept = ".txt"),
+                                                                                                                       textOutput("difffile_cetsa_check"))
+                                                                                                      ),
 
                                                                                      tags$hr(),
 
@@ -2641,37 +2676,41 @@ server <- function(input, output, session){
   })
 
   cetsa_data <- reactive({
-    File <- input$PD_data
-    if (is.null(File) | is.null(input$treat_name)){
-      return(NULL)
+    if(input$example1 == "load"){
+      df <- elu_example1_raw_joined
     }
-    else if(any(apply(input$treat_name, 1, function(x) stringr::str_length(x) == 0))){
-      return(NULL)
-    }
-    else if(length(unique(as.character(input$treat_name[,1]))) != nrow(input$treat_name)){
-      return(NULL)
-    }
-
-    withCallingHandlers({
-      shinyjs::html("diag_rawread", "")
-      df <- imprints_rawread(File$datapath,
-                             #the name of each treatment
-                             treatment = as.character(input$treat_name[,1]),
-                             #number of channel and the name of it
-                             nread = as.numeric(input$n_chan),
-                             channels = rownames(input$treat_name)
-                             )
-    },
-    message = function(m) {
-      m <- m$message
-      if(grepl('protein', m)){
-        shinyjs::html(id = "diag_rawread",
-                      html = paste0("<span style='color:red;'>", m, "</span><br>"),
-                      add = TRUE)
+    else{
+      File <- input$PD_data
+      if (is.null(File) | is.null(input$treat_name)){
+        return(NULL)
       }
-    }
-    )
+      else if(any(apply(input$treat_name, 1, function(x) stringr::str_length(x) == 0))){
+        return(NULL)
+      }
+      else if(length(unique(as.character(input$treat_name[,1]))) != nrow(input$treat_name)){
+        return(NULL)
+      }
 
+      withCallingHandlers({
+        shinyjs::html("diag_rawread", "")
+        df <- imprints_rawread(File$datapath,
+                               #the name of each treatment
+                               treatment = as.character(input$treat_name[,1]),
+                               #number of channel and the name of it
+                               nread = as.numeric(input$n_chan),
+                               channels = rownames(input$treat_name)
+        )
+      },
+      message = function(m) {
+        m <- m$message
+        if(grepl('protein', m)){
+          shinyjs::html(id = "diag_rawread",
+                        html = paste0("<span style='color:red;'>", m, "</span><br>"),
+                        add = TRUE)
+        }
+      }
+      )
+    }
     df
   })
 
@@ -2719,60 +2758,76 @@ server <- function(input, output, session){
                 cols = list(names = TRUE)
     )
   })
-  cetsa_data_clean <- eventReactive(input$str_ren, {
+  cetsa_data_clean_up <- eventReactive(input$str_ren, {
     d1 <- NULL
-    temp <- as.character(input$temp_name[,1])
-    if(any(sapply(temp, stringr::str_length) == 0)){
-      showNotification("Some temperatures names are empty !", type = "error", duration = 5)
-    }
-    else if(length(unique(temp)) != length(temp)){
-      showNotification("Some temperatures names are equal !", type = "error", duration = 5)
-    }
-    else{
-      d1 <- ms_conditionrename(cetsa_data(),
-                               incondition = unique(cetsa_data()$condition),
-                               outcondition = temp
-                               )
-      showNotification("Renaming done !", type = "message", duration = 3)
+    if(!is.null(cetsa_data())){
+      temp <- as.character(input$temp_name[,1])
+      if(any(sapply(temp, stringr::str_length) == 0)){
+        showNotification("Some temperatures names are empty !", type = "error", duration = 5)
+      }
+      else if(length(unique(temp)) != length(temp)){
+        showNotification("Some temperatures names are equal !", type = "error", duration = 5)
+      }
+      else{
+        d1 <- ms_conditionrename(cetsa_data(),
+                                 incondition = unique(cetsa_data()$condition),
+                                 outcondition = temp
+        )
+        showNotification("Renaming done !", type = "message", duration = 3)
 
-      nc_chan_rm <- 0
-      if(input$rem_mix){
-        if(length(grep("^Mix", names(d1)))){
-          nc_chan_rm <- nc_chan_rm + length(grep("^Mix", names(d1)))
-          d1 <- d1[, -grep("^Mix", names(d1))]
+        nc_chan_rm <- 0
+        if(input$rem_mix){
+          if(length(grep("^Mix", names(d1)))){
+            nc_chan_rm <- nc_chan_rm + length(grep("^Mix", names(d1)))
+            d1 <- d1[, -grep("^Mix", names(d1))]
+          }
+          else{
+            showNotification("The column 'Mix' was not found in your data !", type = "warning", duration = 5)
+          }
         }
-        else{
-          showNotification("The column 'Mix' was not found in your data !", type = "warning", duration = 5)
+
+        if(input$rem_empty){
+          if(length(grep("^Empty", names(d1)))){
+            nc_chan_rm <- nc_chan_rm + length(grep("^Empty", names(d1)))
+            d1 <- d1[, -grep("^Empty", names(d1))]
+          }
+          else{
+            showNotification("The column 'Empty' was not found in your data !", type = "warning", duration = 5)
+          }
+        }
+
+        if(input$clean_data){
+          d1 <- ms_clean(d1, nread = as.numeric(input$n_chan) - nc_chan_rm)
+          showNotification("Cleaning done !", type = "message", duration = 3)
         }
       }
-
-      if(input$rem_empty){
-        if(length(grep("^Empty", names(d1)))){
-          nc_chan_rm <- nc_chan_rm + length(grep("^Empty", names(d1)))
-          d1 <- d1[, -grep("^Empty", names(d1))]
-        }
-        else{
-          showNotification("The column 'Empty' was not found in your data !", type = "warning", duration = 5)
-        }
-      }
-
-      if(input$clean_data){
-        d1 <- ms_clean(d1, nread = as.numeric(input$n_chan) - nc_chan_rm)
-        showNotification("Cleaning done !", type = "message", duration = 3)
-      }
     }
+
     d1
+  }, ignoreNULL = FALSE) # initiate event so that cetsa_data_clean_up() is set to NULL when starting
+
+  cetsa_data_clean <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(c(input$example2, input$str_ren), { # trigger whenever one of this two events
+    if(input$example2 == "load"){
+      cetsa_data_clean$x <- elu_example2_raw_cleaned
+    }
+    else if(input$example2 == "up"){
+      cetsa_data_clean$x <- cetsa_data_clean_up()
+    }
   })
+
   #check if a file is upload
   output$cetsa_cleanup <- reactive({
-    return(!is.null(cetsa_data_clean()))
+    return(!is.null(cetsa_data_clean$x))
   })
   outputOptions(output, "cetsa_cleanup", suspendWhenHidden = FALSE)
 
   observeEvent(input$see2_cetsa,{
-    if(!is.null(cetsa_data_clean())){
+    if(!is.null(cetsa_data_clean$x)){
       showModal(tags$div(id="modal2", modalDialog(
-        DT::renderDataTable({DT::datatable(cetsa_data_clean(),
+        DT::renderDataTable({DT::datatable(cetsa_data_clean$x,
                                            caption = htmltools::tags$caption(
                                              style = 'caption-side: top; text-align: left;',
                                              htmltools::strong("Base data")
@@ -2891,12 +2946,24 @@ server <- function(input, output, session){
     conso = NULL,
     rearr = NULL
   )
-  observeEvent(input$ISO, {
-    showNotification("Start resolving isoform, this may take a while. Please wait a few minutes",
-                     type = "message", duration = 5)
-    x <- ms_isoform_resolve(cetsa_data_clean())
 
-    cetsa_isoform$x <- x
+  cetsa_isoform_up <- reactiveValues(
+    x = NULL,
+    y = NULL
+  )
+  observeEvent(input$ISO, {
+    if(!is.null(cetsa_data_clean$x)){
+      showNotification("Start resolving isoform, this may take a while. Please wait a few minutes",
+                       type = "message", duration = 5)
+      x <- ms_isoform_resolve(cetsa_data_clean$x)
+
+      cetsa_isoform_up$x <- x
+    }
+    else{
+      showNotification("Cleaned data are currrently NULL.
+                       Try to load the example from the previous step or upload your own data.",
+                       type = "warning", duration = 5)
+    }
   })
   ISOresdata_cetsa <- reactive({
     File <- input$ISOresfile_cetsa
@@ -2922,7 +2989,21 @@ server <- function(input, output, session){
   })
   observe({
     if(input$got_ISO_cetsa){
-      cetsa_isoform$x <- ISOresdata_cetsa()
+      cetsa_isoform_up$y <- ISOresdata_cetsa()
+    }
+  })
+
+  observeEvent(c(input$example3, input$got_ISO_cetsa, input$ISO, ISOresdata_cetsa()), {
+    if(input$example3 == "load"){
+      cetsa_isoform$x <- elu_example3_isoform_resolved
+    }
+    else if(input$example3 == "up"){
+      if(input$got_ISO_cetsa){
+        cetsa_isoform$x <- cetsa_isoform_up$y
+      }
+      else{
+        cetsa_isoform$x <- cetsa_isoform_up$x
+      }
     }
   })
   #check if a file is upload
@@ -2952,6 +3033,10 @@ server <- function(input, output, session){
     }
   })
 
+  cetsa_rearr_up <- reactiveValues(
+    x = NULL,
+    y = NULL
+  )
   observeEvent(input$ISO2, {
     d2 <- cetsa_isoform$x
     if(!is.null(d2)){
@@ -2988,11 +3073,27 @@ server <- function(input, output, session){
         showNotification("Rearrangement succeed !", type = "message", duration = 5)
       }
 
-      cetsa_isoform$y <- d2
+      cetsa_rearr_up$x <- d2
     }
     else{
       showNotification("Don't forget to import a file or start the analysis", type = "error")
     }
+  })
+
+  observeEvent(input$see_tobe_conso,{
+    showModal(tags$div(id="modal_tobe", modalDialog(
+        DT::renderDataTable({DT::datatable(tobe_conso_example,
+                                           caption = htmltools::tags$caption(
+                                             style = 'caption-side: top; text-align: left;',
+                                             htmltools::strong("Example file")
+                                           ),
+                                           rownames = FALSE,
+                                           options = list(lengthMenu = c(10,20), pageLength = 10,
+                                                          scrollX = TRUE))
+        }),
+        footer = NULL,
+        easyClose = TRUE
+      )))
   })
 
   rearrdata_cetsa <- reactive({
@@ -3019,7 +3120,29 @@ server <- function(input, output, session){
   })
   observe({
     if(input$got_rearr_cetsa){
-      cetsa_isoform$y <- rearrdata_cetsa()
+      cetsa_rearr_up$y <- rearrdata_cetsa()
+    }
+  })
+
+  observeEvent(c(input$example4, input$got_rearr_cetsa, input$ISO2, rearrdata_cetsa(), input$iso_rearr), {
+    if(input$example4 == "load"){
+      cetsa_isoform$y <- elu_example4_pre_norm
+      cetsa_isoform$rearr <- elu_example4_pre_norm
+    }
+    else if(input$example4 == "up"){
+      if(input$got_rearr_cetsa){
+        cetsa_isoform$y <- cetsa_rearr_up$y
+        cetsa_isoform$rearr <- cetsa_rearr_up$y
+      }
+      else{
+        cetsa_isoform$y <- cetsa_rearr_up$x
+        if(input$iso_rearr){
+          cetsa_isoform$rearr <- cetsa_rearr_up$x
+        }
+        else{
+          cetsa_isoform$rearr <- NULL
+        }
+      }
     }
   })
 
@@ -3064,6 +3187,12 @@ server <- function(input, output, session){
       showNotification("The data are currently NULL, try to refresh.", type = "error")
     }
   })
+
+  cetsa_norm_up <- reactiveValues(
+    x = NULL,
+    y = NULL
+  )
+
   observeEvent(input$NORM, {
     if(is.null(cetsa_isoform$y)){
       d <- cetsa_isoform$x
@@ -3076,7 +3205,7 @@ server <- function(input, output, session){
       showNotification("Start normalizing, this may take a while. Please wait a few minutes",
                        type = "message", duration = 5)
       d <- imprints_normalization(d)
-      cetsa_isoform$norm <- d
+      cetsa_norm_up$x <- d
       showNotification("Normalization succeed !", type = "message", duration = 5)
     }
     else{
@@ -3108,9 +3237,24 @@ server <- function(input, output, session){
   })
   observe({
     if(input$got_norm_cetsa){
-      cetsa_isoform$norm <- normdata_cetsa()
+      cetsa_norm_up$y <- normdata_cetsa()
     }
   })
+
+  observeEvent(c(input$example5, input$NORM, input$got_norm_cetsa, normdata_cetsa()), {
+    if(input$example5 == "load"){
+      cetsa_isoform$norm <- elu_example5_post_norm
+    }
+    else{
+      if(input$got_norm_cetsa){
+        cetsa_isoform$norm <- cetsa_norm_up$y
+      }
+      else{
+        cetsa_isoform$norm <- cetsa_norm_up$x
+      }
+    }
+  })
+
   #check if a file is upload
   output$cetsa_normup <- reactive({
     return(!is.null(cetsa_isoform$norm))
@@ -3144,6 +3288,11 @@ server <- function(input, output, session){
       updateSelectInput(session, "ctrl_name2", choices = tr_level, selected = tr_level[1])
     }
   })
+
+  cetsa_dif_up <- reactiveValues(
+    x = NULL,
+    y = NULL
+  )
   observeEvent(input$CAL_DIF, {
     if(!is.null(cetsa_isoform$norm)){
       showNotification("Start fold-change calculation, this may take a while. Please wait a few minutes",
@@ -3156,7 +3305,7 @@ server <- function(input, output, session){
                            withinrep = input$wit_rep
                          )
 
-      cetsa_isoform$dif <- d
+      cetsa_dif_up$x <- d
       message("Done to calculate the pair-wise (per replicate and temperature)
                protein abundance differences")
       showNotification("Difference calculation succeed !", type = "message", duration = 5)
@@ -3192,9 +3341,24 @@ server <- function(input, output, session){
   })
   observe({
     if(input$got_diff_cetsa){
-      cetsa_isoform$dif <- diffdata_cetsa()
+      cetsa_dif_up$y <- diffdata_cetsa()
     }
   })
+
+  observeEvent(c(input$example6, input$CAL_DIF, input$got_diff_cetsa, diffdata_cetsa()), {
+    if(input$example6 == "load"){
+      cetsa_isoform$dif <- elu_example6_caldiff
+    }
+    else if(input$example6 == "up"){
+      if(input$got_diff_cetsa){
+        cetsa_isoform$dif <- cetsa_dif_up$y
+      }
+      else{
+        cetsa_isoform$dif <- cetsa_dif_up$x
+      }
+    }
+  })
+
   #check if a file is upload
   output$cetsa_difup <- reactive({
     return(!is.null(cetsa_isoform$dif))

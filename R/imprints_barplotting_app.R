@@ -370,7 +370,7 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
           subt$category <- paste("Score :", round(subt$score,4))  # keep same name for simplicity
           subt$score <- NULL
           rownames(subt) <- subt$id
-          data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
+          data <- data[order(data[[grep("^score", names(data))]], decreasing = TRUE),]
           data <- data[,-grep("^score", names(data))]
         }
         else{
@@ -615,7 +615,7 @@ imprints_barplotting_app <- function (data, treatmentlevel = get_treat_level(dat
       subt$category <- paste("Score :", round(subt$score,4))  # keep same name for simplicity
       subt$score <- NULL
       rownames(subt) <- subt$id
-      data <- data[order(data[,grep("^score", names(data))], decreasing = TRUE),]
+      data <- data[order(data[[grep("^score", names(data))]], decreasing = TRUE),]
       data <- data[,-grep("^score", names(data))]
     }
     else{

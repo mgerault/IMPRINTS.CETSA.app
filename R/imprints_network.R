@@ -165,9 +165,10 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
   if(!file.exists("STRING_data")){
     dir.create("STRING_data")
   }
-  string_db <- STRINGdb$new(version="12.0", species=species,               #ID 9606 correspond to human
-                            score_threshold=200,
-                            input_directory=file.path(getwd(), "STRING_data"))
+  string_db <- STRINGdb::STRINGdb$new(species=species,               #ID 9606 correspond to human
+                                      score_threshold=200,
+                                      input_directory=  file.path(getwd(), "STRING_data"),
+                                      version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"))
   string_id <- string_db$map(data_genes, "id", removeUnmappedRows = TRUE)
 
   message("Get STRING network...")

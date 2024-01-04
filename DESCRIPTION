@@ -14,7 +14,7 @@ Depends:
     R (>= 4.1.0),
     dplyr (>= 1.1.0),
     ggplot2 (>= 3.2.0)
-Imports: ggplot2,  stringr, tidyr, magick,
+Imports: ggplot2,  stringr, tidyr, magick, withr,
    shiny, shinydashboard, shinyMatrix, shinycssloaders, shinyWidgets,
    bslib, DT, rio, metap, MKmisc, visNetwork, RCurl,
    dplyr, plyr, dbplyr, shinyjs, cowplot, plotly, pubmedR, 

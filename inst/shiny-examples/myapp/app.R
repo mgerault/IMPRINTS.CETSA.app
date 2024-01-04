@@ -7539,7 +7539,7 @@ server <- function(input, output, session){
       Y_ <- NULL
     }
     else{
-      Y_ <- input$Y_pubmed
+      Y_ <- str_remove_all(input$Y_pubmed, " ")
     }
     if (str_length(str_remove_all(input$api_pubmed, " ")) == 0){
       api_ <- NULL

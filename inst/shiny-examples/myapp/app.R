@@ -481,10 +481,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                      advised to name its 'temperature' as '36C' for easier handle
                                                                                                                     in the other functions from IMPRINTS.CETSA.app.</h5>")),
                                                                                               column(4, uiOutput("temp_nameui")),
-                                                                                              column(3, checkboxInput("rem_mix", "Remove the 'Mix' channel if any", TRUE),
+                                                                                              column(3, textInput("prefconta_anaprot", "Type the prefix that identify your contaminants", "Cont_"),
+                                                                                                     checkboxInput("rem_mix", "Remove the 'Mix' channel if any", TRUE),
                                                                                                      checkboxInput("rem_empty", "Remove the 'Empty' channels if any", TRUE),
                                                                                                      checkboxInput("clean_data", "Remove proteins without quantitative information", TRUE)),
-                                                                                              column(3, actionButton("str_ren", "Rename the treatments", class = "btn-primary"))
+                                                                                              column(3, actionButton("str_ren", "Rename the treatments/Clean your data", class = "btn-primary"))
                                                                                               )
                                                                                      ),
 
@@ -2797,7 +2798,8 @@ server <- function(input, output, session){
         }
 
         if(input$clean_data){
-          d1 <- ms_clean(d1, nread = as.numeric(input$n_chan) - nc_chan_rm)
+          d1 <- ms_clean(d1, nread = as.numeric(input$n_chan) - nc_chan_rm,
+                         prefixcontaminant = input$prefconta_anaprot)
           showNotification("Cleaning done !", type = "message", duration = 3)
         }
       }

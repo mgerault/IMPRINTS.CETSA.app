@@ -222,6 +222,13 @@ get_wikipath <- function(wp = TRUE, species = "human"){
 
   url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
                      date, "-gmt-", species, ".gmt")
+  if(!RCurl::url.exists(url_wiki)){
+    date <- strsplit(date, "")[[1]][-(nchar(date)-1)]
+    date <- paste0(date, collapse = "")
+    date <- paste0(date, 1)
+    url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+                       date, "-gmt-", species, ".gmt")
+  }
   url_wiki <- url(url_wiki)
 
   if(wp){

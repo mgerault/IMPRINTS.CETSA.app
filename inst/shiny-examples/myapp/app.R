@@ -461,6 +461,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                    conditionalPanel(condition = "input.example1 == 'up'",
                                                                     fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
+                                                                                    selectInput("quant_soft", "Select the software you used to obtain your
+                                                                                                               Protein.Groups files",
+                                                                                                choices = c("PD", "MaxQuant"), selected = "PD"),
                                                                                     shiny::HTML("<br><h5>On the table on your right, you can type the name
                                                                                                  of the sample to the corresponding channel. The underscore '_'
                                                                                                  will be used as a separator between temperatures, bioreplicates and
@@ -1418,7 +1421,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        choices = c("Human" = 9606,
                                                                                                                                    "Mouse" = 10090,
                                                                                                                                    "Rat" = 10116), selected = 9606)),
-                                                                                                 column(6,  actionButton("start_string", "Start to map genes", class = "btn-primary btn-lg"))
+                                                                                                 column(6,  actionButton("start_string", "Start to map genes", class = "btn-primary btn-lg"),
+                                                                                                        textOutput("diagdataload_string")
+                                                                                                        )
                                                                                                  )
                                                                                         ),
 
@@ -1436,6 +1441,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                  ),
                                                                                         tags$hr(),
                                                                                         actionButton("go_enrich", "Start the enrichment analysis", class = "btn-primary btn-lg"),
+                                                                                        textOutput("diagenrich_string"),
                                                                                         tags$hr(),
 
                                                                                         conditionalPanel(condition = "!input.hidnet1_stri",
@@ -1738,7 +1744,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        fluidRow(column(6, sliderInput("npath_clus", "Choose the maximum number of pathway found to show",
                                                                                                       min = 1, max = 100, step = 1, value = 5)
                                                                                        ),
-                                                                                column(6, actionButton("gocomp_clus", "Compare pathways", class = "btn-primary btn-lg"))
+                                                                                column(6, actionButton("gocomp_clus", "Compare pathways", class = "btn-primary btn-lg"),
+                                                                                       textOutput("diagcomp_clus")
+                                                                                       )
                                                                                 ),
                                                                        DT::dataTableOutput("comptab_clus"),
                                                                        downloadButton("downcomptab_clus"),
@@ -1758,7 +1766,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                        fluidRow(column(4, uiOutput("scorenameui_clus")),
                                                                                 column(4, checkboxInput("onlypos_clus", "Show only enrcihment set with positive enrichment score", TRUE)),
-                                                                                column(4, actionButton("gogsea_clus", "Start GSEA", class = "btn-primary btn-lg"))
+                                                                                column(4, actionButton("gogsea_clus", "Start GSEA", class = "btn-primary btn-lg"),
+                                                                                       textOutput("diaggsea_clus"))
                                                                                 ),
                                                                        DT::dataTableOutput("gseatab_clus"),
                                                                        downloadButton("downgseatab_clus"),
@@ -1777,7 +1786,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           fluidRow(box(title = "Plot a gene concept network from your data", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                        fluidRow(column(6, uiOutput("scorename2ui_clus")),
-                                                                                column(6, actionButton("gogeneconc_clus", "See gene concept network", class = "btn-primary btn-lg"))
+                                                                                column(6, actionButton("gogeneconc_clus", "See gene concept network", class = "btn-primary btn-lg"),
+                                                                                       textOutput("diaggeneconc_clus"))
                                                                                 ),
                                                                        withSpinner(plotOutput("geneplot_clus", height = "800px"), type = 6),
                                                                        fluidRow(column(2, tags$div(style="line-height:175%;",
@@ -2734,7 +2744,7 @@ server <- function(input, output, session){
 
       withCallingHandlers({
         shinyjs::html("diag_rawread", "")
-        df <- imprints_rawread(File$datapath,
+        df <- imprints_rawread(File$datapath, software = input$quant_soft,
                                #the name of each treatment
                                treatment = as.character(input$treat_name[,1]),
                                #number of channel and the name of it
@@ -5760,130 +5770,142 @@ server <- function(input, output, session){
   observeEvent(input$start_string, {
     showNotification("Getting the STRING ids, this may take a while", type = "message")
 
-    if(!file.exists("STRING_data")){
-      dir.create("STRING_data")
-    }
+    withCallingHandlers({
+      shinyjs::html("diagdataload_string", "")
 
-    if(input$species_string == 9606){
-      if(!exists("string_db_human")){
-        string_db_human <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
-                                         species=9606,               #ID 9606 correspond to human
+      message("Running...")
+      if(!file.exists("STRING_data")){
+        dir.create("STRING_data")
+      }
+
+      if(input$species_string == 9606){
+        if(!exists("string_db_human")){
+          string_db_human <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
+                                           species=9606,               #ID 9606 correspond to human
+                                           score_threshold=200,
+                                           input_directory=  file.path(getwd(), "STRING_data"))
+        }
+        string_db <<- string_db_human
+      }
+      else if(input$species_string == 10090){
+        if(!exists("string_db_mouse")){
+          string_db_mouse <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
+                                           species=10090,               #ID 10090 correspond to mouse
+                                           score_threshold=200,
+                                           input_directory=  file.path(getwd(), "STRING_data"))
+        }
+        string_db <<- string_db_mouse
+      }
+      else if(input$species_string == 10116){
+        if(!exists("string_db_rat")){
+          string_db_rat <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
+                                         species=10116,               #ID 10116 correspond to rat
                                          score_threshold=200,
                                          input_directory=  file.path(getwd(), "STRING_data"))
+        }
+        string_db <<- string_db_rat
       }
-      string_db <<- string_db_human
-    }
-    else if(input$species_string == 10090){
-      if(!exists("string_db_mouse")){
-        string_db_mouse <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
-                                         species=10090,               #ID 10090 correspond to mouse
-                                         score_threshold=200,
-                                         input_directory=  file.path(getwd(), "STRING_data"))
-      }
-      string_db <<- string_db_mouse
-    }
-    else if(input$species_string == 10116){
-      if(!exists("string_db_rat")){
-        string_db_rat <<- STRINGdb$new(version = ifelse(packageVersion("STRINGdb") >= '2.12.0', "12.0", "11.5"),
-                                       species=10116,               #ID 10116 correspond to rat
-                                       score_threshold=200,
-                                       input_directory=  file.path(getwd(), "STRING_data"))
-      }
-      string_db <<- string_db_rat
-    }
 
 
-    string_res$x <- NULL
+      string_res$x <- NULL
 
-    if (!is.null(stri_data())){
-      if(input$drug_stri == "dat"){
-        if(input$impfile_stri){
-          if(input$ishit_stri){
-            dat <- stri_data()
-            if(!is.null(input$cond_fhit_stri)){
-              dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_stri))))
-              if(any(duplicated(dat$id))){
-                dat <- dat[-which(duplicated(dat$id)),]
+      if (!is.null(stri_data())){
+        if(input$drug_stri == "dat"){
+          if(input$impfile_stri){
+            if(input$ishit_stri){
+              dat <- stri_data()
+              if(!is.null(input$cond_fhit_stri)){
+                dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_stri))))
+                if(any(duplicated(dat$id))){
+                  dat <- dat[-which(duplicated(dat$id)),]
+                }
+                a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
               }
-              a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+              else{
+                showNotification("Don't forget to select some treatments !", type = "error")
+                a <- NULL
+              }
             }
             else{
-              showNotification("Don't forget to select some treatments !", type = "error")
-              a <- NULL
+              dat <- stri_data()
+              if(any(duplicated(dat[[input$idfile_stri]]))){
+                dat <- dat[-which(duplicated(dat[[input$idfile_stri]])),]
+              }
+              a <- string_db$map(dat, input$idfile_stri, removeUnmappedRows = TRUE)
             }
           }
           else{
             dat <- stri_data()
-            if(any(duplicated(dat[[input$idfile_stri]]))){
-              dat <- dat[-which(duplicated(dat[[input$idfile_stri]])),]
+            if(any(duplicated(dat$id))){
+              dat <- dat[-which(duplicated(dat$id)),]
             }
-            a <- string_db$map(dat, input$idfile_stri, removeUnmappedRows = TRUE)
+            a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
           }
         }
-        else{
+        else if(input$drug_stri == "base"){
           dat <- stri_data()
-          if(any(duplicated(dat$id))){
-            dat <- dat[-which(duplicated(dat$id)),]
+          if(!is.null(input$cond_fhitB_stri)){
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_stri))))
+            if(!is.null(input$cat_fhitB_stri)){
+              dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
+            }
+            if(any(duplicated(dat$id))){
+              dat <- dat[-which(duplicated(dat$id)),]
+            }
+            a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
           }
-          a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
+          else{
+            showNotification("Don't forget to select some treatments !", type = "error")
+            a <- NULL
+          }
         }
       }
-      else if(input$drug_stri == "base"){
-        dat <- stri_data()
-        if(!is.null(input$cond_fhitB_stri)){
-          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_stri))))
-          if(!is.null(input$cat_fhitB_stri)){
-            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_stri))))
+
+      string_res$x <- a
+      if(!is.null(string_res$x)){ # check that no duplicate string ids per id
+        if(any(duplicated(string_res$x[[1]]))){ # first column returned by map from STRINGdb is the identifier used to map genes
+          showNotification("Some ids returned several STRINGids; trying to map genes if in data",
+                           type = "error", duration = 5)
+          duplicated_ids <- unique(string_res$x[[1]][which(duplicated(string_res$x[[1]]))])
+          for(d_id in duplicated_ids){
+            info_d_ids <- string_res$x[which(string_res$x[[1]] == d_id),]
+
+            string_res$x <- string_res$x[-which(string_res$x[[1]] == d_id),]
+
+            where_gene <- grep("^[Gg]en(e$|es$)", colnames(info_d_ids))
+            where_descr <- grep("^[dD]escription$", colnames(info_d_ids))
+
+            if(length(where_gene) == 1){
+              info_d_ids$STRING_id <- NULL
+              info_d_ids <- info_d_ids[1,]
+              info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_gene], removeUnmappedRows = TRUE)
+            }
+            else if(length(where_descr) == 1){
+              info_d_ids$STRING_id <- NULL
+              info_d_ids <- info_d_ids[1,]
+              info_d_ids[,where_descr] <- IMPRINTS.CETSA.app:::getGeneName(info_d_ids[,where_descr])
+              info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_descr], removeUnmappedRows = TRUE)
+            }
+            else{# if no gene info can't map and take first row
+              showNotification("No gene informations has been found in your data; only first identifier is taken",
+                               type = "error", duration = 5)
+              info_d_ids <- info_d_ids[1,]
+            }
+
+            if(nrow(info_d_ids) != 0){
+              string_res$x <- rbind.data.frame(string_res$x, info_d_ids, make.row.names = FALSE)
+            }
           }
-          if(any(duplicated(dat$id))){
-            dat <- dat[-which(duplicated(dat$id)),]
-          }
-          a <- string_db$map(dat, "id", removeUnmappedRows = TRUE)
-        }
-        else{
-          showNotification("Don't forget to select some treatments !", type = "error")
-          a <- NULL
         }
       }
+
+      message("Done !")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagdataload_string", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
     }
-
-    string_res$x <- a
-    if(!is.null(string_res$x)){ # check that no duplicate string ids per id
-      if(any(duplicated(string_res$x[[1]]))){ # first column returned by map from STRINGdb is the identifier used to map genes
-        showNotification("Some ids returned several STRINGids; trying to map genes if in data",
-                         type = "error", duration = 5)
-        duplicated_ids <- unique(string_res$x[[1]][which(duplicated(string_res$x[[1]]))])
-        for(d_id in duplicated_ids){
-          info_d_ids <- string_res$x[which(string_res$x[[1]] == d_id),]
-
-          string_res$x <- string_res$x[-which(string_res$x[[1]] == d_id),]
-
-          where_gene <- grep("^[Gg]en(e$|es$)", colnames(info_d_ids))
-          where_descr <- grep("^[dD]escription$", colnames(info_d_ids))
-
-          if(length(where_gene) == 1){
-            info_d_ids$STRING_id <- NULL
-            info_d_ids <- info_d_ids[1,]
-            info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_gene], removeUnmappedRows = TRUE)
-          }
-          else if(length(where_descr) == 1){
-            info_d_ids$STRING_id <- NULL
-            info_d_ids <- info_d_ids[1,]
-            info_d_ids[,where_descr] <- IMPRINTS.CETSA.app:::getGeneName(info_d_ids[,where_descr])
-            info_d_ids <- string_db$map(info_d_ids, colnames(info_d_ids)[where_descr], removeUnmappedRows = TRUE)
-          }
-          else{# if no gene info can't map and take first row
-            showNotification("No gene informations has been found in your data; only first identifier is taken",
-                             type = "error", duration = 5)
-            info_d_ids <- info_d_ids[1,]
-          }
-
-          if(nrow(info_d_ids) != 0){
-            string_res$x <- rbind.data.frame(string_res$x, info_d_ids, make.row.names = FALSE)
-          }
-        }
-      }
-    }
+    )
 
     showNotification("Mapping succeed !", type = "message")
   })
@@ -5951,9 +5973,20 @@ server <- function(input, output, session){
   )
   observeEvent(input$go_enrich, {
     showNotification("Starting enrichment analysis, this may take a while", type = "message")
-    enrich_res$x <- string_db$get_enrichment(string_res$x$STRING_id)
+    withCallingHandlers({
+      shinyjs::html("diagenrich_string", "")
+      message("Running...")
+      enrich_res$x <- string_db$get_enrichment(string_res$x$STRING_id)
 
-    updateSelectInput(session, "catego_stri", choices = unique(enrich_res$x$category))
+      updateSelectInput(session, "catego_stri", choices = unique(enrich_res$x$category))
+      message("Done !")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagenrich_string", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
     showNotification("Done !", type = "message")
   })
   output$enrich_stri_up <- reactive({
@@ -6689,59 +6722,70 @@ server <- function(input, output, session){
     x = NULL
   )
   observeEvent(input$gocomp_clus, {
-    dat <- NULL
-    res <- NULL
-    if (!is.null(clus_data())){
-      if(input$drug_clus == "dat"){
-        dat <- clus_data()
-        if(input$ishit_clus){
+    withCallingHandlers({
+      shinyjs::html("diagcomp_clus", "")
+      message("Running...")
+      dat <- NULL
+      res <- NULL
+      if (!is.null(clus_data())){
+        if(input$drug_clus == "dat"){
           dat <- clus_data()
-          if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+          if(input$ishit_clus){
+            dat <- clus_data()
+            if(!is.null(input$cond_fhit_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+            }
+            else{
+              showNotification("Don't forget to select some treatments !", type = "error")
+              dat <- NULL
+            }
+            if(!is.null(dat)){
+              showNotification("Starting enrichment analysis !", type = "message")
+              res <- compare_enrich(dat, gene_column = "Gene", species = input$species_clus,
+                                    n_pathway = input$npath_clus, treatment_column = "treatment",
+                                    pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                    database = input$database_clus)
+            }
+          }
+          else{
+            showNotification("Starting pathway analysis !", type = "message")
+            res <- compare_enrich(dat, gene_column = input$idfile_clus,
+                                  species = input$species_clus, n_pathway = input$npath_clus,
+                                  pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                  database = input$database_clus)
+          }
+        }
+        else if(input$drug_clus == "base"){
+          dat <- clus_data()
+          if(!is.null(input$cond_fhitB_clus)){
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
+            if(!is.null(input$cat_fhitB_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
+            }
           }
           else{
             showNotification("Don't forget to select some treatments !", type = "error")
             dat <- NULL
           }
           if(!is.null(dat)){
-            showNotification("Starting enrichment analysis !", type = "message")
+            showNotification("Starting pathway analysis !", type = "message")
             res <- compare_enrich(dat, gene_column = "Gene", species = input$species_clus,
                                   n_pathway = input$npath_clus, treatment_column = "treatment",
                                   pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                                   database = input$database_clus)
           }
         }
-        else{
-          showNotification("Starting pathway analysis !", type = "message")
-          res <- compare_enrich(dat, gene_column = input$idfile_clus,
-                                species = input$species_clus, n_pathway = input$npath_clus,
-                                pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                                database = input$database_clus)
-        }
       }
-      else if(input$drug_clus == "base"){
-        dat <- clus_data()
-        if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
-          if(!is.null(input$cat_fhitB_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
-          }
-        }
-        else{
-          showNotification("Don't forget to select some treatments !", type = "error")
-          dat <- NULL
-        }
-        if(!is.null(dat)){
-          showNotification("Starting pathway analysis !", type = "message")
-          res <- compare_enrich(dat, gene_column = "Gene", species = input$species_clus,
-                                n_pathway = input$npath_clus, treatment_column = "treatment",
-                                pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                                database = input$database_clus)
-        }
-      }
-    }
 
-    cluscomp_res$x <- res
+      cluscomp_res$x <- res
+      message("Done !")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diagcomp_clus", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
   })
 
   output$comptab_clus <- DT::renderDataTable({
@@ -6796,31 +6840,53 @@ server <- function(input, output, session){
     x = NULL
   )
   observeEvent(input$gogsea_clus, {
-    dat <- NULL
-    res <- NULL
-    if (!is.null(clus_data())){
-      if(input$drug_clus == "dat"){
-        dat <- clus_data()
-        if(input$ishit_clus){
+    withCallingHandlers({
+      shinyjs::html("diaggsea_clus", "")
+      message("Running...")
+      dat <- NULL
+      res <- NULL
+      if (!is.null(clus_data())){
+        if(input$drug_clus == "dat"){
           dat <- clus_data()
-          if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
-          }
-          else{
-            showNotification("Don't forget to select some treatments !", type = "error")
-            dat <- NULL
-          }
-          if(!is.null(dat)){
-            if(input$scorenameDAT_clus %in% colnames(dat)){
-              showNotification("Starting GSEA !", type = "message")
-              dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
-              dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
-              res <- run_gsea(dat, gene_column = "Gene",
+          if(input$ishit_clus){
+            dat <- clus_data()
+            if(!is.null(input$cond_fhit_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+            }
+            else{
+              showNotification("Don't forget to select some treatments !", type = "error")
+              dat <- NULL
+            }
+            if(!is.null(dat)){
+              if(input$scorenameDAT_clus %in% colnames(dat)){
+                showNotification("Starting GSEA !", type = "message")
+                dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
+                dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
+                res <- run_gsea(dat, gene_column = "Gene",
                                 species = input$species_clus,
                                 score_column = input$scorenameDAT_clus,
                                 pos_enrichment = input$onlypos_clus,
                                 pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                                 database = input$database_clus)
+              }
+              else{
+                showNotification(paste(input$scorenameDAT_clus,
+                                       "was not found in the column names of the data. Please check the name you wrote."),
+                                 type = "error")
+              }
+            }
+          }
+          else{
+            if(input$scorenameDAT_clus %in% colnames(dat)){
+              showNotification("Starting GSEA !", type = "message")
+              dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
+              dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
+              res <- run_gsea(dat, gene_column = input$idfile_clus,
+                              species = input$species_clus,
+                              score_column = input$scorenameDAT_clus,
+                              pos_enrichment = input$onlypos_clus,
+                              pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                              database = input$database_clus)
             }
             else{
               showNotification(paste(input$scorenameDAT_clus,
@@ -6829,59 +6895,48 @@ server <- function(input, output, session){
             }
           }
         }
-        else{
-          if(input$scorenameDAT_clus %in% colnames(dat)){
-            showNotification("Starting GSEA !", type = "message")
-            dat[[input$scorenameDAT_clus]] <- as.numeric(dat[[input$scorenameDAT_clus]])
-            dat[[input$scorenameDAT_clus]] <- tidyr::replace_na(dat[[input$scorenameDAT_clus]],0)
-            res <- run_gsea(dat, gene_column = input$idfile_clus,
-                              species = input$species_clus,
-                              score_column = input$scorenameDAT_clus,
-                              pos_enrichment = input$onlypos_clus,
-                              pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                              database = input$database_clus)
+        else if(input$drug_clus == "base"){
+          dat <- clus_data()
+          if(!is.null(input$cond_fhitB_clus)){
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
+            if(!is.null(input$cat_fhitB_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
+            }
           }
           else{
-            showNotification(paste(input$scorenameDAT_clus,
-                                   "was not found in the column names of the data. Please check the name you wrote."),
-                             type = "error")
+            showNotification("Don't forget to select some treatments !", type = "error")
+            dat <- NULL
           }
-        }
-      }
-      else if(input$drug_clus == "base"){
-        dat <- clus_data()
-        if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
-          if(!is.null(input$cat_fhitB_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
-          }
-        }
-        else{
-          showNotification("Don't forget to select some treatments !", type = "error")
-          dat <- NULL
-        }
-        if(!is.null(dat)){
-          if(input$scorenameBASE_clus %in% colnames(dat)){
-            showNotification("Starting GSEA !", type = "message")
-            dat[[input$scorenameBASE_clus]] <- as.numeric(dat[[input$scorenameBASE_clus]])
-            dat[[input$scorenameBASE_clus]] <- tidyr::replace_na(dat[[input$scorenameBASE_clus]],0)
-            res <- run_gsea(dat, gene_column = "Gene",
+          if(!is.null(dat)){
+            if(input$scorenameBASE_clus %in% colnames(dat)){
+              showNotification("Starting GSEA !", type = "message")
+              dat[[input$scorenameBASE_clus]] <- as.numeric(dat[[input$scorenameBASE_clus]])
+              dat[[input$scorenameBASE_clus]] <- tidyr::replace_na(dat[[input$scorenameBASE_clus]],0)
+              res <- run_gsea(dat, gene_column = "Gene",
                               species = input$species_clus,
                               score_column = input$scorenameBASE_clus,
                               pos_enrichment = input$onlypos_clus,
                               pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
                               database = input$database_clus)
-          }
-          else{
-            showNotification(paste(input$scorenameBASE_clus,
-                                   "was not found in the column names of the data. Please check the name you wrote."),
-                             type = "error")
+            }
+            else{
+              showNotification(paste(input$scorenameBASE_clus,
+                                     "was not found in the column names of the data. Please check the name you wrote."),
+                               type = "error")
+            }
           }
         }
       }
-    }
 
-    clusgsea_res$x <- res
+      clusgsea_res$x <- res
+      message("Done !")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diaggsea_clus", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
   })
 
   output$gseatab_clus <- DT::renderDataTable({
@@ -6944,30 +6999,51 @@ server <- function(input, output, session){
     x = NULL
   )
   observeEvent(input$gogeneconc_clus, {
-    dat <- NULL
-    res <- NULL
-    if (!is.null(clus_data())){
-      if(input$drug_clus == "dat"){
-        dat <- clus_data()
-        if(input$ishit_clus){
+    withCallingHandlers({
+      shinyjs::html("diaggeneconc_clus", "")
+      message("Running...")
+      dat <- NULL
+      res <- NULL
+      if (!is.null(clus_data())){
+        if(input$drug_clus == "dat"){
           dat <- clus_data()
-          if(!is.null(input$cond_fhit_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+          if(input$ishit_clus){
+            dat <- clus_data()
+            if(!is.null(input$cond_fhit_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+            }
+            else{
+              showNotification("Don't forget to select some treatments !", type = "error")
+              dat <- NULL
+            }
+            if(!is.null(dat)){
+              if(input$scorename2DAT_clus %in% colnames(dat)){
+                showNotification("Starting ORA !", type = "message")
+                dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
+                dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
+                res <- gene_concept_net(dat, gene_column = "Gene",
+                                        species = input$species_clus,
+                                        score_column = input$scorename2DAT_clus,
+                                        pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                        database = input$database_clus)
+              }
+              else{
+                showNotification(paste(input$scorename2DAT_clus,
+                                       "was not found in the column names of the data. Please check the name you wrote."),
+                                 type = "error")
+              }
+            }
           }
           else{
-            showNotification("Don't forget to select some treatments !", type = "error")
-            dat <- NULL
-          }
-          if(!is.null(dat)){
             if(input$scorename2DAT_clus %in% colnames(dat)){
-              showNotification("Starting GSEA !", type = "message")
+              showNotification("Starting ORA !", type = "message")
               dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
               dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
-              res <- gene_concept_net(dat, gene_column = "Gene",
-                                     species = input$species_clus,
-                                     score_column = input$scorename2DAT_clus,
-                                     pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                                     database = input$database_clus)
+              res <- gene_concept_net(dat, gene_column = input$idfile_clus,
+                                      species = input$species_clus,
+                                      score_column = input$scorename2DAT_clus,
+                                      pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                      database = input$database_clus)
             }
             else{
               showNotification(paste(input$scorename2DAT_clus,
@@ -6976,57 +7052,47 @@ server <- function(input, output, session){
             }
           }
         }
-        else{
-          if(input$scorename2DAT_clus %in% colnames(dat)){
-            showNotification("Starting GSEA !", type = "message")
-            dat[[input$scorename2DAT_clus]] <- as.numeric(dat[[input$scorename2DAT_clus]])
-            dat[[input$scorename2DAT_clus]] <- tidyr::replace_na(dat[[input$scorename2DAT_clus]],0)
-            res <- gene_concept_net(dat, gene_column = input$idfile_clus,
-                                   species = input$species_clus,
-                                   score_column = input$scorename2DAT_clus,
-                                   pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                                   database = input$database_clus)
+        else if(input$drug_clus == "base"){
+          dat <- clus_data()
+          if(!is.null(input$cond_fhitB_clus)){
+            dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
+            if(!is.null(input$cat_fhitB_clus)){
+              dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
+            }
           }
           else{
-            showNotification(paste(input$scorename2DAT_clus,
-                                   "was not found in the column names of the data. Please check the name you wrote."),
-                             type = "error")
+            showNotification("Don't forget to select some treatments !", type = "error")
+            dat <- NULL
+          }
+          if(!is.null(dat)){
+            if(input$scorename2BASE_clus %in% colnames(dat)){
+              showNotification("Starting ORA !", type = "message")
+              dat[[input$scorename2BASE_clus]] <- as.numeric(dat[[input$scorename2BASE_clus]])
+              dat[[input$scorename2BASE_clus]] <- tidyr::replace_na(dat[[input$scorename2BASE_clus]],0)
+              res <- gene_concept_net(dat, gene_column = "Gene",
+                                      species = input$species_clus,
+                                      score_column = input$scorename2BASE_clus,
+                                      pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
+                                      database = input$database_clus)
+            }
+            else{
+              showNotification(paste(input$scorename2BASE_clus,
+                                     "was not found in the column names of the data. Please check the name you wrote."),
+                               type = "error")
+            }
           }
         }
       }
-      else if(input$drug_clus == "base"){
-        dat <- clus_data()
-        if(!is.null(input$cond_fhitB_clus)){
-          dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhitB_clus))))
-          if(!is.null(input$cat_fhitB_clus)){
-            dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhitB_clus))))
-          }
-        }
-        else{
-          showNotification("Don't forget to select some treatments !", type = "error")
-          dat <- NULL
-        }
-        if(!is.null(dat)){
-          if(input$scorename2BASE_clus %in% colnames(dat)){
-            showNotification("Starting GSEA !", type = "message")
-            dat[[input$scorename2BASE_clus]] <- as.numeric(dat[[input$scorename2BASE_clus]])
-            dat[[input$scorename2BASE_clus]] <- tidyr::replace_na(dat[[input$scorename2BASE_clus]],0)
-            res <- gene_concept_net(dat, gene_column = "Gene",
-                                   species = input$species_clus,
-                                   score_column = input$scorename2BASE_clus,
-                                   pval_cutoff = input$pvcut_clus, minGSSize = input$minGNsize_clus,
-                                   database = input$database_clus)
-          }
-          else{
-            showNotification(paste(input$scorename2BASE_clus,
-                                   "was not found in the column names of the data. Please check the name you wrote."),
-                             type = "error")
-          }
-        }
-      }
-    }
 
-    clusgene_res$x <- res
+      clusgene_res$x <- res
+      message("Done !")
+    },
+    message = function(m) {
+      shinyjs::html(id = "diaggeneconc_clus", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+
+    }
+    )
+
   })
 
 

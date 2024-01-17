@@ -14,6 +14,7 @@ library(visNetwork)
 library(clusterProfiler)
 
 library(shiny)
+library(shinyFiles)
 library(shinyjs)
 library(shinyMatrix)
 library(shinydashboard)
@@ -109,6 +110,22 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                             ),
                             column(3)
                           ),
+
+                          tags$hr(),
+
+                          fluidRow(
+                            column(12,
+                                   shiny::HTML("<h1>Set your saving directory</h1><br>"),
+                                   shiny::HTML("<h5>IMPRINTS.CETSA.app contains several functions that save automatically
+                                               results in your work directory. If you want to change this directory,
+                                               you can select one below.<br><br></h5>")
+                                   )
+                            ),
+                          fluidRow(column(6, htmlOutput("current_WD", width = "100%")),
+                                   column(6, shinyDirButton("selecting_WD",label = "Select a directory where your results will be saved", title = "Please select a directory",
+                                                            icon = icon("file"), viewtype = "detail", buttonType = "primary",
+                                                            width = "100%", class = "btn-lg"))
+                                   ),
 
                           tags$hr()
                           ),
@@ -2009,7 +2026,30 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 )
 
 server <- function(input, output, session){
+  volumes <- c(Home = WD, "R Installation" = R.home(), getVolumes()(), "~")
+  shinyDirChoose(input, "selecting_WD",
+    roots = volumes, session = session
+  )
+
   setwd(WD)
+  WD_reac <- reactiveValues(
+    pth = WD
+  )
+  observeEvent(input$selecting_WD, {
+    if (is.integer(input$selecting_WD)) {
+      WD_reac$pth <- WD
+    }
+    else {
+      WD_reac$pth <- parseDirPath(volumes, input$selecting_WD)
+    }
+
+    setwd(WD_reac$pth)
+  }, ignoreNULL = TRUE)
+
+  output$current_WD <- renderText({
+    HTML(paste("<p><h4><b>Your current saving directory is:</b><br>", WD_reac$pth, "</h4></p>"))
+  })
+
 
   ### analysis tab - Peptides
 

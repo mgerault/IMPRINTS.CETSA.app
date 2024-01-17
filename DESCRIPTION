@@ -16,7 +16,7 @@ Depends:
     ggplot2 (>= 3.2.0)
 Imports: ggplot2,  stringr, tidyr, magick, withr,
    shiny, shinydashboard, shinyMatrix, shinycssloaders, shinyWidgets,
-   bslib, DT, rio, metap, MKmisc, visNetwork, RCurl,
+   shinyFiles, bslib, DT, rio, metap, MKmisc, visNetwork, RCurl,
    dplyr, plyr, dbplyr, shinyjs, cowplot, plotly, pubmedR, 
    rentrez, XML, gridExtra, rjson, VennDiagram,
    bibliometrix, officer, colourpicker, openxlsx

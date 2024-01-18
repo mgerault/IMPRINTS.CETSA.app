@@ -61,6 +61,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                     ),
 
                           fluidRow(style = "height:20px;"),
+                          tags$style(type = 'text/css',
+                                     '#modal_checkWD .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                      #modal_checkWD .modal-body { width: 150vh; overflow-x: auto;}'
+                                     ),
                           fluidRow(
                             column(12,
                                    shiny::HTML("<h1>About CETSA</h1><br>"),
@@ -2041,7 +2045,24 @@ server <- function(input, output, session){
     roots = volumes, session = session
   )
 
+
   setwd(WD)
+  observe({
+    if(file.access(WD, 2) == -1){
+      showModal(tags$div(id="modal_checkWD",
+                         modalDialog(
+                           shiny::HTML("<h1><span style='color:red;'>Warning: Your saving directory doesn't have write permission !</span></h1><br>
+                                        <br>In order to allow IMPRINTS.CETSA.app to save automatically results,
+                                        please select a valid directory with write permission. Otherwise, the app will
+                                        crash as soon as you run function that save a file like in the analysis tab for instance.<br>
+                                        For example, you can select your Dowload folder. To do so, go to the home tab."),
+                           footer = NULL, easyClose = TRUE
+                           )
+                         )
+                )
+    }
+  })
+
   WD_reac <- reactiveValues(
     pth = WD
   )
@@ -2053,7 +2074,22 @@ server <- function(input, output, session){
       WD_reac$pth <- parseDirPath(volumes, input$selecting_WD)
     }
 
-    setwd(WD_reac$pth)
+    if(file.access(WD_reac$pth, 2) == -1){
+      showModal(tags$div(id="modal_checkWD",
+                         modalDialog(
+                           shiny::HTML("<h1><span style='color:red;'>Warning: Your saving directory doesn't have write permission !</span></h1><br>
+                                        <br>In order to allow IMPRINTS.CETSA.app to save automatically results,
+                                        please select a valid directory with write permission. Otherwise, the app will
+                                        crash as soon as you run function that save a file like in the analysis tab for instance.<br>
+                                        For example, you can select your Dowload folder. To do so, go to the home tab."),
+                           footer = NULL, easyClose = TRUE
+                           )
+                         )
+                )
+    }
+    else{
+      setwd(WD_reac$pth)
+    }
   }, ignoreNULL = TRUE)
 
   output$current_WD <- renderText({
@@ -7691,6 +7727,8 @@ server <- function(input, output, session){
 
 
   })
+
+  session$onSessionEnded(stopApp)
 }
 
 

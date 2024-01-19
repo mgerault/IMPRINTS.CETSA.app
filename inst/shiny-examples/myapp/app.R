@@ -224,7 +224,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                      conditionalPanel(condition = "output.pep_dataup | input.step_peptides",
                                                       fluidRow(box(title = "Normalize your peptides data", status = "primary",
                                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                   tags$u(h3("Normalize your data")),
+                                                                   tags$u(h3("Data Normalization")),
                                                                    fluidRow(column(6, checkboxInput("got_norm_pep", "Do you already have the peptide file NormPeptides ?")),
                                                                             column(6, conditionalPanel(condition = "!input.got_norm_pep",
                                                                                                        actionButton("NORM_pep", "Start Normalization", class = "btn-primary")
@@ -452,7 +452,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                       radioButtons("step_cetsa", "At which step do you want to start your analysis ?",
                                                    choices = c("From the beginning" = "1begin",
                                                                "Consolidate isoforms and rearrange your data" = "2conso_ISO",
-                                                               "Normalize your data" = "3NORM",
+                                                               "Data Normalization" = "3NORM",
                                                                "Get the protein abundance difference" = "4DIFF",
                                                                "Get your hitlist" = "5HIT"),
                                                    inline = TRUE),
@@ -594,7 +594,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                      tags$hr(),
 
-                                                                                     tags$u(h3("Normalize your data")),
+                                                                                     tags$u(h3("Data Normalization")),
                                                                                      tags$hr(),
                                                                                      radioButtons("example5", "", choices = c("Use your data" = "up", "Load the example" = "load"),
                                                                                                   inline = TRUE),
@@ -617,7 +617,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                        tags$hr(),
                                                        conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
-                                                                        fluidRow(box(title = "Abundance difference calculation and hitlist", status = "primary",
+                                                                        fluidRow(box(title = "Fold change calculation and hitlist", status = "primary",
                                                                                      solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                                      actionButton("see6_cetsa", "View normalized data"),
                                                                                      tags$hr(),
@@ -653,7 +653,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                       conditionalPanel(condition = "!input.calc_diff",
                                                                                                                        radioButtons("hitmethod_cetsa", "Choose a method to get your hitlist",
                                                                                                                                     choices = c("Intercept Score" = "IS",
-                                                                                                                                                "IMPRINTS score" = "ImpS",
+                                                                                                                                                "2D-score" = "ImpS",
                                                                                                                                                 "Fold Change cutoff" = "FC"
                                                                                                                                                 ),
                                                                                                                                     selected = "IS",
@@ -1814,7 +1814,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           h1(tags$u(class = "main-1", "Proteins localization")),
                           tags$hr(),
-                          HTML("<h5>In this tab, you can assign protins to their subcellular location
+                          HTML("<h5>In this tab, you can assign proteins to their subcellular location
                                from Protein Atlas database and then plot them on a cell.<br>
                                By clicking on the points on the plot, you  select a protein and then
                                can plot its IMPRINTS profile.</h5>"),

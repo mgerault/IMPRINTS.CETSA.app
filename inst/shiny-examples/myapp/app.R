@@ -2027,14 +2027,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           ),
 
                  bslib::nav_item(tags$a(href = "https://github.com/mgerault/IMPRINTS.CETSA.app",
-                        icon("github"),
-                        title = "See source code to the github repository"), class = "icon1"),
+                                        target="_blank", rel="noopener noreferrer",
+                                        icon("github"),
+                                        title = "See source code to the github repository"), class = "icon1"),
                  bslib::nav_item(tags$a(href = "https://youtu.be/djpP8nc_JUE",
-                        icon("question-circle"),
-                        title = "See the tutorial video of the app"), class = "icon2"),
+                                        target="_blank", rel="noopener noreferrer",
+                                        icon("question-circle"),
+                                        title = "See the tutorial video of the app"), class = "icon2"),
                  bslib::nav_item(tags$a(href = "mailto:marco.gerault@gmail.com",
-                        icon("envelope"),
-                        title = "Any questions, suggestions or bug report ? Feel free to send me an e-mail !"), class = "icon3")
+                                        target="_blank", rel="noopener noreferrer",
+                                        icon("envelope"),
+                                        title = "Any questions, suggestions or bug report ? Feel free to send me an e-mail !"), class = "icon3")
 
 
 )
@@ -7323,7 +7326,7 @@ server <- function(input, output, session){
   output$prsel_p_cell <- renderUI({
     if(!is.null(PR_event())){
       pr <- PR_event()
-      pr_link <- paste0("https://www.uniprot.org/uniprot/", pr, ">")
+      pr_link <- paste0("'https://www.uniprot.org/uniprot/", pr, "' target='_blank' rel='noopener noreferrer'>")
       pr_html <- paste0("<a href=", pr_link, pr, "</a>")
       HTML(paste("You clicked on", paste(pr_html, collapse = ", ")))
     }

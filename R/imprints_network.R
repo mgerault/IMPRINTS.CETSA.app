@@ -414,7 +414,7 @@ imprints_network <- function(data, hits = NULL, treatment = NULL, GOterm = NULL,
     visInteraction(navigationButtons = TRUE) %>%
     visEvents(selectNode = "function(properties) {
                              if(properties.event.srcEvent.shiftKey){
-                                var win = window.open('https://www.uniprot.org/uniprot/' + properties.nodes);
+                                var win = window.open('https://www.uniprot.org/uniprot/' + properties.nodes, '_blank');
                                 win.focus();
                               }
                             }") %>%

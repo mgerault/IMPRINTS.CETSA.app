@@ -157,9 +157,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                      shinyjs:::useShinyjs(),
                                      shinyjs:::extendShinyjs(text = jscode, functions = "collapse"),
-                                     fluidRow(box(id="upload_peptide", title = "Upload and concatenate your data", status = "primary",
+                                     fluidRow(box(id="upload_peptide", title = "Data uploading", status = "primary",
                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                  tags$u(h3("Upload your data")),
+                                                  tags$u(h3("Data uploading")),
                                                   checkboxInput("got_data_pep", "Do you already have the concatenate peptide file ?", FALSE),
 
                                                   conditionalPanel(condition = "input.got_data_pep",
@@ -167,12 +167,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                              accept = ".txt")
                                                                    ),
                                                   conditionalPanel(condition = "!input.got_data_pep",
-                                                                   fileInput("PD_data_pep", "Select PD txt files for your analysis",
+                                                                   fileInput("PD_data_pep", "Load PD txt files for your analysis",
                                                                              accept = ".txt", multiple = TRUE),
                                                                    tags$hr(),
 
                                                                    conditionalPanel(condition = "output.pep_fileup",
-                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>On the table on your right, you can type the tempeature
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>On the table on your right, you can type the tempeatures
                                                                                                                    you used for each of your files. It needs to start with a digit
                                                                                                                    and also it's better to finish by a letter like this:
                                                                                                                    '37C' or '99F'. Remember to not use '_'.
@@ -200,7 +200,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                    This data frame should contain the column 'id' and the column 'description',
                                                                                                                    the Uniprot IDs and the protein description respectively.<br>
                                                                                                                    So you can use the caldiff file output you have from your protein analysis.
-                                                                                                                   <br><br>If you upload nothing, all proteins from the pepetides files
+                                                                                                                   <br><br>If you upload nothing, all proteins from the peptides files
                                                                                                                    will be kept but the protein description will be missing.</h5>")),
                                                                                              column(8, fileInput("prot_data_pep", "Select a protein file",
                                                                                                                  accept = ".txt", multiple = TRUE))
@@ -222,7 +222,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                               ),
 
                                      conditionalPanel(condition = "output.pep_dataup | input.step_peptides",
-                                                      fluidRow(box(title = "Normalize your peptides data", status = "primary",
+                                                      fluidRow(box(title = "Data Normalization", status = "primary",
                                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                    tags$u(h3("Data Normalization")),
                                                                    fluidRow(column(6, checkboxInput("got_norm_pep", "Do you already have the peptide file NormPeptides ?")),
@@ -240,13 +240,13 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                )
                                                       ),
                                      conditionalPanel(condition = "output.norm_pep_dataup",
-                                                      fluidRow(box(title = "Compute fold change and save bar plots", status = "primary",
+                                                      fluidRow(box(title = "Fold change computation and bar plots saving", status = "primary",
                                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                    tags$u(h3("Fold-change calculation")),
                                                                    checkboxInput("sequence_file", "Import a file with proteins and sequences"),
                                                                    tags$hr(),
                                                                    conditionalPanel(condition = "input.sequence_file",
-                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>This file needs to contains at leats one column named
+                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>This file needs to contain at least one column named
                                                                                                                     'protein' and eventually another one named 'sequence'.
                                                                                                                     <br>The 'protein' column contains the Uniprot ID from the
                                                                                                                     protein you want to compute fold changes at the peptide level.
@@ -284,7 +284,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    tags$hr(),
                                                                    fluidRow(style = "height:10px;"),
 
-                                                                   tags$u(h3("Find potential cleaved sites")),
+                                                                   tags$u(h3("Potential cleaved sites")),
                                                                    fluidRow(column(6, checkboxInput("got_FCfile_pep", "Import your own fold-change file.
                                                                                                      If not, will use the one obtained in previous step.", value = FALSE)),
                                                                             conditionalPanel(condition = "input.got_FCfile_pep",
@@ -342,8 +342,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                            ),
 
                                                   tags$hr(),
-                                                  tags$u(h3("Join your datasets")),
-                                                  shiny::HTML("<br><h5>Here you can import as much peptides dataset as you want and join them.
+                                                  tags$u(h3("Datasets joining")),
+                                                  shiny::HTML("<br><h5>Here you can import as much peptides datasets as you want and join them.
                                                               <br>This feature has been mainly made to join dataset after you checked for cleaved sites
                                                               and computed fold changes. For example if you checked for the same potential cleaved site for
                                                               one protein for several drugs and you want now to compare their effect.
@@ -360,7 +360,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                   tags$hr(),
                                                   fluidRow(style = "height:10px;"),
 
-                                                  tags$u(h3("Plot your data")),
+                                                  tags$u(h3("Data plotting")),
                                                   fluidRow(column(6, radioButtons("join_data_pep", label = "", choices = c("Use the joined data" = "join_app",
                                                                                                                            "Use a file" = "join_file"))
                                                                   ),
@@ -442,6 +442,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  '#modal9_IS .modal-dialog { width: fit-content !important; overflow-x: initial !important}
                                                   #modal9_IS .modal-body { width: 150vh; overflow-x: auto;}'
                                                  ),
+                                     tags$style(type = 'text/css',
+                                                '#modal10_2D .modal-dialog { width: fit-content !important; overflow-x: initial !important}
+                                                  #modal10_2D .modal-body { width: 150vh; overflow-x: auto;}'
+                                     ),
 
                                       fluidRow(style = "height:20px;"),
 
@@ -450,17 +454,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                       tags$br(),
 
                                       radioButtons("step_cetsa", "At which step do you want to start your analysis ?",
-                                                   choices = c("From the beginning" = "1begin",
-                                                               "Consolidate isoforms and rearrange your data" = "2conso_ISO",
-                                                               "Data Normalization" = "3NORM",
-                                                               "Get the protein abundance difference" = "4DIFF",
-                                                               "Get your hitlist" = "5HIT"),
+                                                   choices = c("1) Data uploading" = "1begin",
+                                                               "2) Protein isoform consolidation and data rearranging" = "2conso_ISO",
+                                                               "3) Data Normalization" = "3NORM",
+                                                               "4) Fold change computation" = "4DIFF",
+                                                               "5) Hitlist generation" = "5HIT"),
                                                    inline = TRUE),
 
-                                      fluidRow(box(title = "Upload and clean your data", status = "primary",
+                                      fluidRow(box(title = "Data uploading and cleaning", status = "primary",
                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                   tags$u(h3("Upload your data")),
-                                                   radioButtons("example1", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                   tags$u(h3("Data uploading")),
+                                                   radioButtons("example1", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                 inline = TRUE),
 
                                                    conditionalPanel(condition = "input.example1 == 'up'",
@@ -493,9 +497,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                     textOutput("diag_rawread"),
                                                                     actionButton("see1_cetsa", "View data uploaded"),
                                                                     tags$hr(),
-                                                                    tags$u(h3("Rename your treatments and clean your data")),
+                                                                    tags$u(h3("Conditions renaming and data cleaning")),
                                                                     tags$hr(),
-                                                                    radioButtons("example2", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                    radioButtons("example2", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                                  inline = TRUE),
 
                                                                     conditionalPanel(condition = "input.example2 == 'up'",
@@ -520,17 +524,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                       tags$hr(),
 
                                       conditionalPanel(condition = "output.cetsa_cleanup | input.step_cetsa > '2' ",
-                                                       fluidRow(box(title = "Isoform ambiguity cleanup, rearrange and normalization", status = "primary",
+                                                       fluidRow(box(title = "Protein isoform ambiguity, data rearrangement and normalization", status = "primary",
                                                                     solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Isoform ambiguity cleanup and rearrange")),
+                                                                    tags$u(h3("Portein isoform ambiguity and data rearrangement")),
                                                                     tags$hr(),
-                                                                    radioButtons("example3", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                    radioButtons("example3", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                                  inline = TRUE),
 
                                                                     conditionalPanel(condition = "input.example3 == 'up'",
                                                                                      checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
                                                                                      conditionalPanel(condition = "!input.got_ISO_cetsa",
-                                                                                                      actionButton("ISO", "Resolve isoform", class = "btn-primary")
+                                                                                                      actionButton("ISO", "Resolve protein isoform", class = "btn-primary")
                                                                                                       ),
                                                                                      conditionalPanel(condition = "input.got_ISO_cetsa",
                                                                                                       fileInput("ISOresfile_cetsa", "Select the file named isoform_resolved", accept = ".txt"),
@@ -541,43 +545,45 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                     conditionalPanel(condition = "output.cetsa_isoup | input.step_cetsa > '3' ",
                                                                                      tags$hr(),
-                                                                                     actionButton("see3_cetsa", "View data with isoform resolved"),
+                                                                                     actionButton("see3_cetsa", "View data with protein isoform resolved"),
                                                                                      tags$hr(),
 
-                                                                                     radioButtons("example4", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                     radioButtons("example4", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                                                   inline = TRUE),
 
                                                                                      conditionalPanel(condition = "input.example4 == 'up'",
                                                                                                       checkboxInput("got_rearr_cetsa", "Do you already have the file data_pre_normalization
                                                                                                                        (output after rarranging your data) ?", FALSE),
                                                                                                       conditionalPanel(condition = "!input.got_rearr_cetsa",
-                                                                                                                       fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidate", TRUE),
+                                                                                                                       fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidation", TRUE),
                                                                                                                                        tags$hr(),
                                                                                                                                        conditionalPanel(condition = "input.iso_conso",
                                                                                                                                                         numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
                                                                                                                                                         fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
                                                                                                                                                                   accept = ".txt"),
-                                                                                                                                                        actionButton("see_tobe_conso", "View small example file"),
+                                                                                                                                                        actionButton("see_tobe_conso", "View small example file")
                                                                                                                                                         ),
                                                                                                                                        conditionalPanel(condition = "!input.iso_conso",
                                                                                                                                                         tags$br()
                                                                                                                                                         )
                                                                                                                                        ),
-                                                                                                                                column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE), tags$hr()),
-                                                                                                                                conditionalPanel(condition = "input.iso_rearr",
-                                                                                                                                                 column(3, numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
+                                                                                                                                column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
+                                                                                                                                       tags$hr(),
+                                                                                                                                       conditionalPanel(condition = "input.iso_rearr",
+                                                                                                                                                        numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
                                                                                                                                                         numericInput("count_thr", "Type the minimal threshold number of associated abundance count of proteins",
                                                                                                                                                                      value = 2, min = 1, step = 1),
-                                                                                                                                                        checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE)
-                                                                                                                                                        ),
-                                                                                                                                                        column(3, numericInput("rep_thr", "Type the minimal percentage threshold of protein being sampled from multiple runs",
-                                                                                                                                                                               value = 0.1, min = 0, max = 1, step = 0.01),
-                                                                                                                                                                               checkboxInput("avgcount_abd", "Take the median average of abundance count
-                                                                                                                                                                                             across temperature", TRUE)
-                                                                                                                                                               )
-                                                                                                                                                 )
+                                                                                                                                                        numericInput("rep_thr", "Type the minimal percentage threshold of protein being sampled from multiple runs",
+                                                                                                                                                                     value = 0.1, min = 0, max = 1, step = 0.01),
+                                                                                                                                                        checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE),
+                                                                                                                                                        checkboxInput("avgcount_abd", "Take the median average of abundance count
+                                                                                                                                                                      across temperature", TRUE)
+                                                                                                                                                        )
+                                                                                                                                       ),
+
                                                                                                                                 ),
-                                                                                                                       actionButton("ISO2", "Consolidate isoform and/or rearrange", class = "btn-primary"),
+                                                                                                                       tags$br(),
+                                                                                                                       actionButton("ISO2", "Consolidate protein isoform and/or data rearrangement", class = "btn-primary"),
                                                                                                                        textOutput("diag_rearrange")
                                                                                                                        ),
                                                                                                       conditionalPanel(condition = "input.got_rearr_cetsa",
@@ -588,7 +594,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                      tags$hr(),
                                                                                      fluidRow(conditionalPanel(condition = "input.example4 == 'up'",
-                                                                                                               column(3, actionButton("see4_cetsa", "View consolidated data"))
+                                                                                                               column(3, actionButton("see4_cetsa", "View protein isoform consolidated data"))
                                                                                                                ),
                                                                                               column(3, actionButton("see5_cetsa", "View rearranged data"))),
 
@@ -596,7 +602,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                                      tags$u(h3("Data Normalization")),
                                                                                      tags$hr(),
-                                                                                     radioButtons("example5", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                     radioButtons("example5", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                                                   inline = TRUE),
 
                                                                                      conditionalPanel(condition = "input.example5 == 'up'",
@@ -610,20 +616,20 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                        )
                                                                                                                       )
                                                                                                                )
-                                                                                                      )
+                                                                                                      ),
+                                                                                     actionButton("see6_cetsa", "View normalized data")
+                                                                                     )
                                                                     )
-                                                       )
-                                                       ),
+                                                                ),
 
                                                        tags$hr(),
                                                        conditionalPanel(condition = "output.cetsa_normup | input.step_cetsa > '4' ",
                                                                         fluidRow(box(title = "Fold change calculation and hitlist", status = "primary",
                                                                                      solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                                     actionButton("see6_cetsa", "View normalized data"),
+
+                                                                                     tags$u(h3("Fold change calculation")),
                                                                                      tags$hr(),
-                                                                                     tags$u(h3("Calculate the pair-wise protein abundance differences")),
-                                                                                     tags$hr(),
-                                                                                     radioButtons("example6", "", choices = c("Use your data" = "up", "Load the example" = "load"),
+                                                                                     radioButtons("example6", "", choices = c("Use your data" = "up", "Load example file" = "load"),
                                                                                                   inline = TRUE),
 
                                                                                      conditionalPanel(condition = "input.example6 == 'up'",
@@ -632,9 +638,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        fluidRow(column(4, selectInput("ctrl_name2", "Select the treatment that corresponds to your control",
                                                                                                                                                       choices = NULL)
                                                                                                                                        ),
-                                                                                                                                column(4, checkboxInput("wit_rep", "Whether the calculation of the relative protein
-                                                                                                                                                        abundance difference should be within the same biorep", TRUE)),
-                                                                                                                                column(4, actionButton("CAL_DIF", "Start difference calculation", class = "btn-primary"))
+                                                                                                                                column(4, checkboxInput("wit_rep", "Whether the fold change calculation should be within the same biorep", TRUE)),
+                                                                                                                                column(4, actionButton("CAL_DIF", "Start fold change calculation", class = "btn-primary"))
                                                                                                                                 )
                                                                                                                        ),
                                                                                                       conditionalPanel(condition = "input.got_diff_cetsa",
@@ -647,22 +652,23 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                      conditionalPanel(condition = "output.cetsa_difup | input.step_cetsa > '5' ",
                                                                                                       actionButton("see7_cetsa", "View caldiff output"),
                                                                                                       tags$hr(),
-                                                                                                      tags$u(h3("Get the protein hitlist")),
+                                                                                                      tags$u(h3("Hitlist generation")),
                                                                                                       tags$hr(),
 
                                                                                                       conditionalPanel(condition = "!input.calc_diff",
                                                                                                                        radioButtons("hitmethod_cetsa", "Choose a method to get your hitlist",
-                                                                                                                                    choices = c("Intercept Score" = "IS",
+                                                                                                                                    choices = c("I-score" = "IS",
                                                                                                                                                 "2D-score" = "ImpS",
                                                                                                                                                 "Fold Change cutoff" = "FC"
                                                                                                                                                 ),
                                                                                                                                     selected = "IS",
                                                                                                                                     inline = TRUE),
                                                                                                                        conditionalPanel(condition = "input.hitmethod_cetsa == 'ImpS'",
+                                                                                                                                        actionButton("see10_cetsa", "See more information"),
                                                                                                                                         tags$hr(),
                                                                                                                                         fluidRow(column(4, selectInput("formatImpS_cetsa", "Choose how many categories to segregate the results", choices = c("4", "9"), selected = "4")),
                                                                                                                                                  column(4, numericInput("FDRImpS_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
-                                                                                                                                                 column(4, numericInput("cvcutoff_cetsa", "Choose the significance level of threshold used for CV quality control", value = 2.5, min = 0, max = 10, step = 0.25))
+                                                                                                                                                 column(4, numericInput("cvcutoff_cetsa", "Choose the CV cutoff", value = 2.5, min = 0, max = 10, step = 0.25))
                                                                                                                                                  ),
                                                                                                                                         tags$hr(),
                                                                                                                                         textOutput("diag_ImpS"),
@@ -671,9 +677,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        conditionalPanel(condition = "input.hitmethod_cetsa == 'IS'",
                                                                                                                                         actionButton("see9_cetsa", "See more information"),
                                                                                                                                         tags$hr(),
-                                                                                                                                        fluidRow(column(4, numericInput("IScut_cetsa", "Choose a Intercept Score cutoff", value = 1.5, min = 0, step = 0.1)),
+                                                                                                                                        fluidRow(column(4, numericInput("IScut_cetsa", "Choose the Intercept Score cutoff", value = 1.5, min = 0, step = 0.1)),
                                                                                                                                                  column(4, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
-                                                                                                                                                 column(4, numericInput("validval_cetsa", "Choose the minimum proportion of valid values", value = 0, min = 0, max = 1, step = 0.05))
+                                                                                                                                                 column(4, numericInput("validval_cetsa", "Choose the minimum proportion of non-missing values", value = 0, min = 0, max = 1, step = 0.05))
                                                                                                                                                  ),
                                                                                                                                         tags$hr(),
                                                                                                                                         textOutput("diag_IS"),
@@ -682,7 +688,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        conditionalPanel(condition = "input.hitmethod_cetsa == 'FC'",
                                                                                                                                         actionButton("see8_cetsa", "See more information"),
                                                                                                                                         tags$hr(),
-                                                                                                                                        fluidRow(column(4, numericInput("meancut_cetsa", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                                                                        fluidRow(column(4, numericInput("meancut_cetsa", "Choose the mean cutoff", value = 0.25, min = 0, step = 0.01)),
                                                                                                                                                  column(4, numericInput("bound_cetsa", "Choose the boundedness", value = 4)),
                                                                                                                                                  column(4, checkboxInput("save_hit", "Save the hitlist", TRUE))
                                                                                                                                                  )
@@ -696,12 +702,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                     selected = "hitlist", inline = TRUE),
 
                                                                                                                        DT::dataTableOutput("hit_out")
+                                                                                                                       )
                                                                                                       )
                                                                                      )
-                                                                        )
                                                                         ),
 
-                                                                        h3("Go check your file in your working directory, all the results from your analysis should be saved !"),
+                                                                        h3("Check your file in your saving directory, all the results from your analysis should be saved !"),
                                                                         tags$hr()
                                                                         )
                                                        )
@@ -712,7 +718,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           shinyjs::useShinyjs(),
                           fluidRow(style = "height:20px;"),
 
-                          h1(tags$u(class = "main-1", "Add new dataset and remove old ones")),
+                          h1(tags$u(class = "main-1", "Adding and removing datasets")),
                           tags$hr(),
 
                           htmlOutput("info_daba"),
@@ -730,7 +736,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                               <br><h5>Once you made your changements, don't forget to click on the button 'Reload the database' to use it directly.</h5>"
                           ),
 
-                          fluidRow(box(title = "Add new dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                          fluidRow(box(title = "Adding dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, fileInput("caldif_daba", "Import the output from imprints_caldiff"),
                                                        textOutput("caldif_daba_check"),
                                                        checkboxInput("gave_daba", "Don't have the imprints_average output
@@ -752,7 +758,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           )),
 
-                          fluidRow(box(title = "Rename your treatments", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                          fluidRow(box(title = "Treatments renaming", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, uiOutput("davai2_daba_ui")),
                                                 column(6, htmlOutput("condfrom_daba"),
                                                        textInput("condnew_daba", "Type the new names of the treatments
@@ -762,7 +768,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                           )
                           ),
 
-                          fluidRow(box(title = "Remove dataset", status = "danger", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                          fluidRow(box(title = "Removing dataset", status = "danger", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, uiOutput("davai_daba_ui")),
                                                 column(6, actionButton("rem_daba", "Remove dataset", class = "btn-danger btn-lg"))
                                        )
@@ -784,16 +790,16 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                      fluidRow(style = "height:20px;"),
 
-                                     tabsetPanel(type = "tabs", selected = "2D Bar plot",
-                                                 tabPanel("2D Bar plot",
-                                                          h1(tags$u(class = "main-1", "Get the 2D bar plot")),
+                                     tabsetPanel(type = "tabs", selected = "IMPRINTS Bar plot",
+                                                 tabPanel("IMPRINTS Bar plot",
+                                                          h1(tags$u(class = "main-1", "Get the IMPRINTS bar plot")),
                                                           tags$hr(),
 
-                                                          fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                          fluidRow(box(title = "IMPRINTS bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug", "Choose a dataset",
+                                                                       radioButtons("drug", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug == 'base'",
                                                                                         uiOutput("drug2_ui")
@@ -808,17 +814,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                      accept = c(".txt", ".csv", ".xlsx")),
                                                                                                         textOutput("data_barplot_check")
                                                                                                         ),
-                                                                                        column(6, checkboxInput("calc_hitlist", "Find the hitlist from your data file", FALSE),
+                                                                                        column(6, checkboxInput("calc_hitlist", "Compute the hitlist from your data file", FALSE),
                                                                                                conditionalPanel(condition = "!input.calc_hitlist",
                                                                                                                 fileInput("data_hitlist", "Upload your own hitlist, the summary file from the hitlist outputs",
                                                                                                                           accept = c(".txt", ".csv", ".xlsx"), multiple = TRUE)),
                                                                                                conditionalPanel(condition = "input.calc_hitlist",
-                                                                                                                fluidRow(column(2, numericInput("meancut_bar", "Choose a mean cutoff", value = 0.25, min = 0, step = 0.01)),
+                                                                                                                fluidRow(column(2, numericInput("meancut_bar", "Choose the mean cutoff", value = 0.25, min = 0, step = 0.01)),
                                                                                                                          column(2, numericInput("bound_bar", "Choose the boundedness", value = 4)),
                                                                                                                          column(2, checkboxInput("save_hit_bar", "Save the hitlist", FALSE))
                                                                                                                 ),
                                                                                                                 actionButton("str_calchit", "Start calculation"))
-                                                                                        )
+                                                                                               )
                                                                                         ),
 
                                                                                         tags$hr()
@@ -925,15 +931,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  ),
 
                                                  tabPanel("Protein complex",
-                                                          h1(tags$u(class = "main-1", "Protein complex and 2D bar plot")),
+                                                          h1(tags$u(class = "main-1", "Protein complex and IMPRINTS bar plot")),
                                                           tags$hr(),
 
                                                           fluidRow(box(title = "Map proteins to known protein complex", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_compl", "Choose a dataset",
+                                                                       radioButtons("drug_compl", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_compl == 'base'",
                                                                                         uiOutput("drug2ui_compl")
@@ -959,7 +965,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        conditionalPanel(condition = "output.DIFcompl_fileup & output.HITcompl_fileup & output.NNcompl_fileup & output.AVEcompl_fileup",
                                                                                         fluidRow(column(4, selectInput("condsel_compl", "Select a treatment", choices = NULL)),
                                                                                                  column(4, selectInput("catego_compl", "Select some categories", choices = NULL, multiple = TRUE)),
-                                                                                                 column(4, selectInput("organism_compl", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                                                 column(4, selectInput("organism_compl", "Specify an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                                         ),
 
                                                                                         actionButton("ave_map_compl", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
@@ -977,7 +983,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           ),
 
                                                           conditionalPanel(condition = "output.resmappingcompl_fileup",
-                                                                           fluidRow(box(title = "2D bar plot parameter", status = "primary",
+                                                                           fluidRow(box(title = "IMPRINTS bar plot parameter", status = "primary",
                                                                                         solidHeader = TRUE, collapsible = TRUE, width = 12,
 
                                                                                         fluidRow(column(4,selectInput("allcomplex_compl", "Select some protein complex", choices = NULL, multiple = TRUE)),
@@ -1046,14 +1052,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  ),
 
                                                  tabPanel("Similar profiles",
-                                                          h1(tags$u(class = "main-1", "Find similar profiles")),
+                                                          h1(tags$u(class = "main-1", "Find similar IMPRINTS profiles")),
                                                           tags$hr(),
 
-                                                          fluidRow(box(title = "2D bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
+                                                          fluidRow(box(title = "IMPRINTS bar plot parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_simpf", "Choose a dataset",
+                                                                       radioButtons("drug_simpf", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_simpf == 'base'",
                                                                                         uiOutput("drug2ui_simpf")
@@ -1186,15 +1192,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                      tabsetPanel(type = "tabs",
 
                                                  tabPanel("Heatmap",
-                                                          h2(tags$u(class = "main-1", "Get heatmaps from your data")),
+                                                          h1(tags$u(class = "main-1", "Heatmap generation")),
                                                           tags$hr(),
 
-                                                          fluidRow(box(title = "Import your data and Heatmap parameter", status = "primary",
+                                                          fluidRow(box(title = "Data selection and heatmap parameters", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_heat", "Choose a dataset",
+                                                                       radioButtons("drug_heat", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_heat == 'base'",
                                                                                         uiOutput("drug2ui_heat")
@@ -1267,15 +1273,15 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  ),
 
                                                  tabPanel("Protein complex",
-                                                          h2(tags$u(class = "main-1", "Protein complex and heatmap")),
+                                                          h1(tags$u(class = "main-1", "Protein complex and heatmap generation")),
                                                           tags$hr(),
 
                                                           fluidRow(box(title = "Map proteins to known protein complex", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_heatcom", "Choose a dataset",
+                                                                       radioButtons("drug_heatcom", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_heatcom == 'base'",
                                                                                         uiOutput("drug2ui_heatcom")
@@ -1301,7 +1307,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                                        conditionalPanel(condition = "output.heatcom_fileup",
                                                                                         fluidRow(column(4, selectInput("cond_heatcom", "Select a treatment", choices = NULL)),
-                                                                                                 column(4, selectInput("organism_heatcom", "Choose an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
+                                                                                                 column(4, selectInput("organism_heatcom", "Specify an organism", choices = c("Human", "Mouse", "Rat"), selected = "Human"))
                                                                                         ),
 
                                                                                         actionButton("ave_map_heatcom", "Map proteins to known protein complex", class = "btn-primary btn-lg"),
@@ -1321,7 +1327,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                            fluidRow(box(title = "Heatmap parameter", status = "primary",
                                                                                         solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                                        fluidRow(column(4,selectInput("allcomplex_heatcom", "Select some protein complex", choices = NULL, multiple = TRUE)),
+                                                                                        fluidRow(column(4,selectInput("allcomplex_heatcom", "Select some protein complexes", choices = NULL, multiple = TRUE)),
                                                                                                  column(4, selectInput("resp_heatcom", "Select a response to the drug",
                                                                                                                        choices = c("Stabilization" = "S",
                                                                                                                                    "Destabilization" = "D",
@@ -1383,12 +1389,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                           h1(tags$u(class = "main-1", "Network and enrichment analysis from STRING")),
                                                           tags$hr(),
 
-                                                          fluidRow(box(title = "Import your data and start the analysis", status = "primary",
+                                                          fluidRow(box(title = "Data selection and STRING analysis", status = "primary",
                                                                        solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_stri", "Choose a dataset",
+                                                                       radioButtons("drug_stri", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_stri == 'base'",
                                                                                         uiOutput("drug2ui_stri"),
@@ -1421,7 +1427,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         ),
 
                                                                        conditionalPanel(condition = "output.file_stri_up | !input.impfile_stri",
-                                                                                        fluidRow(column(6, selectInput("species_string", "Choose an organism",
+                                                                                        fluidRow(column(6, selectInput("species_string", "Specify an organism",
                                                                                                                        choices = c("Human" = 9606,
                                                                                                                                    "Mouse" = 10090,
                                                                                                                                    "Rat" = 10116), selected = 9606)),
@@ -1531,9 +1537,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                                                           fluidRow(box(title = "Networks data parameters", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                                       radioButtons("drug_barnet", "Choose a dataset",
+                                                                       radioButtons("drug_barnet", "Choose a dataset source",
                                                                                     choices = c("Database" = "base",
-                                                                                                "Your data" = "dat"),
+                                                                                                "Upload a file" = "dat"),
                                                                                     selected = "base", inline = TRUE),
                                                                        conditionalPanel(condition = "input.drug_barnet == 'base'",
                                                                                         uiOutput("drug2_ui_barnet")
@@ -1700,9 +1706,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                      fluidRow(box(title = "Import your data and start the analysis", status = "primary",
                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                                  radioButtons("drug_clus", h3("Choose a dataset"),
+                                                  radioButtons("drug_clus", h3("Choose a dataset source"),
                                                                choices = c("Database" = "base",
-                                                                           "Your data" = "dat"),
+                                                                           "Upload a file" = "dat"),
                                                                selected = "base", inline = TRUE),
                                                   conditionalPanel(condition = "input.drug_clus == 'base'",
                                                                    uiOutput("drug2ui_clus"),
@@ -1820,17 +1826,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                can plot its IMPRINTS profile.</h5>"),
                           tags$hr(),
                           fluidRow(
-                            box(title = "Get subcellular location from your hitlist", status = "primary",
+                            box(title = "Subcellular location from hitlist", status = "primary",
                                 solidHeader = TRUE, collapsible = TRUE, width = 12,
 
-                                radioButtons("drug_cell", "Choose a dataset",
+                                radioButtons("drug_cell", "Choose a dataset source",
                                              choices = c("Database" = "base",
-                                                         "Your data" = "dat"),
+                                                         "Upload a file" = "dat"),
                                              selected = "base", inline = TRUE),
                                 conditionalPanel(condition = "input.drug_cell == 'base'",
                                                  uiOutput("drug2ui_cell")
                                 ),
-                                fluidRow(column(6, selectInput("organism_cell", "Choose an organism",
+                                fluidRow(column(6, selectInput("organism_cell", "Specify an organism",
                                                                choices = c("Human" = "HUMAN",
                                                                            "Mouse" = "MOUSE"), selected = "HUMAN")),
                                          conditionalPanel(condition = "input.drug_cell == 'dat' ",
@@ -1977,9 +1983,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           h1(tags$u(class = "main-1", "Search publications in PubMed")),
                           tags$hr(),
-                          HTML("<h5>In this tab, you can look for potential pubmed publication
+                          HTML("<h5>In this tab, you can search pubmed publication
                                related to the keywords you selected. <br>
-                               If a/some publicaitons are found, their title, author and abstract are saved in
+                               If some publicaitons are found, their title, author and abstract are saved in
                                one word file in the folder you named.</h5>"),
                           tags$hr(),
 
@@ -3545,6 +3551,26 @@ server <- function(input, output, session){
         easyClose = TRUE
       )))
   })
+  observeEvent(input$see10_cetsa,{
+    showModal(tags$div(id="modal10_2D",modalDialog(
+      shiny::HTML("<h1>Hitlist generation: 2D Score</h1><br>
+                    <br>This method compute two scores for each protein; one reflecting the abuundance of the protein and the other its thermal stability.
+                    From this two scores, it then plot each protein according to this two values and derive cutoff from the median of the data, the FDR and
+                    a CV cutoff.
+                    <br>The abundance score is obtained by taking the mean of the fold change of all bioreplicates at the lowest temperature (typically 37°C).
+                    It is then z-score normalized.
+                    <br>The thermal stability score is calculated by taking the mean of the differences of the mean of relative fold changes of protein levels
+                    at other measurement temperatures (typically higher then 37°C) with the protein abundance score. It is then also z-score normalized.
+                    <br><br>Hits can fianlly be seggregated in 4 different categories as follow:
+                    <br><br><img src='catego_4.png' alt='IS figure', width='1080' height='280'>
+                    <br>Or also in 9 different categories as follow:
+                    <br><img src='catego_9.png' alt='IS figure', width='720' height='720'>
+                    "),
+      footer = NULL,
+      easyClose = TRUE
+    )))
+  })
+
   # hitlist calculation
   hit_pr <- reactiveValues(
     hitlist = NULL,

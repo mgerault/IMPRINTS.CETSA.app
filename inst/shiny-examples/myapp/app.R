@@ -201,19 +201,24 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                    the Uniprot IDs and the protein description respectively.<br>
                                                                                                                    So you can use the caldiff file output you have from your protein analysis.
                                                                                                                    <br><br>If you upload nothing, all proteins from the peptides files
-                                                                                                                   will be kept but the protein description will be missing.</h5>")),
+                                                                                                                   will be kept. Also, to have the protein description information, make sure
+                                                                                                                   your files contains the column 'Master Protein Descriptions'.</h5>")),
                                                                                              column(8, fileInput("prot_data_pep", "Select a protein file",
                                                                                                                  accept = ".txt", multiple = TRUE))
                                                                                              ),
                                                                                     tags$hr(),
-                                                                                    fluidRow(column(4, shiny::HTML("<br><h5>For now, you cannot choose the peptide modification
-                                                                                                                   you want to keep or remove. By default, only the TMT modifications
-                                                                                                                   are kept.</h5>")),
-                                                                                             column(4, textInput("dname_pep", "Type a name for your dataset so the saved
+                                                                                    fluidRow(column(6, selectInput("rmmodif_pep", "Select some peptide modifications you would like to remove (can be NULL)",
+                                                                                                                   multiple = TRUE, selected = NULL,
+                                                                                                                   choices = c("Phospho", "Oxidation", "Carbamidomethyl", "Deamidated", "Acetyl", "Met-loss")
+                                                                                                                   )
+                                                                                                    ),
+                                                                                             column(6, textInput("dname_pep", "Type a name for your dataset so the saved
                                                                                                                                file name can contain it. Can be NULL", value = ""))
                                                                                              ),
                                                                                     tags$hr(),
-                                                                                    actionButton("read_pep", "Read your peptides data", class = "btn-primary")
+                                                                                    fluidRow(column(6, actionButton("read_pep", "Read your peptides data", class = "btn-primary")),
+                                                                                             column(6, textOutput("diag_pep_reading"))
+                                                                                             )
                                                                                     )
                                                                    ),
                                                   tags$hr(),
@@ -230,7 +235,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                        actionButton("NORM_pep", "Start Normalization", class = "btn-primary")
                                                                                                        ),
                                                                                    conditionalPanel(condition = "input.got_norm_pep",
-                                                                                                    fileInput("normfile_pep", "Select the NormPeptides file", accept = ".txt")
+                                                                                                    fileInput("normfile_pep", "Select the NormPeptides file", accept = ".txt"),
+                                                                                                    textOutput("normfile_pep_check")
                                                                                                     )
                                                                                    )
                                                                             ),
@@ -288,7 +294,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    fluidRow(column(6, checkboxInput("got_FCfile_pep", "Import your own fold-change file.
                                                                                                      If not, will use the one obtained in previous step.", value = FALSE)),
                                                                             conditionalPanel(condition = "input.got_FCfile_pep",
-                                                                                             column(6, fileInput("FCfile_pep", "Import a peptide fold change file (txt)", accept = ".txt")))
+                                                                                             column(6, fileInput("FCfile_pep", "Import a peptide fold change file (txt)", accept = ".txt"),
+                                                                                                    textOutput("FCfile_pep_check"))
+                                                                                             )
                                                                            ),
                                                                    tags$hr(),
 
@@ -323,6 +331,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                               a number followed by a dash followed by a number, like this for example '208-221'.
                                                               <br>Once the filtration is done a txt file is saved.</h5>"),
                                                   fileInput("filter_joinpep", "Import a fold-change peptide file (txt)", accept = ".txt"),
+                                                  textOutput("filter_joinpep_check"),
                                                   tags$hr(),
                                                   checkboxInput("sequence_file_joinpep", "Import a file with proteins and sequences"),
                                                   tags$hr(),
@@ -752,7 +761,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                        ),
                                        conditionalPanel(condition = "output.DIFdaba_fileup & output.AVEdaba_fileup & output.HITdaba_fileup",
                                                         fluidRow(column(6, textInput("name_daba", "Type a name for your new dataset")),
-                                                                 column(6, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"))
+                                                                 column(6, actionButton("add_daba", "Add dataset", class = "btn-success btn-lg"),
+                                                                        textOutput("diag_add_daba"))
                                                         )
                                        )
 
@@ -760,11 +770,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
 
                           fluidRow(box(title = "Treatments renaming", status = "primary", solidHeader = TRUE, collapsible = TRUE, width = 12,
                                        fluidRow(column(6, uiOutput("davai2_daba_ui")),
-                                                column(6, htmlOutput("condfrom_daba"),
-                                                       textInput("condnew_daba", "Type the new names of the treatments
-                                                                   (same order; separated by a comma; if empty, no changement)"))
-                                       ),
-                                       actionButton("changename_daba", "Change the name of your treatments", class = "btn-primary btn-lg")
+                                                column(6, uiOutput("condfrom_daba"))
+                                                ),
+                                       fluidRow(column(6, actionButton("changename_daba", "Change the name of your treatments", class = "btn-primary btn-lg")),
+                                                column(6, textOutput("diag_chgname_daba"))
+                                                )
                           )
                           ),
 
@@ -2108,6 +2118,48 @@ server <- function(input, output, session){
 
   ### analysis tab - Peptides
 
+  imprints_format_verifier_peptides <- function(x){
+    help_message <- c()
+    needed_column <- c("Master Protein Accessions", "description",
+                       "Positions in Master Proteins", "Annotated Sequence",
+                       "Modifications")
+
+    missing_columns <- needed_column[!(needed_column %in% colnames(x))]
+    if(length(missing_columns)){
+      help_message <- c(help_message, paste(paste(missing_columns, collapse = ", "),
+                                            ifelse(length(missing_columns) > 1, "are", "is"),
+                                            "missing in your data !"))
+      message(help_message[length(help_message)])
+    }
+
+    right_format <- grep("^\\d{1,}", colnames(x), value = TRUE)
+
+    if(length(right_format) == 0){
+      help_message <- c(help_message, "No column names in your data start with a digit ! The column names corresponding to the data should start with the corresonding temperature.")
+      message(help_message[length(help_message)])
+    }
+
+    right_format <- grep("_", right_format, value = TRUE)
+    if(length(right_format) == 0){
+      help_message <- c(help_message, "No column names has an underscore '_' ! The column names corresponding to the data should have an underscore separating between the temperature, the bioreplicate and the treatment.")
+      message(help_message[length(help_message)])
+    }
+    else{
+      right_format <- unique(unlist(lapply(strsplit(right_format, "_"), length)))
+      if(length(right_format) > 1){
+        help_message <- c(help_message,
+                          "The column names corresponding to the data should have the same number of underscores ! i.e. 2 to separate between temperature, bioreplicate and treatment.")
+        message(help_message[length(help_message)])
+      }
+      else if(right_format != 3){
+        help_message <- c(help_message,
+                          "For the data, like the fold-changes, your column names corresponding to the data should only have two underscores separating between the temperature, the bioreplicate and the treatment, in that order.")
+        message(help_message[length(help_message)])
+      }
+    }
+    return(help_message)
+  }
+
   # PD peptides files
   pep_file_data <- reactive({
     File <- input$PD_data_pep
@@ -2170,7 +2222,7 @@ server <- function(input, output, session){
     if (is.null(File)){
       return(NULL)
     }
-    readr::read_tsv(File$datapath)
+    readr::read_tsv(File$datapath, show_col_types = FALSE)
   })
 
   # read the data
@@ -2181,7 +2233,7 @@ server <- function(input, output, session){
     if(input$got_data_pep){
       File <- input$file_data_pep
       if(!is.null(File)){
-        pep_data$x <- readr::read_tsv(File$datapath)
+        pep_data$x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       }
     }
   })
@@ -2198,11 +2250,26 @@ server <- function(input, output, session){
       return(NULL)
     }
     else{
-      showNotification("Reading files...", type = "message")
-      df <- imprints_read_peptides(pep_file_data()$datapath, treatment = treat,
-                                   temperatures = temp,
-                                   proteins = prot_data_pep(),
-                                   dataset_name = input$dname_pep)
+      withCallingHandlers({
+        shinyjs::html("diag_pep_reading", "")
+        message("Reading files...")
+        df <- imprints_read_peptides(pep_file_data()$datapath, treatment = treat,
+                                     temperatures = temp, modification_torm = input$rmmodif_pep,
+                                     proteins = prot_data_pep(),
+                                     dataset_name = input$dname_pep)
+        message("Done !")
+      },
+      message = function(m) {
+        m <- m$message
+        if(grepl("Warning|Error", m)){
+          m_ <- paste0("<span style='color:red;'>", m, "</span><br>")
+        }
+        else{
+          m_ <- paste(m, "<br>")
+        }
+        shinyjs::html(id = "diag_pep_reading", html = m_, add = TRUE)
+      }
+      )
     }
     pep_data$x <- df
   })
@@ -2249,7 +2316,22 @@ server <- function(input, output, session){
     if(input$got_norm_pep){
       File <- input$normfile_pep
       if(!is.null(File)){
-        norm_pep_data$x <- readr::read_tsv(File$datapath)
+        norm_pep_data$x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
+
+        withCallingHandlers({
+          shinyjs::html("normfile_pep_check", "")
+          check <- imprints_format_verifier_peptides(norm_pep_data$x)
+        },
+        message = function(m) {
+          shinyjs::html(id = "normfile_pep_check",
+                        html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                        add = TRUE)
+
+        })
+
+        if(length(check)){
+          norm_pep_data$x <- NULL
+        }
       }
     }
   })
@@ -2317,7 +2399,15 @@ server <- function(input, output, session){
     df
   })
   observe({
-    updateSelectizeInput(session, "protseq_pep", choices = norm_pep_data$x$`Master Protein Accessions`, server = TRUE)
+    pr_g <- norm_pep_data$x[,c("Master Protein Accessions", "description")]
+    pr_g <- unique(pr_g)
+    gn <- pr_g[[2]]
+    pr_g <- pr_g[[1]]
+    if(all(!is.na(gn))){
+      gn <- unname(sapply(gn, IMPRINTS.CETSA.app:::getGeneName))
+      pr_g <- paste0(pr_g, ":", gn)
+    }
+    updateSelectizeInput(session, "protseq_pep", choices = pr_g, server = TRUE)
   })
 
   # handling sequence selection
@@ -2325,6 +2415,7 @@ server <- function(input, output, session){
     if(!is.null(input$protseq_pep)){
       if(length(input$protseq_pep) <= 20){
         prot <- input$protseq_pep
+        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
         m <- matrix("", length(prot), 1,
                     dimnames = list(prot, "sequence"))
 
@@ -2353,7 +2444,22 @@ server <- function(input, output, session){
     if(input$got_FCfile_pep){
       File <- input$FCfile_pep
       if(!is.null(File)){
-        sequence_pep_data$x <- readr::read_tsv(File$datapath)
+        sequence_pep_data$x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
+
+        withCallingHandlers({
+          shinyjs::html("FCfile_pep_check", "")
+          check <- imprints_format_verifier_peptides(sequence_pep_data$x)
+        },
+        message = function(m) {
+          shinyjs::html(id = "FCfile_pep_check",
+                        html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                        add = TRUE)
+
+        })
+
+        if(length(check)){
+          sequence_pep_data$x <- NULL
+        }
       }
     }
   })
@@ -2371,6 +2477,7 @@ server <- function(input, output, session){
     }
     else{
       prot <- input$protseq_pep
+      prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
       if(!is.null(input$selectSequence_pep)){
         if(inherits(input$selectSequence_pep, "matrix")){
           sequ <- as.character(input$selectSequence_pep[,1])
@@ -2481,7 +2588,24 @@ server <- function(input, output, session){
       return(NULL)
     }
     info_filterpep$name <- File$name
-    readr::read_tsv(File$datapath)
+
+    df <- readr::read_tsv(File$datapath, show_col_types = FALSE)
+    withCallingHandlers({
+      shinyjs::html("filter_joinpep_check", "")
+      check <- imprints_format_verifier_peptides(df)
+    },
+    message = function(m) {
+      shinyjs::html(id = "filter_joinpep_check",
+                    html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                    add = TRUE)
+
+    })
+
+    if(length(check)){
+      df <- NULL
+    }
+
+    df
   })
 
 
@@ -2501,8 +2625,16 @@ server <- function(input, output, session){
     df
   })
   observe({
+    pr_g <- tofilter_pep_data()[,c("Master Protein Accessions", "description")]
+    pr_g <- unique(pr_g)
+    gn <- pr_g[[2]]
+    pr_g <- pr_g[[1]]
+    if(all(!is.na(gn))){
+      gn <- unname(sapply(gn, IMPRINTS.CETSA.app:::getGeneName))
+      pr_g <- paste0(pr_g, ":", gn)
+    }
     updateSelectizeInput(session, "protseq_joinpep",
-                         choices = unique(stringr::str_remove_all(tofilter_pep_data()$`Master Protein Accessions`, "\\s.*")),
+                         choices = pr_g,
                          server = TRUE)
   })
   observe({
@@ -2514,6 +2646,7 @@ server <- function(input, output, session){
     if(!is.null(input$protseq_joinpep)){
       if(length(input$protseq_joinpep) <= 20){
         prot <- input$protseq_joinpep
+        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
         m <- matrix("", length(prot), 1,
                     dimnames = list(prot, "sequence"))
 
@@ -2549,15 +2682,22 @@ server <- function(input, output, session){
     }
     else{
       prot <- input$protseq_joinpep
+      prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
       if(!is.null(input$selectSequence_joinpep)){
         if(inherits(input$selectSequence_joinpep, "matrix")){
           sequ <- as.character(input$selectSequence_joinpep[,1])
+          if(!all(grepl("^\\d{1,}-\\d{1,}$", sequ))){
+            sequ <- NULL
+            showNotification("The sequence you wrote isn't in the right format.
+                              No sequence has been selected.", duration = 8, type = "warning")
+          }
         }
         else{
-          if(stringr::str_detect(input$selectSequence_joinpep, "^\\d{1,}-\\d{1,}$") & stringr::str_length(input$selectSequence_joinpep) == 0){
+          if(all(grepl("^\\d{1,}-\\d{1,}$", input$selectSequence_joinpep))){
             sequ <- input$selectSequence_joinpep
           }
           else{
+            sequ <- NULL
             showNotification("The sequence you wrote isn't in the right format.
                               No sequence has been selected.", duration = 8, type = "warning")
           }
@@ -2568,7 +2708,7 @@ server <- function(input, output, session){
     df_filtered <- tofilter_pep_data()
     withCallingHandlers({
       shinyjs::html("diag_pep_filter", "")
-      if(!is.null(prot) & !is.null(sequence)){
+      if(!is.null(prot) & !is.null(sequ)){
         message("Rmoving specific peptides")
         df_filtered <- imprints_remove_peptides(tofilter_pep_data(),
                                                 proteins = prot,
@@ -2615,16 +2755,21 @@ server <- function(input, output, session){
     withCallingHandlers({
       shinyjs::html("diag_pep_join", "")
       message("Reading and joining data")
-      tojoin <- lapply(tojoin_pep_data(), readr::read_tsv)
-      joined_pep_data$x <- imprints_join_peptides(tojoin)
+      tojoin <- lapply(tojoin_pep_data(), readr::read_tsv, show_col_types  = FALSE)
 
-      message("Saving joined dataset")
-      readr::write_tsv(joined_pep_data$x,
-                       file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
-                                     "JoinedPeptides.txt")
-                       )
-      message("Joined data saved !")
-      showNotification("Joined data saved !",  type = "message")
+      check <- unlist(lapply(tojoin, imprints_format_verifier_peptides))
+
+      if(!length(check)){
+        joined_pep_data$x <- imprints_join_peptides(tojoin)
+
+        message("Saving joined dataset")
+        readr::write_tsv(joined_pep_data$x,
+                         file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
+                                       "JoinedPeptides.txt")
+        )
+        message("Joined data saved !")
+        showNotification("Joined data saved !",  type = "message")
+      }
     },
     message = function(m) {
       shinyjs::html(id = "diag_pep_join", html = paste(m$message, "<br>", sep = ""), add = FALSE)
@@ -2666,7 +2811,7 @@ server <- function(input, output, session){
         return(NULL)
       }
       else{
-        df <- readr::read_tsv(File$datapath)
+        df <- readr::read_tsv(File$datapath, show_col_types = FALSE)
         return(df)
       }
     }
@@ -3067,7 +3212,7 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_ISO_cetsa)
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("ISOresfile_cetsa_check", "")
       check <- imprints_format_verifier(x, is_iso = TRUE)
@@ -3198,7 +3343,7 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_rearr_cetsa)
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("rearrfile_cetsa_check", "")
       check <- imprints_format_verifier(x)
@@ -3315,7 +3460,7 @@ server <- function(input, output, session){
     if (is.null(File) | !input$got_norm_cetsa)
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("normfile_cetsa_check", "")
       check <- imprints_format_verifier(x)
@@ -3419,7 +3564,7 @@ server <- function(input, output, session){
 
     # just for handling problem with first hitlist function
     x <- read.delim(File$datapath, check.names = FALSE)
-    xv <- readr::read_tsv(File$datapath)
+    xv <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("difffile_cetsa_check", "")
       check <- imprints_format_verifier(xv)
@@ -3747,7 +3892,7 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("caldif_daba_check", "")
       check <- imprints_format_verifier(x)
@@ -3776,7 +3921,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("AVE_dabafile_check", "")
         check <- imprints_format_verifier(x, TRUE)
@@ -3892,114 +4037,138 @@ server <- function(input, output, session){
 
 
   observeEvent(input$add_daba, {
-    if(input$name_daba %in% names(drug_data_sh$y$data)){
-      showNotification("This name is already taken ! Please, choose anoter one.", type = "error")
-    }
-    else{
-      ave_data <- NULL
-      if(!input$gave_daba & !is.null(AVE_daba())){
-        ave_data <- AVE_daba()
+    withCallingHandlers({
+      shinyjs::html("diag_add_daba", "")
+      if(input$name_daba %in% names(drug_data_sh$y$data)){
+        message("<span style='color:red;'>This name is already taken ! Please, choose anoter one.</span>")
       }
       else{
-        showNotification("Getting average dataset, this may take a while.", type = "message")
-        ave_data <- imprints_average(DIF_daba(), savefile = TRUE)
-        showNotification("Average calculation succeed !", type = "message")
+        ave_data <- NULL
+        if(!input$gave_daba & !is.null(AVE_daba())){
+          ave_data <- AVE_daba()
+        }
+        else{
+          message("Getting average dataset, this may take a while.")
+          ave_data <- imprints_average(DIF_daba(), savefile = TRUE)
+          message("Average calculation succeeded !")
+        }
+        message("Start saving dataset, this may take a while.")
+        save_data(drug_data_sh$y, new_add = list("data" = DIF_daba(),
+                                                 "data_ave" = ave_data,
+                                                 "hitlist" = HIT_daba(),
+                                                 "NN" = NN_daba$x,
+                                                 "treat_level" = data.frame(treatment = get_treat_level(DIF_daba())
+                                                 )
+        ),
+        input$name_daba)
+
+
+        message("New dataset added !")
       }
-      showNotification("Start saving dataset, this may take a while.", type = "message")
-      save_data(drug_data_sh$y, new_add = list("data" = DIF_daba(),
-                                              "data_ave" = ave_data,
-                                              "hitlist" = HIT_daba(),
-                                              "NN" = NN_daba$x,
-                                              "treat_level" = data.frame(treatment = get_treat_level(DIF_daba())
-                                                                         )
-                                              ),
-               input$name_daba)
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_add_daba",
+                    html = paste0(m$message, "<br>"),
+                    add = TRUE)
 
-
-      showNotification("New dataset added !", type = "message")
-    }
+    })
   })
+
 
   output$condfrom_daba <- renderUI({
     cd_info <- NULL
     df <- NULL
+    m <- matrix("", 1, 1,
+                dimnames = list("", "New names"))
     if(!is.null(input$davai2_daba)){
       df <- drug_data_sh$y$data[[input$davai2_daba]]
     }
 
     if(!is.null(df) & length(df)){
       cd <- get_treat_level(df)
-      cd_1 <- cd[-length(cd)]
-      cd_e <- cd[length(cd)]
+      m <- matrix("", length(cd), 1,
+                  dimnames = list(cd, "New names"))
 
-      cd_info <- paste(paste(cd_1, collapse = ", "), cd_e, sep = " and ")
     }
-    HTML(paste("<p>Your current condition names for the drug", input$davai2_daba, "are :", paste0("<b>", cd_info, "</b>"), "</p>"))
+    matrixInput("condnew_daba", "Type new names for some treatments (if empty, it will not be changed)",
+                value = m,
+                rows = list(names = TRUE),
+                cols = list(names = TRUE)
+    )
   })
 
   observeEvent(input$changename_daba, {
-    showNotification("Checking new names", type = "message", duration = 2)
-    nm <- input$condnew_daba
-    nm <- str_split(nm, ",")[[1]]
-    nm <- str_remove_all(nm, " ")
-    if(sum(str_detect(nm, "_|/")) > 0){
-      showNotification("The character '_' and '/' are not alllowed. Please, verify your new names.", type = "error")
-    }
-    else{
-      if(!is.null(input$davai2_daba)){
-        cd <- get_treat_level(drug_data_sh$y$data[[input$davai2_daba]])
-      }
-
-      for(i in 1:length(cd)){
-        if(str_length(nm[i]) == 0){
-          nm[i] <- cd[i]
-        }
-      }
-      change <- cd[!(nm %in% cd)]
-      if(length(change) & !is.null(change)){
-        new <- nm[!(nm %in% cd)]
-        showNotification(paste("You decided to change :", paste(change, collapse = ", "),
-                               "In :", paste(new, collapse = ", ")), type = "message")
-
-        df <- drug_data_sh$y$data[[input$davai2_daba]]
-        df_ave <- drug_data_sh$y$data_ave[[input$davai2_daba]]
-        dh <- drug_data_sh$y$hitlist[[input$davai2_daba]]
-        dnn <- drug_data_sh$y$NN[[input$davai2_daba]]
-
-        n_df <- names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))]
-        n_df_ave <- names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))]
-        n_dh <- dh$treatment
-        n_dnn <- dnn$treatment
-
-        for(i in 1:length(change)){
-          n_df <- str_replace_all(n_df, paste0("_", change[i], "$"), paste0("_", new[i]))
-          n_df_ave <- str_replace_all(n_df_ave, paste0("_", change[i], "$"), paste0("_", new[i]))
-          n_dh <- str_replace_all(n_dh, paste0("^", change[i], "$"), new[i])
-          n_dnn <- str_replace_all(n_dnn, paste0("^", change[i], "$"), new[i])
-        }
-
-        names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df
-        names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df_ave
-        dh$treatment <- n_dh
-        dnn$treatment <- n_dnn
-        dt <- data.frame(treatment = get_treat_level(df))
-
-        showNotification("Start saving changes, this may take a while.", type = "message")
-        save_data(drug_data_sh$y, new_add = list("data" = df,
-                                                "data_ave" = df_ave,
-                                                "hitlist" = dh,
-                                                "NN" = dnn,
-                                                "treat_level" = dt),
-                 input$davai2_daba)
-
-
-        showNotification("Names changed !", type = "message")
-
+    withCallingHandlers({
+      shinyjs::html("diag_chgname_daba", "")
+      message("Checking new names")
+      nm <- input$condnew_daba[,1]
+      nm <- str_remove_all(nm, " ")
+      if(any(grepl("_|/", nm))){
+        message("<span style='color:red;'>The character '_' and '/' are not alllowed. Please, verify your new names.</span>")
       }
       else{
-        showNotification("You didn't make any changement !", type = "error")
+        if(!is.null(input$davai2_daba)){
+          cd <- get_treat_level(drug_data_sh$y$data[[input$davai2_daba]])
+        }
+
+        for(i in 1:length(cd)){
+          if(str_length(nm[i]) == 0){
+            nm[i] <- cd[i]
+          }
+        }
+        change <- cd[!(nm %in% cd)]
+        if(length(change) & !is.null(change)){
+          new <- nm[!(nm %in% cd)]
+          message(paste("You decided to change :", paste(change, collapse = ", "),
+                                 "In :", paste(new, collapse = ", "))
+                  )
+
+          df <- drug_data_sh$y$data[[input$davai2_daba]]
+          df_ave <- drug_data_sh$y$data_ave[[input$davai2_daba]]
+          dh <- drug_data_sh$y$hitlist[[input$davai2_daba]]
+          dnn <- drug_data_sh$y$NN[[input$davai2_daba]]
+
+          n_df <- names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))]
+          n_df_ave <- names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))]
+          n_dh <- dh$treatment
+          n_dnn <- dnn$treatment
+
+          for(i in 1:length(change)){
+            n_df <- str_replace_all(n_df, paste0("_", change[i], "$"), paste0("_", new[i]))
+            n_df_ave <- str_replace_all(n_df_ave, paste0("_", change[i], "$"), paste0("_", new[i]))
+            n_dh <- str_replace_all(n_dh, paste0("^", change[i], "$"), new[i])
+            n_dnn <- str_replace_all(n_dnn, paste0("^", change[i], "$"), new[i])
+          }
+
+          names(df)[str_detect(names(df), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df
+          names(df_ave)[str_detect(names(df_ave), paste(paste0("_", change, "$"), collapse = "|"))] <- n_df_ave
+          dh$treatment <- n_dh
+          dnn$treatment <- n_dnn
+          dt <- data.frame(treatment = get_treat_level(df))
+
+          message("Start saving changes, this may take a while.")
+          save_data(drug_data_sh$y, new_add = list("data" = df,
+                                                   "data_ave" = df_ave,
+                                                   "hitlist" = dh,
+                                                   "NN" = dnn,
+                                                   "treat_level" = dt),
+                    input$davai2_daba)
+
+
+          message("Names changed !")
+
+        }
+        else{
+          message("<span style='color:red;'>You didn't make any changement !</span>")
+        }
       }
-    }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_chgname_daba",
+                    html = paste0(m$message, "<br>"),
+                    add = TRUE)
+
+    })
   })
 
   observeEvent(input$rem_daba, {
@@ -4029,7 +4198,7 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("data_barplot_check", "")
       check <- imprints_format_verifier(x)
@@ -4683,7 +4852,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("caldif_compl_check", "")
         check <- imprints_format_verifier(x)
@@ -4789,7 +4958,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("avef_compl_check", "")
         check <- imprints_format_verifier(x, TRUE)
@@ -5049,7 +5218,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("cdiff_simpf_check", "")
         check <- imprints_format_verifier(x)
@@ -5085,7 +5254,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("avef_simpf_check", "")
         check <- imprints_format_verifier(x, TRUE)
@@ -5296,7 +5465,7 @@ server <- function(input, output, session){
       if (is.null(File) | !input$gave_heat)
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("filedif_heat_check", "")
         check <- imprints_format_verifier(x)
@@ -5327,7 +5496,7 @@ server <- function(input, output, session){
       if (is.null(File)  | input$gave_heat)
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("fileave_heat_check", "")
         check <- imprints_format_verifier(x, TRUE)
@@ -5533,7 +5702,7 @@ server <- function(input, output, session){
       if (is.null(File) | !input$gave_heatcom)
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("filedif_heatcom_check", "")
         check <- imprints_format_verifier(x)
@@ -5564,7 +5733,7 @@ server <- function(input, output, session){
       if (is.null(File)  | input$gave_heatcom)
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("fileave_heatcom_check", "")
         check <- imprints_format_verifier(x, TRUE)
@@ -6181,7 +6350,7 @@ server <- function(input, output, session){
     if (is.null(File))
       return(NULL)
 
-    x <- readr::read_tsv(File$datapath)
+    x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
     withCallingHandlers({
       shinyjs::html("caldiff_barnet_check", "")
       check <- imprints_format_verifier(x)
@@ -7367,7 +7536,7 @@ server <- function(input, output, session){
       if (is.null(File))
         return(NULL)
 
-      x <- readr::read_tsv(File$datapath)
+      x <- readr::read_tsv(File$datapath, show_col_types = FALSE)
       withCallingHandlers({
         shinyjs::html("filebarp_cell_check", "")
         check <- imprints_format_verifier(x)

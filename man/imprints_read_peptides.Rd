@@ -8,22 +8,23 @@ imprints_read_peptides(
   peptides_files,
   treatment,
   temperatures,
-  proteins,
-  modification_tokeep = c("TMT"),
+  proteins = NULL,
+  modification_torm = NULL,
   dataset_name = "Venetoclax6h"
 )
 }
 \arguments{
-\item{peptides_files}{The path to the peptides data. Can be one or more files.}
+\item{peptides_files}{The path to the PeptidesGroups file from PD. Can be one or more files.}
 
 \item{treatment}{A character vector that contains the treatment applied for each channel like 'B1_Vehicle' for example.}
 
 \item{temperatures}{A character vector that contains the temperatures used for each peptides file like '37C' for example.}
 
 \item{proteins}{Either a data frame or a file that has the 2 columns 'id' and 'description' corresponding
-to the proteins you want to keep (usually proteins after \code{imprints_rearrange} or \code{imprints_caldiff})}
+to the proteins you want to keep (usually proteins after \code{imprints_rearrange} or \code{imprints_caldiff}).
+If not specified, no filtering is applied and you must have the column 'Master Protein Descriptions' in your PeptideGroup file(s).}
 
-\item{modification_tokeep}{A character vector that contains the peptides modifications you want to keep. Default is 'TMT'}
+\item{modification_torm}{A character vector that contains the peptides modifications you want to remove. Default is NULL}
 
 \item{dataset_name}{The name of your dataset}
 }

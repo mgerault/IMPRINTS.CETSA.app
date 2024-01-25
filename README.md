@@ -32,7 +32,16 @@ runCETSAapp()
 ```
  
 For more information on how to use the app, go check the [tutorial](https://youtu.be/djpP8nc_JUE) video !
- 
+
+
+ ## Problem with dbplyr package
+
+ If you encounter an error with dbplyr package, check its version. Version 2.4 produces an error when loading database. 
+ Install the version 2.3.4 with:
+
+ ```c
+devtools::install_version("dbplyr", version = "2.3.4")
+```
  
  
  

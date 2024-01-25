@@ -2415,7 +2415,9 @@ server <- function(input, output, session){
     if(!is.null(input$protseq_pep)){
       if(length(input$protseq_pep) <= 20){
         prot <- input$protseq_pep
-        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+        if(!is.null(prot)){
+          prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+        }
         m <- matrix("", length(prot), 1,
                     dimnames = list(prot, "sequence"))
 
@@ -2477,7 +2479,9 @@ server <- function(input, output, session){
     }
     else{
       prot <- input$protseq_pep
-      prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+      if(!is.null(prot)){
+        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+      }
       if(!is.null(input$selectSequence_pep)){
         if(inherits(input$selectSequence_pep, "matrix")){
           sequ <- as.character(input$selectSequence_pep[,1])
@@ -2646,7 +2650,9 @@ server <- function(input, output, session){
     if(!is.null(input$protseq_joinpep)){
       if(length(input$protseq_joinpep) <= 20){
         prot <- input$protseq_joinpep
-        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+        if(!is.null(prot)){
+          prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+        }
         m <- matrix("", length(prot), 1,
                     dimnames = list(prot, "sequence"))
 
@@ -2682,7 +2688,9 @@ server <- function(input, output, session){
     }
     else{
       prot <- input$protseq_joinpep
-      prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+      if(!is.null(prot)){
+        prot <- unname(sapply(prot, function(x) strsplit(x, ":")[[1]][1]))
+      }
       if(!is.null(input$selectSequence_joinpep)){
         if(inherits(input$selectSequence_joinpep, "matrix")){
           sequ <- as.character(input$selectSequence_joinpep[,1])

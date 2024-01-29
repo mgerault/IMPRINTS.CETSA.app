@@ -11,6 +11,7 @@
 #'                 Anyway, it needs to be in the format number-number.
 #'                 If it's NULL, it will only select according the proteins so you can plot all the peptides from those.
 #' @param control The condition corresponding to the control in your dataset.
+#' @param barplot Logical to tell if you want to plot the barplots from the obtained fold-changes. Default is FALSE
 #' @param dataset_name The name of your dataset to save your file.
 #'
 #' @return The caldiff output from the peptide position from the protein you selected; save it and also save the barplots.
@@ -19,7 +20,8 @@
 #'
 #'
 
-imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL, control = "Vehicle",
+imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
+                                       control = "Vehicle", barplot = FALSE,
                                        dataset_name = ""){
   if(!is.null(sequence)){
     if(!(length(proteins) == length(sequence) | length(sequence) == 1) & !inherits(sequence, "list")){
@@ -247,12 +249,13 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL, c
                    )
 
 
-  message("Generates plot")
-  imprints_barplotting_app(final_res_diff, ret_plot = FALSE, save_pdf = TRUE, layout = c(3,3),
-                          pdfname = dataset_name)
+  if(barplot){
+    message("Generates plot")
+    imprints_barplotting_app(final_res_diff, ret_plot = FALSE, save_pdf = TRUE, layout = c(3,3),
+                             pdfname = dataset_name)
+  }
 
-
-
+  message("Done !")
   return(final_res_difffile)
 }
 

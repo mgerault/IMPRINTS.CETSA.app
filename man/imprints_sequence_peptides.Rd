@@ -9,6 +9,7 @@ imprints_sequence_peptides(
   proteins = NULL,
   sequence = NULL,
   control = "Vehicle",
+  barplot = FALSE,
   dataset_name = ""
 )
 }
@@ -24,6 +25,8 @@ Anyway, it needs to be in the format number-number.
 If it's NULL, it will only select according the proteins so you can plot all the peptides from those.}
 
 \item{control}{The condition corresponding to the control in your dataset.}
+
+\item{barplot}{Logical to tell if you want to plot the barplots from the obtained fold-changes. Default is FALSE}
 
 \item{dataset_name}{The name of your dataset to save your file.}
 }

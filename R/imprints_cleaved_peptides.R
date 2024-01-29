@@ -55,15 +55,16 @@ imprints_cleaved_peptides <- function(data, R2 = 0.9, control = NULL, min_ValidV
     dplyr::reframe(mean_value = mean(value, na.rm = TRUE)) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
     dplyr::filter(length(na.omit(mean_value))/length(mean_value) >= min_ValidValue) %>%  # keeping peptides with more than 40% of valid values
-    dplyr::reframe(sum_profile = sum(mean_value, na.rm = TRUE)) %>%  # get sum value for each peptides --> sum all temperatures values
-    dplyr::ungroup() %>% dplyr::group_by(description, treatment) %>%
-    dplyr::filter(length(sum_profile) > 3)  # only keeping proteins with more than 3 peptides
+    dplyr::reframe(sum_profile = sum(mean_value, na.rm = TRUE))  # get sum value for each peptides --> sum all temperatures values
+
 
   # separate id in protein and sequence
   data$id <- stringr::word(data$id, 1, 2)
   data <- data %>%
     tidyr::separate(id, into = c("protein", "sequence"), sep = " ") %>%
-    dplyr::mutate(sequence = stringr::str_remove_all(sequence, "\\[|\\]"))
+    dplyr::mutate(sequence = stringr::str_remove_all(sequence, "\\[|\\]")) %>%
+    dplyr::ungroup() %>% dplyr::group_by(protein, description, treatment) %>%
+    dplyr::filter(length(sum_profile) > 3)  # only keeping proteins with more than 3 peptides
 
 
   # order data according proteins and sequence

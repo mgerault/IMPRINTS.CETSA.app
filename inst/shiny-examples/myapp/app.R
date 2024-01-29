@@ -743,7 +743,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                               click on the button 'Add dataset', and you're good to go !</h5></p>
                               <p><h5>If you want to remove a dataset, select one of the dataset available from the database,
                               and click on the button 'Remove dataset', in the box below. Beware, this operation cannot be undone !</h5></p>
-                              <br><h5>Once you made your changements, don't forget to click on the button 'Reload the database' to use it directly.</h5>"
+                              <br><h5>Once you made your changes, don't forget to click on the button 'Reload the database' to use it directly.</h5>"
                           ),
 
                           fluidRow(box(title = "Adding dataset", status = "success", solidHeader = TRUE, collapsible = TRUE, width = 12,
@@ -4170,7 +4170,7 @@ server <- function(input, output, session){
 
         }
         else{
-          message("<span style='color:red;'>You didn't make any changement !</span>")
+          message("<span style='color:red;'>You didn't make any changes !</span>")
         }
       }
     },

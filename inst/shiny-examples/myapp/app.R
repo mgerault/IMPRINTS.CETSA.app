@@ -280,8 +280,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                              column(6, uiOutput("selectSequenceui_pep"))
                                                                                              )
                                                                                     ),
-                                                                   fluidRow(column(6, selectInput("control_pep", "Select the control from your experiment", choices = NULL)),
-                                                                            column(6, textInput("dnamediff_pep", "Type a name for your dataset so the saved
+                                                                   fluidRow(column(4, selectInput("control_pep", "Select the control from your experiment", choices = NULL)),
+                                                                            column(4, checkboxInput("barplotFC_pep", "Save the barplots from the peptides fold-changes obtained", FALSE)),
+                                                                            column(4, textInput("dnamediff_pep", "Type a name for your dataset so the saved
                                                                                                                   file name can contain it. Can be NULL", value = ""))),
                                                                    tags$hr(),
                                                                    fluidRow(column(6, actionButton("SEQU_pep", "Compute and plot fold change", class = "btn-primary")),
@@ -2503,6 +2504,7 @@ server <- function(input, output, session){
       sequence_pep_data$x <- imprints_sequence_peptides(norm_pep_data$x,
                                                         proteins = prot, sequence = sequ,
                                                         control = input$control_pep,
+                                                        barplot = input$barplotFC_pep,
                                                         dataset_name = input$dnamediff_pep)
       showNotification("Fold change and bar plot saved !",  type = "message")
       },
@@ -2567,10 +2569,11 @@ server <- function(input, output, session){
       shinyjs::html("diag_pep_cleaved", "")
       cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(treatment == input$conditioncleaved_pep)
       foo <- imprints_sequence_peptides(norm_pep_data$x,
-                                                        proteins = cleaved_pepTab$protein,
-                                                        sequence = cleaved_pepTab$cleaved_site,
-                                                        control = input$controlcleaved_pep,
-                                                        dataset_name = "potentially_cleaved")
+                                        proteins = cleaved_pepTab$protein,
+                                        sequence = cleaved_pepTab$cleaved_site,
+                                        control = input$controlcleaved_pep,
+                                        barplot = TRUE,
+                                        dataset_name = "potentially_cleaved")
       },
       message = function(m) {
         shinyjs::html(id = "diag_pep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)

@@ -205,7 +205,7 @@ get_wikipath <- function(wp = TRUE, species = "human"){
     species <- "Mus_musculus"
   }
 
-  date <- strsplit(Sys.Date(), "-")[[1]]
+  date <- strsplit(as.character(Sys.Date()), "-")[[1]]
   date <- as.numeric(date)
   if(date[3] < 11){
     date[2] <- date[2] - 1

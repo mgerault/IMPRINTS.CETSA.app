@@ -4853,7 +4853,7 @@ server <- function(input, output, session){
 
   ### PROTEIN COMPLEX
   output$drug2ui_compl <- renderUI({
-    selectInput("drug2_compl", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_compl", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -5219,7 +5219,7 @@ server <- function(input, output, session){
 
   ### SIMILAR PROFILE
   output$drug2ui_simpf <- renderUI({
-    selectInput("drug2_simpf", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_simpf", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -5466,7 +5466,7 @@ server <- function(input, output, session){
 
   ### HEATMAP
   output$drug2ui_heat <- renderUI({
-    selectInput("drug2_heat", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_heat", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -5703,7 +5703,7 @@ server <- function(input, output, session){
 
   ### HEATMAP PROTEIN COMPLEX
   output$drug2ui_heatcom <- renderUI({
-    selectInput("drug2_heatcom", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_heatcom", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -5939,7 +5939,7 @@ server <- function(input, output, session){
 
   ### STRINGdb
   output$drug2ui_stri <- renderUI({
-    selectInput("drug2_stri", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_stri", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -6353,7 +6353,7 @@ server <- function(input, output, session){
 
   ### Barplots Network
   output$drug2_ui_barnet <- renderUI({
-    selectInput("drug2_barnet", "Choose a drug", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "elutriation")
+    selectInput("drug2_barnet", "Choose a dataset", choices = names(drug_data_sh$y$data), multiple = TRUE, selected = "elutriation")
   })
 
   barnet_data <- reactive({
@@ -6828,7 +6828,7 @@ server <- function(input, output, session){
   })
 
   output$drug2ui_clus <- renderUI({
-    selectInput("drug2_clus", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_clus", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -7359,7 +7359,7 @@ server <- function(input, output, session){
 
   ### CELL
   output$drug2ui_cell <- renderUI({
-    selectInput("drug2_cell", "Choose a drug", choices = names(drug_data_sh$y$data),
+    selectInput("drug2_cell", "Choose a dataset", choices = names(drug_data_sh$y$data),
                 multiple = TRUE, selected = "elutriation")
   })
 
@@ -7930,7 +7930,7 @@ server <- function(input, output, session){
         paste0(format(Sys.time(), "%y%m%d_%H%M_"), "have_publication_", input$feat_pubmed, ".xlsx")
       },
       content = function(file){
-        xlsx::write.xlsx(pub, file, row.names = FALSE)
+        openxlsx::write.xlsx(pub, file, row.names = FALSE)
       }
     )
 

@@ -16,7 +16,7 @@ vignette: >
 ---
 
 ## Introduction  
-The IMPRINTS.CETSA .app package totally depends on the IMPRINTS.CETSA package, written by Dai Lingyun. 
+The IMPRINTS.CETSA.app package totally depends on the IMPRINTS.CETSA package, written by Dai Lingyun. 
 If you're not familiar with this package, go see its [github page](https://github.com/nkdailingyun/IMPRINTS.CETSA) or type 
 'browseVignettes(package = "IMPRINTS.CETSA")' in the R console if you already installed it.
 The main goal of IMPRINTS.CETSA .app package is to provide a "user-friendly" interface of the IMPRINTS.CETSA package thanks to a shiny app. 
@@ -70,7 +70,7 @@ You can install the IMPRINTS.CETSA .app package with this commands :
 if(!requireNamespace("devtools", quietly = TRUE)){ #check if you already have the devtools package
  install.packages("devtools")  #if not, install it
 }
-devtools::install_github("mgerault/IMPRINTS.CETSA .app")
+devtools::install_github("mgerault/IMPRINTS.CETSA.app")
 ```
 
 To install the IMPRINTS.CETSA package (if not already done), you can use the same command :
@@ -89,10 +89,10 @@ When you will use the package and/or the app inside this directory, all your res
 Indeed, when you will load the package, it will save the path of your working directory under the variable WD.
 You can modify it if you want to quickly change your saving directory, but only do it if you are sure and of course if your file exists.
 
-2. Call `IMPRINTS.CETSA .app` package   
+2. Call `IMPRINTS.CETSA.app` package   
 
 ```{r, message=FALSE, eval=FALSE}
-library("IMPRINTS.CETSA .app")
+library("IMPRINTS.CETSA.app")
 ```
 
 --------------------------------------------------
@@ -116,11 +116,11 @@ If you want more informations on how to use the app, I recommend you to watch th
     
 #### $\underline{1.\space The\space data\space}$
   
-The package contains also some data from "Modulation of Protein-Interaction States through the Cell Cycle" from Dai Lingyun and al. 2018, that you can play with.  Let's take a look at the data called `drug_data`. `drug_data` is a list that contains two datasets : "elutriation" and "chemarrest". 
+The package contains also some data from "Modulation of Protein-Interaction States through the Cell Cycle" from Dai et al. 2018, that you can play with.  Let's take a look at the data called `drug_data`. `drug_data` is a list that contains two datasets : "elutriation" and "chemarrest". 
          
 For each dataset, you will find :
 
-* The caldiff output (the protein abundance difference); access it with `$data`
+* The caldiff output (the protein abundance fold-change); access it with `$data`
 * The imprints_average output (the average from the caldiff output among the bioreplicates); access it with `$data_ave`
 * The hitlist; access it with `$hitlist`
 * The proteins categorized as "NN"; access it with `$NN`
@@ -207,7 +207,7 @@ imprints_barplotting_simprof(mydata_caldiff, mydata_ave, #here we have the avera
 #Here we choose the Euclidean distance score with a threshold of 0.65 and no missing values
 ```   
         
-The function will find the similar profiles and inform you of how many it found. If you're satistfied with the number, you can continue and so save the plots or you can stop here and change the method or the threshold.
+The function will find the similar profiles and inform you of how many it found. If you're satisfied with the number, you can continue and so save the plots or you can stop here and change the method or the threshold.
   
   
 ####  $\underline{3.\space Heatmap}$
@@ -252,7 +252,7 @@ norm_data <- readr::read_tsv("path_to_your_normalized_data.txt")
 new_hits <- imprints_IS(norm_data, ctrl = "Vehicle")
 ```    
    
-Since we didn't put the caldiff data, it will calculate it. Then it will save all the results (volcano plots, file output, venndiagram) in file named by default 'Hits_analysis'.
+Since we didn't put the caldiff data, it will calculate it. Then it will save all the results (volcano plots, file output, Venn diagram) in file named by default 'Hits_analysis'.
    
    
 ####  $\underline{5.\space STRING\space network}$
@@ -604,7 +604,6 @@ Then, you can join your datasets (can be more than 2). Usually, the exact same p
 peptides_cleaved <- list(peptides_cleaved_drugA, peptides_cleaved_drugB) # you could add more datasets
 
 peptides_cleaved <- imprints_join_peptides(peptides_cleaved)
-
 ```  
 
 ####  $\underline{7.\space Plot\space your\space results}$

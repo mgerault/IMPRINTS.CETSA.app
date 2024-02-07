@@ -2242,11 +2242,11 @@ server <- function(input, output, session){
     df <- NULL
     treat <- as.character(input$treat_name_pep[,1])
     temp <- as.character(input$temp_name_pep[,1])
-    if(any(stringr::str_length(treat) == 0)){
+    if(any(nchar(treat) == 0)){
       showNotification("Type the treatment names !", type = "error")
       return(NULL)
     }
-    else if(any(stringr::str_length(temp) == 0)){
+    else if(any(nchar(temp) == 0)){
       showNotification("Type the temperature names !", type = "error")
       return(NULL)
     }
@@ -2488,7 +2488,7 @@ server <- function(input, output, session){
           sequ <- as.character(input$selectSequence_pep[,1])
         }
         else{
-          if(stringr::str_detect(input$selectSequence_pep, "^\\d{1,}-\\d{1,}$") & stringr::str_length(input$selectSequence_pep) == 0){
+          if(grepl("^\\d{1,}-\\d{1,}$", input$selectSequence_pep) & nchar(input$selectSequence_pep) == 0){
             sequ <- input$selectSequence_pep
           }
           else{
@@ -2727,14 +2727,14 @@ server <- function(input, output, session){
       }
       if(!is.null(input$remcond_joinpep)){
         message("Removing treatments")
-        df_filtered <- df_filtered[,-stringr::str_which(colnames(df_filtered), paste0("_", input$remcond_joinpep,
-                                                                                      "$", collapse = "|")
-                                                        )
+        df_filtered <- df_filtered[,-grep(paste0("_", input$remcond_joinpep, "$", collapse = "|"),
+                                          colnames(df_filtered)
+                                          )
                                    ]
       }
       message("Saving filtered data")
-      f_name <- stringr::str_replace(info_filterpep$name, "\\.txt", "_filtered.txt")
-      f_name <- str_replace_all(f_name, "\\d{6}_\\d{4}_", format(Sys.time(), "%y%m%d_%H%M_"))
+      f_name <- sub("\\.txt", "_filtered.txt", info_filterpep$name)
+      f_name <- gsub("\\d{6}_\\d{4}_", format(Sys.time(), "%y%m%d_%H%M_"), f_name)
       readr::write_tsv(df_filtered, file = f_name)
       message("Filtered data saved !")
       showNotification("Filtered data saved !",  type = "message")
@@ -2936,7 +2936,7 @@ server <- function(input, output, session){
       if (is.null(File) | is.null(input$treat_name)){
         return(NULL)
       }
-      else if(any(apply(input$treat_name, 1, function(x) stringr::str_length(x) == 0))){
+      else if(any(apply(input$treat_name, 1, function(x) nchar(x) == 0))){
         return(NULL)
       }
       else if(length(unique(as.character(input$treat_name[,1]))) != nrow(input$treat_name)){
@@ -3014,7 +3014,7 @@ server <- function(input, output, session){
     d1 <- NULL
     if(!is.null(cetsa_data())){
       temp <- as.character(input$temp_name[,1])
-      if(any(sapply(temp, stringr::str_length) == 0)){
+      if(any(sapply(temp, nchar) == 0)){
         showNotification("Some temperatures names are empty !", type = "error", duration = 5)
       }
       else if(length(unique(temp)) != length(temp)){
@@ -3742,9 +3742,9 @@ server <- function(input, output, session){
                          type = "message", duration = 5)
 
         Dif <- cetsa_isoform$dif
-        if(any(stringr::str_detect(colnames(Dif), "^X\\d{2}C_"))){
-          bad_col <- stringr::str_which(colnames(Dif), "^X\\d{2}C_")
-          colnames(Dif)[bad_col] <- stringr::str_remove_all(colnames(Dif)[bad_col], "^X")
+        if(any(grepl("^X\\d{2}C_", colnames(Dif)))){
+          bad_col <- grep("^X\\d{2}C_", colnames(Dif))
+          colnames(Dif)[bad_col] <- gsub("^X", "", colnames(Dif)[bad_col])
         }
         if(length(grep("^36C_", colnames(Dif)))){   # remove QP if in data
           Dif <- Dif[,-grep("^36C_", colnames(Dif))]
@@ -3774,11 +3774,11 @@ server <- function(input, output, session){
                            type = "message", duration = 5)
 
           Dif <- cetsa_isoform$dif
-          if(any(stringr::str_detect(colnames(Dif), "^X\\d{2}C_"))){
-            bad_col <- stringr::str_which(colnames(Dif), "^X\\d{2}C_")
-            colnames(Dif)[bad_col] <- stringr::str_remove_all(colnames(Dif)[bad_col], "^X")
+          if(any(grepl("^X\\d{2}C_", colnames(Dif)))){
+            bad_col <- grep("^X\\d{2}C_", colnames(Dif))
+            colnames(Dif)[bad_col] <- gsub("^X", "", colnames(Dif)[bad_col])
           }
-          ctrl <- Dif[,stringr::str_which(colnames(Dif), "^\\d{1,}")]
+          ctrl <- Dif[,grep("^\\d{1,}", colnames(Dif))]
           idx_ctrl <- which(apply(ctrl, 1, function(x) all(!is.na(x))))[1]
           ctrl <- ctrl[idx_ctrl,]
           ctrl <- ctrl %>% tidyr::gather("key", "value") %>%
@@ -3993,7 +3993,7 @@ server <- function(input, output, session){
         output$hitsum_daba_check <- renderText({
           shiny::HTML("")
         })
-        dat <- dat[,stringr::str_which(colnames(dat), "^id$|^Fisher_|^IS_|^GlobalScore_|^category_")]
+        dat <- dat[,grep("^id$|^Fisher_|^IS_|^GlobalScore_|^category_", colnames(dat))]
         dat <- dat %>% tidyr::gather("key", "value", -id) %>%
           tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
           tidyr::spread(key, value)

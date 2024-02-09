@@ -31,7 +31,7 @@ If you want now to use the app just type :
 runCETSAapp()
 ```
  
-For more information on how to use the app, go check the [tutorial](https://youtu.be/djpP8nc_JUE) video !
+For more information on how to use the app, go check the [tutorial](https://youtu.be/m_YuQ14j2sY) video !
 
 
  ## Problem with dbplyr package

@@ -166,7 +166,7 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
 
     if(database != "CETSA"){
       res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
-                                        g <- hits_gene_id$Gene[which(!is.na(match(hits_gene_id$Gene_id, x)))]
+                                        g <- hits_gene_id[[gene_column]][which(!is.na(match(hits_gene_id$Gene_id, x)))]
                                         g <- paste(g, collapse = "/");
                                         g
                                         }

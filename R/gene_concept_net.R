@@ -237,21 +237,86 @@ get_wikipath <- function(wp = TRUE, species = "human"){
 
   url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
                      date, "-gmt-", species, ".gmt")
-  if(!RCurl::url.exists(url_wiki)){
+  url_wiki <- url(url_wiki)
+
+  wikipath <- tryCatch({
+    if(wp){
+      clusterProfiler::read.gmt.wp(url_wiki)
+    }
+    else{
+      clusterProfiler::read.gmt(url_wiki)
+    }
+  },
+  # if wrong date
+  error = function(e){
     date <- strsplit(date, "")[[1]][-(nchar(date)-1)]
     date <- paste0(date, collapse = "")
     date <- paste0(date, 1)
     url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
                        date, "-gmt-", species, ".gmt")
-  }
-  url_wiki <- url(url_wiki)
+    url_wiki <- url(url_wiki)
 
-  if(wp){
-    wikipath <- clusterProfiler::read.gmt.wp(url_wiki)
-  }
-  else{
-    wikipath <- clusterProfiler::read.gmt(url_wiki)
-  }
+    wikipath2 <- tryCatch({
+      if(wp){
+        clusterProfiler::read.gmt.wp(url_wiki)
+      }
+      else{
+        clusterProfiler::read.gmt(url_wiki)
+      }
+    },
+    # if wrong date again, retrieve one month
+    error = function(e){
+      date <- strsplit(date, "")[[1]]
+      date <- c(paste(date[1:4], collapse = ""), # year
+                paste(date[5:6], collapse = ""), # month
+                paste(date[7:8], collapse = "")  # day
+      )
+      date[3] <- "10"
+      date[2] <- as.numeric(date[2]) - 1
+      date[2] <- ifelse(date[2] == "0", "12", date[2])
+      date[2] <- ifelse(nchar(date[2]) == 1, paste0("0", date[2]), date[2])
+      date[1] <- ifelse(date[2] == "12", as.numeric(date[1]) - 1, date[1])
+      date <- paste(date, collapse = "")
+
+      url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+                         date, "-gmt-", species, ".gmt")
+      url_wiki <- url(url_wiki)
+
+      wikipath3 <- tryCatch({
+        if(wp){
+          clusterProfiler::read.gmt.wp(url_wiki)
+        }
+        else{
+          clusterProfiler::read.gmt(url_wiki)
+        }
+      },
+      # if wrong date
+      error = function(e) {
+        date <- strsplit(date, "")[[1]][-(nchar(date)-1)]
+        date <- paste0(date, collapse = "")
+        date <- paste0(date, 1)
+        url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+                           date, "-gmt-", species, ".gmt")
+        url_wiki <- url(url_wiki)
+
+        if(wp){
+          wikipath4 <- clusterProfiler::read.gmt.wp(url_wiki)
+        }
+        else{
+          wikipath4 <-clusterProfiler::read.gmt(url_wiki)
+        }
+
+        return(wikipath4)
+      })
+
+      return(wikipath3)
+    })
+
+    return(wikipath2)
+  })
+
+
   close(url_wiki)
   return(wikipath)
 }
+

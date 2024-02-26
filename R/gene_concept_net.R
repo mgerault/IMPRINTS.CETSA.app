@@ -118,12 +118,10 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
   else if(database == "CETSA"){
-    print(hits)
     hits_enrich <- clusterProfiler::enricher(hits[[gene_column]],
                                              TERM2GENE = cetsa_gsea_database[,c("name", "gene")], # data.frame of 2 columns with term and corresponding gene
                                              pvalueCutoff = pval_cutoff,
                                              minGSSize = minGSSize)
-    print(hits_enrich)
   }
 
   if(is.null(hits_enrich)){
@@ -185,7 +183,8 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     }
 
     hits_enrich@result$Description <- gsub("%.{1,}", "", hits_enrich@result$Description)
-    colnames(hits_enrich@result)[c(8,10)] <- c("geneNumber", "geneID")
+    colnames(hits_enrich@result) <- sub("^geneID$", "geneNumber", colnames(hits_enrich@result))
+    colnames(hits_enrich@result) <- sub("^geneSymbol$", "geneID", colnames(hits_enrich@result))
 
     fold <- hits[,c(gene_column, score_column)]
     fold <- as.data.frame(fold)
@@ -195,7 +194,6 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     rownames(fold) <- fold[[gene_column]]
     fold[[gene_column]] <- NULL
     fold <- unlist(as.list(as.data.frame(t(fold))))
-
 
     graph <- enrichplot::cnetplot(hits_enrich, showCategory = n_toshow,
                                   color_category = "#0059FE",
@@ -209,7 +207,6 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     return(graph)
   }
 }
-
 
 # function to always get most recent wiki pathway database (update every 10 of month)
 get_wikipath <- function(wp = TRUE, species = "human"){

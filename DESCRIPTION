@@ -1,7 +1,7 @@
 Package: IMPRINTS.CETSA.app
 Type: Package
 Title: A shiny app for IMPRINTS.CETSA package 
-Version: 3.4
+Version: 3.4.2
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for IMPRINTS.CETSA R package and 
@@ -9,7 +9,7 @@ Description: Contains a shiny app for IMPRINTS.CETSA R package and
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends: 
     R (>= 4.1.0),
     dplyr (>= 1.1.0),
@@ -27,6 +27,7 @@ Suggests:
     biomaRt,
     enrichplot,
     multtest,
+    limma,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

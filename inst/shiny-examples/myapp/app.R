@@ -232,7 +232,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    tags$u(h3("Data Normalization")),
                                                                    fluidRow(column(6, checkboxInput("got_norm_pep", "Do you already have the peptide file NormPeptides ?")),
                                                                             column(6, conditionalPanel(condition = "!input.got_norm_pep",
-                                                                                                       actionButton("NORM_pep", "Start Normalization", class = "btn-primary")
+                                                                                                       actionButton("NORM_pep", "Start Normalization", class = "btn-primary"),
+                                                                                                       textOutput("diag_normpep")
                                                                                                        ),
                                                                                    conditionalPanel(condition = "input.got_norm_pep",
                                                                                                     fileInput("normfile_pep", "Select the NormPeptides file", accept = ".txt"),
@@ -2358,7 +2359,16 @@ server <- function(input, output, session){
     df <- NULL
 
     showNotification("Starting normalization, this may take a while", type = "message")
-    df <- imprints_normalize_peptides(pep_data$x)
+    withCallingHandlers({
+      shinyjs::html("diag_normpep", "")
+      message("Normalizing data...")
+      df <- imprints_normalize_peptides(pep_data$x)
+      message("Done !")
+    },
+    message = function(m) {
+      m <- m$message
+      shinyjs::html(id = "diag_normpep",  html =  m, add = FALSE)
+    })
 
     norm_pep_data$x <- df
     showNotification("Normalized data saved !",  type = "message")

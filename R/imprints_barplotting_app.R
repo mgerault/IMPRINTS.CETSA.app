@@ -530,7 +530,7 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
       stop("Otherwise specify remsinglecondprot==FALSE !")
     }
     if (printBothName) {
-      data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(descriptionpfdatabase)) %>%
+      data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description)) %>%
         dplyr::mutate(description2 = getGeneName(description)) %>%
         dplyr::mutate(id = paste(id, description1, description2,
                           sep = "\n"))

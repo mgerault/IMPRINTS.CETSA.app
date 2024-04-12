@@ -5207,7 +5207,7 @@ server <- function(input, output, session){
 
     cate <- resmapping_compl$ch[which(!is.na(match(resmapping_compl$ch$ComplexName, input$allcomplex_compl))),]
     notsel_cond <- TREAT[!(TREAT %in% input$condsel_compl)]
-    notsel_cond <- paste(notsel_cond, collapse = "|")
+    notsel_cond <- paste0("_", notsel_cond, "$", collapse = "|")
 
     if(input$save_bar_compl){
       data_l <- list()

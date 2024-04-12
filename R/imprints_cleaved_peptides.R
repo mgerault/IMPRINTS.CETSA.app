@@ -247,10 +247,14 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     treat_data <- treat_data[-which(unlist(lapply(strsplit(treat_data$cleaved_site, "-|~"),
                                                   function(x) abs(diff(as.numeric(x))))
                                            ) == 1),]
-    treat_data_diff <- imprints_remove_peptides(treat_data_diff,
-                                                treat_data$id,
-                                                treat_data$cleaved_site
-                                                )
+    if(!is.null(treat_data)){
+      if(nrow(treat_data) != 0){
+        treat_data_diff <- imprints_remove_peptides(treat_data_diff,
+                                                    treat_data$id,
+                                                    treat_data$cleaved_site
+        )
+      }
+    }
     treat_data_diff <- treat_data_diff[,-grep(paste0("_", control), colnames(treat_data_diff))]
     treat_data_diff$Master.Protein.Accessions <- treat_data_diff$Positions.in.Master.Proteins
     treat_data_diff$Modifications <- NULL

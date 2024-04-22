@@ -2,6 +2,8 @@
 This is a package to complete and provide a user friendly interface for the [IMRPRINTS.CETSA package](https://github.com/nkdailingyun/IMPRINTS.CETSA), more specifically for the analysis of the IMPRINTS-CETSA datasets.
 With its Shiny app, the user can carry out the complete IMPRINTS-CETSA analysis at the protein and peptide level; visualize the bar plot or heatmap of proteins-of-interest; import new datasets or remove old ones at your end; get STRING network and perform GO analysis on your data; plot interactive networks of bar plots; start a PubMed search based on keywords such as protein names and save the results in Word files; etc.
 
+Please cite [IMPRINTS.CETSA & IMPRINTS.CETSA.app](https://doi.org/10.1093/bib/bbae128) when using it.
+
 ## How to install IMPRINTS.CETSA.app ?  
 First go to Rstudio. This package totally depends on the last version of the IMRPRINTS.CETSA package. If you havn't donwload it yet, please do so.
 For installation from github https://github.com/nkdailingyun/IMPRINTS.CETSA .

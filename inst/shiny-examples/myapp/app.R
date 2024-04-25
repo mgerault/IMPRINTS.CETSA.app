@@ -272,8 +272,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                      changes at the peptide level.
                                                                                                      <br>The sequence you can select correspond to the peptide position you want to highlight.
                                                                                                      Every peptides before this sequence will be summed, same for the ones after.
-                                                                                                     <br>The position needs to be in this format precisely: a number followed by a
-                                                                                                     dash and another number; like this for example '208-221'.
+                                                                                                     <br>The position needs to be in this format precisely: a number only followed by a
+                                                                                                     dash and finally another number; like this for example '208-221'.
                                                                                                      <br>If you select nothing, it will select all proteins from your
                                                                                                      peptides data and will not select specific sequences. Which means
                                                                                                      it will compute and plot fold change for all the peptides in your data.</h5>"),
@@ -335,7 +335,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                               you can import the same file you used previously. A file that contains the protein from
                                                               which you want to remove the specific sequence (column named 'protein') and the sequence
                                                               you want to remove (column named 'sequence'). The sequence needs to be in the this format:
-                                                              a number followed by a dash followed by a number, like this for example '208-221'.
+                                                              a number followed by a dash or by ~ and finally followed by a number, like this for example '208-221' or '188~256'.
                                                               <br>Once the filtration is done a txt file is saved.</h5>"),
                                                   fileInput("filter_joinpep", "Import a fold-change peptide file (txt)", accept = ".txt"),
                                                   textOutput("filter_joinpep_check"),
@@ -2424,6 +2424,7 @@ server <- function(input, output, session){
     }
     else{
       df <- df[,c("protein", "sequence")]
+      df$sequence <- sub("~", "-", df$sequence)
     }
     unique(df)
   })
@@ -2501,7 +2502,7 @@ server <- function(input, output, session){
     if(input$sequence_file){
       if(!is.null(protseq_file_pep())){
         prot <- protseq_file_pep()$protein
-        sequ <- protseq_file_pep()$sequence
+        sequ <- sub(protseq_file_pep()$sequence)
       }
       else{
         return(NULL)
@@ -2625,7 +2626,7 @@ server <- function(input, output, session){
       cleaved_pepTab <- cleaved_pep_data$x %>% dplyr::filter(treatment == input$conditioncleaved_pep)
       foo <- imprints_sequence_peptides(norm_pep_data$x,
                                         proteins = cleaved_pepTab$id,
-                                        sequence = cleaved_pepTab$cleaved_site,
+                                        sequence = sub("~", "-", cleaved_pepTab$cleaved_site),
                                         control = input$controlcleaved_pep,
                                         barplot = TRUE,
                                         dataset_name = "potentially_cleaved")
@@ -2754,14 +2755,14 @@ server <- function(input, output, session){
       if(!is.null(input$selectSequence_joinpep)){
         if(inherits(input$selectSequence_joinpep, "matrix")){
           sequ <- as.character(input$selectSequence_joinpep[,1])
-          if(!all(grepl("^\\d{1,}-\\d{1,}$", sequ))){
+          if(!all(grepl("^\\d{1,}(-|~)\\d{1,}$", sequ))){
             sequ <- NULL
             showNotification("The sequence you wrote isn't in the right format.
                               No sequence has been selected.", duration = 8, type = "warning")
           }
         }
         else{
-          if(all(grepl("^\\d{1,}-\\d{1,}$", input$selectSequence_joinpep))){
+          if(all(grepl("^\\d{1,}(-|~)\\d{1,}$", input$selectSequence_joinpep))){
             sequ <- input$selectSequence_joinpep
           }
           else{

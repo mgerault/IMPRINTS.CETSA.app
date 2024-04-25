@@ -167,6 +167,12 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
       cle <- .x$sum_profile[which(.x$position_global == "cleaved")]
       non_cleaved <- .x$cleaved_site[1]
 
+      bef_cleaved <- .x$sequence[which(.x$position_global == "cleaved") -1]
+      aft_cleaved <- .x$sequence[which(.x$position_global == "cleaved") +1]
+
+      bef_cleaved <- as.numeric(strsplit(bef_cleaved, "-|~")[[1]])[2] + 1
+      aft_cleaved <- as.numeric(strsplit(aft_cleaved, "-|~")[[1]])[1] - 1
+
       # proportion augmentation/diminution of sd
       pN <- (sd(c(val_N, cle), na.rm = TRUE)/sd(val_N, na.rm = TRUE))
       pC <- (sd(c(val_C, cle), na.rm = TRUE)/sd(val_C, na.rm = TRUE))
@@ -175,24 +181,24 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
         .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(is.na(pN), "N", "C")
         non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
         if(is.na(pN)){
-          non_cleaved <- non_cleaved[2]
-          non_cleaved <- paste(non_cleaved, non_cleaved + 1, sep = "-")
+          non_cleaved <- non_cleaved[2] + 1
+          non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- non_cleaved[1]
-          non_cleaved <- paste(non_cleaved - 1, non_cleaved, sep = "-")
+          non_cleaved <- non_cleaved[1] - 1
+          non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
       }
       else if(cle >= 0){ # to be cleaved, peptide should be less abundant
         .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(pN <= pC, "N", "C")
         non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
         if(pN <= pC){
-          non_cleaved <- non_cleaved[2]
-          non_cleaved <- paste(non_cleaved, non_cleaved + 1, sep = "-")
+          non_cleaved <- non_cleaved[2] + 1
+          non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- non_cleaved[1]
-          non_cleaved <- paste(non_cleaved - 1, non_cleaved, sep = "-")
+          non_cleaved <- non_cleaved[1] - 1
+          non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
       }
       else{
@@ -200,12 +206,12 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
           .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(pN <= pC, "N", "C")
           non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
           if(pN <= pC){
-            non_cleaved <- non_cleaved[2]
-            non_cleaved <- paste(non_cleaved, non_cleaved + 1, sep = "-")
+            non_cleaved <- non_cleaved[2] + 1
+            non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
           }
           else{
-            non_cleaved <- non_cleaved[1]
-            non_cleaved <- paste(non_cleaved - 1, non_cleaved, sep = "-")
+            non_cleaved <- non_cleaved[1] - 1
+            non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
           }
         }
       }
@@ -223,6 +229,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                      Npep = length(sequence)
                      )
 
+
   message("Summing peptides profiles from N-terminal side and C-terminal side from each treatment")
   treat <- unique(data_cleaved$treatment)
   new_data_diff <- list()
@@ -238,23 +245,16 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
     treat_data_diff <- imprints_sequence_peptides(treat_data_diff,
                                                   proteins = treat_data$id,
-                                                  sequence = treat_data$cleaved_site,
+                                                  sequence = sub("~", "-", treat_data$cleaved_site),
                                                   control = control, dataset_name = t
                                                   )
 
     res[[t]] <- treat_data
     ### removing peptides that could be cleaved site
-    treat_data <- treat_data[-which(unlist(lapply(strsplit(treat_data$cleaved_site, "-|~"),
-                                                  function(x) abs(diff(as.numeric(x))))
-                                           ) == 1),]
-    if(!is.null(treat_data)){
-      if(nrow(treat_data) != 0){
-        treat_data_diff <- imprints_remove_peptides(treat_data_diff,
-                                                    treat_data$id,
-                                                    treat_data$cleaved_site
-        )
-      }
-    }
+    treat_data_diff <- imprints_remove_peptides(treat_data_diff,
+                                                treat_data$id,
+                                                treat_data$cleaved_site
+                                                )
     treat_data_diff <- treat_data_diff[,-grep(paste0("_", control), colnames(treat_data_diff))]
     treat_data_diff$Master.Protein.Accessions <- treat_data_diff$Positions.in.Master.Proteins
     treat_data_diff$Modifications <- NULL
@@ -573,3 +573,5 @@ curve <- function(x, cut_neg, cut_pos, cut_p, curvature = 0.1){
 
   return(y)
 }
+
+

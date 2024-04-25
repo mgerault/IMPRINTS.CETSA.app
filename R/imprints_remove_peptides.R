@@ -26,7 +26,7 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
   mode <- match.arg(mode)
 
   if(length(sequence)){
-    if(!all(grepl("^\\d{1,}-\\d{1,}", sequence))){
+    if(!all(grepl("^\\d{1,}(-|~)\\d{1,}", sequence))){
       message("Error: 'sequence' needs to be a character vector and needs to be a number followed
               by a dash and another number like this '208-221'.")
       return()

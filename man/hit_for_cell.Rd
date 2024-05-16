@@ -4,13 +4,16 @@
 \alias{hit_for_cell}
 \title{hit_for_cell}
 \usage{
-hit_for_cell(HIT, organism = c("HUMAN", "MOUSE"))
+hit_for_cell(HIT, organism = c("HUMAN", "MOUSE"), cell_coordinate = TRUE)
 }
 \arguments{
 \item{HIT}{Usually, the output from hitlist function; but just has to be a data frame with the
 columns id, treatment and category}
 
 \item{organism}{The organism on which you performed your experiment. For now, only 'HUMAN' and 'MOUSE' are available.}
+
+\item{cell_coordinate}{Logical to randomly assign or not coordinate on the cell png corresponding to
+the mapped cellular location. Default is TRUE.}
 }
 \value{
 Dataframe (format for hit_plotcell)

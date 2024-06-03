@@ -218,7 +218,16 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
 
   message("Getting caldiff output") # will remove file saved by caldiff function
   diff_directory_toremove <- list.files()
-  final_res_diff <- IMPRINTS.CETSA::imprints_caldiff_f(final_res, reftreatment = control)
+
+  # checking if within rep can't be used
+  nb_rep_ptreat <- unique(gsub("^\\d{2}C_", "", colnames(final_res)[grep("^\\d{2}C", colnames(final_res))]))
+  nb_rep_ptreat <- table(gsub(".*_", "", nb_rep_ptreat))
+  withinrep <- length(unique(nb_rep_ptreat)) == 1
+  if(!withinrep){
+    message("Warning: The treatments in your dataset doesn't have the same number of replicates ! The fold-changes weren't calculated within each replicate.")
+  }
+
+  final_res_diff <- IMPRINTS.CETSA::imprints_caldiff_f(final_res, reftreatment = control, withinrep = withinrep)
   diff_directory_toremove <- list.files()[!(list.files() %in% diff_directory_toremove)]
   diff_directory_toremove <- grep("final_res_\\d{6}_\\d{4}$", diff_directory_toremove, value = TRUE)
   if(length(diff_directory_toremove) == 1){

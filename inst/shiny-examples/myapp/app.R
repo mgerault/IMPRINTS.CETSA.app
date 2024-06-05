@@ -2502,7 +2502,7 @@ server <- function(input, output, session){
     if(input$sequence_file){
       if(!is.null(protseq_file_pep())){
         prot <- protseq_file_pep()$protein
-        sequ <- sub(protseq_file_pep()$sequence)
+        sequ <- sub("~", "-", protseq_file_pep()$sequence)
       }
       else{
         return(NULL)

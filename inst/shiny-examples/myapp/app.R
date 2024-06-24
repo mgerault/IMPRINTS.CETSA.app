@@ -207,6 +207,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                  accept = ".txt", multiple = TRUE))
                                                                                              ),
                                                                                     tags$hr(),
+                                                                                    fluidRow(column(4, textInput("prefconta_anapep", "Type the prefix that identify your contaminants", "Cont_")),
+                                                                                             column(4, checkboxInput("avgcount_pep", "Take the median average of abundance count across temperature for filtering", FALSE)),
+                                                                                             column(4, numericInput("count_thr_pep", "Type the minimal threshold number of associated abundance count of peptides",
+                                                                                                                    value = 1, min = 0, step = 1))
+                                                                                             ),
+                                                                                    tags$hr(),
                                                                                     fluidRow(column(6, selectInput("rmmodif_pep", "Select some peptide modifications you would like to remove (can be NULL)",
                                                                                                                    multiple = TRUE, selected = NULL,
                                                                                                                    choices = c("Phospho", "Oxidation", "Carbamidomethyl", "Deamidated", "Acetyl", "Met-loss")
@@ -604,8 +610,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                                         numericInput("rep_thr", "Type the minimal percentage threshold of protein being sampled from multiple runs",
                                                                                                                                                                      value = 0.1, min = 0, max = 1, step = 0.01),
                                                                                                                                                         checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE),
-                                                                                                                                                        checkboxInput("avgcount_abd", "Take the median average of abundance count
-                                                                                                                                                                      across temperature", TRUE)
+                                                                                                                                                        checkboxInput("avgcount_abd", "Take the median average of abundance count across temperature", TRUE)
                                                                                                                                                         )
                                                                                                                                        ),
 
@@ -2274,8 +2279,9 @@ server <- function(input, output, session){
         message("Reading files...")
         df <- imprints_read_peptides(pep_file_data()$datapath, treatment = treat,
                                      temperatures = temp, modification_torm = input$rmmodif_pep,
-                                     proteins = prot_data_pep(),
-                                     dataset_name = input$dname_pep)
+                                     prefixcontaminant = input$prefconta_anapep,
+                                     averagecount = input$avgcount_pep, countthreshold = input$count_thr_pep,
+                                     proteins = prot_data_pep(), dataset_name = input$dname_pep)
         message("Done !")
       },
       message = function(m) {

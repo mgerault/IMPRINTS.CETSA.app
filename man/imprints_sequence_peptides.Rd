@@ -10,7 +10,7 @@ imprints_sequence_peptides(
   sequence = NULL,
   control = "Vehicle",
   barplot = FALSE,
-  dataset_name = ""
+  dataset_name = "imprints"
 )
 }
 \arguments{

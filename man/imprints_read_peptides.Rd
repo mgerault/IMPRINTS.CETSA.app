@@ -8,9 +8,12 @@ imprints_read_peptides(
   peptides_files,
   treatment,
   temperatures,
+  prefixcontaminant = "",
+  averagecount = TRUE,
+  countthreshold = 2,
   proteins = NULL,
   modification_torm = NULL,
-  dataset_name = "Venetoclax6h"
+  dataset_name = "imprints"
 )
 }
 \arguments{
@@ -19,6 +22,14 @@ imprints_read_peptides(
 \item{treatment}{A character vector that contains the treatment applied for each channel like 'B1_Vehicle' for example.}
 
 \item{temperatures}{A character vector that contains the temperatures used for each peptides file like '37C' for example.}
+
+\item{prefixcontaminant}{Character corresponding to the prefix used to identify contaminants.}
+
+\item{averagecount}{Whether to take the median of the abundance count numbers across the measured temperature
+range and then use this value for filtering. Default set to TRUE.
+Otherwise, filter the  peptides according to the associated count numbers at each temperature.}
+
+\item{countthreshold}{The minimal threshold number of associated abundance count of peptides, default is 2.}
 
 \item{proteins}{Either a data frame or a file that has the 2 columns 'id' and 'description' corresponding
 to the proteins you want to keep (usually proteins after \code{imprints_rearrange} or \code{imprints_caldiff}).

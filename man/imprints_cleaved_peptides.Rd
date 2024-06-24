@@ -11,7 +11,8 @@ imprints_cleaved_peptides(
   min_ValidValue = 0.4,
   FDR = 0.01,
   diff_cutoff = 0.25,
-  curvature = 0.1
+  curvature = 0.1,
+  folder_name = ""
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ Default is 0.4; so if 6 temperatures need at least 3 non missing values.}
 \item{diff_cutoff}{The maximum fold-change cutoff. Default is 0.25}
 
 \item{curvature}{The curvature used for the curve on the volcano plot}
+
+\item{folder_name}{The name of the folder in which you want to save the results.}
 }
 \value{
 The potential cleaved sites from the proteins considered as cleaved.

@@ -59,6 +59,10 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
     return()
   }
 
+  if("countNum" %in% colnames(data)){
+    data$countNum <- NULL
+  }
+
   if(RESP){
     check_resp <- data %>%
       group_by(Master.Protein.Accessions) %>%

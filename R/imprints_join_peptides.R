@@ -25,6 +25,12 @@ imprints_join_peptides <- function(data, mode = c("partial", "exact")){
     }
     x$description <- gsub(" OX=\\d{1,}", "", x$description) # depending on the PD version, some dataset doesn't have this information --> remove it
     x <- x[order(x$Positions.in.Master.Proteins),]
+
+    if("countNum" %in% colnames(x)){
+      message("Removing countNum information from data for easier handle")
+      x$countNum <- NULL
+    };
+    x
   })
 
   if(mode == "partial"){

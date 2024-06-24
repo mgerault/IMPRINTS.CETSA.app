@@ -44,6 +44,12 @@ imprints_normalize_peptides <- function(peptides_data){
   }
 
   # prepare data shape in order to use imprints_normalization from IMPRINTS.CETSA package
+  countNum_in_peptides <- "countNum" %in% colnames(peptides_data)
+  if(countNum_in_peptides){
+    peptides_countNum <- peptides_data$countNum
+    peptides_data$countNum <- NULL
+  }
+
   colnames(peptides_data)[1:5] <- c("sumUniPeps", "description", "id", "sumPSMs", "countNum")
   peptides_data$sumPSMs <- paste(peptides_data$id,  peptides_data$sumPSMs, sep = "_sep_")
   peptides_data$id <- as.character(1:nrow(peptides_data))
@@ -71,6 +77,10 @@ imprints_normalize_peptides <- function(peptides_data){
                                 (ncol(peptides_data) -  1):ncol(peptides_data),
                                 3:(ncol(peptides_data) -  3))]
   peptides_data[,6:ncol(peptides_data)] <- 2**peptides_data[,6:ncol(peptides_data)]
+
+  if(countNum_in_peptides){
+    peptides_data$countNum <- peptides_countNum
+  }
 
   readr::write_tsv(peptides_data,
                    file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),

@@ -22,7 +22,7 @@
 
 imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
                                        control = "Vehicle", barplot = FALSE,
-                                       dataset_name = ""){
+                                       dataset_name = "imprints"){
   if(!is.null(sequence)){
     if(!(length(proteins) == length(sequence) | length(sequence) == 1) & !inherits(sequence, "list")){
       message("Error: The number of sequence needs to match the number of proteins or just provide one sequence")
@@ -60,35 +60,22 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
                                           data$Annotated.Sequence,
                                           data$Modifications, sep = " \n")
   data <- data[order(data$Master.Protein.Accessions),]
-  ord <- gsub(".*\\[|\\]", "", data$Positions.in.Master.Proteins)
-  ord <- lapply(strsplit(ord, "-|~"),
-                function(x) {sum(as.numeric(x))}
-                )
-  ord <- unlist(ord)
-  ord_f <- data.frame(factor = data$factor, x = ord)
-  ord_f <- ord_f %>% dplyr::group_by(factor) %>%
-    dplyr::mutate(y = order(x))
-  b = (ord_f %>% dplyr::group_by(factor) %>% dplyr::count())$n
-  if(length(b) > 1){
-    b1 = b
-    for(i in length(b):2){
-      b1[i] <- sum(b1[(i-1):1])
-    }
-    b1[1] <- 0
-  }
-  else{
-    b1 <- 0
-  }
-  b1 = rep(b1, b)
-  ord_f$y <- ord_f$y + b1
+  ord <- gsub(".*\\[|\\]", "", gsub(";.*", "", data$Positions.in.Master.Proteins))
+  ord <- sapply(strsplit(ord, "-|~"),
+                function(x) {sum(as.numeric(x))})
+  ord <- data.frame(factor = data$factor, idx = 1:nrow(data), sum.pos = ord) %>%
+    dplyr::group_by(factor) %>%
+    dplyr::mutate(ord.sum.pos = order(sum.pos),
+                  nb.pep = length(ord.sum.pos),
+                  final.order = idx[ord.sum.pos])
 
-  data <- data[ord_f$y,]
+  data <- data[ord$final.order,]
   data$Master.Protein.Accessions <- data$factor
   data$factor <- NULL
 
-  cond_data <- unique(unlist(lapply(strsplit(grep("^\\d{1,}", colnames(data), value = TRUE), "_"), function(x) x[3])))
+  cond_data <- unique(unlist(lapply(strsplit(grep("^\\d{1,}", colnames(data), value = TRUE), "_"), "[[", 3)))
   cond_data <- cond_data[!(cond_data %in% control)]
-  temp_data <- unique(unlist(lapply(strsplit(grep("^\\d{1,}", colnames(data), value = TRUE), "_"), function(x) x[1])))
+  temp_data <- unique(unlist(lapply(strsplit(grep("^\\d{1,}", colnames(data), value = TRUE), "_"), "[[", 1)))
 
   final_res <- list()
   if(!is.null(sequence)){
@@ -97,6 +84,7 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
       message(paste0(proteins[i], " : ", i, "/", length(proteins)))
 
       tab_pr <- data[which(data$Master.Protein.Accessions == proteins[i]),]
+      tab_sequ = gsub(";.*", "", tab_pr$Positions.in.Master.Proteins) # if protein group, only take first one for simplicity
       tab_sequ = gsub(".* \\[|\\].*", "", tab_pr$Positions.in.Master.Proteins)
       tab_sequ_n = strsplit(tab_sequ, "-")
 
@@ -158,14 +146,25 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
             sumup_tab <- tab_pr[sequence_catego[[k]],]
 
             if(nrow(sumup_tab) > 1){
+              if("countNum" %in% colnames(sumup_tab)){
+                sumup_tab$countNum <- as.character(sumup_tab$countNum)
+              }
               annot <- sumup_tab %>% dplyr::select_if(~!is.numeric(.x))
               anno_seq <- as.numeric(unlist(tab_sequ_n[sequence_catego[[k]]]))
-              annot$Positions.in.Master.Proteins[1] <-  paste(annot$Master.Protein.Accessions[1],
-                                                                paste0("[", min(anno_seq), "~", max(anno_seq), "]")
-              )
+              annot$Positions.in.Master.Proteins[1] <-  paste0(sub(";.*", "", annot$Master.Protein.Accessions[1]),
+                                                               paste0(" [", min(anno_seq), "~", max(anno_seq), "]"),
+                                                               ifelse(grepl(";", annot$Master.Protein.Accessions[1]),
+                                                                      sub("^(.*?;)", ";", annot$Master.Protein.Accessions[1]),
+                                                                      "")
+                                                               )
+
 
               annot$Annotated.Sequence[1] <- ""
               annot$Modifications[1] <- ""
+              if("countNum" %in% colnames(annot)){
+                annot$countNum <- as.numeric(annot$countNum)
+                annot$countNum[1] <- median(annot$countNum, na.rm = TRUE)
+              }
               # we not gonna add modif informations, would be too much
               annot <- annot[1,]
 
@@ -173,6 +172,10 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
                 dplyr::summarise_all(sum, na.rm = TRUE)
 
               sumup_tab <- as.data.frame(cbind(annot, num))
+              if("countNum" %in% colnames(sumup_tab)){
+                cn <- colnames(sumup_tab)[-which(colnames(sumup_tab) == "countNum")]
+                sumup_tab <- sumup_tab[,c(cn, "countNum")]
+              }
             }
 
             res[[k]] <- sumup_tab
@@ -182,20 +185,35 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
         }
       }
       else{
+        if("countNum" %in% colnames(tab_pr)){
+          tab_pr$countNum <- as.character(tab_pr$countNum)
+        }
         annot <- tab_pr %>% dplyr::select_if(~!is.numeric(.x))
         anno_seq <- as.numeric(unlist(tab_sequ_n))
-        annot$Positions.in.Master.Proteins[1] <-  paste(annot$Master.Protein.Accessions[1],
-                                                          paste0("[", min(anno_seq), "~", max(anno_seq), "]")
-        )
+        annot$Positions.in.Master.Proteins[1] <-  paste0(sub(";.*", "", annot$Master.Protein.Accessions[1]),
+                                                         paste0(" [", min(anno_seq), "~", max(anno_seq), "]"),
+                                                         ifelse(grepl(";", annot$Master.Protein.Accessions[1]),
+                                                                sub("^(.*?;)", ";", annot$Master.Protein.Accessions[1]),
+                                                                "")
+                                                         )
+
         annot$Annotated.Sequence[1] <- ""
         annot$Modifications[1] <- ""
         # we not gonna add modif informations, would be too much and only TMT modif
+        if("countNum" %in% colnames(annot)){
+          annot$countNum <- as.numeric(annot$countNum)
+          annot$countNum[1] <- median(annot$countNum, na.rm = TRUE)
+        }
         annot <- annot[1,]
 
         num <- tab_pr %>% dplyr::select(where(is.numeric)) %>%
           dplyr::summarise_all(sum, na.rm = TRUE)
 
         res <- as.data.frame(cbind(annot, num))
+        if("countNum" %in% colnames(res)){
+          cn <- colnames(res)[-which(colnames(res) == "countNum")]
+          res <- res[,c(cn, "countNum")]
+        }
       }
 
       final_res[[i]] <- res
@@ -205,6 +223,12 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
   }
   else{
     final_res <- data
+  }
+
+  countNum_in_peptides <- "countNum" %in% colnames(final_res)
+  if(countNum_in_peptides){
+    peptides_countNum <- final_res$countNum
+    final_res$countNum <- NULL
   }
 
   # getting back log2 fold change
@@ -241,14 +265,15 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
                                         )),]
   final_res_diff$id <- gsub("^\\d{1,}_", "", final_res_diff$id)
 
-  final_res_diff$id <- paste(final_res_diff$sumUniPeps, final_res_diff$sumPSMs, final_res_diff$countNum, sep = " \n")
-
   # return data in same shape as input
   final_res_difffile <- final_res_diff[, c(1:2, (ncol(final_res_diff) - 2):ncol(final_res_diff),
                                            3:(ncol(final_res_diff) - 3))
                                        ]
   colnames(final_res_difffile)[1:5] <- keep_n
-  final_res_difffile$Master.Protein.Accessions <- sub(" .*", "", final_res_difffile$Master.Protein.Accessions)
+
+  if(countNum_in_peptides){
+    final_res_difffile$countNum <- peptides_countNum
+  }
 
   readr::write_tsv(final_res_difffile,
                    file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),

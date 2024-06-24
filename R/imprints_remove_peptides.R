@@ -42,7 +42,7 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
   }
   else{
     if(!all(proteins %in% data$Master.Protein.Accessions)){
-      message("Error: Check the proteins you select, some are not in your data.")
+      message("Error: Check the proteins you selected, none are in your data.")
       return()
     }
   }
@@ -87,7 +87,7 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
       sequence_tofilter_idx <- pr_tofilter_idx[grep(sequence_tofilter, pr_tofilter)]
       sequence_tofilter <- grep(sequence_tofilter, pr_tofilter, value = TRUE)
 
-      message(paste(ifelse(mode == "remove", "Removing", "Keping"),
+      message(paste(ifelse(mode == "remove", "Removing", "Keeping"),
                     paste(sequence_tofilter, collapse = ", ")))
 
       if(mode == "remove"){

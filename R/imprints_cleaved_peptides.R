@@ -24,6 +24,7 @@
 #' @param FDR The FDR used to obtained the final p-value cutoff and maximum fold-change cutoff. Default is 1%
 #' @param diff_cutoff The maximum fold-change cutoff. Default is 0.25
 #' @param curvature The curvature used for the curve on the volcano plot
+#' @param folder_name The name of the folder in which you want to save the results.
 #'
 #' @return The potential cleaved sites from the proteins considered as cleaved.
 #'
@@ -33,10 +34,16 @@
 imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                       control = "Vehicle", min_ValidValue = 0.4,
                                       FDR = 0.01, diff_cutoff = 0.25,
-                                      curvature = 0.1){
+                                      curvature = 0.1, folder_name = ""){
   if(!any(grepl(paste0("_", control, "$"), colnames(data)))){
     message(paste("Error:", control, "is wasn't found in your data !"))
     return()
+  }
+
+  outdir <- paste0(wd, "/", format(Sys.time(), "%y%m%d_%H%M"), "_RESP_analysis",
+                   ifelse(nchar(folder_name) > 0, "_", ""), folder_name)
+  if (dir.exists(outdir) == FALSE) {
+    dir.create(outdir)
   }
 
   require(limma)
@@ -55,6 +62,13 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
   if(any(grepl("^36C_", colnames(data_diff)))){
     data_diff <- data_diff[,-grep("^36C_", colnames(data_diff))]
+  }
+
+  if("countNum" %in% colnames(data)){
+    data$countNum <- NULL
+  }
+  if("countNum" %in% colnames(data_diff)){
+    data_diff$countNum <- NULL
   }
 
   data_cleaved <- data_diff
@@ -89,9 +103,15 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
 
   message("Filtering and ordering peptides...")
-  # separate id in protein and sequence
-  data_cleaved$sequence <- sub(".* ", "", data_cleaved$id)
-  data_cleaved$id <- sub(" .*", "", data_cleaved$id)
+  # separate id in protein and sequence (need to take into account protein groups)
+  data_cleaved$sequence <- gsub("(?<= |^).{5,6}(?= \\[)", "", data_cleaved$id, perl = TRUE)
+  data_cleaved$sequence <- gsub(" ", "", data_cleaved$sequence)
+  data_cleaved$sequence <- gsub(";", "; ", data_cleaved$sequence)
+
+  data_cleaved$id <- gsub("(?<=\\[)\\d{1,4}-\\d{1,4}(?=\\])", "", data_cleaved$id, perl = TRUE)
+  data_cleaved$id <- gsub(" \\[(\\]|\\];)", "", data_cleaved$id)
+  data_cleaved$id <- gsub(" ", "; ", data_cleaved$id)
+
   data_cleaved <- data_cleaved %>%
     dplyr::mutate(sequence = gsub("\\[|\\]", "", sequence)) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
@@ -102,29 +122,17 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   # ordering according sequence is capital
   data_cleaved$factor <- data_cleaved$id
   data_cleaved <- data_cleaved[order(data_cleaved$id),]
-  data_cleaved$sequence <- gsub(";", "", data_cleaved$sequence)
-  ord <- lapply(strsplit(data_cleaved$sequence, "-|~"),
+  ord <- sapply(strsplit(gsub(";.*", "", data_cleaved$sequence), "-|~"), # onmy taking first protein if proteinn group
                 function(x) {sum(as.numeric(x))}
                 )
-  ord <- unlist(ord)
-  ord_f <- data.frame(factor = data_cleaved$factor, x = ord)
-  ord_f <- ord_f %>% dplyr::group_by(factor) %>%
-    dplyr::mutate(y = order(x))
-  b = (ord_f %>% dplyr::group_by(factor) %>% dplyr::count())$n
-  if(length(b) > 1){
-    b1 = b
-    for(i in length(b):2){
-      b1[i] <- sum(b1[(i-1):1])
-    }
-    b1[1] <- 0
-  }
-  else{
-    b1 <- 0
-  }
-  b1 = rep(b1, b)
-  ord_f$y <- ord_f$y + b1
+  ord <- data.frame(factor = data_cleaved$factor, idx = 1:nrow(data_cleaved), sum.pos = ord) %>%
+    dplyr::group_by(factor) %>%
+    dplyr::mutate(ord.sum.pos = order(sum.pos),
+                  nb.pep = length(ord.sum.pos),
+                  final.order = idx[ord.sum.pos])
 
-  data_cleaved <- data_cleaved[ord_f$y,]
+  data_cleaved <- data_cleaved[ord$final.order,]
+  data_cleaved$Master.Protein.Accessions <- data_cleaved$factor
   data_cleaved$factor <- NULL
 
   message("Computing cumulative sum to find potential cleaved sites...")
@@ -143,11 +151,12 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
   message("Checking cleaved sites, formating...")
   # set peptide position --> before cleaved site = N-terminal side / after cleaved site = C-terminal side
-  data_cleaved$position_global <- unlist(lapply(strsplit(data_cleaved$sequence,
+  # if protein group, only taking first protein
+  data_cleaved$position_global <- unlist(lapply(strsplit(gsub(";.*", "", data_cleaved$sequence),
                                                  "~|-"),
                                         function(s) sum(as.numeric(s)))
                                  )
-  data_cleaved$cleaved.global <- unlist(lapply(strsplit(data_cleaved$cleaved_site,
+  data_cleaved$cleaved.global <- unlist(lapply(strsplit(gsub(";.*", "", data_cleaved$cleaved_site),
                                                 "~|-"),
                                        function(s) sum(as.numeric(s)))
                                 )
@@ -170,49 +179,74 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
       bef_cleaved <- .x$sequence[which(.x$position_global == "cleaved") -1]
       aft_cleaved <- .x$sequence[which(.x$position_global == "cleaved") +1]
 
-      bef_cleaved <- as.numeric(strsplit(bef_cleaved, "-|~")[[1]])[2] + 1
-      aft_cleaved <- as.numeric(strsplit(aft_cleaved, "-|~")[[1]])[1] - 1
+      bef_cleaved <- sapply(strsplit(bef_cleaved, "; ")[[1]],
+                            function(x){
+                              x <- strsplit(x, "-|~")[[1]]
+                              as.numeric(x[2]) + 1
+                            }, USE.NAMES = FALSE)
+      aft_cleaved <- sapply(strsplit(aft_cleaved, "; ")[[1]],
+                            function(x){
+                              x <- strsplit(x, "-|~")[[1]]
+                              as.numeric(x[1]) - 1
+                            }, USE.NAMES = FALSE)
 
       # proportion augmentation/diminution of sd
       pN <- (sd(c(val_N, cle), na.rm = TRUE)/sd(val_N, na.rm = TRUE))
       pC <- (sd(c(val_C, cle), na.rm = TRUE)/sd(val_C, na.rm = TRUE))
 
-      if(any(is.na(c(pN, pC)))){ # only one can be NA
+      if(any(is.na(c(pN, pC)))){ # if only one peptide in N or C --> sd is NA; only one of them can be NA (at least 4 peptides in total)
+        # if only one, cleaved site is assign to this group
         .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(is.na(pN), "N", "C")
-        non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
+        non_cleaved <- sapply(strsplit(non_cleaved, "; ")[[1]],
+                              function(x){
+                                x <- strsplit(x, "-|~")[[1]]
+                                as.numeric(x)
+                              }, simplify = FALSE)
         if(is.na(pN)){
-          non_cleaved <- non_cleaved[2] + 1
+          non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
           non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- non_cleaved[1] - 1
+          non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
           non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
+        non_cleaved <- paste(non_cleaved, collapse = "; ")
       }
-      else if(cle >= 0){ # to be cleaved, peptide should be less abundant
+      else if(cle >= 0){ # to be cleaved, peptide should be less abundant, i.e. negative fold changes
         .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(pN <= pC, "N", "C")
-        non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
+        non_cleaved <- sapply(strsplit(non_cleaved, "; ")[[1]],
+                              function(x){
+                                x <- strsplit(x, "-|~")[[1]]
+                                as.numeric(x)
+                              }, simplify = FALSE)
         if(pN <= pC){
-          non_cleaved <- non_cleaved[2] + 1
+          non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
           non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- non_cleaved[1] - 1
+          non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
           non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
+        non_cleaved <- paste(non_cleaved, collapse = "; ")
       }
       else{
         if(any(c(pN, pC) < 1)){ # arbitrary, sd augmentation should be more than 100%
           .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(pN <= pC, "N", "C")
-          non_cleaved <- as.numeric(strsplit(non_cleaved, "-|~")[[1]])
+          non_cleaved <- sapply(strsplit(non_cleaved, "; ")[[1]],
+                                function(x){
+                                  x <- strsplit(x, "-|~")[[1]]
+                                  as.numeric(x)
+                                }, simplify = FALSE)
+
           if(pN <= pC){
-            non_cleaved <- non_cleaved[2] + 1
+            non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
             non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
           }
           else{
-            non_cleaved <- non_cleaved[1] - 1
+            non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
             non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
           }
+          non_cleaved <- paste(non_cleaved, collapse = "; ")
         }
       }
       .x$cleaved_site <- non_cleaved
@@ -243,11 +277,18 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
       treat_data_diff <- treat_data_diff[,-grep(treat_torm, colnames(treat_data_diff))]
     }
 
+    directory_toremove <- list.files()
     treat_data_diff <- imprints_sequence_peptides(treat_data_diff,
                                                   proteins = treat_data$id,
                                                   sequence = sub("~", "-", treat_data$cleaved_site),
                                                   control = control, dataset_name = t
                                                   )
+    directory_toremove <- list.files()[!(list.files() %in% directory_toremove)]
+    directory_toremove <- grep(paste0(t, "\\.txt$"), directory_toremove, value = TRUE)
+    if(length(directory_toremove) == 1){
+      unlink(directory_toremove, recursive = TRUE)
+    }
+
 
     res[[t]] <- treat_data
     ### removing peptides that could be cleaved site
@@ -265,15 +306,18 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     treat_data_diff <- treat_data_diff %>%
       tidyr::gather("key", "value", -id, -description) %>%
       tidyr::separate(key, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
-      tidyr::separate(id, into = c("protein", "position"), sep = " ")
-
+      mutate(protein = gsub(" ", "; ", gsub(" \\[(\\]|\\];)", "", gsub("(?<=\\[)\\d{1,4}(-|~)\\d{1,4}(?=\\])", "", id, perl = TRUE))),
+             position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^).{5,6}(?= \\[)", "", id, perl = TRUE)))
+             ) %>%
+      select(-id)
+    treat_data_diff <- treat_data_diff[,c("protein", "position", "description", "temperature", "biorep", "treatment", "value")]
     new_data_diff[[t]] <- treat_data_diff
   }
   new_data_diff <- as.data.frame(Reduce(rbind, new_data_diff))
 
   ##### computing p-values for each protein --> H0 = protein is not cleaved
   message("Reshaping data and computing experimental design")
-  new_data_diff$position_global <- unlist(lapply(strsplit(gsub("\\[|\\]", "", new_data_diff$position),
+  new_data_diff$position_global <- unlist(lapply(strsplit(gsub("\\[|\\]", "", gsub(";.*", "", new_data_diff$position)),
                                                           "~|-"),
                                                  function(s) sum(as.numeric(s)))
                                           )
@@ -468,7 +512,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     theme(plot.title = element_text(hjust = 0.5),
           legend.position = "none")
 
-  ggsave(paste0(format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_plot.png"),
+  ggsave(paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_plot.png"),
          plot = g_h, device = "png",
          width = 16, height = 9)
 
@@ -483,7 +527,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   res <- dplyr::left_join(res, data_cleaved, by = c("id", "treatment"),
                           relationship = "one-to-many")
   res <- res[order(res$combined_pvalue),]
-  openxlsx::write.xlsx(res, paste0(format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_summary.xlsx"))
+  openxlsx::write.xlsx(res, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_summary.xlsx"))
 
   message("Done !")
   return(res)

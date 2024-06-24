@@ -5,6 +5,11 @@
 #' @param peptides_files The path to the PeptidesGroups file from PD. Can be one or more files.
 #' @param treatment A character vector that contains the treatment applied for each channel like 'B1_Vehicle' for example.
 #' @param temperatures A character vector that contains the temperatures used for each peptides file like '37C' for example.
+#' @param prefixcontaminant Character corresponding to the prefix used to identify contaminants.
+#' @param averagecount 	Whether to take the median of the abundance count numbers across the measured temperature
+#'                      range and then use this value for filtering. Default set to TRUE.
+#'                      Otherwise, filter the  peptides according to the associated count numbers at each temperature.
+#' @param countthreshold The minimal threshold number of associated abundance count of peptides, default is 2.
 #' @param proteins Either a data frame or a file that has the 2 columns 'id' and 'description' corresponding
 #'                 to the proteins you want to keep (usually proteins after \code{imprints_rearrange} or \code{imprints_caldiff}).
 #'                 If not specified, no filtering is applied and you must have the column 'Master Protein Descriptions' in your PeptideGroup file(s).
@@ -18,8 +23,9 @@
 #'
 
 imprints_read_peptides <- function(peptides_files, treatment, temperatures,
+                                   prefixcontaminant = "", averagecount = TRUE, countthreshold = 2,
                                    proteins = NULL, modification_torm = NULL,
-                                   dataset_name = "Venetoclax6h"){
+                                   dataset_name = "imprints"){
   n_peptides_files <- length(peptides_files)
   if(length(temperatures) != n_peptides_files){
     message("Error: The number of temperatures doesn't match the number of peptides files !")
@@ -35,6 +41,11 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
     message("Error: Your temperatures should be a character vector !")
     return()
   }
+
+  if(countthreshold < 0){
+    messsage("Parameter countthreshold can only be positive; value set to 0, hence no filtering will be applied.")
+  }
+
   peptides_files <- as.list(peptides_files)
   names(peptides_files) <- temperatures
 
@@ -45,7 +56,7 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
     peptides <- peptides_files[[p]]
 
     peptides <- readr::read_tsv(peptides, show_col_types = FALSE)
-    abundance_columns <- grep("^Abundance:", colnames(peptides), value = TRUE)
+    abundance_columns <- grep("^Abundance: |^Abundances: ", colnames(peptides), value = TRUE)
     if(!length(abundance_columns)){
       abundance_columns <- grep("^Abundances \\(Grouped\\):", colnames(peptides), value = TRUE)
       if(!length(abundance_columns)){
@@ -78,14 +89,47 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
       }
     }
 
-    peptides <- peptides[,c(info_col,
-                            abundance_columns)]
-    peptides <- peptides[order(peptides$`Master Protein Accessions`),]
+    # extracting peptide abundance count
+    countNum <- grep(pattern = paste0("^Abundances Count: [A-z0-9,. -]+: 126[A-z0-9,. -]+$"),
+                     colnames(peptides), value = TRUE)
+    if(length(countNum) == 1){
+      peptides <- peptides[,c(info_col, abundance_columns, countNum)]
+      colnames(peptides)[ncol(peptides)] <- paste0("countNum.", peptides_temperature)
+    }
+    else{
+      peptides <- peptides[,c(info_col, abundance_columns)]
+      message("Warning: There is no peptide abundance count information in the original data.\n
+              Set a default number for the peptide abundance count to 2.")
+      peptides[[paste0("countNum.", peptides_temperature)]] <- 2
+    }
 
-    colnames(peptides)[(length(info_col)+1):ncol(peptides)] <- paste0(peptides_temperature, "_", treatment)
+    # removing contaminants
+    if (nchar(prefixcontaminant)) {
+      ncont <- nrow(peptides)
+      pattern <- grep(paste0("(^|(;|; ))", prefixcontaminant),
+                      peptides$`Master Protein Accessions`)
+      if (length(pattern) > 0) {
+        peptides <- peptides[-pattern, ]
+      }
+      if (nrow(peptides) == 0) {
+        stop("After removing Contaminant proteins, the dataset was empty.")
+      }
+      pattern <- grep("(B|b)os taurus", peptides$`Master Protein Descriptions`)
+      if (length(pattern) > 0) {
+        peptides <- peptides[-pattern, ]
+      }
+      if (nrow(peptides) == 0) {
+        stop("After removing Bos taurus proteins, the dataset was empty.")
+      }
+      message(paste0(ncont - nrow(peptides), " contaminants were removed from the data at temperature ", peptides_temperature))
+    }
 
+    # removing mix and/or empty channels if any
+    colnames(peptides)[(length(info_col)+1):(ncol(peptides) - 1)] <- paste0(peptides_temperature, "_", treatment)
     if(length(grep("_Mix|_Empty", colnames(peptides)))){
-      message(paste(paste(sub(".*_", "", grep("_Mix|_Empty", colnames(peptides), value = TRUE)),
+      message(paste(paste(sub(".*_", "",
+                              grep("_Mix|_Empty", colnames(peptides), value = TRUE)
+                              ),
                           collapse = ", "
                           ),
                     "channel(s) has(ve) been removed."
@@ -94,19 +138,41 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
       peptides <- peptides[, -grep("_Mix|_Empty", colnames(peptides))]
     }
 
+    # filtering on abundance count if not on median abundance count but by temperature
+    if(!averagecount){
+      n_abc <- nrow(peptides)
+      peptides <- peptides[which(peptides[[paste0("countNum.", peptides_temperature)]] >= countthreshold),]
+      message(paste0(n_abc - nrow(peptides), " peptides didn't pass the cutoff of abundance count number\n",
+                     countthreshold, " for the temperature ", peptides_temperature))
+    }
+
+    peptides <- peptides[order(peptides$`Master Protein Accessions`),]
     peptides_dataset[[peptides_temperature]] <- peptides
   }
+
   message("Concatening all peptides files")
-  peptides_dataset <- plyr::join_all(peptides_dataset,
-                                     by = info_col,
+  peptides_dataset <- plyr::join_all(peptides_dataset, by = info_col,
                                      type = "full")
 
+  # computing median from abundance count
+  peptides_dataset$countNum <- apply(peptides_dataset[,grep("^countNum\\.", colnames(peptides_dataset))],
+                                     1, median, na.rm = TRUE)
+  peptides_dataset <- peptides_dataset[,-grep("^countNum\\.", colnames(peptides_dataset))]
+
+  # filtering on abundance count if filtering on median abundance count
+  if(averagecount){
+    n_abc <- nrow(peptides_dataset)
+    peptides_dataset <- peptides_dataset[which(peptides_dataset$countNum >= countthreshold),]
+    message(paste0(n_abc - nrow(peptides_dataset), " peptides didn't pass the cutoff of median abundance count number ", countthreshold))
+  }
+
+  # renaming column description if there
   descr <- grep("Master Protein Descriptions", colnames(peptides_dataset))
   if(length(descr)){
     colnames(peptides_dataset)[descr] <- "description"
   }
 
-  # Take only the same proteins and adding protein description
+  # Take only the same proteins and adding protein description if added proteins argument
   if(!is.null(proteins)){
     peptides_dataset[["description"]] <- NULL
     if(is.character(proteins)){
@@ -150,6 +216,7 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
   }
 
 
+  # filtering modification
   if(!is.null(modification_torm)){
     if(all(nchar(modification_torm))){
       modif_torm <- paste0("\\d{1}x", modification_torm, collapse = "|")
@@ -172,8 +239,8 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
   message("Saving files")
   # remove peptides with only NAs
   n <- nrow(peptides_dataset)
-  peptides_dataset <- peptides_dataset[which(apply(peptides_dataset[,6:ncol(peptides_dataset)], 1,
-                                             function(x) sum(is.na(x)) < ncol(peptides_dataset) - 5)),]
+  peptides_dataset <- peptides_dataset[which(apply(peptides_dataset[,6:(ncol(peptides_dataset)-1)], 1,
+                                             function(x) sum(is.na(x)) < ncol(peptides_dataset) - 6)),]
   n <- n - nrow(peptides_dataset)
   message(paste(n, "peptides without quantitative information were removed"))
   colnames(peptides_dataset)[1:5] <- gsub(" ", ".", colnames(peptides_dataset)[1:5])

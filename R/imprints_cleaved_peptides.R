@@ -40,6 +40,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     return()
   }
 
+  wd <- getwd()
   outdir <- paste0(wd, "/", format(Sys.time(), "%y%m%d_%H%M"), "_RESP_analysis",
                    ifelse(nchar(folder_name) > 0, "_", ""), folder_name)
   if (dir.exists(outdir) == FALSE) {

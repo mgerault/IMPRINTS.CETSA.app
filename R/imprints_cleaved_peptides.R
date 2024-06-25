@@ -105,7 +105,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
   message("Filtering and ordering peptides...")
   # separate id in protein and sequence (need to take into account protein groups)
-  data_cleaved$sequence <- gsub("(?<= |^).{5,6}(?= \\[)", "", data_cleaved$id, perl = TRUE)
+  data_cleaved$sequence <- gsub("(?<= |^)(.{5,6}|A0.{6,8})(?= \\[)", "", data_cleaved$id, perl = TRUE)
   data_cleaved$sequence <- gsub(" ", "", data_cleaved$sequence)
   data_cleaved$sequence <- gsub(";", "; ", data_cleaved$sequence)
 
@@ -308,7 +308,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
       tidyr::gather("key", "value", -id, -description) %>%
       tidyr::separate(key, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
       mutate(protein = gsub(" ", "; ", gsub(" \\[(\\]|\\];)", "", gsub("(?<=\\[)\\d{1,4}(-|~)\\d{1,4}(?=\\])", "", id, perl = TRUE))),
-             position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^).{5,6}(?= \\[)", "", id, perl = TRUE)))
+             position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^)(.{5,6}|A0.{6,8})(?= \\[)", "", id, perl = TRUE)))
              ) %>%
       select(-id)
     treat_data_diff <- treat_data_diff[,c("protein", "position", "description", "temperature", "biorep", "treatment", "value")]

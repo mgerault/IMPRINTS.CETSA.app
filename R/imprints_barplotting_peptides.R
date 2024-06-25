@@ -59,6 +59,10 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
     return()
   }
 
+  if(save_pdf){
+    dataname <- deparse(substitute(data))
+  }
+
   if("countNum" %in% colnames(data)){
     data$countNum <- NULL
   }
@@ -72,10 +76,6 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
       message("Error: to be able to plot your IMPRINTS peptides dataset in the RESP format, you need excatly two peptides sequence per protein !")
       return()
     }
-  }
-
-  if(save_pdf){
-    dataname <- deparse(substitute(data))
   }
 
   ### function to plot IMPRINTS profiles
@@ -366,7 +366,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
                                      "[", 1:ifelse(printBothName, 3, 2)),
                               paste, collapse = "\n")
                        )
-    cdata$id <- factor(cdata$id, ordered = TRUE)
+    cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
 
     plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting, RESP = RESP)
   }

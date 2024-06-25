@@ -518,20 +518,30 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
          width = 16, height = 9)
 
   message("Preparing and saving results")
-  res <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "maxFC")]
   data_cleaved$description <- unname(sapply(data_cleaved$description, IMPRINTS.CETSA.app:::getProteinName))
   data_cleaved$position_global <- paste0(data_cleaved$position_global, "-term")
   data_cleaved <- data_cleaved %>%
     tidyr::pivot_wider(id_cols = c("id", "description", "treatment", "cleaved_site"),
                        names_from = position_global,
                        values_from = c("Nvalue", "Npep"))
-  res <- dplyr::left_join(res, data_cleaved, by = c("id", "treatment"),
+
+  # saving whole results
+  resp <- res[,c("id", "Gene", "treatment", "combined_pvalue", "maxFC", "criteria_curve")]
+  colnames(resp)[ncol(resp)] <- "RESP_hit"
+  resp <- dplyr::left_join(resp, data_cleaved, by = c("id", "treatment"),
+                           relationship = "one-to-many")
+  resp <- resp[order(resp$combined_pvalue),]
+  openxlsx::write.xlsx(resp, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_analysis_full.xlsx"))
+
+  # saving summary
+  resp_summary <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "maxFC")]
+  resp_summary <- dplyr::left_join(resp_summary, data_cleaved, by = c("id", "treatment"),
                           relationship = "one-to-many")
-  res <- res[order(res$combined_pvalue),]
-  openxlsx::write.xlsx(res, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_summary.xlsx"))
+  resp_summary <- resp_summary[order(resp_summary$combined_pvalue),]
+  openxlsx::write.xlsx(resp_summary, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_summary.xlsx"))
 
   message("Done !")
-  return(res)
+  return(resp_summary)
 }
 
 

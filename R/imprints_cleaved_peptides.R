@@ -205,9 +205,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                               }, simplify = FALSE)
         if(is.na(pN)){
           non_cleaved <- sapply(non_cleaved, "[[", 2)
-          if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+          if(any(non_cleaved != aft_cleaved, na.rm = TRUE)){  # if position doesn't follow
             non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
-            if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+            if(any(non_cleaved > aft_cleaved, na.rm = TRUE)){ # cleaved position and after have common AA position
               non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
               aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
             }
@@ -216,9 +216,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
         }
         else{
           non_cleaved <- sapply(non_cleaved, "[[", 1)
-          if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+          if(any(non_cleaved != bef_cleaved, na.rm = TRUE)){  # if position doesn't follow
             non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
-            if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+            if(any(non_cleaved < bef_cleaved, na.rm = TRUE)){ # cleaved position and before have common AA position
               bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
             }
           }
@@ -235,9 +235,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                               }, simplify = FALSE)
         if(pN <= pC){
           non_cleaved <- sapply(non_cleaved, "[[", 2)
-          if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+          if(any(non_cleaved != aft_cleaved, na.rm = TRUE)){  # if position doesn't follow
             non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
-            if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+            if(any(non_cleaved > aft_cleaved, na.rm = TRUE)){ # cleaved position and after have common AA position
               non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
               aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
             }
@@ -246,9 +246,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
         }
         else{
           non_cleaved <- sapply(non_cleaved, "[[", 1)
-          if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+          if(any(non_cleaved != bef_cleaved, na.rm = TRUE)){  # if position doesn't follow
             non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
-            if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+            if(any(non_cleaved < bef_cleaved, na.rm = TRUE)){ # cleaved position and before have common AA position
               bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
             }
           }
@@ -267,9 +267,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
           if(pN <= pC){
             non_cleaved <- sapply(non_cleaved, "[[", 2)
-            if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+            if(any(non_cleaved != aft_cleaved, na.rm = TRUE)){  # if position doesn't follow
               non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
-              if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+              if(any(non_cleaved > aft_cleaved, na.rm = TRUE)){ # cleaved position and after have common AA position
                 non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
                 aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
               }
@@ -278,9 +278,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
           }
           else{
             non_cleaved <- sapply(non_cleaved, "[[", 1)
-            if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+            if(any(non_cleaved != bef_cleaved, na.rm = TRUE)){  # if position doesn't follow
               non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
-              if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+              if(any(non_cleaved < bef_cleaved, na.rm = TRUE)){ # cleaved position and before have common AA position
                 bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
               }
             }

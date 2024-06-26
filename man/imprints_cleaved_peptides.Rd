@@ -10,7 +10,7 @@ imprints_cleaved_peptides(
   control = "Vehicle",
   min_ValidValue = 0.4,
   FDR = 0.01,
-  diff_cutoff = 0.25,
+  RESP_score = 0.3,
   curvature = 0.1,
   folder_name = ""
 )
@@ -28,7 +28,7 @@ Default is 0.4; so if 6 temperatures need at least 3 non missing values.}
 
 \item{FDR}{The FDR used to obtained the final p-value cutoff and maximum fold-change cutoff. Default is 1%}
 
-\item{diff_cutoff}{The maximum fold-change cutoff. Default is 0.25}
+\item{RESP_score}{The maximum fold-change cutoff. Default is 0.25}
 
 \item{curvature}{The curvature used for the curve on the volcano plot}
 

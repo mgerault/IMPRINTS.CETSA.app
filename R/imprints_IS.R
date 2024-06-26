@@ -266,7 +266,9 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   cond <- unique(diff_IS_plot$treatment)
   n_cond <- length(cond)
-  df_curve <- data.frame(IS = rep(seq(min(diff_IS_plot$IS, na.rm = TRUE), max(diff_IS_plot$IS, na.rm = TRUE), 0.01), n_cond))
+  df_curve <- data.frame(IS = rep(seq(-max(abs(diff_IS_plot$IS), na.rm = TRUE),
+                                      max(abs(diff_IS_plot$IS), na.rm = TRUE), 0.005),
+                                  n_cond))
   df_curve$treatment <- rep(cond, each = nrow(df_curve)/n_cond)
   df_curve <- df_curve %>% dplyr::group_by(treatment, rownames(df_curve)) %>%
     dplyr::mutate(curve = curve(IS, cutoff$IS_neg[which(cutoff$treatment == treatment)],

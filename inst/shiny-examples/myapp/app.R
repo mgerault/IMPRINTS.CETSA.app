@@ -2592,7 +2592,7 @@ server <- function(input, output, session){
                                                         control = input$controlcleaved_pep,
                                                         min_ValidValue = input$propValcleaved_pep,
                                                         FDR = input$FDRcleaved_pep,
-                                                        diff_cutoff = input$diffcutcleaved_pep)
+                                                        RESP_score = input$diffcutcleaved_pep)
       },
       message = function(m) {
         shinyjs::html(id = "diag_pep_cleaved", html = m$message, add = FALSE)

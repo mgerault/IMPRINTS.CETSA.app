@@ -22,7 +22,7 @@
 #' @param min_ValidValue The minimum proportion of valid values per peptides.
 #'                       Default is 0.4; so if 6 temperatures need at least 3 non missing values.
 #' @param FDR The FDR used to obtained the final p-value cutoff and maximum fold-change cutoff. Default is 1%
-#' @param diff_cutoff The maximum fold-change cutoff. Default is 0.25
+#' @param RESP_score The maximum fold-change cutoff. Default is 0.25
 #' @param curvature The curvature used for the curve on the volcano plot
 #' @param folder_name The name of the folder in which you want to save the results.
 #'
@@ -33,7 +33,7 @@
 
 imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                       control = "Vehicle", min_ValidValue = 0.4,
-                                      FDR = 0.01, diff_cutoff = 0.25,
+                                      FDR = 0.01, RESP_score = 0.3,
                                       curvature = 0.1, folder_name = ""){
   if(!any(grepl(paste0("_", control, "$"), colnames(data)))){
     message(paste("Error:", control, "is wasn't found in your data !"))
@@ -204,11 +204,24 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                 as.numeric(x)
                               }, simplify = FALSE)
         if(is.na(pN)){
-          non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
+          non_cleaved <- sapply(non_cleaved, "[[", 2)
+          if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+            non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
+            if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+              non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
+              aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
+            }
+          }
           non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
+          non_cleaved <- sapply(non_cleaved, "[[", 1)
+          if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+            non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
+            if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+              bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
+            }
+          }
           non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
         non_cleaved <- paste(non_cleaved, collapse = "; ")
@@ -221,11 +234,24 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                 as.numeric(x)
                               }, simplify = FALSE)
         if(pN <= pC){
-          non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
+          non_cleaved <- sapply(non_cleaved, "[[", 2)
+          if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+            non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
+            if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+              non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
+              aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
+            }
+          }
           non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
         }
         else{
-          non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
+          non_cleaved <- sapply(non_cleaved, "[[", 1)
+          if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+            non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
+            if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+              bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
+            }
+          }
           non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
         }
         non_cleaved <- paste(non_cleaved, collapse = "; ")
@@ -240,11 +266,24 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                 }, simplify = FALSE)
 
           if(pN <= pC){
-            non_cleaved <- sapply(non_cleaved, "[[", 2) + 1
+            non_cleaved <- sapply(non_cleaved, "[[", 2)
+            if(any(non_cleaved != aft_cleaved)){  # if position doesn't follow
+              non_cleaved[which(non_cleaved != aft_cleaved)] <- non_cleaved[which(non_cleaved != aft_cleaved)] + 1
+              if(any(non_cleaved > aft_cleaved)){ # cleaved position and after have common AA position
+                non_cleaved[which(non_cleaved > aft_cleaved)] <- aft_cleaved
+                aft_cleaved[which(aft_cleaved == non_cleaved)] <- aft_cleaved[which(aft_cleaved == non_cleaved)] + 1
+              }
+            }
             non_cleaved <- paste(non_cleaved, aft_cleaved, sep = "~")
           }
           else{
-            non_cleaved <- sapply(non_cleaved, "[[", 1) - 1
+            non_cleaved <- sapply(non_cleaved, "[[", 1)
+            if(any(non_cleaved != bef_cleaved)){  # if position doesn't follow
+              non_cleaved[which(non_cleaved != bef_cleaved)] <- non_cleaved[which(non_cleaved != bef_cleaved)] - 1
+              if(any(non_cleaved < bef_cleaved)){ # cleaved position and before have common AA position
+                bef_cleaved[which(bef_cleaved > non_cleaved)] <- non_cleaved - 1
+              }
+            }
             non_cleaved <- paste(bef_cleaved, non_cleaved, sep = "~")
           }
           non_cleaved <- paste(non_cleaved, collapse = "; ")
@@ -265,7 +304,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                      )
 
 
-  message("Summing peptides profiles from N-terminal side and C-terminal side from each treatment")
+  message("Summing peptides profiles from N-terminal side and C-terminal side from each treatment\n")
   treat <- unique(data_cleaved$treatment)
   new_data_diff <- list()
   res <- list()
@@ -317,7 +356,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   new_data_diff <- as.data.frame(Reduce(rbind, new_data_diff))
 
   ##### computing p-values for each protein --> H0 = protein is not cleaved
-  message("Reshaping data and computing experimental design")
+  message("\nReshaping data and computing experimental design")
   new_data_diff$position_global <- unlist(lapply(strsplit(gsub("\\[|\\]", "", gsub(";.*", "", new_data_diff$position)),
                                                           "~|-"),
                                                  function(s) sum(as.numeric(s)))
@@ -457,22 +496,61 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                               metap::logitp(adj.P.Val)$p, # Goerge's method
                                               NA),
                      maxFC = ifelse(length(na.omit(logFC)),
-                                    logFC[which(abs(logFC) == max(abs(logFC), na.rm = T))],
+                                    temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],
                                     NA)
-                     )
+                     ) %>%
+    dplyr::ungroup() %>% dplyr::group_by(id, Gene, treatment) %>%
+    dplyr::group_modify(~ {
+      if(!is.na(.x$maxFC)){
+        # getting FC
+        score <- new_data_diff_matrix[which(new_data_diff_matrix$id == paste0(.x$id, "_", .x$Gene) & new_data_diff_matrix$treatment == .x$treatment),
+                      grep(paste0("_", .x$maxFC, "$"), colnames(new_data_diff_matrix))]
+
+        # computing score
+        score <- c(mean(as.numeric(score[1,grep("^N_", colnames(score))]), na.rm = TRUE),
+                   mean(as.numeric(score[1,grep("^C_", colnames(score))]), na.rm = TRUE))
+        sign_score <- sign(score)
+        if(length(unique(sign_score)) == 1){ # same sign
+          zscore <- abs(score[which.max(abs(score))])/max(c(0.01, abs(score[which.min(abs(score))]))) # ratio give the score
+        }
+        else{ # one is neg and one is pos
+          zscore <- score + abs(score[which.min(score)]) + 0.01 # 0.1 is a constant, can be modified for importance of opposite 'direction' RESP
+          zscore <- zscore[which.max(zscore)]/zscore[which.min(zscore)] # ratio give the score
+        }
+        zscore <- zscore*sign(diff(score))
+      }
+      else{
+        zscore <- NA
+      }
+
+      score <- .x
+      score <- score[,-grep("^id$|^Gene$|^treatment$", colnames(score))]
+      score$zscore <- zscore
+      return(score)
+    }, .keep = TRUE) %>%
+    dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
+    dplyr::mutate(zscore = (zscore - mean(zscore, na.rm = TRUE))/sd(zscore, na.rm = TRUE)) %>%
+    select(-maxFC)
+
   # FDR 1%
   cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
     dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
     dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
-                     maxFC_pos = diff_cutoff + median(maxFC[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
-                     maxFC_neg = -diff_cutoff - median(maxFC[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
+                     zscore_pos = RESP_score + median(zscore[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
+                     zscore_neg = -RESP_score - median(zscore[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
+
+  # saving obtained cutoffs
+  cutoff_file <- paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "cutoff.txt")
+  readr::write_tsv(cutoff, cutoff_file)
+  extra_info <- paste0("\nParameters: \nRESP z-score cutoff=", RESP_score, ", FDR=", FDR*100, "%, curvature=", curvature)
+  write(extra_info, cutoff_file, sep = "\n", append = TRUE)
 
   res <- res %>% dplyr::group_by(id, Gene, treatment) %>%
     dplyr::mutate(criteria = combined_pvalue <= cutoff$pval[which(cutoff$treatment == treatment)] &
-                    (maxFC >= cutoff$maxFC_pos[which(cutoff$treatment == treatment)] | maxFC <= cutoff$maxFC_neg[which(cutoff$treatment == treatment)]),
-                  curve = curve(maxFC,
-                                cutoff$maxFC_neg[which(cutoff$treatment == treatment)],
-                                cutoff$maxFC_pos[which(cutoff$treatment == treatment)],
+                    (zscore >= cutoff$zscore_pos[which(cutoff$treatment == treatment)] | zscore <= cutoff$zscore_neg[which(cutoff$treatment == treatment)]),
+                  curve = curve(zscore,
+                                cutoff$zscore_neg[which(cutoff$treatment == treatment)],
+                                cutoff$zscore_pos[which(cutoff$treatment == treatment)],
                                 cutoff$pval[which(cutoff$treatment == treatment)],
                                 curvature = curvature),
                   criteria_curve = -log10(combined_pvalue) >= curve
@@ -480,34 +558,34 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   res$criteria_curve <- tidyr::replace_na(res$criteria_curve, FALSE)
 
   n_treat <- length(treat)
-  df_curve <- data.frame(maxFC = rep(seq(min(res$maxFC, na.rm = TRUE),
-                                         max(res$maxFC, na.rm = TRUE), 0.01),
+  df_curve <- data.frame(zscore = rep(seq(-max(abs(res$zscore), na.rm = TRUE),
+                                          max(abs(res$zscore), na.rm = TRUE), 0.005),
                                      n_treat)
                          )
   df_curve$treatment <- rep(treat, each = nrow(df_curve)/n_treat)
   df_curve <- df_curve %>% dplyr::group_by(treatment, rownames(df_curve)) %>%
-    dplyr::mutate(curve = curve(maxFC,
-                                cutoff$maxFC_neg[which(cutoff$treatment == treatment)],
-                                cutoff$maxFC_pos[which(cutoff$treatment == treatment)],
+    dplyr::mutate(curve = curve(zscore,
+                                cutoff$zscore_neg[which(cutoff$treatment == treatment)],
+                                cutoff$zscore_pos[which(cutoff$treatment == treatment)],
                                 cutoff$pval[which(cutoff$treatment == treatment)]
                                 )
                   )
 
   message("Creating and saving plot")
-  g_h <- ggplot(res, aes(maxFC, -log10(combined_pvalue), color = criteria_curve)) +
+  g_h <- ggplot(res, aes(zscore, -log10(combined_pvalue), color = criteria_curve)) +
     geom_point() +
-    geom_line(data = df_curve, aes(x = maxFC, y = curve), linetype = "dashed", color = "black") +
+    geom_line(data = df_curve, aes(x = zscore, y = curve), linetype = "dashed", color = "black") +
     ylim(c(0, max(-log10(res$combined_pvalue), na.rm = TRUE))) +
-    xlim(c(-max(abs(res$maxFC), na.rm = TRUE),
-           max(abs(res$maxFC), na.rm = TRUE))
+    xlim(c(-max(abs(res$zscore), na.rm = TRUE),
+           max(abs(res$zscore), na.rm = TRUE))
          ) +
     labs(title = "RESP volcano plot",
          y = "-log10(combined p-value)",
-         x = "maximum log2(FC)") +
+         x = "RESP z-score") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     facet_wrap(~treatment) +
     ggrepel::geom_label_repel(data = res[res$criteria_curve,],
-                              aes(maxFC, -log10(combined_pvalue), label = Gene),
+                              aes(zscore, -log10(combined_pvalue), label = Gene),
                               show.legend = FALSE, min.segment.length = 0) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
@@ -526,7 +604,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                        values_from = c("Nvalue", "Npep"))
 
   # saving whole results
-  resp <- res[,c("id", "Gene", "treatment", "combined_pvalue", "maxFC", "criteria_curve")]
+  resp <- res[,c("id", "Gene", "treatment", "combined_pvalue", "zscore", "criteria_curve")]
   colnames(resp)[ncol(resp)] <- "RESP_hit"
   resp <- dplyr::left_join(resp, data_cleaved, by = c("id", "treatment"),
                            relationship = "one-to-many")
@@ -534,7 +612,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   openxlsx::write.xlsx(resp, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_analysis_full.xlsx"))
 
   # saving summary
-  resp_summary <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "maxFC")]
+  resp_summary <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "zscore")]
   resp_summary <- dplyr::left_join(resp_summary, data_cleaved, by = c("id", "treatment"),
                           relationship = "one-to-many")
   resp_summary <- resp_summary[order(resp_summary$combined_pvalue),]

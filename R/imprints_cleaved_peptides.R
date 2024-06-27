@@ -511,10 +511,10 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                    mean(as.numeric(score[1,grep("^C_", colnames(score))]), na.rm = TRUE))
         sign_score <- sign(score)
         if(length(unique(sign_score)) == 1){ # same sign
-          zscore <- abs(score[which.max(abs(score))])/max(c(0.01, abs(score[which.min(abs(score))]))) # ratio give the score
+          zscore <- abs(score[which.max(abs(score))])/max(c(0.025, abs(score[which.min(abs(score))]))) # ratio give the score
         }
         else{ # one is neg and one is pos
-          zscore <- score + abs(score[which.min(score)]) + 0.01 # 0.1 is a constant, can be modified for importance of opposite 'direction' RESP
+          zscore <- score + abs(score[which.min(score)]) + 0.025 # 0.025 is a constant, can be modified for importance of opposite 'direction' RESP
           zscore <- zscore[which.max(zscore)]/zscore[which.min(zscore)] # ratio give the score
         }
         zscore <- zscore*sign(diff(score))

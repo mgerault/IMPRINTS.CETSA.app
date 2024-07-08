@@ -253,26 +253,18 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
   message("Preparing data for plotting...")
   nrowdata <- nrow(data)
   if (printBothName) {
-    data <- data %>% dplyr::rowwise() %>%
-      dplyr::mutate(description1 = getProteinName(description),
-                    description2 = getGeneName(description),
-                    Master.Protein.Accessions = paste(Master.Protein.Accessions,
-                                                      description1, description2,
-                                                      sep = "\n"))
-      data$description1 <- NULL
-      data$description2 <- NULL
+    data$description <- sapply(data$description,
+                               function(x) paste(getProteinName(x), getGeneName(x), sep = "\n"),
+                               USE.NAMES = FALSE)
+    data$Master.Protein.Accessions <- paste(data$Master.Protein.Accessions, data$description, sep = "\n")
   }
   else if (printGeneName) {
-    data <- data %>% dplyr::rowwise() %>%
-      dplyr::mutate(description = getGeneName(description),
-                    Master.Protein.Accessions = paste(Master.Protein.Accessions,
-                                                      description, sep = "\n"))
+    data$description <- sapply(data$description, getGeneName,  USE.NAMES = FALSE)
+    data$Master.Protein.Accessions <- paste(data$Master.Protein.Accessions, data$description, sep = "\n")
   }
   else {
-    data <- data %>% dplyr::rowwise() %>%
-      dplyr::mutate(description = getProteinName(description),
-                    Master.Protein.Accessions = paste(Master.Protein.Accessions,
-                                                      description, sep = "\n"))
+    data$description <- sapply(data$description, getProteinName,  USE.NAMES = FALSE)
+    data$Master.Protein.Accessions <- paste(data$Master.Protein.Accessions, data$description, sep = "\n")
   }
   data$description <- NULL
 
@@ -337,9 +329,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
     stop("make sure the namings of the columns of the dasaset are correct.")
   }
 
-  cdata <- cdata %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(condition = paste(temperature, treatment, sep = "_"))
+  cdata$condition <- paste(cdata$temperature, cdata$treatment, sep = "_")
   cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
 
   cdata$treatment <- factor(as.character(cdata$treatment),

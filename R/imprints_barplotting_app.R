@@ -306,22 +306,18 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
           stop("Otherwise specify remsinglecondprot==FALSE !")
         }
         if (printBothName) {
-          data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description)) %>%
-            dplyr::mutate(description2 = getGeneName(description)) %>%
-            dplyr::mutate(id = paste(id, description1, description2,
-                              sep = "\n"))
-          data$description1 <- NULL
-          data$description2 <- NULL
+          data$description <- sapply(data$description,
+                                     function(x) paste(getProteinName(x), getGeneName(x), sep = "\n"),
+                                     USE.NAMES = FALSE)
+          data$id <- paste(data$id, data$description, sep = "\n")
         }
         else if (printGeneName) {
-          data <- data %>% dplyr::rowwise() %>%
-            dplyr::mutate(description = getGeneName(description)) %>%
-            dplyr::mutate(id = paste(id, description, sep = "\n"))
+          data$description <- sapply(data$description, getGeneName, USE.NAMES = FALSE)
+          data$id <- paste(data$id, data$description, sep = "\n")
         }
         else {
-          data <- data %>% dplyr::rowwise() %>%
-            dplyr::mutate(description = getProteinName(description)) %>%
-            dplyr::mutate(id = paste(id, description, sep = "\n"))
+          data$description <- sapply(data$description, getProteinName, USE.NAMES = FALSE)
+          data$id <- paste(data$id, data$description, sep = "\n")
         }
 
         if(length(grep("^category", names(data)))){
@@ -372,8 +368,8 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
         }
 
         data$description <- NULL
-        data1 <- tidyr::gather(data[, -grep("^sumPSM|^countNum|^sumUniPeps|^drug$|^category", names(data))],
-                               condition, reading, -id)
+        data1 <- data[, -grep("^sumPSM|^countNum|^sumUniPeps|^drug$|^category", names(data))]
+        data1 <- tidyr::gather(data1, condition, reading, -id)
 
         if (!log2scale) {
           data1 <- dplyr::mutate(data1, reading = 2^reading)
@@ -381,8 +377,7 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
         a <- data1$condition[1]
         if (length(unlist(strsplit(a, "_"))) == 4) {
           withset <- TRUE
-          data1 <- tidyr::separate(data1, condition, into = c("set",
-                                                              "temperature", "replicate", "treatment"), sep = "_")
+          data1 <- tidyr::separate(data1, condition, into = c("set", "temperature", "replicate", "treatment"), sep = "_")
           temperature <- sort(unique(data1$temperature))
           temp_idx <- grep("^[0-9]", temperature)
           if(length(temp_idx) != length(temperature)){
@@ -452,8 +447,8 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
         else {
           stop("make sure the namings of the columns of the dasaset are correct.")
         }
-        cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
-                                                                  treatment, sep = "_"))
+        cdata$condition <- paste(cdata$temperature, cdata$treatment, sep = "_")
+
         if (withset) {
           cdata$set <- factor(as.character(cdata$set), levels = setlevel)
         }
@@ -470,10 +465,8 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
                                                                    %in% as.character(cdata$condition)
                                                                    ]
                                   )
+
         message("Generating fitted plot, pls wait.")
-
-
-
         plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
                              withset = withset)
 
@@ -530,22 +523,18 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
       stop("Otherwise specify remsinglecondprot==FALSE !")
     }
     if (printBothName) {
-      data <- data %>% dplyr::rowwise() %>% dplyr::mutate(description1 = getProteinName(description)) %>%
-        dplyr::mutate(description2 = getGeneName(description)) %>%
-        dplyr::mutate(id = paste(id, description1, description2,
-                          sep = "\n"))
-      data$description1 <- NULL
-      data$description2 <- NULL
+      data$description <- sapply(data$description,
+                                 function(x) paste(getProteinName(x), getGeneName(x), sep = "\n"),
+                                 USE.NAMES = FALSE)
+      data$id <- paste(data$id, data$description, sep = "\n")
     }
     else if (printGeneName) {
-      data <- data %>% dplyr::rowwise() %>%
-        dplyr::mutate(description = getGeneName(description)) %>%
-        dplyr::mutate(id = paste(id, description, sep = "\n"))
+      data$description <- sapply(data$description, getGeneName, USE.NAMES = FALSE)
+      data$id <- paste(data$id, data$description, sep = "\n")
     }
     else {
-      data <- data %>% dplyr::rowwise() %>%
-        dplyr::mutate(description = getProteinName(description)) %>%
-        dplyr::mutate(id = paste(id, description, sep = "\n"))
+      data$description <- sapply(data$description, getProteinName, USE.NAMES = FALSE)
+      data$id <- paste(data$id, data$description, sep = "\n")
     }
 
     if(length(grep("^category", names(data)))){
@@ -596,8 +585,8 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
     }
 
     data$description <- NULL
-    data1 <- tidyr::gather(data[, -grep("^sumPSM|^countNum|^sumUniPeps|^drug$|^category", names(data))],
-                           condition, reading, -id)
+    data1 <- data[, -grep("^sumPSM|^countNum|^sumUniPeps|^drug$|^category", names(data))]
+    data1 <- tidyr::gather(data1, condition, reading, -id)
     if (!log2scale) {
       data1 <- dplyr::mutate(data1, reading = 2^reading)
     }
@@ -680,13 +669,13 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
     else {
       stop("make sure the namings of the columns of the dasaset are correct.")
     }
-    cdata <- cdata %>% dplyr::rowwise() %>% dplyr::mutate(condition = paste(temperature,
-                                                              treatment, sep = "_"))
+
+    cdata$condition <- paste(cdata$temperature, cdata$treatment, sep = "_")
     if (withset) {
       cdata$set <- factor(as.character(cdata$set), levels = setlevel)
     }
-    cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
 
+    cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
     cdata$treatment <- factor(as.character(cdata$treatment),
                               levels = treatmentlevel)
     cdata$condition <- factor(as.character(cdata$condition),
@@ -700,7 +689,6 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
                               )
 
     message("Generating fitted plot, pls wait.")
-
     plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting,
                          withset = withset)
 

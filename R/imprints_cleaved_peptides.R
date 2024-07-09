@@ -111,7 +111,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
   data_cleaved$id <- gsub("(?<=\\[)\\d{1,4}-\\d{1,4}(?=\\])", "", data_cleaved$id, perl = TRUE)
   data_cleaved$id <- gsub(" \\[(\\]|\\];)", "", data_cleaved$id)
-  data_cleaved$id <- gsub(" ", "; ", data_cleaved$id)
+  data_cleaved$id <- gsub("(?<!;) ", "; ", data_cleaved$id, perl = TRUE)
 
   data_cleaved <- data_cleaved %>%
     dplyr::mutate(sequence = gsub("\\[|\\]", "", sequence)) %>%
@@ -346,7 +346,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     treat_data_diff <- treat_data_diff %>%
       tidyr::gather("key", "value", -id, -description) %>%
       tidyr::separate(key, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
-      mutate(protein = gsub(" ", "; ", gsub(" \\[(\\]|\\];)", "", gsub("(?<=\\[)\\d{1,4}(-|~)\\d{1,4}(?=\\])", "", id, perl = TRUE))),
+      mutate(protein = gsub("(?<!;) ", "; ", gsub(" \\[(\\]|\\];)", "", gsub("(?<=\\[)\\d{1,4}(-|~)\\d{1,4}(?=\\])", "", id, perl = TRUE)), perl = TRUE),
              position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^)(.{5,6}|A0.{6,8})(?= \\[)", "", id, perl = TRUE)))
              ) %>%
       select(-id)

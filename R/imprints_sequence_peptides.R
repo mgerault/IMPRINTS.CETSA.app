@@ -85,7 +85,7 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
 
       tab_pr <- data[which(data$Master.Protein.Accessions == proteins[i]),]
       tab_sequ = gsub(";.*", "", tab_pr$Positions.in.Master.Proteins) # if protein group, only take first one for simplicity
-      tab_sequ = gsub(".* \\[|\\].*", "", tab_pr$Positions.in.Master.Proteins)
+      tab_sequ = gsub(".* \\[|\\].*", "", tab_sequ)
       tab_sequ_n = strsplit(tab_sequ, "-")
 
       if(length(sequence) == 1){

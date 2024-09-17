@@ -303,7 +303,6 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
                      Npep = length(sequence)
                      )
 
-
   message("Summing peptides profiles from N-terminal side and C-terminal side from each treatment\n")
   treat <- unique(data_cleaved$treatment)
   new_data_diff <- list()
@@ -493,7 +492,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     dplyr::mutate(adj.P.Val = tidyr::replace_na(adj.P.Val, 1)) %>%
     dplyr::group_by(id, Gene, treatment) %>%
     dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
-                                              metap::logitp(adj.P.Val)$p, # Goerge's method
+                                              adj.P.Val, # metap::logitp(adj.P.Val)$p, # Goerge's method
                                               NA),
                      maxFC = ifelse(length(na.omit(logFC)),
                                     temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],

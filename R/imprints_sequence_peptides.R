@@ -125,13 +125,24 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
             the_one <- lapply(the_one, which)
           }
           sequence_catego <- paste0(" ", paste(1:length(tab_sequ_n), collapse = " "), " ")
+
           for(l in 1:length(the_one)){
             to_insert <- paste0(" ", paste(the_one[[l]], collapse = " "), " ")
             to_add <- paste(sequence_catego[length(sequence_catego)], collapse = " ")
             if(l != 1){
               to_add <- paste0(" ", to_add)
             }
-            to_add <- strsplit(to_add, to_insert)[[1]]
+            if(nchar(to_insert) < 1462){ # prevent strsplit out of memory (if that much, not an exact cleaved site so *)
+              to_add <- strsplit(to_add, to_insert)[[1]]
+            }
+            else{
+              to_inserts <- strsplit(to_insert, " ")[[1]][-1]
+              to_inserts <- paste0(to_inserts, " ")
+              for(i in to_inserts){
+                to_add <- sub(i, "", to_add)
+              }
+              to_add <- c("", sub("^ ", "", to_add)) # *
+            }
             sequence_catego <- sequence_catego[-length(sequence_catego)]
             sequence_catego <- append(sequence_catego, append(to_add, to_insert, after = 1))
           }

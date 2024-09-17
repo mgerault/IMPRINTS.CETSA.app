@@ -314,7 +314,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                     ),
                                                                                              column(3, numericInput("diffcutcleaved_pep", "Choose cutoff difference between the two IMPRINTS
                                                                                                                                         profiles from the two parts of the protein",
-                                                                                                                    value = 0.25, min = 0.01, max = 10, step = 0.1)
+                                                                                                                    value = 0.3, min = 0.01, max = 10, step = 0.1)
                                                                                                     ),
                                                                                              column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
                                                                                              column(3, numericInput("propValcleaved_pep", "Choose the minimum proportion of valid values per peptide
@@ -2542,6 +2542,9 @@ server <- function(input, output, session){
                                                         control = input$control_pep,
                                                         barplot = input$barplotFC_pep,
                                                         dataset_name = input$dnamediff_pep)
+      if(any("NA" %in% sequence_pep_data$x$Master.Protein.Accessions)){
+        sequence_pep_data$x$Master.Protein.Accessions[which(sequence_pep_data$x$Master.Protein.Accessions == "NA")] <- NA
+      }
       showNotification("Fold change and bar plot saved !",  type = "message")
       },
       message = function(m) {

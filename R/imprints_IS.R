@@ -8,7 +8,12 @@
 #' @param ctrl The name of the control.
 #' @param valid_val The percentage of valid values you want per treatment. If less, score will be set to NA,
 #'                  i.e. the protein will not be a hit
-#' @param IS_cutoff The I-score cutoff
+#' @param IS_cutoff The I-score cutoff. Default is 1.5.
+#' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the I-score.
+#'   If TRUE, the value IS_cutoff will directly be used as the cutoff and for all treatments. If FALSE,
+#'   the I-score cutoff will be calculated as the value selected for IS_cutoff plus the median of the
+#'   I-scores of the proteins which have a p-value lower than the median of all p-values for a given treatment.
+#'   Default is FALSE.
 #' @param curvature The curvature used for the curve on the volcano plot
 #' @param FDR The FDR used for the BH corrected combined p-value
 #' @param FDR_category The FDR used for the BH corrected  p-value at 37°C used in order to categorize the hits
@@ -23,7 +28,7 @@
 #' @export
 
 imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
-                        IS_cutoff = 1.5,
+                        IS_cutoff = 1.5, fixed_score_cutoff = FALSE,
                         FDR = 0.01, curvature = 0.1,
                         FDR_category = 0.1,
                         folder_name = "Hits_analysis",
@@ -240,11 +245,20 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_IS_plot <- tidyr::spread(diff_IS_plot, Value, reading)
   diff_IS_plot$treatment <- factor(diff_IS_plot$treatment)
 
-  cutoff <- diff_IS_plot %>% dplyr::group_by(treatment) %>%
-    dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
-    dplyr::reframe(pval = find_cutoff(Fisher, BH),
-                     IS_pos = IS_cutoff + median(IS[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE),
-                     IS_neg = -IS_cutoff - median(IS[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE))
+  if(fixed_score_cutoff){
+    cutoff <- diff_IS_plot %>% dplyr::group_by(treatment) %>%
+      dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
+      dplyr::reframe(pval = find_cutoff(Fisher, BH),
+                     IS_pos = IS_cutoff,
+                     IS_neg = -IS_cutoff)
+  }
+  else{
+    cutoff <- diff_IS_plot %>% dplyr::group_by(treatment) %>%
+      dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
+      dplyr::reframe(pval = find_cutoff(Fisher, BH),
+                     IS_pos = IS_cutoff + median(abs(IS)[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE),
+                     IS_neg = -IS_cutoff - median(abs(IS)[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE))
+  }
 
   cutoff_file <- paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "cutoff.txt")
   readr::write_tsv(cutoff, cutoff_file)

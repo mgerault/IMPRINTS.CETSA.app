@@ -21,8 +21,13 @@
 #' @param control The control treatment from your dataset.
 #' @param min_ValidValue The minimum proportion of valid values per peptides.
 #'                       Default is 0.4; so if 6 temperatures need at least 3 non missing values.
-#' @param FDR The FDR used to obtained the final p-value cutoff and maximum fold-change cutoff. Default is 1%
-#' @param RESP_score The maximum fold-change cutoff. Default is 0.25
+#' @param FDR The FDR used to obtained the final p-value cutoff. Default is 1%
+#' @param RESP_score The RESP score cutoff. Default is 0.3
+#' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the RESP score.
+#'   If TRUE, the value RESP_score will directly be used as the cutoff and for all treatments. If FALSE,
+#'   the RESP score cutoff will be calculated as the value selected for RESP_score plus the median of the
+#'   scores of the proteins which have a p-value lower than the median of all p-values for a given treatment.
+#'   Default is FALSE.
 #' @param curvature The curvature used for the curve on the volcano plot
 #' @param folder_name The name of the folder in which you want to save the results.
 #'
@@ -33,7 +38,7 @@
 
 imprints_cleaved_peptides <- function(data, data_diff = NULL,
                                       control = "Vehicle", min_ValidValue = 0.4,
-                                      FDR = 0.01, RESP_score = 0.3,
+                                      FDR = 0.01, RESP_score = 0.3, fixed_score_cutoff = FALSE,
                                       curvature = 0.1, folder_name = ""){
   if(!any(grepl(paste0("_", control, "$"), colnames(data)))){
     message(paste("Error:", control, "is wasn't found in your data !"))
@@ -492,7 +497,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     dplyr::mutate(adj.P.Val = tidyr::replace_na(adj.P.Val, 1)) %>%
     dplyr::group_by(id, Gene, treatment) %>%
     dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
-                                              adj.P.Val, # metap::logitp(adj.P.Val)$p, # Goerge's method
+                                              metap::logitp(adj.P.Val)$p, # Goerge's method
                                               NA),
                      maxFC = ifelse(length(na.omit(logFC)),
                                     temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],
@@ -513,8 +518,8 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
           zscore <- abs(score[which.max(abs(score))])/max(c(0.025, abs(score[which.min(abs(score))]))) # ratio give the score
         }
         else{ # one is neg and one is pos
-          zscore <- score + abs(score[which.min(score)]) + 0.025 # 0.025 is a constant, can be modified for importance of opposite 'direction' RESP
-          zscore <- zscore[which.max(zscore)]/zscore[which.min(zscore)] # ratio give the score
+          zscore <- score[which.max(score)] + abs(score[which.min(score)]) # 0.025 is a constant, can be modified for importance of opposite 'direction' RESP
+          zscore <- zscore/0.025 # ratio give the score
         }
         zscore <- zscore*sign(diff(score))
       }
@@ -531,12 +536,21 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
     dplyr::mutate(zscore = (zscore - mean(zscore, na.rm = TRUE))/sd(zscore, na.rm = TRUE)) %>%
     select(-maxFC)
 
-  # FDR 1%
-  cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
-    dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
-    dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
-                     zscore_pos = RESP_score + median(zscore[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
-                     zscore_neg = -RESP_score - median(zscore[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
+  # compute cutoffs
+  if(fixed_score_cutoff){
+    cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
+      dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
+      dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
+                       zscore_pos = RESP_score,
+                       zscore_neg = -RESP_score)
+  }
+  else{
+    cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
+      dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
+      dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
+                       zscore_pos = RESP_score + median(abs(zscore)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
+                       zscore_neg = -RESP_score - median(abs(zscore)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
+  }
 
   # saving obtained cutoffs
   cutoff_file <- paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "cutoff.txt")
@@ -624,28 +638,58 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
 
 ### function to compute discrete inflexion point
 inflex <- function(x){
-  x <- diff(x) # get first 'first derivative'
-  # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
-  df <- data.frame(x = 1:length(x),
-                   y = x)
-  res <- lm(y ~ x, data = df)
-  res <- res$coeff[2]
-  res <- sign(res)
+  lx <- length(x)
 
-  x <- diff(x) # get second 'first derivative'
-  if(res == 1){
-    inflex_point <- which.max(x) + 2 # double diff, so add 2 to index point
+  if(lx == 4){
+    inflex_point <- 2
+  }
+  else if(lx == 5){
+    inflex_point <- 3
   }
   else{
-    inflex_point <- which.min(x) + 2 # double diff, so add 2 to index point
-  }
+    inflex_point <- sapply(3:(lx-2), # need at least two peptides before or after
+                           function(z){
+                             r1 <- lm(y ~ x, data = data.frame(x = 1:z,
+                                                               y = x[1:z])
+                             )
+                             r2 <- lm(y ~ x, data = data.frame(x = z:lx,
+                                                               y = x[z:lx])
+                             )
 
-  if(inflex_point - 2 == length(x)){  # if inflex_point is last one, can't conclude that is cleaved
-    inflex_point <- NA
+                             r1 <- deviance(r1)
+                             r2 <- deviance(r2)
+
+                             return(r1+r2)
+                           })
+
+    inflex_point <- which.min(inflex_point) + 2
   }
 
   return(inflex_point)
 }
+#inflex <- function(x){
+#  x <- diff(x) # get first 'first derivative'
+#  # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
+#  df <- data.frame(x = 1:length(x),
+#                   y = x)
+#  res <- lm(y ~ x, data = df)
+#  res <- res$coeff[2]
+#  res <- sign(res)
+#
+#  x <- diff(x) # get second 'first derivative'
+#  if(res == 1){
+#    inflex_point <- which.max(x) + 2 # double diff, so add 2 to index point
+#  }
+#  else{
+#    inflex_point <- which.min(x) + 2 # double diff, so add 2 to index point
+#  }
+#
+#  if(inflex_point - 2 == length(x)){  # if inflex_point is last one, can't conclude that is cleaved
+#    inflex_point <- NA
+#  }
+#
+#  return(inflex_point)
+#}
 
 ### function to sum number of values per peptide N and peptide C
 nb_pepval <- function(x){

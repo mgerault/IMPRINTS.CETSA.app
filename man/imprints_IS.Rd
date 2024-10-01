@@ -10,6 +10,7 @@ imprints_IS(
   ctrl,
   valid_val = NULL,
   IS_cutoff = 1.5,
+  fixed_score_cutoff = FALSE,
   FDR = 0.01,
   curvature = 0.1,
   FDR_category = 0.1,
@@ -28,7 +29,13 @@ imprints_IS(
 \item{valid_val}{The percentage of valid values you want per treatment. If less, score will be set to NA,
 i.e. the protein will not be a hit}
 
-\item{IS_cutoff}{The I-score cutoff}
+\item{IS_cutoff}{The I-score cutoff. Default is 1.5.}
+
+\item{fixed_score_cutoff}{Logical to tell if you want to use a fixed cutoff for the I-score.
+If TRUE, the value IS_cutoff will directly be used as the cutoff and for all treatments. If FALSE,
+the I-score cutoff will be calculated as the value selected for IS_cutoff plus the median of the
+I-scores of the proteins which have a p-value lower than the median of all p-values for a given treatment.
+Default is FALSE.}
 
 \item{FDR}{The FDR used for the BH corrected combined p-value}
 

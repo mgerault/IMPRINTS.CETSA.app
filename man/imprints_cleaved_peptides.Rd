@@ -11,6 +11,7 @@ imprints_cleaved_peptides(
   min_ValidValue = 0.4,
   FDR = 0.01,
   RESP_score = 0.3,
+  fixed_score_cutoff = FALSE,
   curvature = 0.1,
   folder_name = ""
 )
@@ -26,9 +27,15 @@ If NULL, it will be computed.}
 \item{min_ValidValue}{The minimum proportion of valid values per peptides.
 Default is 0.4; so if 6 temperatures need at least 3 non missing values.}
 
-\item{FDR}{The FDR used to obtained the final p-value cutoff and maximum fold-change cutoff. Default is 1%}
+\item{FDR}{The FDR used to obtained the final p-value cutoff. Default is 1%}
 
-\item{RESP_score}{The maximum fold-change cutoff. Default is 0.25}
+\item{RESP_score}{The RESP score cutoff. Default is 0.3}
+
+\item{fixed_score_cutoff}{Logical to tell if you want to use a fixed cutoff for the RESP score.
+If TRUE, the value RESP_score will directly be used as the cutoff and for all treatments. If FALSE,
+the RESP score cutoff will be calculated as the value selected for RESP_score plus the median of the
+scores of the proteins which have a p-value lower than the median of all p-values for a given treatment.
+Default is FALSE.}
 
 \item{curvature}{The curvature used for the curve on the volcano plot}
 

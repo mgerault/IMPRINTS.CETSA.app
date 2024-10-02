@@ -9,6 +9,7 @@ imprints_cleaved_peptides(
   data_diff = NULL,
   control = "Vehicle",
   min_ValidValue = 0.4,
+  min_peptide = 4,
   FDR = 0.01,
   RESP_score = 0.3,
   fixed_score_cutoff = FALSE,
@@ -26,6 +27,9 @@ If NULL, it will be computed.}
 
 \item{min_ValidValue}{The minimum proportion of valid values per peptides.
 Default is 0.4; so if 6 temperatures need at least 3 non missing values.}
+
+\item{min_peptide}{The minimum number of peptides per protein to be considered a RESP candidate.
+Default is 4.}
 
 \item{FDR}{The FDR used to obtained the final p-value cutoff. Default is 1%}
 

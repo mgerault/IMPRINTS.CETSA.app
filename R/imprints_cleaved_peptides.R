@@ -21,6 +21,8 @@
 #' @param control The control treatment from your dataset.
 #' @param min_ValidValue The minimum proportion of valid values per peptides.
 #'                       Default is 0.4; so if 6 temperatures need at least 3 non missing values.
+#' @param min_peptide The minimum number of peptides per protein to be considered a RESP candidate.
+#'   Default is 4.
 #' @param FDR The FDR used to obtained the final p-value cutoff. Default is 1%
 #' @param RESP_score The RESP score cutoff. Default is 0.3
 #' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the RESP score.
@@ -36,8 +38,8 @@
 #' @export
 #'
 
-imprints_cleaved_peptides <- function(data, data_diff = NULL,
-                                      control = "Vehicle", min_ValidValue = 0.4,
+imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle",
+                                      min_ValidValue = 0.4, min_peptide = 4,
                                       FDR = 0.01, RESP_score = 0.3, fixed_score_cutoff = FALSE,
                                       curvature = 0.1, folder_name = ""){
   if(!any(grepl(paste0("_", control, "$"), colnames(data)))){
@@ -121,7 +123,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   data_cleaved <- data_cleaved %>%
     dplyr::mutate(sequence = gsub("\\[|\\]", "", sequence)) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
-    dplyr::filter(length(sum_profile) > 3)  # only keeping proteins with more than 3 peptides
+    dplyr::filter(length(sum_profile) >= min_peptide)  # only keeping proteins with more than min_peptide peptides
 
 
   # order data according proteins and sequence
@@ -513,15 +515,19 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
         # computing score
         score <- c(mean(as.numeric(score[1,grep("^N_", colnames(score))]), na.rm = TRUE),
                    mean(as.numeric(score[1,grep("^C_", colnames(score))]), na.rm = TRUE))
-        sign_score <- sign(score)
+        sign_score <- unique(sign(score))
+        diff_score <- diff(score)
         if(length(unique(sign_score)) == 1){ # same sign
-          zscore <- abs(score[which.max(abs(score))])/max(c(0.025, abs(score[which.min(abs(score))]))) # ratio give the score
+          zscore <- diff_score/ifelse(sign_score == 1,
+                                      max(c(0.1, min(score))),
+                                      max(c(0.1, min(abs(score))))
+                                      )
+          # ratio give the score where 0.1 is a constant that prevent exploding score when min approach 0
         }
         else{ # one is neg and one is pos
-          zscore <- score[which.max(score)] + abs(score[which.min(score)]) # 0.025 is a constant, can be modified for importance of opposite 'direction' RESP
-          zscore <- zscore/0.025 # ratio give the score
+          zscore <- max(abs(score))*diff_score/0.1  # also use the same constant
+          # multiplying by the maximum fold change prevent keepin low profile that would have opposite sign
         }
-        zscore <- zscore*sign(diff(score))
       }
       else{
         zscore <- NA
@@ -555,7 +561,8 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL,
   # saving obtained cutoffs
   cutoff_file <- paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "cutoff.txt")
   readr::write_tsv(cutoff, cutoff_file)
-  extra_info <- paste0("\nParameters: \nRESP z-score cutoff=", RESP_score, ", FDR=", FDR*100, "%, curvature=", curvature)
+  extra_info <- paste0("\nParameters: \nRESP z-score cutoff=", RESP_score, ", FDR=", FDR*100, "%, curvature=", curvature,
+                       " \nMinimum number of peptides=", min_peptide, ", Minimum proportion of non-missing values=", min_ValidValue)
   write(extra_info, cutoff_file, sep = "\n", append = TRUE)
 
   res <- res %>% dplyr::group_by(id, Gene, treatment) %>%

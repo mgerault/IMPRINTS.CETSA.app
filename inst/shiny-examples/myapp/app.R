@@ -309,18 +309,24 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    tags$hr(),
 
                                                                    conditionalPanel(condition = "output.sequence_pep_dataup",
-                                                                                    fluidRow(column(3, numericInput("FDRcleaved_pep", "Choose the FDR",
-                                                                                                                    value = 0.01, min = 1e-16, max = 1, step = 0.01)
-                                                                                                    ),
-                                                                                             column(3, numericInput("diffcutcleaved_pep", "Choose cutoff difference between the two IMPRINTS
-                                                                                                                                        profiles from the two parts of the protein",
-                                                                                                                    value = 0.3, min = 0.01, max = 10, step = 0.1)
-                                                                                                    ),
-                                                                                             column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
-                                                                                             column(3, numericInput("propValcleaved_pep", "Choose the minimum proportion of valid values per peptide
+                                                                                    fluidRow(column(3, numericInput("propValcleaved_pep", "Choose the minimum proportion of valid values per peptide
                                                                                                                                            per treatment; i.e. if 6 temperatures and 0.5, it can't
                                                                                                                                            have more than 3 missing values.",
-                                                                                                                    value = 0.4, min = 0, max = 1, step = 0.01))
+                                                                                                                    value = 0.4, min = 0, max = 1, step = 0.01),
+                                                                                                    numericInput("minPep_pep", "Choose a minimum number of peptides per protein to
+                                                                                                                 be considered a RESP candidate",
+                                                                                                                 value = 4, min = 2, step = 1)
+                                                                                                    ),
+                                                                                             column(3, numericInput("RESPscore_pep", "Choose cutoff difference between the two IMPRINTS
+                                                                                                                                        profiles from the two parts of the protein",
+                                                                                                                    value = 0.3, min = 0.01, max = 10, step = 0.1),
+                                                                                                    checkboxInput("fixedRESP_pep", "Recalculate the RESP score cutoff based on the p-value distribution", TRUE)
+                                                                                                    ),
+                                                                                             column(3, numericInput("FDRcleaved_pep", "Choose the FDR",
+                                                                                                                    value = 0.01, min = 1e-16, max = 1, step = 0.01)
+                                                                                                    ),
+                                                                                             column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
+
                                                                                              ),
                                                                                     fluidRow(column(6, actionButton("CLEAVED_pep", "Search for potential cleaved site", class = "btn-primary")),
                                                                                              column(6, htmlOutput("error_pep_cleaved"),
@@ -710,9 +716,10 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        conditionalPanel(condition = "input.hitmethod_cetsa == 'IS'",
                                                                                                                                         actionButton("see9_cetsa", "See more information"),
                                                                                                                                         tags$hr(),
-                                                                                                                                        fluidRow(column(4, numericInput("IScut_cetsa", "Choose the Intercept Score cutoff", value = 1.5, min = 0, step = 0.1)),
-                                                                                                                                                 column(4, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
-                                                                                                                                                 column(4, numericInput("validval_cetsa", "Choose the minimum proportion of non-missing values", value = 0, min = 0, max = 1, step = 0.05))
+                                                                                                                                        fluidRow(column(3, numericInput("IScut_cetsa", "Choose the Intercept Score cutoff", value = 1.5, min = 0, step = 0.1)),
+                                                                                                                                                 column(3, checkboxInput("fixedIS_cetsa", "Recalculate the  Intercept Score cutoff based on the p-value distribution", TRUE)),
+                                                                                                                                                 column(3, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
+                                                                                                                                                 column(3, numericInput("validval_cetsa", "Choose the minimum proportion of non-missing values", value = 0, min = 0, max = 1, step = 0.05))
                                                                                                                                                  ),
                                                                                                                                         tags$hr(),
                                                                                                                                         textOutput("diag_IS"),
@@ -2594,8 +2601,10 @@ server <- function(input, output, session){
                                                         data_diff = sequence_pep_data$x,
                                                         control = input$controlcleaved_pep,
                                                         min_ValidValue = input$propValcleaved_pep,
+                                                        min_peptide = input$minPep_pep,
                                                         FDR = input$FDRcleaved_pep,
-                                                        RESP_score = input$diffcutcleaved_pep)
+                                                        RESP_score = input$RESPscore_pep,
+                                                        fixed_score_cutoff = !input$fixedRESP_pep)
       },
       message = function(m) {
         shinyjs::html(id = "diag_pep_cleaved", html = m$message, add = FALSE)
@@ -3881,6 +3890,7 @@ server <- function(input, output, session){
             h <- imprints_IS(cetsa_isoform$norm, Dif, ctrl = ctrl,
                              valid_val = input$validval_cetsa,
                              IS_cutoff = input$IScut_cetsa,
+                             fixed_score_cutoff = !input$fixedIS_cetsa,
                              FDR = input$FDR_cetsa)
           },
           message = function(m) {

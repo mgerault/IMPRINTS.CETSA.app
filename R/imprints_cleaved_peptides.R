@@ -518,10 +518,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
         sign_score <- unique(sign(score))
         diff_score <- diff(score)
         if(length(unique(sign_score)) == 1){ # same sign
-          zscore <- diff_score/ifelse(sign_score == 1,
-                                      max(c(0.1, min(score))),
-                                      max(c(0.1, min(abs(score))))
-                                      )
+          zscore <- diff_score/max(c(0.1, min(abs(score))))
           # ratio give the score where 0.1 is a constant that prevent exploding score when min approach 0
         }
         else{ # one is neg and one is pos

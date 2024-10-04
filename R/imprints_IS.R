@@ -460,5 +460,5 @@ find_cutoff <- function(x,y){
   y <- y[id]
 
   x <- x[which(x > y)]
-  return(x[1])
+  return(x[length(x)])
 }

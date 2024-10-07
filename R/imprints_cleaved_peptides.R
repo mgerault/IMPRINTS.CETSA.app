@@ -496,7 +496,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
 
   message("Finding most likely proteins with RESP effect")
   res <- res %>%
-    dplyr::mutate(adj.P.Val = tidyr::replace_na(adj.P.Val, 1)) %>%
+    dplyr::mutate(adj.P.Val = tidyr::replace_na(adj.P.Val, 0.999999)) %>%
     dplyr::group_by(id, Gene, treatment) %>%
     dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
                                               metap::logitp(adj.P.Val)$p, # Goerge's method

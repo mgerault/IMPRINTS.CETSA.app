@@ -4,10 +4,12 @@
 \alias{imprints_normalize_peptides}
 \title{imprints_normalize_peptides}
 \usage{
-imprints_normalize_peptides(peptides_data)
+imprints_normalize_peptides(peptides_data, dataset_name = "imprints")
 }
 \arguments{
 \item{peptides_data}{The data frame output from \code{imprints_read_peptides}. Can also be the path to that file.}
+
+\item{dataset_name}{The name of your dataset}
 }
 \value{
 The normalized peptides data frame, non log2 transformed.

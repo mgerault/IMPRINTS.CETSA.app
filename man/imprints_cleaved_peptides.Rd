@@ -11,9 +11,10 @@ imprints_cleaved_peptides(
   min_ValidValue = 0.4,
   min_peptide = 4,
   FDR = 0.01,
-  RESP_score = 0.3,
+  comb_pv_method = c("george", "fisher", "edgington"),
+  RESP_score = 0.5,
   fixed_score_cutoff = FALSE,
-  curvature = 0.1,
+  curvature = 0.05,
   folder_name = ""
 )
 }
@@ -25,21 +26,21 @@ If NULL, it will be computed.}
 
 \item{control}{The control treatment from your dataset.}
 
-\item{min_ValidValue}{The minimum proportion of valid values per peptides.
+\item{min_ValidValue}{The minimum proportion of non-missing values per peptides.
 Default is 0.4; so if 6 temperatures need at least 3 non missing values.}
 
 \item{min_peptide}{The minimum number of peptides per protein to be considered a RESP candidate.
 Default is 4.}
 
-\item{FDR}{The FDR used to obtained the final p-value cutoff. Default is 1%}
+\item{FDR}{The FDR used to obtained the final p-value cutoff. Default is 0.01}
 
-\item{RESP_score}{The RESP score cutoff. Default is 0.3}
+\item{comb_pv_method}{The method used to combine p-values. Either george, fisher or edgington.
+Default is george. See Details.}
+
+\item{RESP_score}{The RESP score cutoff. Default is 0.5}
 
 \item{fixed_score_cutoff}{Logical to tell if you want to use a fixed cutoff for the RESP score.
-If TRUE, the value RESP_score will directly be used as the cutoff and for all treatments. If FALSE,
-the RESP score cutoff will be calculated as the value selected for RESP_score plus the median of the
-scores of the proteins which have a p-value lower than the median of all p-values for a given treatment.
-Default is FALSE.}
+Default is FALSE. See Details.}
 
 \item{curvature}{The curvature used for the curve on the volcano plot}
 
@@ -47,13 +48,14 @@ Default is FALSE.}
 }
 \value{
 The potential cleaved sites from the proteins considered as cleaved.
+  A folder will also be saved where you'll find a volcano plots and results data.
 }
 \description{
 Function to find proteins that are potentially cleaved and their cleaved sites.
 For more information, see Details section.
 }
 \details{
-The idea here is to compute the sum from all fold change for each peptide and then compute the cumulative sum of
+The idea of this function is to compute the sum from all fold change for each peptide and then compute the cumulative sum of
 these summed fold change of every peptides for each protein.
 If the protein is not cleaved, this cumulative sum should be constantly increasing/decreasing, i.e linear.
 If the protein is cleaved, then this cumulative sum will either be convex or concave.
@@ -61,6 +63,18 @@ If convex, the last peptides are more abundant; if concave the first peptides ar
 In the end a volcano plot will be plotted where the p-value corresponds to the combined p-value from
 the six temperatures comparison between peptides located towards the N-terminal and the ones located
 towards the C-terminal position.
+You can then use the function \code{imprints_sequence_peptides} to plot the peptides before and after
+the potential cleavage site.
 
-You can then use the function \code{imprints_sequence_peptides} to plot the peptides before and after the potential cleaved site found.
+George's method correspond to the sum of the logit of the p-values, Fisher's to the sum of the
+log of the p-values and Edgington's is the sum of the p-values.
+Edgington's method is the most stringent and is particularly sensitive with higher p-values
+whereas Fisher's mmethod is the less stringent as it is mostly sensitive to low p-values.
+George's method is a compromise between the two methods.
+For more details read \link{https://doi.org/10.48550/arXiv.1707.06897}.
+
+About the fixed_score_cutoff,if TRUE, the value RESP_score will directly be used as the cutoff and
+for all treatments. If FALSE, the RESP score cutoff will be calculated as the value selected for
+RESP_score plus the median of the scores of the proteins which have a p-value lower than the median
+of all p-values for a given treatment.
 }

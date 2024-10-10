@@ -12,7 +12,7 @@ imprints_IS(
   IS_cutoff = 1.5,
   fixed_score_cutoff = FALSE,
   FDR = 0.01,
-  curvature = 0.1,
+  curvature = 0.05,
   FDR_category = 0.1,
   folder_name = "Hits_analysis",
   peptide_count_col = "sumUniPeps",
@@ -26,7 +26,7 @@ imprints_IS(
 
 \item{ctrl}{The name of the control.}
 
-\item{valid_val}{The percentage of valid values you want per treatment. If less, score will be set to NA,
+\item{valid_val}{The percentage of non-missing values you want per treatment. If less, score will be set to NA,
 i.e. the protein will not be a hit}
 
 \item{IS_cutoff}{The I-score cutoff. Default is 1.5.}

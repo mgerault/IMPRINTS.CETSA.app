@@ -60,7 +60,8 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
   sequence_tokeep <- c()
   for(p in 1:length(proteins)){
     protein_idx <- which(data$Master.Protein.Accessions == proteins[p])
-    protein_sequence <- unlist(stringr::str_extract_all(data$Positions.in.Master.Proteins[protein_idx],
+    protein_sequence <- unlist(stringr::str_extract_all(sub("; .*", "",
+                                                            data$Positions.in.Master.Proteins[protein_idx]), # if protein group just need first one
                                                         "(?<=\\[).+?(?=\\])")
                                )
     if(length(sequence) > 1){
@@ -69,6 +70,7 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
     else{
       sequence_tofilter <- sequence
     }
+    sequence_tofilter <- sub("; .*", "", sequence_tofilter) # if protein group just need first one
     sequence_tofilter <- as.numeric(strsplit(sequence_tofilter, "-|~")[[1]])
 
     sequence_tofilter <- lapply(strsplit(protein_sequence, "-|~"),
@@ -81,11 +83,12 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
 
     if(length(sequence_tofilter)){
       sequence_tofilter <- paste0("\\[", protein_sequence[sequence_tofilter], "\\]")
-      pr_tofilter <- grep(proteins[p], data$Positions.in.Master.Proteins, value = TRUE)
-      pr_tofilter_idx <- grep(proteins[p], data$Positions.in.Master.Proteins)
+      pr_tofilter <- data$Positions.in.Master.Proteins[protein_idx]
+      pr_tofilter_idx <- protein_idx
 
-      sequence_tofilter_idx <- pr_tofilter_idx[grep(sequence_tofilter, pr_tofilter)]
-      sequence_tofilter <- grep(sequence_tofilter, pr_tofilter, value = TRUE)
+      sequence_tofilter_idx <- pr_tofilter_idx[grep(sequence_tofilter, sub("; .*", "", pr_tofilter))]
+      sequence_tofilter <- pr_tofilter[grep(sequence_tofilter, sub("; .*", "", pr_tofilter))]
+
 
       message(paste(ifelse(mode == "remove", "Removing", "Keeping"),
                     paste(sequence_tofilter, collapse = ", ")))

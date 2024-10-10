@@ -6,7 +6,7 @@
 #' @param data The input data set from which categorization is performed on and hitlist is produced from.
 #' @param data_diff The output from imprints_caldiff; can be NULL and if so will compute it; can also be a path to the data.
 #' @param ctrl The name of the control.
-#' @param valid_val The percentage of valid values you want per treatment. If less, score will be set to NA,
+#' @param valid_val The percentage of non-missing values you want per treatment. If less, score will be set to NA,
 #'                  i.e. the protein will not be a hit
 #' @param IS_cutoff The I-score cutoff. Default is 1.5.
 #' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the I-score.
@@ -29,7 +29,7 @@
 
 imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                         IS_cutoff = 1.5, fixed_score_cutoff = FALSE,
-                        FDR = 0.01, curvature = 0.1,
+                        FDR = 0.01, curvature = 0.05,
                         FDR_category = 0.1,
                         folder_name = "Hits_analysis",
                         peptide_count_col = "sumUniPeps",

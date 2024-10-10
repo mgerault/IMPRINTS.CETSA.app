@@ -7,6 +7,7 @@
 #'          from \code{limma} package.
 #'
 #' @param peptides_data The data frame output from \code{imprints_read_peptides}. Can also be the path to that file.
+#' @param dataset_name The name of your dataset
 #'
 #' @return The normalized peptides data frame, non log2 transformed.
 #'
@@ -14,11 +15,10 @@
 #'
 #'
 
-imprints_normalize_peptides <- function(peptides_data){
+imprints_normalize_peptides <- function(peptides_data, dataset_name = "imprints"){
   if(is.character(peptides_data)){
     if(file.exists(peptides_data)){
       peptides_data <- readr::read_tsv(peptides_data)
-      dataset_name <- "peptides_data"
     }
     else{
       message("Error: Your peptide file wasn't found, check your spelling.")
@@ -36,7 +36,6 @@ imprints_normalize_peptides <- function(peptides_data){
                       You should use the output from 'imprints_read_peptides'.")
       return()
     }
-    dataset_name <- deparse(substitute(peptides_data))
   }
   else{
     message("Error: Your peptides data can only be the output file or the output data frame from 'imprints_read_peptides'.")
@@ -84,7 +83,7 @@ imprints_normalize_peptides <- function(peptides_data){
 
   readr::write_tsv(peptides_data,
                    file = paste0(format(Sys.time(), "%y%m%d_%H%M_"),
-                                 "NormPeptides_", dataset_name, ".txt")
+                                 "peptides_normalized_", dataset_name, ".txt")
                    )
 
   return(peptides_data)

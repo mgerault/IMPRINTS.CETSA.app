@@ -8,6 +8,7 @@ imprints_remove_peptides(
   data,
   proteins = NULL,
   sequence,
+  margin = 2,
   mode = c("remove", "keep")
 )
 }
@@ -23,6 +24,10 @@ of proteins you have in your peptides data.}
 \item{sequence}{The peptide position you want to remove/keep. If you put one sequence, it will remove/keep it for all proteins
 from your peptides data; otherwise it needs to match the number of proteins you put or have in your dataset.
 The format needs to be a number followed by a dash and another number, like this : '208-221'.}
+
+\item{margin}{Numeric to tell the margin number of amino acid added to the sequences selected. This avoid
+peptide selection ambigutiy when a peptide has only a small number of amino acid more than the sequence selected.
+Default is set to 2.}
 
 \item{mode}{Character to specify if you want to remove or only the peptides selected; either 'remove' or 'keep'.
 Default is 'remove'.}

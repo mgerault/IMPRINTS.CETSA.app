@@ -9,6 +9,7 @@ imprints_sequence_peptides(
   proteins = NULL,
   sequence = NULL,
   control = "Vehicle",
+  margin = 2,
   barplot = FALSE,
   dataset_name = "imprints"
 )
@@ -25,6 +26,10 @@ Anyway, it needs to be in the format number-number.
 If it's NULL, it will only select according the proteins so you can plot all the peptides from those.}
 
 \item{control}{The condition corresponding to the control in your dataset.}
+
+\item{margin}{Numeric to tell the margin number of amino acid added to the sequences selected. This avoid
+peptide selection ambigutiy when a peptide has only a small number of amino acid more than the sequence selected.
+Default is set to 2.}
 
 \item{barplot}{Logical to tell if you want to plot the barplots from the obtained fold-changes. Default is FALSE}
 

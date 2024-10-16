@@ -12,6 +12,9 @@
 #' @param sequence The peptide position you want to remove/keep. If you put one sequence, it will remove/keep it for all proteins
 #'                 from your peptides data; otherwise it needs to match the number of proteins you put or have in your dataset.
 #'                 The format needs to be a number followed by a dash and another number, like this : '208-221'.
+#' @param margin Numeric to tell the margin number of amino acid added to the sequences selected. This avoid
+#'   peptide selection ambigutiy when a peptide has only a small number of amino acid more than the sequence selected.
+#'   Default is set to 2.
 #' @param mode Character to specify if you want to remove or only the peptides selected; either 'remove' or 'keep'.
 #'             Default is 'remove'.
 #'
@@ -22,7 +25,7 @@
 #'
 
 imprints_remove_peptides <- function(data, proteins = NULL, sequence,
-                                     mode = c("remove", "keep")){
+                                     margin = 2, mode = c("remove", "keep")){
   mode <- match.arg(mode)
 
   if(length(sequence)){
@@ -75,7 +78,7 @@ imprints_remove_peptides <- function(data, proteins = NULL, sequence,
 
     sequence_tofilter <- lapply(strsplit(protein_sequence, "-|~"),
                                 function(y){y <- as.numeric(y)
-                                            y <- y[1] >= sequence_tofilter[1] & y[2] <= sequence_tofilter[2];
+                                            y <- y[1] >= sequence_tofilter[1] - margin & y[2] <= sequence_tofilter[2] + margin;
                                             y
                                             }
                                 )

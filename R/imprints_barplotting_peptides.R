@@ -109,7 +109,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
 
     if(RESP){
       ord_position <- unique(d1$global.position)
-      ord_position <- gsub(".*\\[|\\]", "", ord_position)
+      ord_position <- gsub(".*\\[|\\]", "", sub(";.*", "", ord_position))
       ord_position <- lapply(strsplit(ord_position, "-|~"),
                              function(x){
                                sum(as.numeric(x))

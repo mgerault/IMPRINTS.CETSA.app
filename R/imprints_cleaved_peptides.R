@@ -3,24 +3,6 @@
 #' Function to find proteins that are potentially cleaved and their cleaved sites.
 #' For more information, see Details section.
 #'
-#'
-#' @param data The normalized peptides data set, i.e. the outpout from \code{imprints_normalize_peptides}.
-#' @param data_diff The log2 fold-changes peptides data set, i.e. the outpout from \code{imprints_sequence_peptides}.
-#'                  If NULL, it will be computed.
-#' @param control The control treatment from your dataset.
-#' @param min_ValidValue The minimum proportion of non-missing values per peptides.
-#'                       Default is 0.4; so if 6 temperatures need at least 3 non missing values.
-#' @param min_peptide The minimum number of peptides per protein to be considered a RESP candidate.
-#'   Default is 4.
-#' @param FDR The FDR used to obtained the final p-value cutoff. Default is 1%
-#' @param comb_pv_method The method used to combine p-values. Either george, fisher or edgington.
-#'   Default is george. See Details.
-#' @param RESP_score The RESP score cutoff. Default is 0.5
-#' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the RESP score.
-#'   Default is FALSE. See Details.
-#' @param curvature The curvature used for the curve on the volcano plot
-#' @param folder_name The name of the folder in which you want to save the results.
-#'
 #' @details
 #' The idea of this function is to compute the sum from all fold change for each peptide and then compute the cumulative sum of
 #' these summed fold change of every peptides for each protein.
@@ -33,6 +15,27 @@
 #' You can then use the function \code{imprints_sequence_peptides} to plot the peptides before and after
 #' the potential cleavage site.
 #'
+#' @param data The normalized peptides data set, i.e. the outpout from \code{imprints_normalize_peptides}.
+#' @param data_diff The log2 fold-changes peptides data set, i.e. the outpout from \code{imprints_sequence_peptides}.
+#'                  If NULL, it will be computed.
+#' @param control The control treatment from your dataset.
+#' @param min_ValidValue The minimum proportion of non-missing values per peptides.
+#'                       Default is 0.4; so if 6 temperatures need at least 3 non missing values.
+#' @param min_peptide The minimum number of peptides per protein to be considered a RESP candidate.
+#'   Default is 4.
+#' @param FDR The FDR used to obtained the final p-value cutoff. Default is 0.01
+#' @param comb_pv_method The method used to combine p-values. Either george, fisher or edgington.
+#'   Default is george. See Details.
+#' @param RESP_score The RESP score cutoff. Default is 0.5
+#' @param fixed_score_cutoff Logical to tell if you want to use a fixed cutoff for the RESP score.
+#'   Default is FALSE. See Details.
+#' @param curvature The curvature used for the curve on the volcano plot
+#' @param folder_name The name of the folder in which you want to save the results.
+#'
+#' @return The potential cleaved sites from the proteins considered as cleaved.
+#'   A folder will also be saved where you'll find a volcano plots and results data.
+#'
+#' @details
 #' George's method correspond to the sum of the logit of the p-values, Fisher's to the sum of the
 #' log of the p-values and Edgington's is the sum of the p-values.
 #' Edgington's method is the most stringent and is particularly sensitive with higher p-values
@@ -40,14 +43,11 @@
 #' George's method is a compromise between the two methods.
 #' For more details read \link{https://doi.org/10.48550/arXiv.1707.06897}.
 #'
+#' @details
 #' About the fixed_score_cutoff,if TRUE, the value RESP_score will directly be used as the cutoff and
 #' for all treatments. If FALSE, the RESP score cutoff will be calculated as the value selected for
 #' RESP_score plus the median of the scores of the proteins which have a p-value lower than the median
 #' of all p-values for a given treatment.
-#'
-#'
-#' @return The potential cleaved sites from the proteins considered as cleaved.
-#'   A folder will also be saved where you'll find a volcano plots and results data.
 #'
 #' @export
 #'
@@ -433,7 +433,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
       tidyr::gather("key", "value", -id, -description) %>%
       tidyr::separate(key, into = c("temperature", "biorep", "treatment"), sep = "_") %>%
       mutate(protein = gsub("(?<!;) ", "; ", gsub(" \\[(\\]|\\];)", "", gsub("(?<=\\[)\\d{1,4}(-|~)\\d{1,4}(?=\\])", "", id, perl = TRUE)), perl = TRUE),
-             position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^)(.{5,6}|A0.{6,8})(|_\\d{1,2})(?= \\[)", "", id, perl = TRUE)))
+             position = gsub(";", "; ", gsub(" ", "", gsub("(?<=; |^)(.{5,6}|A0.{6,8})(|_\\d{1,3})(?= \\[)", "", id, perl = TRUE)))
              ) %>%
       select(-id)
     treat_data_diff <- treat_data_diff[,c("protein", "position", "description", "temperature", "biorep", "treatment", "value")]
@@ -565,7 +565,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
                                        x$temperature <- n
                                        x <- x %>%
                                          tibble::rownames_to_column("id") %>%
-                                         tidyr::separate(id, into = c("id", "Gene"), sep = "(?<=_\\d{1,2})_");
+                                         tidyr::separate(id, into = c("id", "Gene"), sep = "(?<=_\\d{1,3})_");
                                        x
                                      },
                                      res[[tr]], names(res[[tr]]),

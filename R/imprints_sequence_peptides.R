@@ -11,6 +11,9 @@
 #'                 Anyway, it needs to be in the format number-number.
 #'                 If it's NULL, it will only select according the proteins so you can plot all the peptides from those.
 #' @param control The condition corresponding to the control in your dataset.
+#' @param margin Numeric to tell the margin number of amino acid added to the sequences selected. This avoid
+#'   peptide selection ambigutiy when a peptide has only a small number of amino acid more than the sequence selected.
+#'   Default is set to 2.
 #' @param barplot Logical to tell if you want to plot the barplots from the obtained fold-changes. Default is FALSE
 #' @param dataset_name The name of your dataset to save your file.
 #'
@@ -21,8 +24,8 @@
 #'
 
 imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
-                                       control = "Vehicle", barplot = FALSE,
-                                       dataset_name = "imprints"){
+                                       control = "Vehicle", margin = 2,
+                                       barplot = FALSE, dataset_name = "imprints"){
   if(!is.null(sequence)){
     if(!(length(proteins) == length(sequence) | length(sequence) == 1) & !inherits(sequence, "list")){
       message("Error: The number of sequence needs to match the number of proteins or just provide one sequence")
@@ -60,7 +63,9 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
                                           data$Annotated.Sequence,
                                           data$Modifications, sep = " \n")
   data <- data[order(data$Master.Protein.Accessions),]
-  ord <- gsub(".*\\[|\\]", "", gsub(";.*", "", data$Positions.in.Master.Proteins))
+  ord <- gsub(".*\\[|\\]", "",
+              sub(";.*", "", data$Positions.in.Master.Proteins)
+              )
   ord <- sapply(strsplit(ord, "-|~"),
                 function(x) {sum(as.numeric(x))})
   ord <- data.frame(factor = data$factor, idx = 1:nrow(data), sum.pos = ord) %>%
@@ -105,7 +110,8 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
             y <- as.numeric(y)
             x <- lapply(tab_sequ_n, function(x){
               x <- as.numeric(x)
-              x[1] >= y[1] & x[2] <= y[2]  # if peptide sequence is 'in' the one selected, save it
+              # if peptide sequence is 'in' the one selected, save it
+              x[1] >= y[1] - margin & x[2] <= y[2] + margin  # +/- margin amino acid (avoid selection ambiguity)
             })
             x <- unlist(x);
             x
@@ -180,7 +186,13 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
               annot <- annot[1,]
 
               num <- sumup_tab %>% dplyr::select(where(is.numeric)) %>%
-                dplyr::summarise_all(sum, na.rm = TRUE)
+                dplyr::summarise_all(function(x){
+                  x <- sum(x, na.rm = TRUE)
+                  if(x == 0){
+                    x <- NA
+                  }
+                  return(x)
+                })
 
               sumup_tab <- as.data.frame(cbind(annot, num))
               if("countNum" %in% colnames(sumup_tab)){
@@ -218,7 +230,13 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
         annot <- annot[1,]
 
         num <- tab_pr %>% dplyr::select(where(is.numeric)) %>%
-          dplyr::summarise_all(sum, na.rm = TRUE)
+          dplyr::summarise_all(function(x){
+            x <- sum(x, na.rm = TRUE)
+            if(x == 0){
+              x <- NA
+            }
+            return(x)
+          })
 
         res <- as.data.frame(cbind(annot, num))
         if("countNum" %in% colnames(res)){
@@ -302,5 +320,4 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
   message("Done !")
   return(final_res_difffile)
 }
-
 

@@ -23,8 +23,38 @@ imprints_join_peptides <- function(data, mode = c("partial", "exact")){
       x$Annotated.Sequence <- ""
       x$Modifications <- ""
     }
+
     x$description <- gsub(" OX=\\d{1,}", "", x$description) # depending on the PD version, some dataset doesn't have this information --> remove it
-    x <- x[order(x$Positions.in.Master.Proteins),]
+
+    # ordering final dataset -> take into account sequence number
+    x$factor <- x$Master.Protein.Accessions
+    x <- x[order(x$Master.Protein.Accessions),]
+    ord <- gsub(".*\\[|\\]", "",
+                sub(";.*", "", x$Positions.in.Master.Proteins)
+                )
+    ord <- lapply(strsplit(ord, "-|~"),
+                  function(x) {sum(as.numeric(x))}
+    )
+    ord <- unlist(ord)
+    ord_f <- data.frame(factor = x$factor, x = ord)
+    ord_f <- ord_f %>% dplyr::group_by(factor) %>%
+      dplyr::mutate(y = order(x))
+    b = (ord_f %>% dplyr::group_by(factor) %>% dplyr::count())$n
+    if(length(b) > 1){
+      b1 = b
+      for(i in length(b):2){
+        b1[i] <- sum(b1[(i-1):1])
+      }
+      b1[1] <- 0
+    }
+    else{
+      b1 <- 0
+    }
+    b1 = rep(b1, b)
+    ord_f$y <- ord_f$y + b1
+
+    x <- x[ord_f$y,]
+    x$factor <- NULL
 
     if("countNum" %in% colnames(x)){
       message("Removing countNum information from data for easier handle")
@@ -129,12 +159,44 @@ imprints_join_peptides <- function(data, mode = c("partial", "exact")){
     data_protein_position_number$sequence_group <- NULL
 
     # get back the global sequence for each dataset --> return a list
-    data_protein_position_number <- (data_protein_position_number %>% dplyr::filter(!is.na(global_sequence)) %>%
-                                       dplyr::group_by(sequence_dataset) %>%
-                                       dplyr::reframe(result = paste0(protein, " [", global_sequence, "]")) %>%
-                                       dplyr::group_by(sequence_dataset) %>%
-                                       dplyr::reframe(result = list(result[order(result)])) %>%
-                                       dplyr::select(result))[[1]]
+    data_protein_position_number <- data_protein_position_number %>% dplyr::filter(!is.na(global_sequence)) %>%
+      dplyr::group_by(sequence_dataset, protein) %>%
+      mutate(global_sequence = global_sequence[get_sequence_order(global_sequence)])
+    data_protein_position_number <- sapply(unique(data_protein_position_number$sequence_dataset),
+                                           function(x){
+                                             x <- data_protein_position_number[data_protein_position_number$sequence_dataset == x,]
+                                             x$sequence_dataset <- NULL
+
+                                             x$factor <- x$protein
+                                             x <- x[order(x$protein),]
+                                             ord <- x$global_sequence
+                                             ord <- lapply(strsplit(ord, "-|~"),
+                                                           function(x) {sum(as.numeric(x))}
+                                             )
+                                             ord <- unlist(ord)
+                                             ord_f <- data.frame(factor = x$factor, x = ord)
+                                             ord_f <- ord_f %>% dplyr::group_by(factor) %>%
+                                               dplyr::mutate(y = order(x))
+                                             b = (ord_f %>% dplyr::group_by(factor) %>% dplyr::count())$n
+                                             if(length(b) > 1){
+                                               b1 = b
+                                               for(i in length(b):2){
+                                                 b1[i] <- sum(b1[(i-1):1])
+                                               }
+                                               b1[1] <- 0
+                                             }
+                                             else{
+                                               b1 <- 0
+                                             }
+                                             b1 = rep(b1, b)
+                                             ord_f$y <- ord_f$y + b1
+
+                                             x <- x[ord_f$y,]
+                                             x$factor <- NULL
+
+                                             x <- paste0(x$protein, " [",  x$global_sequence, "]")
+                                             return(x)
+                                           }, simplify = FALSE)
 
     # since we ordered postion, already matched
     # can now assign to corresponding dataset
@@ -156,7 +218,9 @@ imprints_join_peptides <- function(data, mode = c("partial", "exact")){
   # ordering final dataset -> take into account sequence number
   data$factor <- data$Master.Protein.Accessions
   data <- data[order(data$Master.Protein.Accessions),]
-  ord <- gsub(".*\\[|\\]", "", data$Positions.in.Master.Proteins)
+  ord <- gsub(".*\\[|\\]", "",
+              sub(";.*", "", data$Positions.in.Master.Proteins)
+              )
   ord <- lapply(strsplit(ord, "-|~"),
                 function(x) {sum(as.numeric(x))}
                 )

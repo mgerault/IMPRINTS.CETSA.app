@@ -289,22 +289,48 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #                                                 control = "Vehicle", FDR = 0.01)
 
 ## ----eval=FALSE---------------------------------------------------------------
+#  # compute potential cleaved hit list
+#  potential_cleaved_notcat <- imprints_cleaved_peptides(peptides_norm, peptidesall_norm_diff,
+#                                                        control = "Vehicle", FDR = 0.01,
+#                                                        categorize = FALSE)
+#  
+#  # perform categorization
+#  potential_cleaved_cat <- imprints_categorize_peptides(peptides_norm, potential_cleaved_notcat,
+#                                                        control = "Vehicle")
+
+## ----eval=FALSE---------------------------------------------------------------
+#  imprints_barplotting_categorize_peptides(peptides_norm, potential_cleaved_cat,
+#                                           treatment = "DrugB", control = "Vehicle",
+#                                           color = "red")
+
+## ----eval=FALSE---------------------------------------------------------------
+#  ## Drug A
 #  # keeping only drug A
 #  peptides_norm_drugA <- peptides_norm[,-grep("_DrugB$", colnames(peptides_norm))]
 #  potential_cleaved_drugA <- potential_cleaved %>%
 #    dplyr::filter(treatment == "DrugA") %>%
 #    select(id, cleaved_site)
-#  
+#  # computing fold-changes
 #  peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
 #                                                        proteins =  potential_cleaved_drugA$id,
-#                                                        sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleaved sites
+#                                                        sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleavage sites
 #                                                        control = "Vehicle") # needs to specify control from your experiment
-
-## ----eval=FALSE---------------------------------------------------------------
+#  # removing peptides considred as cleavage sites
 #  peptides_cleaved_drugA <- imprints_remove_peptides(peptides_cleaved_drugA,
-#                                                     proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the sepecific sequence
+#                                                     proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the specific sequence
 #                                                     sequence = potential_cleaved_drugA$cleaved_site) # the sequence you want to remove
 #  
+#  ## Drug B
+#  peptides_norm_drugB <- peptides_norm[,-grep("_DrugA$", colnames(peptides_norm))]
+#  potential_cleaved_drugB <- potential_cleaved %>%
+#    dplyr::filter(treatment == "DrugB") %>%
+#    select(id, cleaved_site)
+#  # computing fold-changes
+#  peptides_cleaved_drugB <-  imprints_sequence_peptides(peptides_norm_drugB,
+#                                                        proteins =  potential_cleaved_drugB$id,
+#                                                        sequence = potential_cleaved_drugB$cleaved_site, # give sequence = the potential cleavage sites
+#                                                        control = "Vehicle") # needs to specify control from your experiment
+#  # removing peptides considred as cleavage sites
 #  peptides_cleaved_drugB <- imprints_remove_peptides(peptides_cleaved_drugB,
 #                                                     proteins =  potential_cleaved_drugB$protein,  # the protein from which you want to remove the sepecific sequence
 #                                                     sequence = potential_cleaved_drugB$cleaved_site) # the sequence you want to remove
@@ -317,5 +343,5 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 ## ----eval=FALSE---------------------------------------------------------------
 #  # save the imprints in a pdf
 #  imprints_barplotting_peptides(peptides_cleaved, RESP = TRUE,
-#                           save_pdf = T, ret_plot = F)
+#                                save_pdf = T, ret_plot = F)
 

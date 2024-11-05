@@ -553,10 +553,10 @@ peptides_norm_diff <-  imprints_sequence_peptides(peptides_norm,
 
 The function returns the caldiff output from all peptides from each protein you selected. It also save it as a file and plot the barplots from all these peptides.
 
-####  $\underline{4.\space Searching\space for\space cleaved\space peptides}$
+####  $\underline{4.\space Searching\space for\space potentially\space cleaved\space proteins}$
 
-From you IMPRINTS dataset on the peptide level, you can look for potential cleaved proteins; i.e. proteins with peptides with greater abundance and/or stabilization than onthers. For example, you can have peptides located between the N-terminal position and a cleaved site with greater stabilization than the ones that are after the cleaved site and before the C-terminal. We call it RESP effect.
-Using the function `imprints_cleaved_peptides`, you can compute p-value for each proteins telling how likely a protein is cleaved based on the computed potential cleaved site. For that, let's compute fold-changes from all peptides. For more details, check the documentation of the function `imprints_cleaved_peptides`.
+From you IMPRINTS dataset on the peptide level, you can look for potential cleaved proteins; i.e. proteins with peptides with greater abundance and/or stabilization than others. For example, you can have peptides located between the N-terminal position and a cleavage site with greater fold-changes than the ones that are after the cleavage site and before the C-terminal. We call it RESP effect for REgional Stabilization Proteolysis.
+Using the function `imprints_cleaved_peptides`, you can compute p-values for each protein telling how likely a protein is to be cleaved based on the computed potential cleavage site. For that, let's compute fold-changes from all peptides. For more details, check the documentation of the function `imprints_cleaved_peptides`.
 
 ```{r, eval=FALSE}
 # no barplotting this time as it would be quite long
@@ -567,38 +567,65 @@ potential_cleaved <- imprints_cleaved_peptides(peptides_norm, peptidesall_norm_d
                                                control = "Vehicle", FDR = 0.01) 
 ```  
 
-This function returns a data frame that contains the proteins with RESP effect that passes the cutoffs and their respective potential cleaved sites. It also saves automatically the data frame as an excel file and a volcano plot from each treatment tested.
-
-####  $\underline{5.\space Check\space the\space cleaved\space peptides}$
-
-You can now sum all the fold changes from all the peptides before the cleaved site found and after, and this for all poteins found significant RESP effect. For this, you can use again the `imprints_sequence_peptides` function but this time, input some sequences. Here, we will do it only for DrugA.
+This function returns a data frame that contains the proteins with RESP effect that passes the cutoffs and their respective potential cleaved sites. It also saves automatically the data frame as an excel file and a volcano plot from each treatment tested. By default, the function `imprints_cleaved_peptides` will categorize the obtained hits in 6 different category: RESP for REgional Stabilization after Proteolysis, SP for Single Peptide, MP for multiple peptides and FP for false positive. When a small 'm' is added to SP or MP it stands for modified, meaning that at least one of the peptides is modified. If you don't want to perform this last step, you'll need to set up the argument `categorize` to `FALSE`. But you can still perform categorization after using the function `imprints_categorize_peptides` like so:
 
 ```{r, eval=FALSE}
+# compute potential cleaved hit list
+potential_cleaved_notcat <- imprints_cleaved_peptides(peptides_norm, peptidesall_norm_diff, 
+                                                      control = "Vehicle", FDR = 0.01,
+                                                      categorize = FALSE) 
+
+# perform categorization
+potential_cleaved_cat <- imprints_categorize_peptides(peptides_norm, potential_cleaved_notcat, 
+                                                      control = "Vehicle") 
+```  
+
+The function `imprints_categorize_peptides` will save the results in an xlsx file. You can set its name using the parameter `xlsxname` or choose to not save the results by setting `save_xlsx` to `FALSE`.
+
+####  $\underline{5.\space Plot\space and\space check\space the\space peptides\space of\space each\space categorized\space proteins\space}$
+
+To illustrate the RESP effect, you can sum all the fold changes from all the peptides before the cleavage site and after, and this for all proteins found with significant RESP effect. Also, to better validate the results, it is good practice to also plot all the corresponding peptides alongside it.
+
+To do so, you can use the function `imprints_barplotting_categorize_peptides`. It will plot each 'RESP plot' from each protein followed by all its corresponding peptides in one pdf, all ordered according their categories following this order: RESP, SP, SPm, MP, MPm and FP. If you don't provide a categorized RESP summary, the function will call automatically `imprints_categorize_peptides` to do so but it will not save the resulting xlsx file.
+
+```{r, eval=FALSE}
+imprints_barplotting_categorize_peptides(peptides_norm, potential_cleaved_cat,
+                                         treatment = "DrugB", control = "Vehicle",
+                                         color = "red")
+```  
+
+
+####  $\underline{6.\space Multiple\space dataset\space analysis}$
+
+If you're satisfied with th results, you can continue and expand it to the second treatment, potentially only keeping hits categorized as 'RESP'; here we will keep all. You can then compute the resulting datasets from the RESP analysis.
+```{r, eval=FALSE}
+## Drug A
 # keeping only drug A
 peptides_norm_drugA <- peptides_norm[,-grep("_DrugB$", colnames(peptides_norm))]
 potential_cleaved_drugA <- potential_cleaved %>%
   dplyr::filter(treatment == "DrugA") %>% 
   select(id, cleaved_site)
-
+# computing fold-changes
 peptides_cleaved_drugA <-  imprints_sequence_peptides(peptides_norm_drugA,
                                                       proteins =  potential_cleaved_drugA$id,  
-                                                      sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleaved sites
+                                                      sequence = potential_cleaved_drugA$cleaved_site, # give sequence = the potential cleavage sites
                                                       control = "Vehicle") # needs to specify control from your experiment
-```  
-
-You can now check the barplots obtained and see if the proteins found are cleaved.
-In `imprints_sequence_peptides`, you can put any sequence. Check the documentation from the function for more details.
-
-####  $\underline{6.\space Multiple\space dataset\space analysis}$
-
-If you do the exact same analysis for another dataset, or here with Drug B; you'll maybe want to compare your results between each drug.
-
-For more clarity, let's remove the peptide cleaved site.
-```{r, eval=FALSE}
+# removing peptides considred as cleavage sites
 peptides_cleaved_drugA <- imprints_remove_peptides(peptides_cleaved_drugA, 
-                                                   proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the sepecific sequence
+                                                   proteins =  potential_cleaved_drugA$protein,  # the protein from which you want to remove the specific sequence
                                                    sequence = potential_cleaved_drugA$cleaved_site) # the sequence you want to remove
 
+## Drug B
+peptides_norm_drugB <- peptides_norm[,-grep("_DrugA$", colnames(peptides_norm))]
+potential_cleaved_drugB <- potential_cleaved %>%
+  dplyr::filter(treatment == "DrugB") %>% 
+  select(id, cleaved_site)
+# computing fold-changes
+peptides_cleaved_drugB <-  imprints_sequence_peptides(peptides_norm_drugB,
+                                                      proteins =  potential_cleaved_drugB$id,  
+                                                      sequence = potential_cleaved_drugB$cleaved_site, # give sequence = the potential cleavage sites
+                                                      control = "Vehicle") # needs to specify control from your experiment
+# removing peptides considred as cleavage sites
 peptides_cleaved_drugB <- imprints_remove_peptides(peptides_cleaved_drugB, 
                                                    proteins =  potential_cleaved_drugB$protein,  # the protein from which you want to remove the sepecific sequence
                                                    sequence = potential_cleaved_drugB$cleaved_site) # the sequence you want to remove
@@ -620,7 +647,7 @@ If you want just to plot each peptide, set it to `FALSE`.
 ```{r, eval=FALSE}
 # save the imprints in a pdf
 imprints_barplotting_peptides(peptides_cleaved, RESP = TRUE,
-                         save_pdf = T, ret_plot = F)
+                              save_pdf = T, ret_plot = F)
 ```  
 
 

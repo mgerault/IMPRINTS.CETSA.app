@@ -300,7 +300,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    tags$hr(),
                                                                    fluidRow(style = "height:10px;"),
 
-                                                                   tags$u(h3("RESP effect - potential cleaved sites")),
+                                                                   tags$u(h3("RESP effect - finding potential cleaved proteins")),
                                                                    fluidRow(column(6, checkboxInput("got_FCfile_pep", "Import your own fold-change file.
                                                                                                      If not, will use the one obtained in previous step.", value = FALSE)),
                                                                             conditionalPanel(condition = "input.got_FCfile_pep",
@@ -325,7 +325,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                     checkboxInput("fixedRESP_pep", "Recalculate the RESP score cutoff based on the p-value distribution", TRUE)
                                                                                                     ),
                                                                                              column(3, numericInput("FDRcleaved_pep", "Choose the FDR",
-                                                                                                                    value = 0.01, min = 1e-16, max = 1, step = 0.01)
+                                                                                                                    value = 0.01, min = 1e-16, max = 1, step = 0.01),
+                                                                                                    checkboxInput("catcleaved_pep", "Categorize the potential cleaved proteins obtained", TRUE)
                                                                                                     ),
                                                                                              column(3, selectInput("controlcleaved_pep", "Select the control from your experiment", choices = NULL)),
 
@@ -335,7 +336,54 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                     textOutput("diag_pep_cleaved")
                                                                                                     )
                                                                                              )
-                                                                                    )
+                                                                                    ),
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
+
+                                                                   tags$u(h3("RESP effect - categorization and barplot")),
+                                                                   shiny::HTML("<h5>By uploading your 'RESP_summary' file below obtained in the previous step, i.e.
+                                                                               the proteins being potentially cleaved; you can categorize each hits in 6 categories: <br>
+                                                                               RESP (REgional Stabilization Proteolysis), SP (Single Peptide), SPm (Single Peptide modified),
+                                                                               MP (Multiple Peptide), MPm (Multiple Peptide modified) and FP (false positive). Hits categorized
+                                                                               as RESP are proteins being the most likely cleaved by a protease to be activated or deactivated.<br>
+                                                                               Results will be save in an xlsx file.<br></h5>"),
+
+                                                                   fluidRow(column(3, fileInput("RESPsummaryCat_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
+                                                                                   textOutput("RESPsummaryCat_pep_check")),
+                                                                            column(3, selectInput("controlCat_pep", "Select the control of your experiment (can't be in the RESP summary)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(3, textInput("xlsxnameCat_pep", "Type a name for your categorized RESP summary (xlsx)", "RESP_summary_categorized")),
+                                                                            column(3, actionButton("goCat_pep", "Categorize", class = "btn-primary"),
+                                                                                   textOutput("diag_catpep_cleaved")
+                                                                                   )
+                                                                            ),
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
+
+                                                                   shiny::HTML("<h5>Here you can plot each categorized hits obtained in the previous steps and save it in a pdf.
+                                                                               For each protein, its RESP plot will be plotted alongside its corresponding peptides. Its assigned
+                                                                               category will also be highlited on each page of the pdf. The proteins will be ordered according
+                                                                               their category in the following order: RESP, SP, SPm, MP, MPm and FP.<br></h5>"),
+                                                                   fluidRow(column(4, fileInput("RESPsummaryCatPlt_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
+                                                                                   shiny::HTML("<h5>If not already categorized, will do it automatically but the categorized RESP
+                                                                                               summary file will not be saved.</h5>"),
+                                                                                   textOutput("RESPsummaryCatPlt_pep_check")
+                                                                                   ),
+                                                                            column(4, selectInput("controlCatPlt_pep", "Select the control of your experiment (can't be in the RESP summary)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(4, selectInput("treatmentCatPlt_pep", "Select the treatment you want to plot (can't be the same as control)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            ),
+                                                                   fluidRow(column(4, colourpicker::colourInput("own_color_pick_CatPlt_pep", "Select a color for the barplots", "red",
+                                                                                                                allowTransparent = TRUE, closeOnClick = TRUE)),
+                                                                            column(4, textInput("pdfnameCatPlt_pep", "Type a name for your pdf file", value = "categorized_RESP_barplots")),
+                                                                            column(4, actionButton("goCatPlt_pep", "Plot categorized hits", class = "btn-primary"),
+                                                                                   textOutput("diag_catpltpep_cleaved")
+                                                                                   ),
+                                                                            ),
                                                                    )
                                                                )
                                                       ),
@@ -2606,6 +2654,7 @@ server <- function(input, output, session){
                                                         min_peptide = input$minPep_pep,
                                                         FDR = input$FDRcleaved_pep,
                                                         RESP_score = input$RESPscore_pep,
+                                                        categorize = input$catcleaved_pep,
                                                         fixed_score_cutoff = !input$fixedRESP_pep)
       },
       message = function(m) {
@@ -2658,6 +2707,129 @@ server <- function(input, output, session){
 
     removeModal()
     showNotification("Fold change computed !", type = "message")
+  })
+
+
+  # categorize RESP hits - categorization
+  observe({
+    updateSelectInput(session, "controlCat_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+  observe({
+    updateSelectInput(session, "treatmentCatPlt_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+  observe({
+    updateSelectInput(session, "controlCatPlt_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+  observe({
+    if(!is.null(input$controlCatPlt_pep)){
+      updateSelectInput(session, "treatmentCatPlt_pep",
+                        choices = get_treat_level(norm_pep_data$x)[!(get_treat_level(norm_pep_data$x) %in% input$controlCatPlt_pep)])
+    }
+  })
+
+  cleaved_pep_data_tocat <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$RESPsummaryCat_pep,{ # uploading RESP hits file for categorizing
+    File <- input$RESPsummaryCat_pep
+    if(!is.null(File)){
+      cleaved_pep_data_tocat$x <- openxlsx::read.xlsx(File$datapath)
+
+      withCallingHandlers({
+        shinyjs::html("RESPsummaryCat_pep_check", "")
+        missing_columns <- c("id", "Gene", "description", "treatment",
+                            "combined_pvalue", "RESP_score", "cleaved_site",
+                            "Nvalue_N-term", "Nvalue_C-term",
+                            "Npep_N-term", "Npep_C-term")
+        missing_columns <- missing_columns[!(colnames(cleaved_pep_data_tocat$x) %in% missing_columns)]
+        if(length(missing_columns)){
+          message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
+                        "missing in your RESP summary !")
+                  )
+        }
+      },
+      message = function(m) {
+        shinyjs::html(id = "RESPsummaryCat_pep_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+      })
+
+      if(length(missing_columns)){
+        cleaved_pep_data_tocat$x <- NULL
+      }
+    }
+  })
+  observeEvent(input$goCat_pep, { # performing categorization
+    showNotification("Categorizing hits", type = "message")
+    withCallingHandlers({
+      shinyjs::html("diag_catpep_cleaved", "")
+      if(!is.null(cleaved_pep_data_tocat$x)){
+        foo <- imprints_categorize_peptides(norm_pep_data$x, cleaved_pep_data_tocat$x, input$controlCat_pep,
+                                            xlsxname = input$xlsxnameCat_pep)
+      }
+      else{
+        message(paste0("<span style='color:red;'>", "You didn't upload a RESP summary !", "</span>"))
+      }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_catpep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+    })
+
+    showNotification("RESP hits categorized !", type = "message")
+  })
+
+  # categorize RESP hits - plot categorized
+  cleaved_pep_data_cattoplt <- reactiveValues(
+    x = NULL
+  )
+  observeEvent(input$RESPsummaryCatPlt_pep,{ # uploading RESP hits file for categorizing
+    File <- input$RESPsummaryCatPlt_pep
+    if(!is.null(File)){
+      cleaved_pep_data_cattoplt$x <- openxlsx::read.xlsx(File$datapath)
+
+      withCallingHandlers({
+        shinyjs::html("RESPsummaryCatPlt_pep_check", "")
+        missing_columns <- c("id", "Gene", "description", "treatment",
+                             "combined_pvalue", "RESP_score", "cleaved_site",
+                             "Nvalue_N-term", "Nvalue_C-term",
+                             "Npep_N-term", "Npep_C-term")
+        missing_columns <- missing_columns[!(colnames(cleaved_pep_data_cattoplt$x) %in% missing_columns)]
+        if(length(missing_columns)){
+          message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
+                        "missing in your RESP summary !")
+          )
+        }
+      },
+      message = function(m) {
+        shinyjs::html(id = "RESPsummaryCatPlt_pep_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+      })
+
+      if(length(missing_columns)){
+        cleaved_pep_data_cattoplt$x <- NULL
+      }
+    }
+  })
+
+  observeEvent(input$goCatPlt_pep, { # performing categorization
+    showNotification("Plotting categorized hits", type = "message")
+    withCallingHandlers({
+      shinyjs::html("diag_catpltpep_cleaved", "")
+      if(!is.null(cleaved_pep_data_cattoplt$x)){
+        imprints_barplotting_categorize_peptides(norm_pep_data$x, cleaved_pep_data_cattoplt$x,
+                                                 input$treatmentCatPlt_pep, input$controlCatPlt_pep,
+                                                 input$own_color_pick_CatPlt_pep, input$pdfnameCatPlt_pep)
+      }
+      else{
+        message(paste0("<span style='color:red;'>", "You didn't upload a RESP summary !", "</span>"))
+      }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_catpltpep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+    })
+
+    showNotification("RESP hits plotted !", type = "message")
   })
 
 

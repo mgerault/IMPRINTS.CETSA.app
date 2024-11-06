@@ -41,6 +41,9 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                   "which are in your data_cleaved"))
     return(NULL)
   }
+  if("countNum" %in% colnames(data)){
+    data$countNum <- NULL
+  }
 
   # computing FC from cleavage hits
   message("Computing fold-changes...")
@@ -60,7 +63,7 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
   message("Reshaping data...")
   data_diff <- data_diff %>%
     tidyr::gather("key", "value", -Master.Protein.Accessions, -description,
-                  -Positions.in.Master.Proteins, -Annotated.Sequence, -Modifications, -countNum) %>%
+                  -Positions.in.Master.Proteins, -Annotated.Sequence, -Modifications) %>%
     tidyr::separate(key, into = c("temperature", "rep", "treatment"), sep = "_")
   data_diff <- data_diff[,c("Master.Protein.Accessions", "description", "Positions.in.Master.Proteins",
                             "Modifications", "temperature", "rep", "treatment", "value")]

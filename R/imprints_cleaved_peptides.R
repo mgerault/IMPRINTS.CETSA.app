@@ -760,7 +760,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
 
   if(categorize & nrow(resp_summary)){
     message("Categorizing...")
-    resp_summary <- imprints_categorize_peptides(data, resp_summary, control)
+    resp_summary <- imprints_categorize_peptides(data, resp_summary, control, save_xlsx = FALSE)
   }
 
   openxlsx::write.xlsx(resp_summary, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_summary.xlsx"))

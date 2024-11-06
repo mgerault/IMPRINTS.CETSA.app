@@ -758,7 +758,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   resp_summary <- resp_summary[order(resp_summary$combined_pvalue),]
   resp_summary$id <- sub("_.*", "", resp_summary$id)
 
-  if(categorize){
+  if(categorize & nrow(resp_summary)){
     message("Categorizing...")
     resp_summary <- imprints_categorize_peptides(data, resp_summary, control)
   }

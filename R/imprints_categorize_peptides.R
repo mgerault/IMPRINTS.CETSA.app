@@ -235,7 +235,7 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                   category <- paste(paste(paste(new_seq[which(sign(pepm) == 1)], modif[which(sign(pepm) == 1)], collapse = ", "),
                                           "positively shifting and"),
                                     paste(paste(new_seq[which(sign(pepm) == -1)], modif[which(sign(pepm) == -1)], collapse = ", "),
-                                          "negatively shifting and"),
+                                          "negatively shifting and")
                                     )
                 }
               }

@@ -565,8 +565,8 @@ fetch_isoforms <- function(proteins, fasta){
   names(fasta) <- sapply(strsplit(names(fasta), "\\|"), "[[", 2)
   fasta <- lapply(fasta, paste, collapse = "")
 
-  if(!all(proteins %in% names(fasta))){
-    missing_proteins <- proteins[!(proteins %in% names(fasta))]
+  if(!all(sub(";.*", "", proteins) %in% names(fasta))){
+    missing_proteins <- sub(";.*", "", proteins)[!(sub(";.*", "", proteins) %in% names(fasta))]
     missing_proteins <- paste(missing_proteins, collapse = "; ")
     stop(paste(missing_proteins, "not in FASTA !"))
   }

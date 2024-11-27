@@ -595,11 +595,16 @@ fetch_isoforms <- function(proteins, fasta){
 
       iso$canonical_sequence <- iso$sequence[iso$canonical]
       iso <- iso[!iso$canonical,]
-      iso$canonical <- NULL
-      iso$length_canonical <- nchar(iso$canonical_sequence)
+      if(nrow(iso)){
+        iso$canonical <- NULL
+        iso$length_canonical <- nchar(iso$canonical_sequence)
 
-      iso$isoforms <- iso$accession
-      iso$accession <- i
+        iso$isoforms <- iso$accession
+        iso$accession <- i
+      }
+      else{
+        iso <- NULL
+      }
     }
 
     isoforms[[i]] <- iso

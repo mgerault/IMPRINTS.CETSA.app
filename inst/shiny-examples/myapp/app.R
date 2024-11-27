@@ -384,6 +384,33 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                    textOutput("diag_catpltpep_cleaved")
                                                                                    ),
                                                                             ),
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
+
+                                                                   tags$u(h3("RESP effect - mapping isoforms")),
+                                                                   shiny::HTML("<h5>When a protein is found as a potential RESP effect, it means that this protein has a peptide position
+                                                                                    where the IMPRINTS profiles of the two obtained parts are significantly different.
+                                                                                    This difference can be caused by protein modification and mainly proteolysis; but if a splicing form of
+                                                                                    protein is more expressed than its canonical form, a significant difference in the profiles can also occur.
+                                                                                    <br>The aim here is to refilter the hit list and give the possible splicing forms which could be more
+                                                                                    expressed based on the RESP_summary output and the sequence alignments of the isoform sequence and its
+                                                                                    corresponding canonical form. <br></h5>"),
+
+                                                                   fluidRow(column(4, fileInput("RESPsummaryIso_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
+                                                                                   textOutput("RESPsummaryIso_pep_check")),
+                                                                            column(4, selectInput("controlIso_pep", "Select the control of your experiment (can't be in the RESP summary)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(4, textInput("xlsxnameIso_pep", "Type a name for your mapped isoform RESP summary (xlsx)", "RESP_isoform_mapping"))
+                                                                            ),
+                                                                   fluidRow(column(4, fileInput("FASTAIso_pep", "Import a FASTA file", accept = ".fasta")),
+                                                                            column(4, numericInput("minalignIso_pep", "Type a minimum length for the aligned sequence",
+                                                                                                   value = 5, step = 1, min = 1)),
+                                                                            column(4, actionButton("goIso_pep", "Map isoforms", class = "btn-primary"),
+                                                                                   textOutput("diag_isopep_cleaved")
+                                                                                   )
+                                                                            ),
+                                                                   DT::dataTableOutput("resIso_pep")
                                                                    )
                                                                )
                                                       ),
@@ -2741,7 +2768,7 @@ server <- function(input, output, session){
                             "combined_pvalue", "RESP_score", "cleaved_site",
                             "Nvalue_N-term", "Nvalue_C-term",
                             "Npep_N-term", "Npep_C-term")
-        missing_columns <- missing_columns[!(colnames(cleaved_pep_data_tocat$x) %in% missing_columns)]
+        missing_columns <- missing_columns[!(missing_columns %in% colnames(cleaved_pep_data_cattoplt$x))]
         if(length(missing_columns)){
           message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
                         "missing in your RESP summary !")
@@ -2793,7 +2820,7 @@ server <- function(input, output, session){
                              "combined_pvalue", "RESP_score", "cleaved_site",
                              "Nvalue_N-term", "Nvalue_C-term",
                              "Npep_N-term", "Npep_C-term")
-        missing_columns <- missing_columns[!(colnames(cleaved_pep_data_cattoplt$x) %in% missing_columns)]
+        missing_columns <- missing_columns[!(missing_columns %in% colnames(cleaved_pep_data_cattoplt$x))]
         if(length(missing_columns)){
           message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
                         "missing in your RESP summary !")
@@ -2831,6 +2858,92 @@ server <- function(input, output, session){
 
     showNotification("RESP hits plotted !", type = "message")
   })
+
+
+
+  # RESP hits - checking splicing forms
+  observe({
+    updateSelectInput(session, "controlIso_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+
+  cleaved_pep_data_iso <- reactiveValues(
+    x = NULL,
+    res = NULL
+  )
+  observeEvent(input$RESPsummaryIso_pep,{ # uploading RESP hits file for categorizing
+    File <- input$RESPsummaryIso_pep
+    if(!is.null(File)){
+      cleaved_pep_data_iso$x <- openxlsx::read.xlsx(File$datapath)
+
+      withCallingHandlers({
+        shinyjs::html("RESPsummaryIso_pep_check", "")
+        missing_columns <- c("id", "Gene", "description", "treatment",
+                             "combined_pvalue", "RESP_score", "cleaved_site",
+                             "Nvalue_N-term", "Nvalue_C-term",
+                             "Npep_N-term", "Npep_C-term")
+        missing_columns <- missing_columns[!(missing_columns %in% colnames(cleaved_pep_data_iso$x))]
+        if(length(missing_columns)){
+          message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
+                        "missing in your RESP summary !")
+          )
+        }
+      },
+      message = function(m) {
+        shinyjs::html(id = "RESPsummaryIso_pep_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+      })
+
+      if(length(missing_columns)){
+        cleaved_pep_data_iso$x <- NULL
+      }
+    }
+  })
+
+  fasta_iso_pep <- reactive({
+    File <- input$FASTAIso_pep
+    if (is.null(File)){
+      return(NULL)
+    }
+
+    File$datapath
+  })
+
+  observeEvent(input$goIso_pep, { # performing isoform mapping
+    showNotification("Mapping hits", type = "message")
+    withCallingHandlers({
+      shinyjs::html("diag_isopep_cleaved", "")
+      if(!is.null(cleaved_pep_data_iso$x)){
+        if(!is.null(fasta_iso_pep())){
+          cleaved_pep_data_iso$res <- imprints_isoform_peptides(norm_pep_data$x, cleaved_pep_data_iso$x,
+                                                                input$controlIso_pep, fasta_iso_pep(),
+                                                                input$minalignIso_pep,
+                                                                TRUE, input$xlsxnameIso_pep)
+        }
+        else{
+          showNotification("Don't forget to upload a FASTA file !", type = "error")
+        }
+      }
+      else{
+        message(paste0("<span style='color:red;'>", "You didn't upload a RESP summary !", "</span>"))
+      }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_isopep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+    })
+
+    showNotification("RESP hits mapped !", type = "message")
+  })
+
+  output$resIso_pep <- DT::renderDataTable({
+    DT::datatable(cleaved_pep_data_iso$res,
+                  caption = htmltools::tags$caption(
+                    style = 'caption-side: top; text-align: left;',
+                    htmltools::strong("Potential RESP effect due to splicing forms")
+                  ),
+                  rownames = FALSE,
+                  options = list(lengthMenu = c(10,20,30), pageLength = 10, scrollX = TRUE))
+    })
 
 
   # filter peptides data

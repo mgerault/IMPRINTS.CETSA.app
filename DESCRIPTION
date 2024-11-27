@@ -1,7 +1,7 @@
 Package: IMPRINTS.CETSA.app
 Type: Package
 Title: A shiny app for IMPRINTS.CETSA package 
-Version: 3.5
+Version: 3.5.1
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for IMPRINTS.CETSA R package and 
@@ -19,7 +19,7 @@ Imports: ggplot2,  stringr, tidyr, magick, withr,
    shiny, shinydashboard, shinyMatrix, shinycssloaders, shinyWidgets,
    shinyFiles, bslib, DT, rio, metap, randtests, MKmisc, visNetwork, RCurl,
    dplyr, plyr, dbplyr, shinyjs, cowplot, plotly, pubmedR, 
-   rentrez, XML, gridExtra, rjson, VennDiagram,
+   rentrez, XML, xml2, httr, rbioapi, seqinr, gridExtra, rjson, VennDiagram,
    bibliometrix, officer, colourpicker, openxlsx
 Suggests: 
     IMPRINTS.CETSA,

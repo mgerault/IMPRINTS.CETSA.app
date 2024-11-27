@@ -434,7 +434,15 @@ imprints_isoform_peptides <- function(data, data_cleaved, control, fasta,
                                          ))),]
 
   # computing fold-changes
-  data <- imprints_sequence_peptides(data, control = control)
+  directory_toremove <- list.files()
+  data <- imprints_sequence_peptides(data, control = control) # will save txt file
+  directory_toremove <- list.files()[!(list.files() %in% directory_toremove)]
+  # remove this file
+  directory_toremove <- grep("(?=^\\d{6}_\\d{4}_.*)(?=.*\\.txt$)", directory_toremove, value = TRUE, perl = TRUE)
+  if(length(directory_toremove) == 1){
+    unlink(directory_toremove, recursive = TRUE)
+  }
+                        
   data <- data[,-grep(paste0("_", control, "$"), colnames(data))]
 
   data <- data %>%

@@ -606,8 +606,10 @@ fetch_isoforms <- function(proteins, fasta){
   }
 
   isoforms <- as.data.frame(Reduce(rbind, isoforms))
-  isoforms <- isoforms[,c("accession", "length_canonical", "canonical_sequence",
-                          "isoforms", "length_isoform", "sequence")]
+  if(nrow(isoforms)){
+    isoforms <- isoforms[,c("accession", "length_canonical", "canonical_sequence",
+                            "isoforms", "length_isoform", "sequence")]
+  }
 
   return(isoforms)
 }

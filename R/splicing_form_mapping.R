@@ -527,9 +527,11 @@ imprints_isoform_peptides <- function(data, data_cleaved, control, fasta,
           isoform <- FALSE
         }
         else{
-          median_pos_align <- median(median_pos_align, na.rm = TRUE)
-          if(max_canonical >= median_pos_align){
-            isoform <- FALSE
+          if(length(median_pos_align)){
+            median_pos_align <- median(median_pos_align, na.rm = TRUE)
+            if(max_canonical >= median_pos_align){
+              isoform <- FALSE
+            }
           }
         }
       }
@@ -549,7 +551,7 @@ imprints_isoform_peptides <- function(data, data_cleaved, control, fasta,
   data_isoform_ambiguity <- unique(data_isoform_ambiguity[,1:14])
 
   if(save_xlsx){
-    openxlsx::write.xlsx(data_isoform_ambiguity, paste0(xlsxname, ".xlsx"))
+    openxlsx::write.xlsx(data_isoform_ambiguity, paste0(format(Sys.time(), "%y%m%d_%H%M"), "_", xlsxname, ".xlsx"))
   }
   message("Done !")
 

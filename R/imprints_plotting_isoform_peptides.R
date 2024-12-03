@@ -387,14 +387,19 @@ isoform_seqalign_plotting <- function(data){
               linetype = "dashed") +
     geom_line(data = data.frame(x = cleavage_site[2], y = seq(0.85,1.05, 0.01)),
               aes(x, y),
-              linetype = "dashed") +
-    geom_line(data = data.frame(x = seq(cleavage_site[1], cleavage_site[2], 0.01), y = 0.85),
-              aes(x, y),
-              linetype = "dashed") +
-    geom_line(data = data.frame(x = seq(cleavage_site[1], cleavage_site[2], 0.01), y = 1.05),
-              aes(x, y),
-              linetype = "dashed") +
+              linetype = "dashed")
 
+  if(cleavage_site[1] != cleavage_site[2]){
+    g <- g +
+      geom_line(data = data.frame(x = seq(cleavage_site[1], cleavage_site[2], 0.01), y = 0.85),
+                aes(x, y),
+                linetype = "dashed") +
+      geom_line(data = data.frame(x = seq(cleavage_site[1], cleavage_site[2], 0.01), y = 1.05),
+                aes(x, y),
+                linetype = "dashed")
+  }
+
+  g <- g +
     # set colors and aestethic
     scale_fill_gradientn(breaks = c(-2,-1.5,seq(-1,1,0.25), 1.5, 2),
                          colors = c("#4A86FF", "#17B5FD", "#00E49D", "#40FF5B", "#10B527", "#00570C",

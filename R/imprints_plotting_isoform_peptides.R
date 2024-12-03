@@ -296,7 +296,7 @@ isoform_seqalign_plotting <- function(data){
     grp1 <- which(data$cluster == 1)
     grp1 <- expand.grid(grp1, grp1)
     grp1 <- grp1[-which(apply(grp1, 1, function(y) any(duplicated(y)))),]
-    grp1 <- grp1[-which(duplicated(t(apply(grp1, 1, sort))))]
+    grp1 <- grp1[-which(duplicated(t(apply(grp1, 1, sort)))),]
 
     for(p in 1:nrow(grp1)){
       # Define Links between peptides of 'same cluster'

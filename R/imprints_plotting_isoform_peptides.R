@@ -96,8 +96,10 @@ imprints_plotting_isoform_peptides <- function(data, data_isoform, control, trea
   ### filtering treatments and proteins
   data_isoform <- data_isoform[which(data_isoform$treatment == treatment),]
   treat_torm <- get_treat_level(data)[!(get_treat_level(data) %in% c(control, treatment))]
-  data <- data[which(!is.na(match(data$Master.Protein.Accessions, unique(data_isoform$accession)))),
-               -grep(paste0("_", treat_torm, "$", collapse = "|"), colnames(data))]
+  if(length(treat_torm)){
+    data <- data[-grep(paste0("_", treat_torm, "$", collapse = "|"), colnames(data))]
+  }
+  data <- data[which(!is.na(match(data$Master.Protein.Accessions, unique(data_isoform$accession)))),]
 
   ### computing FC
   directory_toremove <- list.files()

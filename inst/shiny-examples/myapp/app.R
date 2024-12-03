@@ -410,7 +410,52 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                    textOutput("diag_isopep_cleaved")
                                                                                    )
                                                                             ),
-                                                                   DT::dataTableOutput("resIso_pep")
+                                                                   DT::dataTableOutput("resIso_pep"),
+
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
+
+                                                                   tags$u(h3("RESP effect - plot mapped isoforms")),
+                                                                   shiny::HTML("<h5>Now that the RESP hits were mapped to potential isoforms, you can plot the obtained alignment.<br></h5>"),
+
+                                                                   fluidRow(column(3, checkboxInput("useresIsoPlt_pep", "Use isoform mapping obtained above", FALSE),
+                                                                                   conditionalPanel(condition = "!input.useresIsoPlt_pep",
+                                                                                                    fileInput("isoformsummaryIsoPlt_pep", "Import the isoforms mapped to RESP file (xlsx)", accept = ".xlsx"),
+                                                                                                    textOutput("isoformsummaryIsoPlt_pep_check")
+                                                                                                    )
+                                                                                   ),
+                                                                            column(3, selectInput("controlIsoPlt_pep", "Select the control of your experiment (can't be in the file)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(3, selectInput("treatIsoPlt_pep", "Select the treatment from which you want to see the peptides",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(3, numericInput("propvalIsoPlt_pep", "Choose the minimum proportion of non missing values per peptide
+                                                                                                                         per treatment; i.e. if 6 temperatures and 0.5, it can't have more than 3 missing values.",
+                                                                                                   value = 0.4, min = 0, max = 1, step = 0.01))
+                                                                            ),
+                                                                   fluidRow(column(4, checkboxInput("allprotIsoPlt_pep", "Generate plot for all isoforms", FALSE),
+                                                                                   conditionalPanel(condition = "!input.allprotIsoPlt_pep",
+                                                                                                    selectizeInput("isoformsIsoPlt_pep", "Select isoform(s)", choices = NULL, multiple = TRUE)
+                                                                                                    )
+                                                                                   ),
+                                                                            column(4, checkboxInput("saveIsoPlt_pep", "Save plots in pdf file", FALSE),
+                                                                                   conditionalPanel(condition = "input.saveIsoPlt_pep",
+                                                                                                    textInput("pdfnameIsoPlt_pep", "Type a name for your pdf file", "isoform_alignement_plots")
+                                                                                                    )
+                                                                                   ),
+                                                                            column(4, actionButton("goIsoPlt_pep", "Plot isoform alignments", class = "btn-primary"),
+                                                                                   textOutput("diag_isopltpep_cleaved")
+                                                                                   )
+                                                                            ),
+                                                                   tags$hr(),
+                                                                   withSpinner(plotOutput("alignplotIsoPlt_pep", height = "800px"), type = 6),
+                                                                   fluidRow(column(2, tags$div(style="line-height:175%;",
+                                                                                               tags$br()
+                                                                                               ),
+                                                                                   downloadButton("downIsoPlt_pep", "Download plot")),
+                                                                            column(2, selectInput("downIsoPlt_pep_format", "Download as", choices = c("png", "pdf")))
+                                                                            )
                                                                    )
                                                                )
                                                       ),
@@ -2944,6 +2989,131 @@ server <- function(input, output, session){
                   rownames = FALSE,
                   options = list(lengthMenu = c(10,20,30), pageLength = 10, scrollX = TRUE))
     })
+
+
+
+  ## plotting isoforms
+  observe({
+    updateSelectInput(session, "treatIsoPlt_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+  observe({
+    updateSelectInput(session, "controlIsoPlt_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+  observe({
+    if(!is.null(input$controlIsoPlt_pep)){
+      updateSelectInput(session, "treatIsoPlt_pep",
+                        choices = get_treat_level(norm_pep_data$x)[!(get_treat_level(norm_pep_data$x) %in% input$controlIsoPlt_pep)])
+    }
+  })
+
+
+  cleaved_pep_data_isoplt <- reactiveValues(
+    computed = NULL,
+    x = NULL,
+    plt = NULL
+  )
+  observe({
+    cleaved_pep_data_isoplt$computed <- cleaved_pep_data_iso$res
+  })
+  observeEvent(input$isoformsummaryIsoPlt_pep,{ # uploading RESP hits file for categorizing
+    File <- input$isoformsummaryIsoPlt_pep
+    if(!is.null(File)){
+      cleaved_pep_data_isoplt$x <- openxlsx::read.xlsx(File$datapath)
+
+      withCallingHandlers({
+        shinyjs::html("isoformsummaryIsoPlt_pep_check", "")
+        missing_columns <- c("accession", "description", "Gene", "treatment", "cleaved_site",
+                             "isoforms", "canonical_posalign", "length_canonical")
+        missing_columns <- missing_columns[!(missing_columns %in% colnames(cleaved_pep_data_isoplt$x))]
+        if(length(missing_columns)){
+          message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
+                        "missing in your isoform mapping file !")
+          )
+        }
+      },
+      message = function(m) {
+        shinyjs::html(id = "isoformsummaryIsoPlt_pep_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+      })
+
+      if(length(missing_columns)){
+        cleaved_pep_data_isoplt$x <- NULL
+      }
+    }
+  })
+
+  # getting possible isoforms to plot
+  observe({
+    if(input$useresIsoPlt_pep){
+      df <- cleaved_pep_data_isoplt$computed
+    }
+    else{
+      df <- cleaved_pep_data_isoplt$x
+    }
+
+    if(!is.null(df)){
+      iso <- df[,c("isoforms", "Gene")]
+      iso <- unique(iso)
+      iso <- paste0(iso[[1]], ":", iso[[2]])
+    }
+    else{
+      iso <- NULL
+    }
+
+    updateSelectizeInput(session, "isoformsIsoPlt_pep", choices = iso, server = TRUE)
+  })
+
+  # plotting
+  observeEvent(input$goIsoPlt_pep, {
+    withCallingHandlers({
+      shinyjs::html("diag_isopltpep_cleaved", "")
+      showNotification("Starting plotting !", type = "message")
+
+      if(input$useresIsoPlt_pep){
+        df <- cleaved_pep_data_isoplt$computed
+      }
+      else{
+        df <- cleaved_pep_data_isoplt$x
+      }
+
+      if(!is.null(df)){
+        if(!input$allprotIsoPlt_pep){
+          df <- df[which(!is.na(match(df$isoforms, sub(":.*", "", input$isoformsIsoPlt_pep)))),]
+        }
+        res <- imprints_plotting_isoform_peptides(norm_pep_data$x, df, input$controlIsoPlt_pep, input$treatIsoPlt_pep,
+                                                  input$propvalIsoPlt_pep, ret_plot = !input$saveIsoPlt_pep,
+                                                  save_pdf = input$saveIsoPlt_pep, pdfname = input$pdfnameIsoPlt_pep)
+      }
+      else{
+        message(paste0("<span style='color:red;'>",
+                       "Your data is currently NULL !",
+                       "</span>"))
+        res <- NULL
+      }
+
+
+      cleaved_pep_data_isoplt$plt <- res
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_isopltpep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+      })
+  })
+
+  output$alignplotIsoPlt_pep <- renderPlot({
+    cleaved_pep_data_isoplt$plt
+  })
+  output$downIsoPlt_pep <- downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%y%m%d_%H%M_"), "isoform_alignement_plots",
+             input$isoformsIsoPlt_pep[length(input$isoformsIsoPlt_pep)],
+             ".", input$downIsoPlt_pep_format)
+    },
+    content = function(file){
+      ggsave(file, plot = cleaved_pep_data_isoplt$plt, device = input$downIsoPlt_pep_format,
+             width = 16, height = 8, dpi = 300)
+    }
+  )
 
 
   # filter peptides data

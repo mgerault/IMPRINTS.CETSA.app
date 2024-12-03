@@ -308,6 +308,11 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #                                                control = "Vehicle", fasta = "path/to/your/FASTA_file.fasta")
 
 ## ----eval=FALSE---------------------------------------------------------------
+# imprints_plotting_isoform_peptides(peptides_norm, isoform_ambiguity,
+#                                    control = "Vehicle", treatment = "DrugB",
+#                                    ret_plot = FALSE, save_pdf = TRUE)
+
+## ----eval=FALSE---------------------------------------------------------------
 # ## Drug A
 # # keeping only drug A
 # peptides_norm_drugA <- peptides_norm[,-grep("_DrugB$", colnames(peptides_norm))]

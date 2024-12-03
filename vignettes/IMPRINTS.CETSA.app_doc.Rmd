@@ -604,6 +604,16 @@ isoform_ambiguity <- imprints_isoform_peptides(peptides_norm, peptidesall_norm_d
 It will need the FASTA file you used for your search and it will then make a query to Uniprot to retrieve all isoforms of each of your proteins. Next, it will call BLAST to align the isoform sequences and their corresponding canonical form. From there, the function will returned the proteins that could be considered a hit by `imprints_cleaved_peptides` due to alternative splicing forms being more expressed.
 As for `imprints_categorize_peptides`, it will automatically save the results in an xlsx file.
 
+If now you want to visualize the isoform sequence alignement with its canonical form and see how the aligned peptides shift to evaluate how likely it is that the RESP effect can be explained by an alternative splicing form, you can use the `imprints_plotting_isoform_peptides` like so:
+
+```{r, eval=FALSE}
+imprints_plotting_isoform_peptides(peptides_norm, isoform_ambiguity,
+                                   control = "Vehicle", treatment = "DrugB",
+                                   ret_plot = FALSE, save_pdf = TRUE)
+``` 
+
+This will save each plot in a pdf file.
+
 ####  $\underline{6.\space Multiple\space dataset\space analysis}$
 
 If you're satisfied with th results, you can continue and expand it to the second treatment, potentially only keeping hits categorized as 'RESP'; here we will keep all. You can then compute the resulting datasets from the RESP analysis.

@@ -242,6 +242,10 @@ imprints_plotting_isoform_peptides <- function(data, data_isoform, control, trea
 isoform_seqalign_plotting <- function(data){
   message(paste("Preparing plot for", data$isoforms[1]))
 
+  if(any(abs(data$maxFC) > 2)){
+    data$maxFC[which(abs(data$maxFC) > 2)] <- 2*sign(data$maxFC[which(abs(data$maxFC) > 2)])
+  }
+  
   ### Define Data for the whole canonical sequence and its alignment with the selected isoform
   positions <- unique(c(1,
                         sort(unlist(sapply(strsplit(strsplit(data$canonical_posalign, "; ")[[1]],

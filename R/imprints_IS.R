@@ -308,7 +308,9 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = "none")
+          legend.position = "none",
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(face = "bold"))
 
   ggsave(paste0(format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_plot.png"),
          plot = g_h, device = "png",  path = outdir,
@@ -332,7 +334,9 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = "none")
+          legend.position = "none",
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(face = "bold"))
 
 
   g_I <- plotly::ggplotly(g_I, tooltip = "text", width = 1080, height = 560)

@@ -726,7 +726,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
                               show.legend = FALSE, min.segment.length = 0) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = "none")
+          legend.position = "none",
+          strip.background = element_rect(fill = "white"),
+          strip.text = element_text(face = "bold"))
 
   ggsave(paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_hits_plot.png"),
          plot = g_h, device = "png",

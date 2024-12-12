@@ -146,24 +146,29 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
 
       ### CATEGORIZATION ###
       if(nrow(pep) == 1){# if only one peptide was cluster in a group
-        pep_s <- sign(apply(pep[,-c(1,2)], 1, mean, na.rm = TRUE))
-        modif <- strsplit(pep$Modifications, "(?<=\\]); (?=\\d{1}x)", perl =  TRUE)[[1]]
-        modif <- modif[-grep("\\d{1}xTMT", modif)]
-        if(pep_s == 1){
-          category <- paste("single peptide",
-                            sub(".* ", "",
-                                sub("; .*", "", pep$Positions.in.Master.Proteins)),
-                            "positively shifting")
+        if(df_mincl == 2){ # if only one peptide clustered in the low shifting then must be FP (means that all other peptides shift)
+          category <- "false positive"
         }
-        else{
-          category <- paste("single peptide",
-                            sub(".* ", "",
-                                sub("; .*", "", pep$Positions.in.Master.Proteins)),
-                            "negatively shifting")
-        }
-        if(length(modif)){
-          category <- paste(category, paste(modif, collapse = "; ")
-          )
+        else{# otherwise it's indeed an FP
+          pep_s <- sign(apply(pep[,-c(1,2)], 1, mean, na.rm = TRUE))
+          modif <- strsplit(pep$Modifications, "(?<=\\]); (?=\\d{1}x)", perl =  TRUE)[[1]]
+          modif <- modif[-grep("\\d{1}xTMT", modif)]
+          if(pep_s == 1){
+            category <- paste("single peptide",
+                              sub(".* ", "",
+                                  sub("; .*", "", pep$Positions.in.Master.Proteins)),
+                              "positively shifting")
+          }
+          else{
+            category <- paste("single peptide",
+                              sub(".* ", "",
+                                  sub("; .*", "", pep$Positions.in.Master.Proteins)),
+                              "negatively shifting")
+          }
+          if(length(modif)){
+            category <- paste(category, paste(modif, collapse = "; ")
+            )
+          }
         }
       }
       else{

@@ -9,6 +9,7 @@ imprints_barplotting_categorize_peptides(
   data_cleaved,
   treatment,
   control,
+  format = c("RESP_peptide", "peptide_one"),
   color = "red",
   pdfname = "categorized_RESP_barplots"
 )
@@ -21,6 +22,10 @@ imprints_barplotting_categorize_peptides(
 \item{treatment}{The treatment from which you want to see the plots. Can only be one.}
 
 \item{control}{The control treatment from your dataset.}
+
+\item{format}{Format of the plot; either \code{RESP_peptide} which will plot the RESP plot and then all peptides
+separately from the protein or \code{peptide_one} which will plot all peptides in one plot for each protein.
+Default is \code{RESP_peptide}.}
 
 \item{color}{The color of the bar plots.}
 

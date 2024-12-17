@@ -365,22 +365,26 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                For each protein, its RESP plot will be plotted alongside its corresponding peptides. Its assigned
                                                                                category will also be highlited on each page of the pdf. The proteins will be ordered according
                                                                                their category in the following order: RESP, SP, SPm, MP, MPm and FP.<br></h5>"),
-                                                                   fluidRow(column(4, fileInput("RESPsummaryCatPlt_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
+                                                                   fluidRow(column(3, fileInput("RESPsummaryCatPlt_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
                                                                                    shiny::HTML("<h5>If not already categorized, will do it automatically but the categorized RESP
                                                                                                summary file will not be saved.</h5>"),
                                                                                    textOutput("RESPsummaryCatPlt_pep_check")
                                                                                    ),
-                                                                            column(4, selectInput("controlCatPlt_pep", "Select the control of your experiment (can't be in the RESP summary)",
+                                                                            column(3, selectInput("controlCatPlt_pep", "Select the control of your experiment (can't be in the RESP summary)",
                                                                                                   choices = NULL)
                                                                                    ),
-                                                                            column(4, selectInput("treatmentCatPlt_pep", "Select the treatment you want to plot (can't be the same as control)",
+                                                                            column(3, selectInput("treatmentCatPlt_pep", "Select the treatment you want to plot (can't be the same as control)",
                                                                                                   choices = NULL)
+                                                                                   ),
+                                                                            column(3, selectInput("formatCatPlt_pep", "Select the format for your plot",
+                                                                                                  choices =  c("Main + each peptide per plot" = "RESP_peptide",
+                                                                                                               "All peptides in one plot" = "peptide_one"), selected = "RESP_peptide")
                                                                                    ),
                                                                             ),
-                                                                   fluidRow(column(4, colourpicker::colourInput("own_color_pick_CatPlt_pep", "Select a color for the barplots", "red",
+                                                                   fluidRow(column(3, colourpicker::colourInput("own_color_pick_CatPlt_pep", "Select a color for the barplots", "red",
                                                                                                                 allowTransparent = TRUE, closeOnClick = TRUE)),
-                                                                            column(4, textInput("pdfnameCatPlt_pep", "Type a name for your pdf file", value = "categorized_RESP_barplots")),
-                                                                            column(4, actionButton("goCatPlt_pep", "Plot categorized hits", class = "btn-primary"),
+                                                                            column(3, textInput("pdfnameCatPlt_pep", "Type a name for your pdf file", value = "categorized_RESP_barplots")),
+                                                                            column(3, actionButton("goCatPlt_pep", "Plot categorized hits", class = "btn-primary"),
                                                                                    textOutput("diag_catpltpep_cleaved")
                                                                                    ),
                                                                             ),
@@ -2891,6 +2895,7 @@ server <- function(input, output, session){
       if(!is.null(cleaved_pep_data_cattoplt$x)){
         imprints_barplotting_categorize_peptides(norm_pep_data$x, cleaved_pep_data_cattoplt$x,
                                                  input$treatmentCatPlt_pep, input$controlCatPlt_pep,
+                                                 input$formatCatPlt_pep,
                                                  input$own_color_pick_CatPlt_pep, input$pdfnameCatPlt_pep)
       }
       else{

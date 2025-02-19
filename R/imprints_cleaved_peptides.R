@@ -364,7 +364,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     treat_data_diff <- data
     treat_torm <- treat[!(treat %in% t)]
     if(length(treat_torm)){
-      treat_torm <- paste0("_", treat_torm, collapse = "|")
+      treat_torm <- paste0("_", treat_torm, "$", collapse = "|")
       treat_data_diff <- treat_data_diff[,-grep(treat_torm, colnames(treat_data_diff))]
     }
 

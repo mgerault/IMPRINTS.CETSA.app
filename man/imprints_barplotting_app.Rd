@@ -12,6 +12,7 @@ imprints_barplotting_app(
   printGeneName = FALSE,
   witherrorbar = TRUE,
   withpoint = FALSE,
+  pointperrep = TRUE,
   layout = NULL,
   colorpanel = PaletteWithoutGrey(treatmentlevel),
   usegradient = FALSE,
@@ -45,6 +46,8 @@ group would be the first group}
 \item{witherrorbar}{A logical to print or not the error bar on the plot}
 
 \item{withpoint}{A logical to print or not the data point of each replicate on the plot on top of the bars}
+
+\item{pointperrep}{A logical to separate the point per replicate; only active when withpoint is set to TRUE}
 
 \item{layout}{a vector indicating the panel layout for multi-panel plots per page,
 default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE}

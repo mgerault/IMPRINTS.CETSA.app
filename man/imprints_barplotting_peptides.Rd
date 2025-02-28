@@ -12,6 +12,7 @@ imprints_barplotting_peptides(
   printGeneName = FALSE,
   witherrorbar = TRUE,
   withpoint = FALSE,
+  pointperrep = TRUE,
   layout = NULL,
   colorpanel = PaletteWithoutGrey(treatmentlevel),
   usegradient = FALSE,
@@ -46,6 +47,8 @@ In order to be able to do it, you'll need exactly 2 peptide sequence per protein
 \item{witherrorbar}{A logical to print or not the error bar on the plot}
 
 \item{withpoint}{A logical to print or not the data point of each replicate on the plot on top of the bars}
+
+\item{pointperrep}{A logical to separate the point per replicate; only active when withpoint is set to TRUE}
 
 \item{layout}{a vector indicating the panel layout for multi-panel plots per page,
 default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE}

@@ -1070,9 +1070,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                        tags$hr(),
 
                                                                        fluidRow(column(4, checkboxInput("werb", "Print error bar", TRUE),
-                                                                                          checkboxInput("wpts", "Print point of each replicate", FALSE)),
-                                                                                column(4, checkboxInput("grad", "Use color gradient", FALSE)),
-                                                                                column(4, checkboxInput("line", "Use line instead of bar", FALSE))
+                                                                                          checkboxInput("line", "Use line instead of bar", FALSE)),
+                                                                                column(4, checkboxInput("wpts", "Print point of each replicate", FALSE),
+                                                                                          conditionalPanel(condition = "input.wpts",
+                                                                                                           checkboxInput("ptsperrep", "Separate point per replicate", FALSE))
+                                                                                       ),
+                                                                                column(4, checkboxInput("grad", "Use color gradient", FALSE))
                                                                        )
                                                           )),
 
@@ -1191,9 +1194,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         tags$hr(),
 
                                                                                         fluidRow(column(4, checkboxInput("werb_compl", "Print error bar", TRUE),
-                                                                                                           checkboxInput("wpts_compl", "Print point of each replicate", FALSE)),
-                                                                                                 column(4, checkboxInput("grad_compl", "Use color gradient", FALSE)),
-                                                                                                 column(4, checkboxInput("line_compl", "Use line instead of bar", FALSE))
+                                                                                                           checkboxInput("line_compl", "Use line instead of bar", FALSE)),
+                                                                                                 column(4, checkboxInput("wpts_compl", "Print point of each replicate", FALSE),
+                                                                                                           conditionalPanel(condition = "input.wpts_compl",
+                                                                                                                            checkboxInput("ptsperrep_compl", "Separate point per replicate", FALSE))
+                                                                                                        ),
+                                                                                                 column(4, checkboxInput("grad_compl", "Use color gradient", FALSE))
                                                                                         ),
 
                                                                                         tags$hr(),
@@ -2120,9 +2126,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                  tags$hr(),
 
                                                  fluidRow(column(4, checkboxInput("werb_cell", "Print error bar", TRUE),
-                                                                    checkboxInput("wpts_cell", "Print point of each replicate", FALSE)),
-                                                          column(4, checkboxInput("grad_cell", "Use color gradient", FALSE)),
-                                                          column(4, checkboxInput("line_cell", "Use line instead of bar", FALSE))
+                                                                    checkboxInput("line_cell", "Use line instead of bar", FALSE)),
+                                                          column(4, checkboxInput("wpts_cell", "Print point of each replicate", FALSE),
+                                                                    conditionalPanel(condition = "input.wpts_cell",
+                                                                                     checkboxInput("ptsperrep_cell", "Separate point per replicate", FALSE))
+                                                                 ),
+                                                          column(4, checkboxInput("grad_cell", "Use color gradient", FALSE))
                                                  ),
 
                                                  tags$hr(),
@@ -5324,7 +5333,7 @@ server <- function(input, output, session){
         COL <- OWN_color$ch
         if(nbc == length(COL)){
           imprints_barplotting_app(data(), witherrorbar = input$werb,
-                                   withpoint = input$wpts,
+                                   withpoint = input$wpts, pointperrep = input$ptsperrep,
                                    usegradient = input$grad, linegraph = input$line,
                                    save_pdf = input$save_bar, ret_plot = !input$save_bar,
                                    colorpanel = COL,
@@ -5339,7 +5348,7 @@ server <- function(input, output, session){
       }
       else{
         imprints_barplotting_app(data(), witherrorbar = input$werb,
-                                 withpoint = input$wpts,
+                                 withpoint = input$wpts, pointperrep = input$ptsperrep,
                                  usegradient = input$grad, linegraph = input$line,
                                  save_pdf = input$save_bar, ret_plot = !input$save_bar,
                                  layout = c(input$lay_bar1, input$lay_bar2),
@@ -5732,7 +5741,7 @@ server <- function(input, output, session){
 
 
       imprints_barplotting_app(data_compl(), witherrorbar = input$werb_compl,
-                               withpoint = input$wpts_compl,
+                               withpoint = input$wpts_compl, pointperrep = input$ptsperrep_compl,
                                usegradient = input$grad_compl, linegraph = input$line_compl,
                                save_pdf = input$save_bar_compl, colorpanel = COL,
                                ret_plot = !input$save_bar_compl,
@@ -8329,7 +8338,7 @@ server <- function(input, output, session){
         COL <- OWN_color_cell$ch
         if(nbc == length(COL)){
           imprints_barplotting_app(data_cell(), witherrorbar = input$werb_cell,
-                                   withpoint = input$wpts_cell,
+                                   withpoint = input$wpts_cell, pointperrep = input$ptsperrep_cell,
                                    usegradient = input$grad_cell, linegraph = input$line_cell,
                                    save_pdf = input$save_bar_cell, colorpanel = COL,
                                    ret_plot = !input$save_bar_cell,
@@ -8345,7 +8354,7 @@ server <- function(input, output, session){
       }
       else{
         imprints_barplotting_app(data_cell(), witherrorbar = input$werb_cell,
-                                 withpoint = input$wpts_cell,
+                                 withpoint = input$wpts_cell, pointperrep = input$ptsperrep_cell,
                                  usegradient = input$grad_cell, linegraph = input$line_cell,
                                  save_pdf = input$save_bar_cell, ret_plot = !input$save_bar_cell,
                                  layout = c(input$lay_bar1_cell, input$lay_bar2_cell),

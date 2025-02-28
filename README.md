@@ -15,7 +15,7 @@ Moreover, you need to install some packages from BioConductor especially for the
 if(!requireNamespace("BiocManager", quietly = TRUE)){
    install.packages("BiocManager") 
 }
-BiocManager::install(c("STRINGdb", "clusterProfiler", "biomaRt", "enrichplot", "multtest", "limma"))
+BiocManager::install(c("STRINGdb", "clusterProfiler", "enrichplot", "multtest", "limma"))
 ```
 
 When all of this is done, type and run the following commands in R console:

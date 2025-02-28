@@ -46,6 +46,8 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
 
       if(!is.null(sequence) & length(sequence) > 1){
         sequence <- sequence[protein_in]
+        # protein group in sequence, only keeping first one
+        sequence <- sub(";.*", "", sequence)
       }
     }
 
@@ -105,8 +107,8 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
           res <- tab_pr
         }
         else{
-          seq <- seq[order(unlist(lapply(strsplit(seq, "-"), function(x) as.numeric(x[2]))))]
-          the_one <- lapply(strsplit(seq, "-"), function(y){
+          seq <- seq[order(unlist(lapply(strsplit(seq, "-|~"), function(x) as.numeric(x[2]))))]
+          the_one <- lapply(strsplit(seq, "-|~"), function(y){
             y <- as.numeric(y)
             x <- lapply(tab_sequ_n, function(x){
               x <- as.numeric(x)
@@ -119,7 +121,7 @@ imprints_sequence_peptides <- function(data, proteins = NULL, sequence = NULL,
           the_one <- lapply(the_one, which)
           the_one <- the_one[lapply(the_one, length) > 0] # only keep non empty results
           if(length(the_one) == 0){
-            the_one <- lapply(strsplit(seq, "-"), function(y){
+            the_one <- lapply(strsplit(seq, "-|~"), function(y){
               y <- as.numeric(y)
               x <- lapply(tab_sequ_n, function(x){
                 x <- as.numeric(x)

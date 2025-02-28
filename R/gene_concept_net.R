@@ -25,21 +25,28 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
                             pval_cutoff = 0.01, minGSSize = 3,
                             database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
+  species <- tolower(species)
+  species <- match.arg(species)
+  database <- match.arg(database)
+
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
     BiocManager::install("KEGGREST")
   }
-  if(!("biomaRt" %in% installed.packages())){
-    message("Installing biomaRt package")
-    BiocManager::install("biomaRt")
+  if(species == "human"){
+    if(!("org.Hs.eg.db" %in% installed.packages())){
+      message("Installing org.Hs.eg.db package")
+      BiocManager::install("org.Hs.eg.db")
+    }
+  }
+  else if(species == "mouse"){
+    if(!("org.Mm.eg.db" %in% installed.packages())){
+      message("Installing org.Mm.eg.db package")
+      BiocManager::install("org.Mm.eg.db")
+    }
   }
 
-  species <- tolower(species)
-  species <- match.arg(species)
-
-  database <- match.arg(database)
-
-  biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
+  org_data <- ifelse(species == "human", "org.Hs.eg.db", "org.Mm.eg.db")
 
   if(!is.null(treatment_column) & !is.null(treatment)){
     hits <- hits[which(hits[[treatment_column]] == treatment),]
@@ -52,23 +59,16 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
   }
 
   if(database != "CETSA"){
-    ### load database
-    ensembl <- NULL
-    while(is.null(ensembl)){
-      ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
-                          error = function(e) message("Timeout reached for getting gene ensemble,
-                                                    fetching it again.")) # genes_id / gene symbols
-    }
-
-    # get genes id from gene symbol
-    hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
-                                   filters = "uniprot_gn_symbol",
-                                   values = unique(sort(hits[[gene_column]])),
-                                   bmHeader = TRUE,
-                                   mart = ensembl)
+    ### convert gene IDs
+    hits_gene_id <- clusterProfiler::bitr(unique(sort(hits[[gene_column]])),
+                                          fromType = "SYMBOL", toType = c("ENTREZID"),
+                                          OrgDb = org_data, drop = FALSE)
     colnames(hits_gene_id) <- c(gene_column, "Gene_id")
 
     hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+    if(any(is.na(hits$Gene_id))){
+      hits <- hits[which(!is.na(hits$Gene_id)),]
+    }
   }
 
   # start enrichment analysis
@@ -96,21 +96,13 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
   }
   else if(database == "GO"){
     if(species == "human"){
-      if(!("org.Hs.eg.db" %in% installed.packages())){
-        message("Installing org.Hs.eg.db package")
-        BiocManager::install("org.Hs.eg.db")
-      }
-      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
+      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = "BP",
                                                OrgDb = "org.Hs.eg.db",
                                                pvalueCutoff = pval_cutoff,
                                                minGSSize = minGSSize)
     }
     else if(species == "mouse"){
-      if(!("org.Mm.eg.db" %in% installed.packages())){
-        message("Installing org.Mm.eg.db package")
-        BiocManager::install("org.Mm.eg.db")
-      }
-      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id,
+      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = "BP",
                                                OrgDb = "org.Mm.eg.db",
                                                pvalueCutoff = pval_cutoff,
                                                minGSSize = minGSSize)

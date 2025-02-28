@@ -12,6 +12,7 @@
 #' @param printGeneName A logical to tell if you want to print the gene names on the plot
 #' @param witherrorbar A logical to print or not the error bar on the plot
 #' @param withpoint A logical to print or not the data point of each replicate on the plot on top of the bars
+#' @param pointperrep A logical to separate the point per replicate; only active when withpoint is set to TRUE
 #' @param colorpanel a vector of color scheme provided by default with the function PaletteWithoutGrey
 #' @param usegradient whether the barplot should be draw in color gradient format
 #' @param colorgradient the color scheme of gradient applied, default value c("#4575B4","ivory", "#D73027")
@@ -47,8 +48,8 @@
 
 imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data), setlevel = NULL,
                                      printBothName = TRUE, printGeneName = FALSE,
-                                     witherrorbar = TRUE, withpoint = FALSE, layout = NULL,
-                                     colorpanel = PaletteWithoutGrey(treatmentlevel),
+                                     witherrorbar = TRUE, withpoint = FALSE, pointperrep = TRUE,
+                                     layout = NULL, colorpanel = PaletteWithoutGrey(treatmentlevel),
                                      usegradient = FALSE, colorgradient = c("#4575B4", "ivory", "#D73027"),
                                      linegraph = FALSE, log2scale = TRUE, ratio = 0.6,
                                      ret_plot = TRUE, save_pdf = FALSE,
@@ -129,10 +130,17 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
                 return(df)
               })
 
-            q <- q +
-              geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
-                         size = rel(1.5), fill = NA) +
-              scale_shape_manual(values = c(1,2,4,5,6,7,8))
+            if(pointperrep){
+              q <- q +
+                geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
+                           size = rel(1.5), fill = NA) +
+                scale_shape_manual(values = c(1,2,4,5,6,7,8))
+            }
+            else{
+              q <- q +
+                geom_point(data = d1_pts, aes(x = condition, y = pts),
+                           size = rel(1.5), fill = NA)
+            }
           }
 
           q <- q + labs(subtitle = subt$category[n_loop]) +
@@ -262,10 +270,17 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
             return(df)
           })
 
-        q <- q +
-          geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
-                     size = rel(1.5), fill = NA) +
-          scale_shape_manual(values = c(1,2,4,5,6,7,8))
+        if(pointperrep){
+          q <- q +
+            geom_point(data = d1_pts, aes(x = condition, y = pts, shape = replicate),
+                       size = rel(1.5), fill = NA) +
+            scale_shape_manual(values = c(1,2,4,5,6,7,8))
+        }
+        else{
+          q <- q +
+            geom_point(data = d1_pts, aes(x = condition, y = pts),
+                       size = rel(1.5), fill = NA)
+        }
       }
 
       q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +

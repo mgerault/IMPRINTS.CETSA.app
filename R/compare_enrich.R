@@ -24,44 +24,44 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                        pval_cutoff = 0.01, minGSSize = 3,
                        database = c("WikiPathway", "KEGG", "GO", "CETSA")){
   require(clusterProfiler)
+  species <- tolower(species)
+  species <- match.arg(species)
+  database <- match.arg(database)
+
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
     BiocManager::install("KEGGREST")
   }
-  if(!("biomaRt" %in% installed.packages())){
-    message("Installing biomaRt package")
-    BiocManager::install("biomaRt")
+  if(species == "human"){
+    if(!("org.Hs.eg.db" %in% installed.packages())){
+      message("Installing org.Hs.eg.db package")
+      BiocManager::install("org.Hs.eg.db")
+    }
+  }
+  else if(species == "mouse"){
+    if(!("org.Mm.eg.db" %in% installed.packages())){
+      message("Installing org.Mm.eg.db package")
+      BiocManager::install("org.Mm.eg.db")
+    }
   }
 
-  species <- tolower(species)
-  species <- match.arg(species)
-
-  database <- match.arg(database)
-
-  biomart_data <- ifelse(species == "human", "hsapiens_gene_ensembl", "mmusculus_gene_ensembl")
+  org_data <- ifelse(species == "human", "org.Hs.eg.db", "org.Mm.eg.db")
 
   if(any(is.na(hits[[gene_column]]))){
     hits <- hits[which(!is.na(hits[[gene_column]])),]
   }
 
   if(database != "CETSA"){
-    ### load database
-    ensembl <- NULL
-    while(is.null(ensembl)){
-      ensembl <- tryCatch(biomaRt::useMart("ensembl", dataset = biomart_data, port = ""),
-                          error = function(e) message("Timeout reached for getting gene ensemble, fetching it again.")) # genes_id / gene symbols
-    }
-
-    # get genes id from gene symbol
-    hits_gene_id <- biomaRt::getBM(attributes = c("uniprot_gn_symbol", "entrezgene_id"),
-                                   filters = "uniprot_gn_symbol",
-                                   curl = curl::handle_setopt(curl::new_handle(), timeout = 30000),
-                                   values = unique(sort(hits[[gene_column]])),
-                                   bmHeader = TRUE,
-                                   mart = ensembl)
+    ### convert gene IDs
+    hits_gene_id <- clusterProfiler::bitr(unique(sort(hits[[gene_column]])),
+                                          fromType = "SYMBOL", toType = c("ENTREZID"),
+                                          OrgDb = org_data, drop = FALSE)
     colnames(hits_gene_id) <- c(gene_column, "Gene_id")
 
     hits <- dplyr::left_join(hits, hits_gene_id, by = gene_column, multiple = "all")
+    if(any(is.na(hits$Gene_id))){
+      hits <- hits[which(!is.na(hits$Gene_id)),]
+    }
   }
 
 
@@ -99,22 +99,14 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
   }
   else if(database == "GO"){
     if(species == "human"){
-      if(!("org.Hs.eg.db" %in% installed.packages())){
-        message("Installing org.Hs.eg.db package")
-        BiocManager::install("org.Hs.eg.db")
-      }
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
-                                                     data = hits, fun = "enrichGO",
+                                                     data = hits, fun = "enrichGO", ont = "BP",
                                                      OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff,
                                                      minGSSize = minGSSize)
     }
     else if(species == "mouse"){
-      if(!("org.Mm.eg.db" %in% installed.packages())){
-        message("Installing org.Mm.eg.db package")
-        BiocManager::install("org.Mm.eg.db")
-      }
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
-                                                     data = hits, fun = "enrichGO",
+                                                     data = hits, fun = "enrichGO",ont = "BP",
                                                      OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff,
                                                      minGSSize = minGSSize)
     }
@@ -151,18 +143,18 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
     res <- fortify(hits_enrich, showCategory = 6)
     res$treatment <- factor(res$treatment, levels = unique(res$treatment))
     graph <- ggplot(res, aes(treatment, Description,
-                             color = p.adjust,
+                             fill = p.adjust,
                              size = GeneRatio)) +
-      geom_point() +
+      geom_point(color = "black", shape = 21) +
       scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
-      scale_color_continuous(low = "#B2ECBF", high = "#3821A3", name = "p.adjust",
+      scale_fill_continuous(low = "#01DD05", high = "#B30000", name = "p.adjust",
                              guide = guide_colorbar(reverse = TRUE)) +
       scale_size(range = c(3,8)) +
       DOSE::theme_dose(12) +
       labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
       theme(axis.title.x = element_blank(),
-            axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.85)),
-            axis.text.y = element_text(angle = 30, size = rel(0.85)))
+            axis.text.x = element_text(angle = 30, hjust = 1, size = rel(1.6), face = "bold"),
+            axis.text.y = element_text(size = rel(1.3)))
 
     if(database != "CETSA"){
       res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)

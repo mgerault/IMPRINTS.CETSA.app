@@ -10,7 +10,6 @@ hitlist(
   boundedness = 4,
   qualitycutoff = 0.15,
   meandev = 0.15,
-  expstr = c(),
   use_prompt = TRUE,
   exported = FALSE
 )
@@ -20,13 +19,11 @@ hitlist(
 
 \item{meancutoff}{The threshold value for the mean of a triplicate(First filter of hits).}
 
-\item{boundedness}{Number of SD/SEM, the mean needs to be within.}
+\item{boundedness}{Factor of SD/SEM, the mean needs to be within.}
 
 \item{qualitycutoff}{The threshold value for the SD/SEM to separate well-measured and illmeasured measurements.}
 
 \item{meandev}{The deviation of individual mean from the group mean in CN categorization.}
-
-\item{expstr}{List of strings with treatments/drugs and control group}
 
 \item{use_prompt}{Logical to tell if you want to use the prompt function (added for the shiny app)}
 
@@ -38,4 +35,9 @@ Dataframe of the export.
 \description{
 Function to categorize protein according to their Expression/Stability change
 based on two treatment conditions and characteristic conditions for fold change.
+}
+\details{
+This function was a first draft of hit selection from which I, Marc-Antoine Gerault, wasn't the author.
+After corrections and mosifications of tghe scripts, it has been kept in IMPRINTS.CETSA.app for comparison
+purpose but is not advised for hit selection.
 }

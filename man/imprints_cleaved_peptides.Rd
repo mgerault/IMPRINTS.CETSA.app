@@ -73,7 +73,7 @@ the potential cleavage site.
 George's method correspond to the sum of the logit of the p-values, Fisher's to the sum of the
 log of the p-values and Edgington's is the sum of the p-values.
 Edgington's method is the most stringent and is particularly sensitive with higher p-values
-whereas Fisher's mmethod is the less stringent as it is mostly sensitive to low p-values.
+whereas Fisher's method is the less stringent as it is mostly sensitive to low p-values.
 George's method is a compromise between the two methods.
 For more details read \link{https://doi.org/10.48550/arXiv.1707.06897}.
 

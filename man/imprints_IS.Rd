@@ -12,6 +12,9 @@ imprints_IS(
   IS_cutoff = 1.5,
   fixed_score_cutoff = FALSE,
   FDR = 0.01,
+  pv_method = c("all", "top2"),
+  adj_pv_method = "BH",
+  comb_pv_method = c("fisher", "george", "edgington"),
   curvature = 0.05,
   FDR_category = 0.1,
   folder_name = "Hits_analysis",
@@ -39,6 +42,15 @@ Default is FALSE.}
 
 \item{FDR}{The FDR used for the BH corrected combined p-value}
 
+\item{pv_method}{The method to compute the p-values. If top2, then only the p-values from the two greatest fold-changes
+will be computed and combined; if all, will take all fold-changes.
+Default is all.}
+
+\item{adj_pv_method}{see \code{\link{p.adjust}}; default is BH}
+
+\item{comb_pv_method}{The method used to combine p-values. Either george, fisher or edgington.
+Default is fisher; see Details.}
+
 \item{curvature}{The curvature used for the curve on the volcano plot}
 
 \item{FDR_category}{The FDR used for the BH corrected  p-value at 37°C used in order to categorize the hits}
@@ -57,4 +69,12 @@ A dataframe which contains the hits.
 \description{
 Function to categorize protein according to their Expression/Stability change
 based on their I-score and their combined p-value on their two biggest fold changes.
+}
+\details{
+George's method correspond to the sum of the logit of the p-values, Fisher's to the sum of the
+log of the p-values and Edgington's is the sum of the p-values.
+Edgington's method is the most stringent and is particularly sensitive with higher p-values
+whereas Fisher's method is the less stringent as it is mostly sensitive to low p-values.
+George's method is a compromise between the two methods.
+For more details read \link{https://doi.org/10.48550/arXiv.1707.06897}.
 }

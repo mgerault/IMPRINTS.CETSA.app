@@ -16,6 +16,12 @@
 #'   Default is FALSE.
 #' @param curvature The curvature used for the curve on the volcano plot
 #' @param FDR The FDR used for the BH corrected combined p-value
+#' @param pv_method The method to compute the p-values. If top2, then only the p-values from the two greatest fold-changes
+#'   will be computed and combined; if all, will take all fold-changes.
+#'   Default is all.
+#' @param adj_pv_method see \code{\link{p.adjust}}; default is BH
+#' @param comb_pv_method The method used to combine p-values. Either george, fisher or edgington.
+#'   Default is fisher; see Details.
 #' @param FDR_category The FDR used for the BH corrected  p-value at 37°C used in order to categorize the hits
 #' @param folder_name The name of the folder in which you want to save the results.
 #' @param peptide_count_col The name of the column that contain the unique peptide count.
@@ -23,18 +29,33 @@
 #' @param species The species on which you did the experiment (not necessary if already present in your datas).
 #'                Default is 'Homo Sapiens'.
 #'
+#' @details
+#' George's method correspond to the sum of the logit of the p-values, Fisher's to the sum of the
+#' log of the p-values and Edgington's is the sum of the p-values.
+#' Edgington's method is the most stringent and is particularly sensitive with higher p-values
+#' whereas Fisher's method is the less stringent as it is mostly sensitive to low p-values.
+#' George's method is a compromise between the two methods.
+#' For more details read \link{https://doi.org/10.48550/arXiv.1707.06897}.
+#'
 #' @return A dataframe which contains the hits.
 #'
 #' @export
 
 imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                         IS_cutoff = 1.5, fixed_score_cutoff = FALSE,
-                        FDR = 0.01, curvature = 0.05,
-                        FDR_category = 0.1,
+                        FDR = 0.01, pv_method = c("all", "top2"),
+                        adj_pv_method = "BH",
+                        comb_pv_method = c("fisher", "george", "edgington"),
+                        curvature = 0.05,  FDR_category = 0.1,
                         folder_name = "Hits_analysis",
                         peptide_count_col = "sumUniPeps",
                         species = "Homo Sapiens"){
   wd <- getwd()
+  pv_method <- match.arg(pv_method)
+  comb_pv_method <- match.arg(comb_pv_method)
+  if(!(adj_pv_method %in% p.adjust.methods)){
+    stop(paste(adj_pv_method, "is not a valid p-value ajustment method, see p.adjust"))
+  }
   outdir <- paste0(wd, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", folder_name)
   if (dir.exists(outdir) == FALSE) {
     dir.create(outdir)
@@ -53,14 +74,14 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
           like 'id', 'description', 'genes', 'peptide_count' and 'protein_names' for example.")
   }
   cond <- strsplit(name_cond, "_")
-  cond <- unique(unlist(lapply(cond, function(x) x[3])))
+  cond <- unique(sapply(cond, "[[", 3))
   if(!(ctrl %in% cond)){
     stop("'ctrl' is not in the treatments. Please, check spelling or column names.")
   }
   cond <- cond[-which(cond == ctrl)]
 
   temp <- strsplit(name_cond, "_")
-  temp <- unique(unlist(lapply(temp, function(x) x[1])))
+  temp <- unique(sapply(temp, "[[", 1))
 
   min_validval <- 0
   if(!is.null(valid_val)){
@@ -142,36 +163,24 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
       X <- M[,grep(paste0("^", i, "_"), colnames(M))]
       grp <- unname(sapply(colnames(X), function(x) strsplit(x, "_")[[1]][3]))
 
-      res[[i]] <- MKmisc::mod.t.test(as.matrix(X),
-                                     group = factor(grp),
-                                     adjust.method = "BH")$p.value
+      xx <<- X
+      xxg <<- factor(grp)
+      res[[i]] <- MKmisc::mod.t.test(as.matrix(X), group = factor(grp),
+                                     adjust.method = adj_pv_method)$adj.p.value
     }
     pval[[k]] <- res
   }
 
 
-  message("Computing I-score and Fisher p-value on top 2 fractions")
+  message(paste("Computing I-score and", comb_pv_method, "p-value on", pv_method,  "fractions"))
   diff_IS <- diff_IS[,-c(1:2)]
   for(k in cond){# get top 2 biggest diff_IS
     message(k)
 
-    message("Getting top2 fraction")
-    diff_IS[[paste0("Top2_", k)]] <- apply(diff_IS[,grep(paste0("_", k, "$"), colnames(diff_IS))],
-                                           1,
-                                           function(x) paste(order(as.numeric(abs(x)),
-                                                                   decreasing = TRUE)[1:2],
-                                                             collapse = ";")
-    )
-
-
-    message("Getting I-score")
+    message("Computing I-score")
     diff_IS[[paste0("IS_", k)]] <-
       apply(diff_IS[,grep(paste0("_", k, "$"), colnames(diff_IS))], 1,
             function(d){
-              top = d[length(d)]
-              top <- strsplit(top, ";")[[1]]
-              top <- as.numeric(top)
-              d = d[-length(d)]
               d = as.numeric(d)
               stabilization = sign(mean(d, na.rm = TRUE))
               d = abs(d)
@@ -195,7 +204,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                 dat = data.frame(x = 1:length(temp),
                                  y = d)
                 wght = rep(0.1, length(d))
-                wght[1:2] <- 0.5
+                wght[1:2] <- 0.5 # setting greater weight to top 2 FC
                 res = lm(y ~ x,
                          data = dat,
                          weights = wght
@@ -207,39 +216,83 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     diff_IS[[paste0("IS_", k)]] <- (diff_IS[[paste0("IS_", k)]] -
                                       mean(diff_IS[[paste0("IS_", k)]], na.rm=TRUE))/sd(diff_IS[[paste0("IS_", k)]], na.rm=TRUE)
 
-    message("Getting Fisher p-value")
-    diff_IS[[paste0("pvalF1_", k)]] <- rep(1,n)
-    diff_IS[[paste0("pvalF2_", k)]] <- rep(1,n)
-    diff_IS[[paste0("Fisher_", k)]] <- rep(1,n)
-    for(i in 1:n){
-      topF <- diff_IS[[paste0("Top2_", k)]][i]
-      topF <- strsplit(topF, ";")[[1]]
-      topF <- as.numeric(topF)
+    if(pv_method == "top2"){
+      message("Getting top2 fraction")
+      diff_IS[[paste0("Top2_", k)]] <- apply(diff_IS[,grep(paste0("^[^I]*_", k, "$"), colnames(diff_IS))],
+                                             1,
+                                             function(x) paste(order(as.numeric(abs(x)),
+                                                                     decreasing = TRUE)[1:2],
+                                                               collapse = ";")
+                                             )
 
-      pF1 <- pval[[k]][[temp[topF[1]]]][i]
-      pF2 <- pval[[k]][[temp[topF[2]]]][i]
-      if(is.na(pF1)){
-        pF1 <- 1
+      message(paste("Getting", comb_pv_method, "p-value"))
+      diff_IS[[paste0("pvalF1_", k)]] <- rep(1,n)
+      diff_IS[[paste0("pvalF2_", k)]] <- rep(1,n)
+      diff_IS[[paste0("Combinedpval_", k)]] <- rep(1,n)
+      for(i in 1:n){
+        topF <- diff_IS[[paste0("Top2_", k)]][i]
+        topF <- strsplit(topF, ";")[[1]]
+        topF <- as.numeric(topF)
+
+        pF1 <- pval[[k]][[temp[topF[1]]]][i]
+        pF2 <- pval[[k]][[temp[topF[2]]]][i]
+        if(is.na(pF1)){
+          pF1 <- 1
+        }
+        if(is.na(pF2)){
+          pF2 <- 1
+        }
+
+        diff_IS[[paste0("pvalF1_", k)]][i] <- pF1
+        diff_IS[[paste0("pvalF2_", k)]][i] <- pF2
+
+        if(comb_pv_method == "fisher"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::sumlog(c(pF1, pF2))$p
+        }
+        else if(comb_pv_method == "george"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::logitp(c(pF1, pF2))$p
+        }
+        else if(comb_pv_method == "edgington"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::sump(c(pF1, pF2))$p
+        }
       }
-      if(is.na(pF2)){
-        pF2 <- 1
-      }
 
-      diff_IS[[paste0("pvalF1_", k)]][i] <- pF1
-      diff_IS[[paste0("pvalF2_", k)]][i] <- pF2
-
-      diff_IS[[paste0("Fisher_", k)]][i] <- metap::sumlog(c(pF1, pF2))$p
+      # getting pvalue from base temperature
+      diff_IS[[paste0("pval", temp[1],  "_", k)]] <- pval[[k]][[temp[1]]]
     }
-    diff_IS[[paste0("pval", temp[1],  "_", k)]] <- pval[[k]][[temp[1]]]
+    else if(pv_method == "all"){
+      message(paste("Getting", comb_pv_method, "p-value"))
+      diff_IS <- as.data.frame(diff_IS) # tibble class can return error
+      diff_IS[, paste0("pval", temp, "_", k)] <- rep(1,n)
+      diff_IS[[paste0("Combinedpval_", k)]] <- rep(1,n)
 
-    diff_IS[[paste0("GlobalScore_", k)]] <- tidyr::replace_na(diff_IS[[paste0("IS_", k)]]*(-log10(diff_IS[[paste0("Fisher_", k)]])), 0)
+      for(i in 1:n){
+        pval_all <- sapply(temp, function(x) pval[[k]][[x]][i], USE.NAMES = FALSE)
+        if(any(is.na(pval_all))){
+          pval_all[which(is.na(pval_all))] <- 1
+        }
+        diff_IS[i, paste0("pval", temp, "_", k)] <- pval_all
+
+        if(comb_pv_method == "fisher"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::sumlog(pval_all)$p
+        }
+        else if(comb_pv_method == "george"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::logitp(pval_all)$p
+        }
+        else if(comb_pv_method == "edgington"){
+          diff_IS[[paste0("Combinedpval_", k)]][i] <- metap::sump(pval_all)$p
+        }
+      }
+    }
+
+    diff_IS[[paste0("GlobalScore_", k)]] <- tidyr::replace_na(diff_IS[[paste0("IS_", k)]]*(-log10(diff_IS[[paste0("Combinedpval_", k)]])), 0)
   }
   info <- data_diff[,c("id", "description", "sumUniPeps")]
   info$description <- stringr::str_extract(paste0(info$description, " "), "(?<=GN=).+?(?= )") # extract genes
   colnames(info) <- c("id", "Gene", "sumUniPeps")
   diff_IS <- as.data.frame(cbind(info, diff_IS))
 
-  diff_IS_plot <- diff_IS[,c("id", "Gene", grep("^IS_|^Fisher_", colnames(diff_IS), value = TRUE))]
+  diff_IS_plot <- diff_IS[,c("id", "Gene", grep("^IS_|^Combinedpval_", colnames(diff_IS), value = TRUE))]
   diff_IS_plot <- tidyr::gather(diff_IS_plot, treatment, reading, -id, -Gene)
   diff_IS_plot <- tidyr::separate(diff_IS_plot, treatment, into = c("Value", "treatment"), sep = "_")
   diff_IS_plot <- tidyr::spread(diff_IS_plot, Value, reading)
@@ -247,34 +300,35 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   if(fixed_score_cutoff){
     cutoff <- diff_IS_plot %>% dplyr::group_by(treatment) %>%
-      dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
-      dplyr::reframe(pval = find_cutoff(Fisher, BH),
+      dplyr::mutate(BH = (order(order(Combinedpval))/length(Combinedpval))*FDR) %>%
+      dplyr::reframe(pval = find_cutoff(Combinedpval, BH),
                      IS_pos = IS_cutoff,
                      IS_neg = -IS_cutoff)
   }
   else{
     cutoff <- diff_IS_plot %>% dplyr::group_by(treatment) %>%
-      dplyr::mutate(BH = (order(order(Fisher))/length(Fisher))*FDR) %>%
-      dplyr::reframe(pval = find_cutoff(Fisher, BH),
-                     IS_pos = IS_cutoff + median(abs(IS)[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE),
-                     IS_neg = -IS_cutoff - median(abs(IS)[which(Fisher < quantile(Fisher, 0.5, na.rm = TRUE))], na.rm = TRUE))
+      dplyr::mutate(BH = (order(order(Combinedpval))/length(Combinedpval))*FDR) %>%
+      dplyr::reframe(pval = find_cutoff(Combinedpval, BH),
+                     IS_pos = IS_cutoff + median(abs(IS)[which(Combinedpval < quantile(Combinedpval, 0.5, na.rm = TRUE))], na.rm = TRUE),
+                     IS_neg = -IS_cutoff - median(abs(IS)[which(Combinedpval < quantile(Combinedpval, 0.5, na.rm = TRUE))], na.rm = TRUE))
   }
 
   cutoff_file <- paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "cutoff.txt")
   readr::write_tsv(cutoff, cutoff_file)
-  extra_info <- paste0("\nParameters: \nIS cutoff=", IS_cutoff, ", FDR=", FDR*100, "%, curvature=", curvature)
+  extra_info <- paste0("\nParameters: \nIS cutoff=", IS_cutoff, ", FDR=", FDR*100, "%, p-value adjustment=", adj_pv_method,
+                       "\np-value calculation method=", pv_method, ", p-value combination method=", comb_pv_method, ", curvature=", curvature)
   write(extra_info, cutoff_file, sep = "\n", append = TRUE)
 
 
   diff_IS_plot <- diff_IS_plot %>% dplyr::group_by(id, Gene, treatment) %>%
-    dplyr::mutate(criteria = Fisher <= cutoff$pval[which(cutoff$treatment == treatment)] &
+    dplyr::mutate(criteria = Combinedpval <= cutoff$pval[which(cutoff$treatment == treatment)] &
                     (IS >= cutoff$IS_pos[which(cutoff$treatment == treatment)] | IS <= cutoff$IS_neg[which(cutoff$treatment == treatment)]),
                   curve = curve(IS, cutoff$IS_neg[which(cutoff$treatment == treatment)],
                                 cutoff$IS_pos[which(cutoff$treatment == treatment)],
                                 cutoff$pval[which(cutoff$treatment == treatment)],
                                 curvature = curvature
                   ),
-                  criteria_curve = -log10(Fisher) >= curve
+                  criteria_curve = -log10(Combinedpval) >= curve
     )
   diff_IS_plot$criteria_curve <- tidyr::replace_na(diff_IS_plot$criteria_curve, FALSE)
 
@@ -291,19 +345,19 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     )
 
   message("Creating and saving plot")
-  g_h <- ggplot(diff_IS_plot, aes(IS, -log10(Fisher), color = criteria_curve)) +
+  g_h <- ggplot(diff_IS_plot, aes(IS, -log10(Combinedpval), color = criteria_curve)) +
     geom_point() +
     geom_line(data = df_curve, aes(x = IS, y = curve), linetype = "dashed", color = "black") +
     facet_wrap(~treatment) +
     ggrepel::geom_label_repel(data = diff_IS_plot[diff_IS_plot$criteria_curve,],
-                              aes(IS, -log10(Fisher),
+                              aes(IS, -log10(Combinedpval),
                                   label = Gene), show.legend = FALSE) +
-    ylim(c(0, max(-log10(diff_IS_plot$Fisher)))) +
+    ylim(c(0, max(-log10(diff_IS_plot$Combinedpval)))) +
     xlim(c(-max(abs(diff_IS_plot$IS), na.rm = TRUE),
            max(abs(diff_IS_plot$IS), na.rm = TRUE))
          ) +
     labs(title = "I-score plot",
-         y = "-log10(Fisher p-value)",
+         y = "-log10(Combined p-value)",
          x = "I-score") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
     theme_bw() +
@@ -316,20 +370,20 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
          plot = g_h, device = "png",  path = outdir,
          width = 16, height = 9)
 
-  g_I <- ggplot(diff_IS_plot, aes(IS, -log10(Fisher), color = criteria_curve)) +
-    geom_point(aes(text = paste0("Fisher p-value: ", diff_IS_plot$Fisher, "\n",
+  g_I <- ggplot(diff_IS_plot, aes(IS, -log10(Combinedpval), color = criteria_curve)) +
+    geom_point(aes(text = paste0("Combined p-value: ", diff_IS_plot$Combinedpval, "\n",
                                  "I-score: ", diff_IS_plot$IS, "\n",
                                  "Protein: ", diff_IS_plot$id, "\n",
                                  "Gene: ", diff_IS_plot$Gene))
                ) +
     geom_line(data = df_curve, aes(x = IS, y = curve), linetype = "dashed", color = "black") +
     facet_wrap(~treatment) +
-    ylim(c(0, max(-log10(diff_IS_plot$Fisher), na.rm = TRUE))) +
+    ylim(c(0, max(-log10(diff_IS_plot$Combinedpval), na.rm = TRUE))) +
     xlim(c(-max(abs(diff_IS_plot$IS), na.rm = TRUE),
            max(abs(diff_IS_plot$IS), na.rm = TRUE))
          ) +
     labs(title = "I-score plot",
-         y = "-log10(Fisher p-value)",
+         y = "-log10(Combined p-value)",
          x = "I-score") +
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70")) +
     theme_bw() +
@@ -378,7 +432,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                               })
   diff_IS_plot$category[which(is.na(diff_IS_plot$category) & diff_IS_plot$coeff <= 1e-2)] <- "CN"
   diff_IS_plot$category[which(is.na(diff_IS_plot$category))] <- "CC"
-  diff_IS_plot <- diff_IS_plot[,c("id", "Gene", "treatment", "Fisher", "IS", "category")]
+  diff_IS_plot <- diff_IS_plot[,c("id", "Gene", "treatment", "Combinedpval", "IS", "category")]
 
   for_categorize <- diff_IS_plot[,c("id", "Gene", "treatment", "category")] %>%
     tidyr::spread(treatment, category)
@@ -434,7 +488,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                          "Gene" = info$Gene[which(!is.na(match(info$id,
                                                                  vennlist[[i]])))]
       )
-      score_info <- diff_IS[,c(1, grep("^IS_|^Fisher_", colnames(diff_IS)))]
+      score_info <- diff_IS[,c(1, grep("^IS_|^Combinedpval_", colnames(diff_IS)))]
 
       vennlist[[i]] <- dplyr::left_join(prot, score_info, by = "id")
     }

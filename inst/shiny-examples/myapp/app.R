@@ -847,6 +847,17 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                                  column(3, numericInput("FDR_cetsa", "Choose the FDR", value = 0.01, min = 0, max = 1, step = 0.01)),
                                                                                                                                                  column(3, numericInput("validval_cetsa", "Choose the minimum proportion of non-missing values", value = 0, min = 0, max = 1, step = 0.05))
                                                                                                                                                  ),
+                                                                                                                                        fluidRow(column(3, selectInput("top2orall_cetsa", "Choose the method to select p-value", choices = c("All" = "all", "Top 2" = "top2"), selected = "all")),
+                                                                                                                                                 column(3, selectInput("combPvmeth_cetsa", "Choose the method to combine p-values",
+                                                                                                                                                                       choices = c("Fisher" = "fisher", "George" = "goerge", "Edgington" = "edgington"), selected = "fisher")),
+                                                                                                                                                 column(6, shiny::HTML("<h5>On the left you can choose between the method 'Top 2' and 'All' to select p-values.
+                                                                                                                                                                            The method 'All' will compute all fold-changes' p-values and combine them while the
+                                                                                                                                                                            'Top 2' method will only combine the p-values of the two greatest fold-changes.
+                                                                                                                                                                            <br>You can then choose between the Fisher, Goerge or Edgington's method to combine
+                                                                                                                                                                            the p-values where Fisher being more sensitive to the low p-values, Edgington to the
+                                                                                                                                                                            high p-values and George a compromise between these two.
+                                                                                                                                                                            <br>The default parameters, All and Fisher, are the advised one for IMPRINTS-CETSA data.</h5>"))
+                                                                                                                                                 ),
                                                                                                                                         tags$hr(),
                                                                                                                                         textOutput("diag_IS"),
                                                                                                                                         tags$hr()
@@ -4362,7 +4373,8 @@ server <- function(input, output, session){
                              valid_val = input$validval_cetsa,
                              IS_cutoff = input$IScut_cetsa,
                              fixed_score_cutoff = !input$fixedIS_cetsa,
-                             FDR = input$FDR_cetsa)
+                             FDR = input$FDR_cetsa,
+                             pv_method = input$top2orall_cetsa, comb_pv_method = input$combPvmeth_cetsa)
           },
           message = function(m) {
             shinyjs::html(id = "diag_IS", html = paste(m$message, "<br>", sep = ""), add = FALSE)

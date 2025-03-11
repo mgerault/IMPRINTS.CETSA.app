@@ -141,37 +141,79 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
   }
   else{
     res <- fortify(hits_enrich, showCategory = 6)
-    res$treatment <- factor(res$treatment, levels = unique(res$treatment))
-    graph <- ggplot(res, aes(treatment, Description,
-                             fill = p.adjust,
-                             size = GeneRatio)) +
-      geom_point(color = "black", shape = 21) +
-      scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
-      scale_fill_continuous(low = "#01DD05", high = "#B30000", name = "p.adjust",
-                             guide = guide_colorbar(reverse = TRUE)) +
-      scale_size(range = c(3,8)) +
-      DOSE::theme_dose(12) +
-      labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
-      theme(axis.title.x = element_blank(),
-            axis.text.x = element_text(angle = 30, hjust = 1, size = rel(1.6), face = "bold"),
-            axis.text.y = element_text(size = rel(1.3)))
+    if(any(res$Count < minGSSize)){
+      res <- res[-which(res$Count < minGSSize),]
+    }
+    if(nrow(res)){
+      res_data <- res
+      if(any(!(unique(hits$treatment) %in% res$treatment))){
+        res$Cluster <- as.character(res$Cluster)
+        res$Description <- as.character(res$Description)
+        for(i in unique(hits$treatment)[!(unique(hits$treatment) %in% res$treatment)]){
+          res <- as.data.frame(rbind(res[1,], res))
+          res[1,which(sapply(as.list(res[1,]), is.numeric))] <- NA
+          res[1,which(!sapply(as.list(res[1,]), is.numeric))] <- ""
+          res$Cluster[1] <- i
+          res$treatment[1] <- i
+        }
+      }
 
-    if(database != "CETSA"){
-      res$geneSymbol <- unlist(lapply(strsplit(res$geneID, "/"), function(x){x <- as.numeric(x)
-                                        g <- hits_gene_id[[gene_column]][which(!is.na(match(hits_gene_id$Gene_id, x)))]
-                                        g <- paste(g, collapse = "/");
-                                        g
-                                        }
-                                      )
-                               )
+      if(is.null(levels(hits$treatment))){
+        res$treatment <- factor(res$treatment, levels = unique(res$treatment))
+      }
+      else{
+        res$treatment <- factor(res$treatment, levels = levels(hits$treatment))
+      }
+
+      graph <- ggplot(res, aes(treatment, Description,
+                               fill = p.adjust,
+                               size = GeneRatio)) +
+        geom_point(color = "black", shape = 21) +
+        scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
+        scale_fill_continuous(low = "#01DD05", high = "#B30000", name = "p.adjust",
+                              guide = guide_colorbar(reverse = TRUE)) +
+        scale_size(range = c(3,8)) +
+        DOSE::theme_dose(12) +
+        labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
+        theme(axis.title.x = element_blank(),
+              axis.text.x = element_text(angle = 30, hjust = 1, size = rel(1.6), face = "bold"),
+              axis.text.y = element_text(size = rel(1.3)))
+
+      if(database != "CETSA"){
+        res_data$geneSymbol <- unlist(lapply(strsplit(res_data$geneID, "/"), function(x){
+          if(length(x)){
+            x <- as.numeric(x)
+            g <- hits_gene_id[[gene_column]][which(!is.na(match(hits_gene_id$Gene_id, x)))]
+            g <- paste(g, collapse = "/")
+          }
+          else{
+            g <- ""
+          };
+          g})
+          )
+      }
+      else{
+        extra_info <- unique(cetsa_gsea_database[,c("cetsa.id", "function", "functional.hypothesis")])
+        colnames(extra_info)[1] <- "ID"
+        res_data <- dplyr::left_join(res_data, extra_info, by = "ID")
+      }
+
+      return(list("res" = res_data, "graph" = graph))
     }
     else{
-      extra_info <- unique(cetsa_gsea_database[,c("cetsa.id", "function", "functional.hypothesis")])
-      colnames(extra_info)[1] <- "ID"
-      res <- dplyr::left_join(res, extra_info, by = "ID")
-    }
+      #no term enriched with enough genes
+      graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+        geom_text(x=0.5, y=0.5, label = paste("No term enriched \nwith more than", minGSSize, "genes"), size = 10) +
+        cowplot::theme_cowplot() +
+        theme(axis.text.x = element_blank(),
+              axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.ticks.y = element_blank())
 
-    return(list("res" = res, "graph" = graph))
+      return(list("res" = NULL, "graph" = graph))
+    }
   }
 }
 

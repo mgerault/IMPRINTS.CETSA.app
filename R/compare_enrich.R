@@ -165,10 +165,20 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
         res$treatment <- factor(res$treatment, levels = levels(hits$treatment))
       }
 
+      ord <- res %>% dplyr::select(Description, treatment) %>%
+        dplyr::group_by(Description) %>%
+        dplyr::summarise(n = length(unique(treatment)),
+                         t = paste(as.numeric(treatment), collapse = ""),
+                         ord = paste0(n, "_", t))
+      res$Description <- factor(res$Description, levels = rev(ord$Description[order(ord$ord)]))
+      if(any(res$Description == "")){
+        res$Description[which(res$Description == "")] <- res$Description[nrow(res)]
+      }
+
       graph <- ggplot(res, aes(treatment, Description,
                                fill = p.adjust,
                                size = GeneRatio)) +
-        geom_point(color = "black", shape = 21) +
+        geom_point(color = "black", shape = 21, na.rm = TRUE) +
         scale_y_discrete(labels = enrichplot:::default_labeller(30)) +
         scale_fill_continuous(low = "#01DD05", high = "#B30000", name = "p.adjust",
                               guide = guide_colorbar(reverse = TRUE)) +

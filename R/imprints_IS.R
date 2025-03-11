@@ -163,8 +163,6 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
       X <- M[,grep(paste0("^", i, "_"), colnames(M))]
       grp <- unname(sapply(colnames(X), function(x) strsplit(x, "_")[[1]][3]))
 
-      xx <<- X
-      xxg <<- factor(grp)
       res[[i]] <- MKmisc::mod.t.test(as.matrix(X), group = factor(grp),
                                      adjust.method = adj_pv_method)$adj.p.value
     }

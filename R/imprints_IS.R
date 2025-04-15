@@ -411,13 +411,14 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   diff_IS_plot <- left_join(diff_IS_plot, for_categorize, by = c("id", "Gene", "treatment"))
   diff_IS_plot$category <- NA
-  diff_IS_plot$category[which(is.na(diff_IS_plot$pval37C))] <- "ND"
+
+  # if ones want to add category ND for 'undetermined' when 37C is not measured
+  # diff_IS_plot$category[which(is.na(diff_IS_plot[["37C"]]))] <- "ND"
 
   diff_IS_plot <- diff_IS_plot %>% group_by(id, Gene, treatment) %>%
     mutate(is_C = pval37C <= cutoff$pval[which(cutoff$treatment == treatment)])
 
   diff_IS_plot$category[which(!diff_IS_plot$is_C)] <- "NC"
-  diff_IS_plot$category[which(is.na(diff_IS_plot$category) & is.na(diff_IS_plot[[temp[length(temp)]]]))] <- "CC" #denatured in the end but significant 37
 
   diff_IS_plot$coeff <- apply(diff_IS_plot[,grep("^\\d{1,}", colnames(diff_IS_plot))], 1,
                               function(x){

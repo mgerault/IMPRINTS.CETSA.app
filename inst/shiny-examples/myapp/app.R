@@ -1585,7 +1585,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                         fluidRow(column(6, selectInput("cond_fhitB_stri", "Select some treatments to filter your proteins",
                                                                                                                        choices = NULL, multiple = TRUE)),
                                                                                                  column(6, selectInput("cat_fhitB_stri", "Select some categories to filter your proteins (If NULL, will select all)",
-                                                                                                                       choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
+                                                                                                                       choices = NULL, multiple = TRUE))
                                                                                                  )
                                                                                         ),
 
@@ -1601,7 +1601,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                          ),
                                                                                                                   conditionalPanel(condition = "input.ishit_stri",
                                                                                                                                    column(4, selectInput("cond_fhit_stri", "Select some treatments to filter your hits",
-                                                                                                                                                         choices = NULL, multiple = TRUE))
+                                                                                                                                                         choices = NULL, multiple = TRUE),
+                                                                                                                                          selectInput("cat_fhit_stri", "Select some categories to filter your proteins (If NULL or no category in your data, will select all)",
+                                                                                                                                                      choices = NULL, multiple = TRUE))
                                                                                                                                    )
                                                                                                                   )
                                                                                                          ),
@@ -1899,7 +1901,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    fluidRow(column(6, selectInput("cond_fhitB_clus", "Select some treatments to filter your proteins",
                                                                                                   choices = NULL, multiple = TRUE)),
                                                                             column(6, selectInput("cat_fhitB_clus", "Select some categories to filter your proteins (If NULL, will select all)",
-                                                                                                  choices = c("CN", "NC", "CC", "ND", "NN"), multiple = TRUE))
+                                                                                                  choices = NULL, multiple = TRUE))
                                                                             )
                                                                    ),
 
@@ -1913,7 +1915,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                    ),
                                                                             conditionalPanel(condition = "input.ishit_clus",
                                                                                              column(4, selectInput("cond_fhit_clus", "Select some treatments to filter your hits",
-                                                                                                                   choices = NULL, multiple = TRUE))
+                                                                                                                   choices = NULL, multiple = TRUE),
+                                                                                                    selectInput("cat_fhit_clus", "Select some categories to filter your proteins (If NULL or if no category in your data, will select all)",
+                                                                                                                choices = NULL, multiple = TRUE))
                                                                                              )
                                                                             )
                                                                    ),
@@ -4343,10 +4347,10 @@ server <- function(input, output, session){
         )
 
         hit_pr$hitlist <- h[which(h$category != "NN"),]
-        hit_pr$ND <- h[which(h$category == "ND"),]
-        hit_pr$NC <- h[grep("NC", h$category),]
-        hit_pr$CN <- h[grep("CN", h$category),]
-        hit_pr$CC <- h[grep("CC", h$category),]
+        hit_pr$ND <- h[which(gsub("-|\\+", "", h$category) == "ND"),]
+        hit_pr$NC <- h[grep(gsub("-|\\+", "", h$category), h$category),]
+        hit_pr$CN <- h[grep(gsub("-|\\+", "", h$category), h$category),]
+        hit_pr$CC <- h[grep(gsub("-|\\+", "", h$category), h$category),]
       }
       else if(input$hitmethod_cetsa == "IS"){
         if(!is.null(cetsa_isoform$norm)){
@@ -4383,10 +4387,10 @@ server <- function(input, output, session){
           )
 
           hit_pr$hitlist <- h
-          hit_pr$ND <- h %>% filter(category == "ND")
-          hit_pr$NC <- h %>% filter(category == "NC")
-          hit_pr$CN <- h %>% filter(category == "CN")
-          hit_pr$CC <- h %>% filter(category == "CC")
+          hit_pr$ND <- h %>% filter(gsub("-|\\+", "", category) == "ND")
+          hit_pr$NC <- h %>% filter(gsub("-|\\+", "", category) == "NC")
+          hit_pr$CN <- h %>% filter(gsub("-|\\+", "", category) == "CN")
+          hit_pr$CC <- h %>% filter(gsub("-|\\+", "", category) == "CC")
         }
         else{
           showNotification("You also need the post normalization data for this method.
@@ -4555,10 +4559,16 @@ server <- function(input, output, session){
       dat <- dat[, !(names(dat) %in% nv_nam)]
     }
     if(!("treatment" %in% colnames(dat))){ # means that the analysis tab was imported
-      missing_columns <- sapply(c("^id$","^Fisher_", "^IS_", "^GlobalScore_", "^category_"),
+      missing_columns <- sapply(c("^id$","^Fisher_", "^Combinedpval_", "^IS_", "^GlobalScore_", "^category_"),
                                 grep, colnames(dat), simplify = FALSE)
       missing_columns <- lapply(missing_columns, length)
       names(missing_columns) <- gsub("\\^|\\$", "", names(missing_columns))
+      if(missing_columns$Fisher_ == 0){
+        missing_columns$Fisher_ <- NULL
+      }
+      else if(missing_columns$Combinedpval_ == 0){
+        missing_columns$Combinedpval_ <- NULL
+      }
       missing_columns <- unlist(missing_columns)
 
       if(any(missing_columns == 0)){
@@ -6571,7 +6581,7 @@ server <- function(input, output, session){
     if((input$ishit_stri & input$impfile_stri) | input$drug_stri == "base"){
       HIT <- stri_data()
 
-      c_idx <- str_which(colnames(HIT), "treatment")
+      c_idx <- grep("^treatment$", colnames(HIT))
 
       if(length(c_idx)){
         tr <- HIT[, c_idx]
@@ -6581,13 +6591,31 @@ server <- function(input, output, session){
 
     tr
   })
+  Sel_cat_fhit_stri <- reactive({
+    cat <- NULL
+
+    if((input$ishit_stri & input$impfile_stri) | input$drug_stri == "base"){
+      HIT <- stri_data()
+
+      c_idx <- grep("^category$", colnames(HIT))
+
+      if(length(c_idx)){
+        cat <- HIT[, c_idx]
+        cat <- unique(cat)
+      }
+    }
+
+    cat
+  })
 
   observe({
-    if(input$drug_stri =="dat"){
+    if(input$drug_stri == "dat"){
       updateSelectInput(session, "cond_fhit_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+      updateSelectInput(session, "cat_fhit_stri", choices = Sel_cat_fhit_stri(), selected = Sel_cat_fhit_stri()[1])
     }
-    else if(input$drug_stri =="base"){
+    else if(input$drug_stri == "base"){
       updateSelectInput(session, "cond_fhitB_stri", choices = Sel_cond_fhit_stri(), selected = Sel_cond_fhit_stri()[1])
+      updateSelectInput(session, "cat_fhitB_stri", choices = Sel_cat_fhit_stri(), selected = Sel_cat_fhit_stri()[1])
     }
   })
 
@@ -6643,6 +6671,9 @@ server <- function(input, output, session){
               dat <- stri_data()
               if(!is.null(input$cond_fhit_stri)){
                 dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_stri))))
+                if(!is.null(input$cat_fhit_stri)){
+                  dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhit_stri))))
+                }
                 if(any(duplicated(dat$id))){
                   dat <- dat[-which(duplicated(dat$id)),]
                 }
@@ -7524,7 +7555,7 @@ server <- function(input, output, session){
     if(input$ishit_clus | input$drug_clus == "base"){
       HIT <- clus_data()
 
-      c_idx <- str_which(colnames(HIT), "treatment")
+      c_idx <- grep("^treatment$", colnames(HIT))
 
       if(length(c_idx)){
         tr <- HIT[, c_idx]
@@ -7535,12 +7566,31 @@ server <- function(input, output, session){
     tr
   })
 
+  Sel_cat_fhit_clus <- reactive({
+    cat <- NULL
+
+    if(input$ishit_clus | input$drug_clus == "base"){
+      HIT <- clus_data()
+
+      c_idx <- grep("^category$", colnames(HIT))
+
+      if(length(c_idx)){
+        cat <- HIT[, c_idx]
+        cat <- unique(cat)
+      }
+    }
+
+    cat
+  })
+
   observe({
     if(input$drug_clus =="dat"){
       updateSelectInput(session, "cond_fhit_clus", choices = Sel_cond_fhit_clus(), selected = Sel_cond_fhit_clus()[1])
+      updateSelectInput(session, "cat_fhit_clus", choices = Sel_cat_fhit_clus(), selected = Sel_cat_fhit_clus()[1])
     }
     else if(input$drug_clus =="base"){
       updateSelectInput(session, "cond_fhitB_clus", choices = Sel_cond_fhit_clus(), selected = Sel_cond_fhit_clus()[1])
+      updateSelectInput(session, "cat_fhitB_clus", choices = Sel_cat_fhit_clus(), selected = Sel_cat_fhit_clus()[1])
     }
   })
 
@@ -7561,6 +7611,9 @@ server <- function(input, output, session){
             dat <- clus_data()
             if(!is.null(input$cond_fhit_clus)){
               dat <- dat %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_clus))))
+              if(!is.null(input$cat_fhit_clus)){
+                dat <- dat %>% dplyr::filter(!is.na(match(category, c(input$cat_fhit_clus))))
+              }
             }
             else{
               showNotification("Don't forget to select some treatments !", type = "error")

@@ -405,14 +405,21 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_IS_plot$criteria_curve <- NULL
   diff_IS_plot$curve <- NULL
 
-  for_categorize <- diff_IS[,grep("^id|Gene|^\\d{1,}|^pval37", colnames(diff_IS))]
+  for_categorize <- diff_IS[,grep("^id$|^Gene$|^\\d{2}C_|^pval37C_", colnames(diff_IS))]
   for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Gene) %>%
     tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
     tidyr::spread(key, value)
 
-  cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
-    dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
-    dplyr::reframe(pval = find_cutoff(pval37C, BH))
+  if(adj_pv_method == "none"){
+    cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
+      dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
+      dplyr::reframe(pval = find_cutoff(pval37C, BH))
+  }
+  else{ # single p-value already adjusted --> taking p-value below 0.05 for all
+    cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
+      dplyr::reframe(pval = 0.05)
+  }
+
 
   diff_IS_plot <- left_join(diff_IS_plot, for_categorize, by = c("id", "Gene", "treatment"))
   diff_IS_plot$category <- NA
@@ -423,18 +430,33 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_IS_plot <- diff_IS_plot %>% group_by(id, Gene, treatment) %>%
     mutate(is_C = pval37C <= cutoff$pval[which(cutoff$treatment == treatment)])
 
-  diff_IS_plot$category[which(!diff_IS_plot$is_C)] <- "NC"
+  diff_IS_plot$category[which(!diff_IS_plot$is_C | is.na(diff_IS_plot$is_C))] <- "NC"
 
-  diff_IS_plot$coeff <- apply(diff_IS_plot[,grep("^\\d{1,}", colnames(diff_IS_plot))], 1,
-                              function(x){
-                                x <- abs(x)
-                                n <- 1/length(na.omit(x))
-                                x <- na.omit(x)
-                                x <- x/sum(x)
-                                x <- sum((x - n)**2);
-                                x
-                              })
-  diff_IS_plot$category[which(is.na(diff_IS_plot$category) & diff_IS_plot$coeff <= 1e-2)] <- "CN"
+  ## performing repeated measure anova to see if the fold-changes depends on the temperature --> know if (de)stabilize
+  stab <- data_diff[which(!is.na(match(data_diff$id, diff_IS_plot$id))),
+                    -c((ncol(data_diff)-2):ncol(data_diff))] %>%
+    tidyr::gather("key", "value", -id, -description) %>%
+    tidyr::separate(key, into = c("temperature", "rep", "treatment"), sep = "_")
+  stab$description <- stringr::str_extract(paste0(stab$description, " "), "(?<=GN=).+?(?= )")
+  colnames(stab)[2] <- "Gene"
+  stab <- dplyr::left_join(diff_IS_plot[which(is.na(diff_IS_plot$category)), c("id", "Gene", "treatment")],
+                           stab, by = c("id", "Gene", "treatment"))
+  stab <- stab %>% dplyr::group_by(id, Gene, treatment) %>%
+    dplyr::group_modify(~ {
+      ntemp <- unique(.x$temperature[which(!is.na(.x$value))])
+      ntemp <- length(ntemp)
+      if(ntemp > 1){
+        pv <- rstatix::anova_test(data = as.data.frame(.x), dv = value, wid = rep, within = temperature)
+        pv <- rstatix::get_anova_table(pv, correction = "none")
+        pv <- pv$p
+      }
+      else{
+        pv <- 1
+      }
+      return(data.frame(is_stab = pv <= 0.05))
+    })
+  diff_IS_plot <- dplyr::full_join(diff_IS_plot, stab, by = c("id", "Gene", "treatment"))
+  diff_IS_plot$category[which(is.na(diff_IS_plot$category) & !diff_IS_plot$is_stab)] <- "CN"
   diff_IS_plot$category[which(is.na(diff_IS_plot$category))] <- "CC"
 
   if(format_category == "9"){
@@ -445,20 +467,20 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
             stability <- cat[2]
 
             if(abundance == "C"){
-              if(x[["37C"]] >= 0){
+              if(as.numeric(x[["37C"]]) >= 0){
                 abundance <- paste0(abundance, "+")
               }
               else{
-                abundance <- paste0(abundance, "+")
+                abundance <- paste0(abundance, "-")
               }
             }
 
             if(stability == "C"){
-              if(x[["IS"]] >= 0){
+              if(as.numeric(x[["IS"]]) >= 0){
                 stability <- paste0(stability, "+")
               }
               else{
-                stability <- paste0(stability, "+")
+                stability <- paste0(stability, "-")
               }
             }
 

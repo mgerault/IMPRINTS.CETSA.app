@@ -439,8 +439,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     tidyr::separate(key, into = c("temperature", "rep", "treatment"), sep = "_")
   stab$description <- stringr::str_extract(paste0(stab$description, " "), "(?<=GN=).+?(?= )")
   colnames(stab)[2] <- "Gene"
-  stab <- dplyr::left_join(diff_IS_plot[which(is.na(diff_IS_plot$category)), c("id", "Gene", "treatment")],
-                           stab, by = c("id", "Gene", "treatment"))
+  stab <- dplyr::left_join(diff_IS_plot[, c("id", "Gene", "treatment")], stab, by = c("id", "Gene", "treatment"))
   stab <- stab %>% dplyr::group_by(id, Gene, treatment) %>%
     dplyr::group_modify(~ {
       ntemp <- unique(.x$temperature[which(!is.na(.x$value))])
@@ -449,11 +448,23 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
         pv <- rstatix::anova_test(data = as.data.frame(.x), dv = value, wid = rep, within = temperature)
         pv <- rstatix::get_anova_table(pv, correction = "none")
         pv <- pv$p
+
+        st <- .x %>% dplyr::group_by(temperature) %>%
+          dplyr::summarise(value = mean(value, na.rm = TRUE))
+        if(is.na(st$value[which(st$temperature == "37C")])){
+          st <- mean(diff(st$value[which(st$temperature != "37C")]), na.rm = TRUE)
+        }
+        else{
+          st$value <-  st$value - st$value[which(st$temperature == "37C")]
+          st <- st$value[which(st$temperature != "37C")]
+          st <- mean(st, na.rm = TRUE)
+        }
       }
       else{
         pv <- 1
+        st <- NA
       }
-      return(data.frame(is_stab = pv <= 0.05))
+      return(data.frame(is_stab = pv <= 0.05, stab_sign = st))
     })
   diff_IS_plot <- dplyr::full_join(diff_IS_plot, stab, by = c("id", "Gene", "treatment"))
   diff_IS_plot$category[which(is.na(diff_IS_plot$category) & !diff_IS_plot$is_stab)] <- "CN"
@@ -476,7 +487,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
             }
 
             if(stability == "C"){
-              if(as.numeric(x[["IS"]]) >= 0){
+              if(as.numeric(x[["stab_sign"]]) >= 0){
                 stability <- paste0(stability, "+")
               }
               else{

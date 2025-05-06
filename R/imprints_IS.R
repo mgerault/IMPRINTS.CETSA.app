@@ -405,109 +405,115 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   diff_IS_plot$criteria_curve <- NULL
   diff_IS_plot$curve <- NULL
 
-  for_categorize <- diff_IS[,grep("^id$|^Gene$|^\\d{2}C_|^pval37C_", colnames(diff_IS))]
-  for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Gene) %>%
-    tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
-    tidyr::spread(key, value)
+  if(nrow(diff_IS_plot)){ # at least one hit
+    for_categorize <- diff_IS[,grep("^id$|^Gene$|^\\d{2}C_|^pval37C_", colnames(diff_IS))]
+    for_categorize <- for_categorize %>% tidyr::gather("key", "value", -id, -Gene) %>%
+      tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
+      tidyr::spread(key, value)
 
-  if(adj_pv_method == "none"){
-    cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
-      dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
-      dplyr::reframe(pval = find_cutoff(pval37C, BH))
-  }
-  else{ # single p-value already adjusted --> taking p-value below 0.05 for all
-    cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
-      dplyr::reframe(pval = 0.05)
-  }
+    if(adj_pv_method == "none"){
+      cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
+        dplyr::mutate(BH = (order(order(pval37C))/length(pval37C))*FDR_category) %>% # FDR of 10% for significant 37
+        dplyr::reframe(pval = find_cutoff(pval37C, BH))
+    }
+    else{ # single p-value already adjusted --> taking p-value below 0.05 for all
+      cutoff <- for_categorize %>% dplyr::group_by(treatment) %>%
+        dplyr::reframe(pval = 0.05)
+    }
 
 
-  diff_IS_plot <- left_join(diff_IS_plot, for_categorize, by = c("id", "Gene", "treatment"))
-  diff_IS_plot$category <- NA
+    diff_IS_plot <- left_join(diff_IS_plot, for_categorize, by = c("id", "Gene", "treatment"))
+    diff_IS_plot$category <- NA
 
-  # if ones want to add category ND for 'undetermined' when 37C is not measured
-  # diff_IS_plot$category[which(is.na(diff_IS_plot[["37C"]]))] <- "ND"
+    # if ones want to add category ND for 'undetermined' when 37C is not measured
+    # diff_IS_plot$category[which(is.na(diff_IS_plot[["37C"]]))] <- "ND"
 
-  diff_IS_plot <- diff_IS_plot %>% group_by(id, Gene, treatment) %>%
-    mutate(is_C = pval37C <= cutoff$pval[which(cutoff$treatment == treatment)])
+    diff_IS_plot <- diff_IS_plot %>% group_by(id, Gene, treatment) %>%
+      mutate(is_C = pval37C <= cutoff$pval[which(cutoff$treatment == treatment)])
 
-  diff_IS_plot$category[which(!diff_IS_plot$is_C | is.na(diff_IS_plot$is_C))] <- "NC"
+    diff_IS_plot$category[which(!diff_IS_plot$is_C | is.na(diff_IS_plot$is_C))] <- "NC"
 
-  ## performing repeated measure anova to see if the fold-changes depends on the temperature --> know if (de)stabilize
-  stab <- data_diff[which(!is.na(match(data_diff$id, diff_IS_plot$id))),
-                    -c((ncol(data_diff)-2):ncol(data_diff))] %>%
-    tidyr::gather("key", "value", -id, -description) %>%
-    tidyr::separate(key, into = c("temperature", "rep", "treatment"), sep = "_")
-  stab$description <- stringr::str_extract(paste0(stab$description, " "), "(?<=GN=).+?(?= )")
-  colnames(stab)[2] <- "Gene"
-  stab <- dplyr::left_join(diff_IS_plot[, c("id", "Gene", "treatment")], stab, by = c("id", "Gene", "treatment"))
-  stab <- stab %>% dplyr::group_by(id, Gene, treatment) %>%
-    dplyr::group_modify(~ {
-      ntemp <- unique(.x$temperature[which(!is.na(.x$value))])
-      ntemp <- length(ntemp)
-      if(ntemp > 1){
-        pv <- rstatix::anova_test(data = as.data.frame(.x), dv = value, wid = rep, within = temperature)
-        pv <- rstatix::get_anova_table(pv, correction = "none")
-        pv <- pv$p
+    ## performing repeated measure anova to see if the fold-changes depends on the temperature --> know if (de)stabilize
+    stab <- data_diff[which(!is.na(match(data_diff$id, diff_IS_plot$id))),
+                      -c((ncol(data_diff)-2):ncol(data_diff))] %>%
+      tidyr::gather("key", "value", -id, -description) %>%
+      tidyr::separate(key, into = c("temperature", "rep", "treatment"), sep = "_")
+    stab$description <- stringr::str_extract(paste0(stab$description, " "), "(?<=GN=).+?(?= )")
+    colnames(stab)[2] <- "Gene"
+    stab <- dplyr::left_join(diff_IS_plot[, c("id", "Gene", "treatment")], stab, by = c("id", "Gene", "treatment"))
+    stab <- stab %>% dplyr::group_by(id, Gene, treatment) %>%
+      dplyr::group_modify(~ {
+        ntemp <- unique(.x$temperature[which(!is.na(.x$value))])
+        ntemp <- length(ntemp)
+        if(ntemp > 1){
+          pv <- rstatix::anova_test(data = as.data.frame(.x), dv = value, wid = rep, within = temperature)
+          pv <- rstatix::get_anova_table(pv, correction = "none")
+          pv <- pv$p
 
-        st <- .x %>% dplyr::group_by(temperature) %>%
-          dplyr::summarise(value = mean(value, na.rm = TRUE))
-        if(is.na(st$value[which(st$temperature == "37C")])){
-          st <- mean(diff(st$value[which(st$temperature != "37C")]), na.rm = TRUE)
+          st <- .x %>% dplyr::group_by(temperature) %>%
+            dplyr::summarise(value = mean(value, na.rm = TRUE))
+          if(is.na(st$value[which(st$temperature == "37C")])){
+            st <- mean(diff(st$value[which(st$temperature != "37C")]), na.rm = TRUE)
+          }
+          else{
+            st$value <-  st$value - st$value[which(st$temperature == "37C")]
+            st <- st$value[which(st$temperature != "37C")]
+            st <- mean(st, na.rm = TRUE)
+          }
         }
         else{
-          st$value <-  st$value - st$value[which(st$temperature == "37C")]
-          st <- st$value[which(st$temperature != "37C")]
-          st <- mean(st, na.rm = TRUE)
+          pv <- 1
+          st <- NA
         }
-      }
-      else{
-        pv <- 1
-        st <- NA
-      }
-      return(data.frame(is_stab = pv <= 0.05, stab_sign = st))
-    })
-  diff_IS_plot <- dplyr::full_join(diff_IS_plot, stab, by = c("id", "Gene", "treatment"))
-  diff_IS_plot$category[which(is.na(diff_IS_plot$category) & !diff_IS_plot$is_stab)] <- "CN"
-  diff_IS_plot$category[which(is.na(diff_IS_plot$category))] <- "CC"
+        return(data.frame(is_stab = pv <= 0.05, stab_sign = st))
+      })
+    diff_IS_plot <- dplyr::full_join(diff_IS_plot, stab, by = c("id", "Gene", "treatment"))
+    diff_IS_plot$category[which(is.na(diff_IS_plot$category) & !diff_IS_plot$is_stab)] <- "CN"
+    diff_IS_plot$category[which(is.na(diff_IS_plot$category))] <- "CC"
 
-  if(format_category == "9"){
-    diff_IS_plot$category <- apply(diff_IS_plot, 1,
-          function(x){
-            cat <- strsplit(x[["category"]], "")[[1]]
-            abundance <- cat[1]
-            stability <- cat[2]
+    if(format_category == "9"){
+      diff_IS_plot$category <- apply(diff_IS_plot, 1,
+                                     function(x){
+                                       cat <- strsplit(x[["category"]], "")[[1]]
+                                       abundance <- cat[1]
+                                       stability <- cat[2]
 
-            if(abundance == "C"){
-              if(as.numeric(x[["37C"]]) >= 0){
-                abundance <- paste0(abundance, "+")
-              }
-              else{
-                abundance <- paste0(abundance, "-")
-              }
-            }
+                                       if(abundance == "C"){
+                                         if(as.numeric(x[["37C"]]) >= 0){
+                                           abundance <- paste0(abundance, "+")
+                                         }
+                                         else{
+                                           abundance <- paste0(abundance, "-")
+                                         }
+                                       }
 
-            if(stability == "C"){
-              if(as.numeric(x[["stab_sign"]]) >= 0){
-                stability <- paste0(stability, "+")
-              }
-              else{
-                stability <- paste0(stability, "-")
-              }
-            }
+                                       if(stability == "C"){
+                                         if(as.numeric(x[["stab_sign"]]) >= 0){
+                                           stability <- paste0(stability, "+")
+                                         }
+                                         else{
+                                           stability <- paste0(stability, "-")
+                                         }
+                                       }
 
-            paste0(abundance, stability)
-          })
+                                       paste0(abundance, stability)
+                                     })
+    }
+    diff_IS_plot <- diff_IS_plot[,c("id", "Gene", "treatment", "Combinedpval", "IS", "category")]
+
+    for_categorize <- diff_IS_plot[,c("id", "Gene", "treatment", "category")] %>%
+      tidyr::spread(treatment, category)
+    colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
+    diff_IS <- diff_IS %>% dplyr::left_join(for_categorize, by = c("id", "Gene"))
+
+    diff_IS[,grep("category", colnames(diff_IS))] <- apply(as.data.frame(diff_IS[,grep("category", colnames(diff_IS))]),
+                                                           2, function(x) tidyr::replace_na(x, "NN")
+                                                           )
   }
-  diff_IS_plot <- diff_IS_plot[,c("id", "Gene", "treatment", "Combinedpval", "IS", "category")]
-
-  for_categorize <- diff_IS_plot[,c("id", "Gene", "treatment", "category")] %>%
-    tidyr::spread(treatment, category)
-  colnames(for_categorize)[-c(1:2)] <- paste0("category_", colnames(for_categorize)[-c(1:2)])
-  diff_IS <- diff_IS %>% dplyr::left_join(for_categorize, by = c("id", "Gene"))
-
-  diff_IS[,grep("category", colnames(diff_IS))] <- apply(as.data.frame(diff_IS[,grep("category", colnames(diff_IS))]),
-                                                         2, function(x) tidyr::replace_na(x, "NN")
-                                                         )
+  else{# no hits were found
+    diff_IS_plot$category <- character(0)
+    diff_IS[,paste0("category_", as.character(cond))] <- "NN"
+  }
 
   message("Saving datas...")
   openxlsx::write.xlsx(diff_IS, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "hits_analysis_tab.xlsx"))

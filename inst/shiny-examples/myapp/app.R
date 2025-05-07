@@ -4565,9 +4565,11 @@ server <- function(input, output, session){
       names(missing_columns) <- gsub("\\^|\\$", "", names(missing_columns))
       if(missing_columns$Fisher_ == 0){
         missing_columns$Fisher_ <- NULL
+        pvname <- "Combinedpval"
       }
       else if(missing_columns$Combinedpval_ == 0){
         missing_columns$Combinedpval_ <- NULL
+        pvname <- "Fisher"
       }
       missing_columns <- unlist(missing_columns)
 
@@ -4585,7 +4587,7 @@ server <- function(input, output, session){
         output$hitsum_daba_check <- renderText({
           shiny::HTML("")
         })
-        dat <- dat[,grep("^id$|^Fisher_|^IS_|^GlobalScore_|^category_", colnames(dat))]
+        dat <- dat[,grep(paste0("^id$|^IS_|^GlobalScore_|^category_|^", pvname, "_"), colnames(dat))]
         dat <- dat %>% tidyr::gather("key", "value", -id) %>%
           tidyr::separate(key, into = c("key", "treatment"), sep = "_") %>%
           tidyr::spread(key, value)
@@ -4593,7 +4595,7 @@ server <- function(input, output, session){
         nn <- dat %>% dplyr::filter(category == "NN")
         dif <- DIF_daba()[,1:2]
         nn <- dplyr::left_join(nn, dif, by = "id")
-        nn <- nn[,c("id", "description", "treatment", "category", "Fisher", "IS", "GlobalScore")]
+        nn <- nn[,c("id", "description", "treatment", "category", pvname, "IS", "GlobalScore")]
         NN_daba$x <- nn
 
         dat <- dat %>% dplyr::filter(category != "NN")
@@ -7708,7 +7710,7 @@ server <- function(input, output, session){
     else if(input$drug_clus == "base"){
       ch <- "No score"
       if(!is.null(clus_data())){
-        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "IS", "GlobalScore")]
+        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "Combinedpval", "IS", "GlobalScore")]
         if(length(n)){
           ch <- n
         }
@@ -7867,7 +7869,7 @@ server <- function(input, output, session){
     else if(input$drug_clus == "base"){
       ch <- "No score"
       if(!is.null(clus_data())){
-        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "IS", "GlobalScore")]
+        n <- colnames(clus_data())[colnames(clus_data()) %in% c("Fisher", "Combinedpval", "IS", "GlobalScore")]
         if(length(n)){
           ch <- n
         }

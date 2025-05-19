@@ -535,12 +535,16 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                            ),
                                                   conditionalPanel(condition = "output.toplot_pep_dataup",
                                                                    fluidRow(column(3, selectInput("condition_plotjoinpep", "Select one or more treatments",
-                                                                                                  choices = NULL,
-                                                                                                  multiple = TRUE)
+                                                                                                  choices = NULL, multiple = TRUE),
+                                                                                   selectInput("RESP_plotjoinpep", "Select a plot format", choices = c("Individual plot per petide" = "individual_peptide",
+                                                                                                                                                       "RESP plot per protein" = "RESP_peptide",
+                                                                                                                                                       "All peptides per proteins" = "peptide_one"),
+                                                                                               selected = "individual_peptide")
                                                                                    ),
-                                                                            column(3, checkboxInput("RESP_plotjoinpep", "Plot in RESP format", FALSE)),
                                                                             column(3, numericInput("lay_bar1_plotjoinpep", "Type the number of plot per row", min = 1, max = 10, step = 1, value = 2),
                                                                                       numericInput("lay_bar2_plotjoinpep", "Type the number of plot per column", min = 1, max = 10, step = 1, value = 2)),
+                                                                            column(3, numericInput("pdfw_plotjoinpep", "Type the width of the pdf page", min = 1, step = 1, value = 12),
+                                                                                      numericInput("pdfh_plotjoinpep", "Type the height of the pdf page", min = 1, step = 1, value = 12)),
                                                                             column(3, textInput("pdftit_plotjoinpep", "Choose a name for your pdf file", "barplot"))
                                                                             ),
                                                                    fluidRow(column(4, checkboxInput("ch_own_col_plotjoinpep", "Choose your own color", FALSE)),
@@ -3461,10 +3465,11 @@ server <- function(input, output, session){
           nbc <- length(input$condition_plotjoinpep)
           COL <- OWN_color_plotjoinpep$ch
           if(nbc == length(COL)){
-            imprints_barplotting_peptides(data_toplot, RESP = input$RESP_plotjoinpep,
+            imprints_barplotting_peptides(data_toplot, format = input$RESP_plotjoinpep,
                                           save_pdf = TRUE, ret_plot = FALSE,
                                           colorpanel = COL, treatmentlevel = input$condition_plotjoinpep,
                                           layout = c(input$lay_bar1_plotjoinpep, input$lay_bar2_plotjoinpep),
+                                          pdfwidth = input$pdfw_plotjoinpep, pdfheight = input$pdfh_plotjoinpep,
                                           pdfname = input$pdftit_plotjoinpep)
             showNotification("Bar plot saved !",  type = "message")
           }
@@ -3473,10 +3478,11 @@ server <- function(input, output, session){
           }
         }
         else{
-          imprints_barplotting_peptides(data_toplot, RESP = input$RESP_plotjoinpep,
+          imprints_barplotting_peptides(data_toplot, format = input$RESP_plotjoinpep,
                                         save_pdf = TRUE, ret_plot = FALSE,
                                         treatmentlevel = input$condition_plotjoinpep,
                                         layout = c(input$lay_bar1_plotjoinpep, input$lay_bar2_plotjoinpep),
+                                        pdfwidth = input$pdfw_plotjoinpep, pdfheight = input$pdfh_plotjoinpep,
                                         pdfname = input$pdftit_plotjoinpep)
           showNotification("Bar plot saved !",  type = "message")
         }

@@ -127,7 +127,7 @@ imprints_barplotting_categorize_peptides <- function(data, data_cleaved, treatme
     for(p in data_cleaved$id){
       # plotting summary plot
       X <- data_diff_summary[which(data_diff_summary$Master.Protein.Accessions == p),]
-      l[[paste0(p, "_summary")]] <- imprints_barplotting_peptides(X, RESP = TRUE, colorpanel = color)
+      l[[paste0(p, "_summary")]] <- imprints_barplotting_peptides(X, format = RESP_peptide, colorpanel = color)
       # plotting individual peptides
       X <- data_diff_peptides[which(data_diff_peptides$Master.Protein.Accessions == p),]
       l[[paste0(p, "_peptides")]] <- imprints_barplotting_peptides(X, colorpanel = color)

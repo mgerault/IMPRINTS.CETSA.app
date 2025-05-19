@@ -7,8 +7,11 @@
 #' @param treatmentlevel a vector of treatment labels, such as c("DMSO","TNFa","AT26533")
 #'                       the order determines the arrangement, so in this case DMSO
 #'                       group would be the first group
-#' @param RESP Logical to tell if you want to plot IMPRINTS profile in the RESP format (\code{\link{imprints_cleaved_peptides}}).
-#'             In order to be able to do it, you'll need exactly 2 peptide sequence per protein.
+#' @param format Format of the plot; either \code{individual_peptide} which will plot each peptide individually as
+#' it would be done for each protein with \code{\link{imprints_barplotting_app}}, \code{RESP_peptide} which will plot
+#' the RESP plot (you'll need exactly two 'peptides' per protein) or \code{peptide_one} which will plot all peptides
+#' in one plot for each protein.
+#' Default is \code{individual_peptide}.
 #' @param printBothName A logical to tell if you want to print the both protein names on the plot
 #' @param printGeneName A logical to tell if you want to print the gene names on the plot
 #' @param witherrorbar A logical to print or not the error bar on the plot
@@ -39,7 +42,8 @@
 #' @export
 #'
 
-imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level(data), RESP = FALSE,
+imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level(data),
+                                          format = c("individual_peptide", "RESP_peptide", "peptide_one"),
                                           printBothName = TRUE, printGeneName = FALSE,
                                           witherrorbar = TRUE, withpoint = FALSE, pointperrep = TRUE,
                                           layout = NULL, colorpanel = PaletteWithoutGrey(treatmentlevel),
@@ -48,6 +52,8 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
                                           ret_plot = TRUE, save_pdf = FALSE,
                                           toplabel = "IMPRINTS-CETSA bar plotting", leftlabel = "", bottomlabel = "",
                                           pdfname = "barplot",  pdfheight = 12, pdfwidth = 12){
+  format <- match.arg(format)
+
   needed_columns <- c("Master.Protein.Accessions", "description",
                       "Positions.in.Master.Proteins", "Annotated.Sequence",
                       "Modifications")
@@ -68,7 +74,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
     data$countNum <- NULL
   }
 
-  if(RESP){
+  if(format == "RESP_peptide"){
     check_resp <- data %>%
       group_by(Master.Protein.Accessions) %>%
       count()
@@ -80,7 +86,9 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
   }
 
   ### function to plot IMPRINTS profiles
-  barplotting <- function(d1, RESP = TRUE){
+  barplotting <- function(d1, format = c("individual_peptide", "RESP_peptide", "peptide_one")){
+    format <- match.arg(format)
+
     if (!log2scale) {
       minreading = 0.5
       maxreading = 2
@@ -108,7 +116,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
       }
     }
 
-    if(RESP){
+    if(format == "RESP_peptide"){
       ord_position <- unique(d1$global.position)
       ord_position <- gsub(".*\\[|\\]", "", sub(";.*", "", ord_position))
       ord_position <- lapply(strsplit(ord_position, "-|~"),
@@ -117,6 +125,43 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
                              })
       ord_position <- unique(d1$global.position)[order(unlist(ord_position))]
       d1$global.position <- factor(d1$global.position, levels = ord_position)
+    }
+    else if(format == "peptide_one"){
+      pos <- strsplit(d1$global.position, "(?<=-\\d{1,4}\\]) (?=\\d{1}x)", perl = TRUE)
+      d1$Positions.in.Master.Proteins <- sapply(pos, "[[", 1)
+      d1$Modifications <- sapply(pos, "[[", 2)
+
+      # keeping only master protein
+      d1$Positions.in.Master.Proteins <- sub(".* ", "", d1$Positions.in.Master.Proteins)
+      d1$Positions.in.Master.Proteins <- gsub("\\[|\\]", "", d1$Positions.in.Master.Proteins)
+
+      # formating modification
+      d1$Modifications <- unlist(lapply(strsplit(d1$Modifications, "\\];"),
+                                        function(y){
+                                          y <- y[-grep("TMT", y)]
+                                          if(length(y)){
+                                            y <- sub("\\d{1}x", "", y)
+                                            y <- sub("^ ", "", y)
+                                            y <- gsub("\\[|\\]", "", y)
+                                            y <- paste(y, collapse = "\n")
+                                          }
+                                          else{
+                                            y <- ""
+                                          };
+                                          y
+                                        })
+      )
+
+      # formating labels/title
+      d1$Positions.in.Master.Proteins <- paste0(d1$Positions.in.Master.Proteins, "\n",
+                                                d1$Modifications)
+      d1$Positions.in.Master.Proteins <- factor(d1$Positions.in.Master.Proteins,
+                                                unique(d1$Positions.in.Master.Proteins)[order(sapply(strsplit(gsub("\\[|\\]|\n.*", "",
+                                                                                                                   unique(d1$Positions.in.Master.Proteins)
+                                                ),
+                                                "-"),
+                                                function(y) sum(as.numeric(y)))
+                                                )])
     }
 
     d1$QP <- FALSE
@@ -175,7 +220,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
       q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
     }
     if(withpoint){
-      if(RESP){
+      if(format != "individual_peptide"){
         d1_pts <- d1 %>%
           group_by(id, temperature, treatment, condition, global.position) %>%
           group_modify(~ {
@@ -221,11 +266,11 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
       }
     }
 
-    if(RESP){
+    if(format == "RESP_peptide"){
       q <- q + facet_wrap(~global.position) +
         cowplot::theme_cowplot() +
         theme(text = element_text(size = 10),
-              strip.text.x = element_text(size = 8),
+              strip.text.x = element_text(size = rel(1.1)),
               strip.background.x = element_rect(fill = "white", color = "black"),
               plot.title = element_text(hjust = 0.5,size = rel(0.8)),
               legend.background = element_rect(fill = NULL),
@@ -236,13 +281,34 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
               panel.grid.minor = element_blank(), strip.background = element_blank(),
               axis.line.x = element_line(), axis.line.y = element_line(),
               axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.7)),
+              axis.title.x = element_blank(),
               aspect.ratio = ratio)
     }
-    else{
+    else if(format == "peptide_one"){
+      q <- q  + facet_wrap(~Positions.in.Master.Proteins, strip.position = "bottom", nrow = 1) +
+        cowplot::theme_cowplot() +
+        theme(text = element_text(size = 10),
+              strip.background = element_blank(),
+              strip.placement = "outside",
+              strip.text = element_text(face = "bold", angle = 90, size = rel(1.1)),
+              plot.title = element_text(hjust = 0.5,size = rel(0.8)),
+              legend.background = element_rect(fill = NULL),
+              legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.15,"cm"),
+              legend.title = element_text(face = "bold"),
+              legend.text = element_text(size = rel(0.7)),
+              legend.justification = "center",
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.line.x = element_line(), axis.line.y = element_line(),
+              axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.7)),
+              axis.title.x = element_blank(),
+              aspect.ratio = ratio)
+    }
+    else if(format == "individual_peptide"){
       q <- q  +
         cowplot::theme_cowplot() +
         theme(text = element_text(size = 10),
-              strip.text.x = element_text(size = 8),
+              strip.text.x = element_text(size = rel(1.1)),
               plot.title = element_text(hjust = 0.5,size = rel(0.8)),
               legend.background = element_rect(fill = NULL),
               legend.key.height = unit(0.5, "cm"), legend.key.width = unit(0.15,"cm"),
@@ -252,6 +318,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
               panel.grid.minor = element_blank(), strip.background = element_blank(),
               axis.line.x = element_line(), axis.line.y = element_line(),
               axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.7)),
+              axis.title.x = element_blank(),
               aspect.ratio = ratio)
     }
 
@@ -352,7 +419,7 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
                             )
 
   message("Generating fitted plot, pls wait.")
-  if(RESP){
+  if(format != "individual_peptide"){
     cdata$id <- as.character(cdata$id)
 
     cdata$global.position <- unlist(lapply(strsplit(cdata$id, "\n"),
@@ -362,15 +429,11 @@ imprints_barplotting_peptides <- function(data, treatmentlevel = get_treat_level
 
     cdata$id <- unlist(lapply(lapply(strsplit(cdata$id, "\n"),
                                      "[", 1:ifelse(printBothName, 3, 2)),
-                              paste, collapse = "\n")
-                       )
+                              paste, collapse = "\n"))
     cdata$id <- factor(cdata$id, levels = unique(cdata$id), ordered = TRUE)
+  }
 
-    plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting, RESP = RESP)
-  }
-  else{
-    plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting, RESP = RESP)
-  }
+  plots <- plyr::dlply(cdata, plyr::.(id), .fun = barplotting, format = format)
 
   if(save_pdf){
     message("Start saving plot")

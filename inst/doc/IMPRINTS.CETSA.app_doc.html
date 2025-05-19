@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2024-12-03" />
+<meta name="date" content="2025-05-19" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1571,7 +1571,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2024-12-03</h4>
+<h4 class="date">2025-05-19</h4>
 
 </div>
 
@@ -2292,13 +2292,15 @@ parameter <code>mode</code> set to <code>&quot;partial&quot;</code>.</p>
 <h4><span class="math inline">\(\underline{7.\space Plot\space
 your\space results}\)</span></h4>
 <p>You can use the <code>imprints_barplotting_peptides</code> function
-to plot your final results. Here we will plot in the RESP effet to
+to plot your final results. Here we will plot in the RESP effect to
 directly compare the two IMPRINTS profiles from the two parts of the
-proteins obtained. For that you can set the parameter <code>RESP</code>
-to <code>TRUE</code>. If you want just to plot each peptide, set it to
-<code>FALSE</code>.</p>
+proteins obtained. For that you can set the parameter
+<code>format</code> to <code>RESP_peptide</code>. If you want just to
+plot each peptide, set it to <code>individual_peptide</code> or if you
+prefer to visualize all peptide per protein in one plot set it to
+<code>peptide_one</code>.</p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
-<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="fu">imprints_barplotting_peptides</span>(peptides_cleaved, <span class="at">RESP =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="fu">imprints_barplotting_peptides</span>(peptides_cleaved, <span class="at">format =</span> <span class="st">&quot;RESP_peptide&quot;</span>,</span>
 <span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>                              <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
 </div>
 </div>

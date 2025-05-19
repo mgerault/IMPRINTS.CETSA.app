@@ -351,6 +351,6 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 
 ## ----eval=FALSE---------------------------------------------------------------
 # # save the imprints in a pdf
-# imprints_barplotting_peptides(peptides_cleaved, RESP = TRUE,
+# imprints_barplotting_peptides(peptides_cleaved, format = "RESP_peptide",
 #                               save_pdf = T, ret_plot = F)
 

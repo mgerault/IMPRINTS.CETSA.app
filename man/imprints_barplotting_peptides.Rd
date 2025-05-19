@@ -7,7 +7,7 @@
 imprints_barplotting_peptides(
   data,
   treatmentlevel = get_treat_level(data),
-  RESP = FALSE,
+  format = c("individual_peptide", "RESP_peptide", "peptide_one"),
   printBothName = TRUE,
   printGeneName = FALSE,
   witherrorbar = TRUE,
@@ -37,8 +37,11 @@ imprints_barplotting_peptides(
 the order determines the arrangement, so in this case DMSO
 group would be the first group}
 
-\item{RESP}{Logical to tell if you want to plot IMPRINTS profile in the RESP format (\code{\link{imprints_cleaved_peptides}}).
-In order to be able to do it, you'll need exactly 2 peptide sequence per protein.}
+\item{format}{Format of the plot; either \code{individual_peptide} which will plot each peptide individually as
+it would be done for each protein with \code{\link{imprints_barplotting_app}}, \code{RESP_peptide} which will plot
+the RESP plot (you'll need exactly two 'peptides' per protein) or \code{peptide_one} which will plot all peptides
+in one plot for each protein.
+Default is \code{individual_peptide}.}
 
 \item{printBothName}{A logical to tell if you want to print the both protein names on the plot}
 

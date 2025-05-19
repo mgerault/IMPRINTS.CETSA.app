@@ -660,12 +660,12 @@ peptides_cleaved <- imprints_join_peptides(peptides_cleaved, mode = "partial")
 
 ####  $\underline{7.\space Plot\space your\space results}$
 
-You can use the `imprints_barplotting_peptides` function to plot your final results. Here we will plot in the RESP effet to directly compare the two IMPRINTS profiles from the two parts of the proteins obtained. For that you can set the parameter `RESP` to `TRUE`.
-If you want just to plot each peptide, set it to `FALSE`.
+You can use the `imprints_barplotting_peptides` function to plot your final results. Here we will plot in the RESP effect to directly compare the two IMPRINTS profiles from the two parts of the proteins obtained. For that you can set the parameter `format` to `RESP_peptide`.
+If you want just to plot each peptide, set it to `individual_peptide` or if you prefer to visualize all peptide per protein in one plot set it to `peptide_one`.
 
 ```{r, eval=FALSE}
 # save the imprints in a pdf
-imprints_barplotting_peptides(peptides_cleaved, RESP = TRUE,
+imprints_barplotting_peptides(peptides_cleaved, format = "RESP_peptide",
                               save_pdf = T, ret_plot = F)
 ```  
 

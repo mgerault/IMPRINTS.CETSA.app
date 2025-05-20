@@ -304,6 +304,10 @@ ggplot(data.frame(x = c(1,1,2,2,1), y = c(1,2,2,1,1)), aes(x,y)) + geom_point() 
 #                                          color = "red")
 
 ## ----eval=FALSE---------------------------------------------------------------
+# ptms_ambiguity <- imprints_ptms_peptides(peptides_norm, peptidesall_norm_diff, control = "Vehicle",
+#                                          PTM_direction = "both")
+
+## ----eval=FALSE---------------------------------------------------------------
 # isoform_ambiguity <- imprints_isoform_peptides(peptides_norm, peptidesall_norm_diff,
 #                                                control = "Vehicle", fasta = "path/to/your/FASTA_file.fasta")
 

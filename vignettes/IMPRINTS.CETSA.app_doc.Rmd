@@ -594,7 +594,15 @@ imprints_barplotting_categorize_peptides(peptides_norm, potential_cleaved_cat,
                                          color = "red")
 ```  
 
-However, when a hit is returned by `imprints_cleaved_peptides`, it means that this protein has a peptide position where the IMPRINTS profiles of the two obtained parts are significantly different. This difference can be caused by protein modification and mainly proteolysis as discussed previously. But if a splicing form of a protein is more expressed than its canonical form, a significant difference in the profiles can also occur, i.e. the common part of the sequence between the canonical form and the isoform should shift the same way but not the different part. To refilter the hit list and give the possible splicing forms which could be more expressed based on the output of `imprints_cleaved_peptides` and the sequence alignments of the isoform sequence and its corresponding canonical form, you can use the function `imprints_isoform_peptides`. 
+However, when a hit is returned by `imprints_cleaved_peptides`, it means that this protein has a peptide position where the IMPRINTS profiles of the two obtained parts are significantly different. This difference can be caused by post translational modifications (PTMs) and, our interest here, proteolysis. To refilter the hits and see how many RESP could be due to PTMs, you can map your results to the PhosphoSitePlus database (https://www.phosphosite.org) with the function `imprints_ptms_peptides`. This function will return all peptides being likely modified. The function assume that the mapped PTMs are modifications that weren't added during the peptide identification. Hence if a peptide is 'hyper-modified' its non modified counterpart should have significantly negative fold-changes and vice versa. You can set in `imprints_ptms_peptides` if you want to look for solely for hyper, hypo or both.
+It will return and save an xlsx file for you with the results.
+
+```{r, eval=FALSE}
+ptms_ambiguity <- imprints_ptms_peptides(peptides_norm, peptidesall_norm_diff, control = "Vehicle",
+                                         PTM_direction = "both")
+``` 
+
+Other than PTMs, this significant difference can also be due to alternative splicing forms. Indeed, if a splicing form of a protein is more expressed than its canonical form, a significant difference in the profiles can also occur, i.e. the common part of the sequence between the canonical form and the isoform should shift the same way but not the different part. To refilter the hit list and give the possible splicing forms which could be more expressed based on the output of `imprints_cleaved_peptides` and the sequence alignments of the isoform sequence and its corresponding canonical form, you can use the function `imprints_isoform_peptides`. 
 
 ```{r, eval=FALSE}
 isoform_ambiguity <- imprints_isoform_peptides(peptides_norm, peptidesall_norm_diff,

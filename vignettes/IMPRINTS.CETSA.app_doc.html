@@ -11,7 +11,7 @@
 
 <meta name="author" content="Marc-Antoine Gerault" />
 
-<meta name="date" content="2025-05-19" />
+<meta name="date" content="2025-05-20" />
 
 <title>Analyze IMPRINTS or IMPRINTS MS-CETSA datasets in a user friendly way</title>
 
@@ -1571,7 +1571,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analyze IMPRINTS or IMPRINTS MS-CETSA
 datasets in a user friendly way</h1>
 <h4 class="author">Marc-Antoine Gerault</h4>
-<h4 class="date">2025-05-19</h4>
+<h4 class="date">2025-05-20</h4>
 
 </div>
 
@@ -2213,18 +2213,32 @@ the resulting xlsx file.</p>
 <p>However, when a hit is returned by
 <code>imprints_cleaved_peptides</code>, it means that this protein has a
 peptide position where the IMPRINTS profiles of the two obtained parts
-are significantly different. This difference can be caused by protein
-modification and mainly proteolysis as discussed previously. But if a
-splicing form of a protein is more expressed than its canonical form, a
-significant difference in the profiles can also occur, i.e. the common
-part of the sequence between the canonical form and the isoform should
-shift the same way but not the different part. To refilter the hit list
-and give the possible splicing forms which could be more expressed based
-on the output of <code>imprints_cleaved_peptides</code> and the sequence
-alignments of the isoform sequence and its corresponding canonical form,
-you can use the function <code>imprints_isoform_peptides</code>.</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>isoform_ambiguity <span class="ot">&lt;-</span> <span class="fu">imprints_isoform_peptides</span>(peptides_norm, peptidesall_norm_diff,</span>
-<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>                                               <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>, <span class="at">fasta =</span> <span class="st">&quot;path/to/your/FASTA_file.fasta&quot;</span>)</span></code></pre></div>
+are significantly different. This difference can be caused by post
+translational modifications (PTMs) and, our interest here, proteolysis.
+To refilter the hits and see how many RESP could be due to PTMs, you can
+map your results to the PhosphoSitePlus database (<a href="https://www.phosphosite.org" class="uri">https://www.phosphosite.org</a>) with the function
+<code>imprints_ptms_peptides</code>. This function will return all
+peptides being likely modified. The function assume that the mapped PTMs
+are modifications that weren’t added during the peptide identification.
+Hence if a peptide is ‘hyper-modified’ its non modified counterpart
+should have significantly negative fold-changes and vice versa. You can
+set in <code>imprints_ptms_peptides</code> if you want to look for
+solely for hyper, hypo or both. It will return and save an xlsx file for
+you with the results.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>ptms_ambiguity <span class="ot">&lt;-</span> <span class="fu">imprints_ptms_peptides</span>(peptides_norm, peptidesall_norm_diff, <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>,</span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>                                         <span class="at">PTM_direction =</span> <span class="st">&quot;both&quot;</span>)</span></code></pre></div>
+<p>Other than PTMs, this significant difference can also be due to
+alternative splicing forms. Indeed, if a splicing form of a protein is
+more expressed than its canonical form, a significant difference in the
+profiles can also occur, i.e. the common part of the sequence between
+the canonical form and the isoform should shift the same way but not the
+different part. To refilter the hit list and give the possible splicing
+forms which could be more expressed based on the output of
+<code>imprints_cleaved_peptides</code> and the sequence alignments of
+the isoform sequence and its corresponding canonical form, you can use
+the function <code>imprints_isoform_peptides</code>.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>isoform_ambiguity <span class="ot">&lt;-</span> <span class="fu">imprints_isoform_peptides</span>(peptides_norm, peptidesall_norm_diff,</span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>                                               <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>, <span class="at">fasta =</span> <span class="st">&quot;path/to/your/FASTA_file.fasta&quot;</span>)</span></code></pre></div>
 <p>It will need the FASTA file you used for your search and it will then
 make a query to Uniprot to retrieve all isoforms of each of your
 proteins. Next, it will call BLAST to align the isoform sequences and
@@ -2238,9 +2252,9 @@ canonical form and see how the aligned peptides shift to evaluate how
 likely it is that the RESP effect can be explained by an alternative
 splicing form, you can use the
 <code>imprints_plotting_isoform_peptides</code> like so:</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="fu">imprints_plotting_isoform_peptides</span>(peptides_norm, isoform_ambiguity,</span>
-<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>                                   <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>, <span class="at">treatment =</span> <span class="st">&quot;DrugB&quot;</span>,</span>
-<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>                                   <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="fu">imprints_plotting_isoform_peptides</span>(peptides_norm, isoform_ambiguity,</span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>                                   <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>, <span class="at">treatment =</span> <span class="st">&quot;DrugB&quot;</span>,</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>                                   <span class="at">ret_plot =</span> <span class="cn">FALSE</span>, <span class="at">save_pdf =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>This will save each plot in a pdf file.</p>
 </div>
 <div id="underline6.space-multiplespace-datasetspace-analysis" class="section level4">
@@ -2250,43 +2264,43 @@ dataset\space analysis}\)</span></h4>
 to the second treatment, potentially only keeping hits categorized as
 ‘RESP’; here we will keep all. You can then compute the resulting
 datasets from the RESP analysis.</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="do">## Drug A</span></span>
-<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
-<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;_DrugB$&quot;</span>, <span class="fu">colnames</span>(peptides_norm))]</span>
-<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
-<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>  <span class="fu">select</span>(id, cleaved_site)</span>
-<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a><span class="co"># computing fold-changes</span></span>
-<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
-<span id="cb34-9"><a href="#cb34-9" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>id,  </span>
-<span id="cb34-10"><a href="#cb34-10" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleavage sites</span></span>
-<span id="cb34-11"><a href="#cb34-11" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span>
-<span id="cb34-12"><a href="#cb34-12" tabindex="-1"></a><span class="co"># removing peptides considred as cleavage sites</span></span>
-<span id="cb34-13"><a href="#cb34-13" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugA, </span>
-<span id="cb34-14"><a href="#cb34-14" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the specific sequence</span></span>
-<span id="cb34-15"><a href="#cb34-15" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span>
-<span id="cb34-16"><a href="#cb34-16" tabindex="-1"></a></span>
-<span id="cb34-17"><a href="#cb34-17" tabindex="-1"></a><span class="do">## Drug B</span></span>
-<span id="cb34-18"><a href="#cb34-18" tabindex="-1"></a>peptides_norm_drugB <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;_DrugA$&quot;</span>, <span class="fu">colnames</span>(peptides_norm))]</span>
-<span id="cb34-19"><a href="#cb34-19" tabindex="-1"></a>potential_cleaved_drugB <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
-<span id="cb34-20"><a href="#cb34-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugB&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb34-21"><a href="#cb34-21" tabindex="-1"></a>  <span class="fu">select</span>(id, cleaved_site)</span>
-<span id="cb34-22"><a href="#cb34-22" tabindex="-1"></a><span class="co"># computing fold-changes</span></span>
-<span id="cb34-23"><a href="#cb34-23" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugB,</span>
-<span id="cb34-24"><a href="#cb34-24" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>id,  </span>
-<span id="cb34-25"><a href="#cb34-25" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleavage sites</span></span>
-<span id="cb34-26"><a href="#cb34-26" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span>
-<span id="cb34-27"><a href="#cb34-27" tabindex="-1"></a><span class="co"># removing peptides considred as cleavage sites</span></span>
-<span id="cb34-28"><a href="#cb34-28" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugB, </span>
-<span id="cb34-29"><a href="#cb34-29" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
-<span id="cb34-30"><a href="#cb34-30" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="do">## Drug A</span></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a><span class="co"># keeping only drug A</span></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>peptides_norm_drugA <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;_DrugB$&quot;</span>, <span class="fu">colnames</span>(peptides_norm))]</span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a>potential_cleaved_drugA <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugA&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a>  <span class="fu">select</span>(id, cleaved_site)</span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="co"># computing fold-changes</span></span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugA,</span>
+<span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>id,  </span>
+<span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleavage sites</span></span>
+<span id="cb35-11"><a href="#cb35-11" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span>
+<span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a><span class="co"># removing peptides considred as cleavage sites</span></span>
+<span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a>peptides_cleaved_drugA <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugA, </span>
+<span id="cb35-14"><a href="#cb35-14" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugA<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the specific sequence</span></span>
+<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugA<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span>
+<span id="cb35-16"><a href="#cb35-16" tabindex="-1"></a></span>
+<span id="cb35-17"><a href="#cb35-17" tabindex="-1"></a><span class="do">## Drug B</span></span>
+<span id="cb35-18"><a href="#cb35-18" tabindex="-1"></a>peptides_norm_drugB <span class="ot">&lt;-</span> peptides_norm[,<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;_DrugA$&quot;</span>, <span class="fu">colnames</span>(peptides_norm))]</span>
+<span id="cb35-19"><a href="#cb35-19" tabindex="-1"></a>potential_cleaved_drugB <span class="ot">&lt;-</span> potential_cleaved <span class="sc">%&gt;%</span></span>
+<span id="cb35-20"><a href="#cb35-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(treatment <span class="sc">==</span> <span class="st">&quot;DrugB&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-21"><a href="#cb35-21" tabindex="-1"></a>  <span class="fu">select</span>(id, cleaved_site)</span>
+<span id="cb35-22"><a href="#cb35-22" tabindex="-1"></a><span class="co"># computing fold-changes</span></span>
+<span id="cb35-23"><a href="#cb35-23" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span>  <span class="fu">imprints_sequence_peptides</span>(peptides_norm_drugB,</span>
+<span id="cb35-24"><a href="#cb35-24" tabindex="-1"></a>                                                      <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>id,  </span>
+<span id="cb35-25"><a href="#cb35-25" tabindex="-1"></a>                                                      <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site, <span class="co"># give sequence = the potential cleavage sites</span></span>
+<span id="cb35-26"><a href="#cb35-26" tabindex="-1"></a>                                                      <span class="at">control =</span> <span class="st">&quot;Vehicle&quot;</span>) <span class="co"># needs to specify control from your experiment</span></span>
+<span id="cb35-27"><a href="#cb35-27" tabindex="-1"></a><span class="co"># removing peptides considred as cleavage sites</span></span>
+<span id="cb35-28"><a href="#cb35-28" tabindex="-1"></a>peptides_cleaved_drugB <span class="ot">&lt;-</span> <span class="fu">imprints_remove_peptides</span>(peptides_cleaved_drugB, </span>
+<span id="cb35-29"><a href="#cb35-29" tabindex="-1"></a>                                                   <span class="at">proteins =</span>  potential_cleaved_drugB<span class="sc">$</span>protein,  <span class="co"># the protein from which you want to remove the sepecific sequence</span></span>
+<span id="cb35-30"><a href="#cb35-30" tabindex="-1"></a>                                                   <span class="at">sequence =</span> potential_cleaved_drugB<span class="sc">$</span>cleaved_site) <span class="co"># the sequence you want to remove</span></span></code></pre></div>
 <p>Then, you can join your datasets (can be more than 2). Usually, the
 exact same peptide sequence is not found between the datasets. Since the
 fold change are summed, we can join the closest sequences using the
 parameter <code>mode</code> set to <code>&quot;partial&quot;</code>.</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">list</span>(peptides_cleaved_drugA, peptides_cleaved_drugB) <span class="co"># you could add more datasets</span></span>
-<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a></span>
-<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">imprints_join_peptides</span>(peptides_cleaved, <span class="at">mode =</span> <span class="st">&quot;partial&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">list</span>(peptides_cleaved_drugA, peptides_cleaved_drugB) <span class="co"># you could add more datasets</span></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>peptides_cleaved <span class="ot">&lt;-</span> <span class="fu">imprints_join_peptides</span>(peptides_cleaved, <span class="at">mode =</span> <span class="st">&quot;partial&quot;</span>)</span></code></pre></div>
 </div>
 <div id="underline7.space-plotspace-yourspace-results" class="section level4">
 <h4><span class="math inline">\(\underline{7.\space Plot\space
@@ -2299,9 +2313,9 @@ proteins obtained. For that you can set the parameter
 plot each peptide, set it to <code>individual_peptide</code> or if you
 prefer to visualize all peptide per protein in one plot set it to
 <code>peptide_one</code>.</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
-<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="fu">imprints_barplotting_peptides</span>(peptides_cleaved, <span class="at">format =</span> <span class="st">&quot;RESP_peptide&quot;</span>,</span>
-<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>                              <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="co"># save the imprints in a pdf</span></span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="fu">imprints_barplotting_peptides</span>(peptides_cleaved, <span class="at">format =</span> <span class="st">&quot;RESP_peptide&quot;</span>,</span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a>                              <span class="at">save_pdf =</span> T, <span class="at">ret_plot =</span> F)</span></code></pre></div>
 </div>
 </div>
 </div>

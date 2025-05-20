@@ -255,7 +255,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                )
                                                       ),
                                      conditionalPanel(condition = "output.norm_pep_dataup",
-                                                      fluidRow(box(title = "Fold change computation and bar plots saving", status = "primary",
+                                                      fluidRow(box(title = "Fold-Change and RESP effect", status = "primary",
                                                                    solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                    tags$u(h3("Fold-change calculation")),
                                                                    checkboxInput("sequence_file", "Import a file with proteins and sequences"),
@@ -336,10 +336,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                     textOutput("diag_pep_cleaved")
                                                                                                     )
                                                                                              )
-                                                                                    ),
-                                                                   tags$hr(),
-                                                                   fluidRow(style = "height:10px;"),
+                                                                                    )
+                                                                   )
+                                                               ),
 
+                                                      fluidRow(box(title = "RESP effect - results curating", status = "primary",
+                                                                   solidHeader = TRUE, collapsible = TRUE, width = 12,
                                                                    tags$u(h3("RESP effect - categorization and barplot")),
                                                                    shiny::HTML("<h5>By uploading your 'RESP_summary' file below obtained in the previous step, i.e.
                                                                                the proteins being potentially cleaved; you can categorize each hits in 6 categories: <br>
@@ -371,14 +373,14 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                    textOutput("RESPsummaryCatPlt_pep_check")
                                                                                    ),
                                                                             column(3, selectInput("controlCatPlt_pep", "Select the control of your experiment (can't be in the RESP summary)",
-                                                                                                  choices = NULL)
+                                                                                         choices = NULL)
                                                                                    ),
                                                                             column(3, selectInput("treatmentCatPlt_pep", "Select the treatment you want to plot (can't be the same as control)",
-                                                                                                  choices = NULL)
+                                                                                         choices = NULL)
                                                                                    ),
                                                                             column(3, selectInput("formatCatPlt_pep", "Select the format for your plot",
-                                                                                                  choices =  c("Main + each peptide per plot" = "RESP_peptide",
-                                                                                                               "All peptides in one plot" = "peptide_one"), selected = "RESP_peptide")
+                                                                                         choices =  c("Main + each peptide per plot" = "RESP_peptide",
+                                                                                                      "All peptides in one plot" = "peptide_one"), selected = "RESP_peptide")
                                                                                    ),
                                                                             ),
                                                                    fluidRow(column(3, colourpicker::colourInput("own_color_pick_CatPlt_pep", "Select a color for the barplots", "red",
@@ -434,9 +436,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                             column(3, selectInput("treatIsoPlt_pep", "Select the treatment from which you want to see the peptides",
                                                                                                   choices = NULL)
                                                                                    ),
-                                                                            column(3, numericInput("propvalIsoPlt_pep", "Choose the minimum proportion of non missing values per peptide
-                                                                                                                         per treatment; i.e. if 6 temperatures and 0.5, it can't have more than 3 missing values.",
-                                                                                                   value = 0.4, min = 0, max = 1, step = 0.01))
+                                                                                   column(3, numericInput("propvalIsoPlt_pep", "Choose the minimum proportion of non missing values per peptide
+                                                                                                          per treatment; i.e. if 6 temperatures and 0.5, it can't have more than 3 missing values.",
+                                                                                                          value = 0.4, min = 0, max = 1, step = 0.01))
                                                                             ),
                                                                    fluidRow(column(4, checkboxInput("allprotIsoPlt_pep", "Generate plot for all isoforms", FALSE),
                                                                                    conditionalPanel(condition = "!input.allprotIsoPlt_pep",
@@ -459,7 +461,40 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                ),
                                                                                    downloadButton("downIsoPlt_pep", "Download plot")),
                                                                             column(2, selectInput("downIsoPlt_pep_format", "Download as", choices = c("png", "pdf")))
-                                                                            )
+                                                                            ),
+
+                                                                   tags$hr(),
+                                                                   fluidRow(style = "height:10px;"),
+
+                                                                   tags$u(h3("RESP effect - mapping PTMs")),
+                                                                   shiny::HTML("<h5>When a protein is found as a potential RESP effect, it means that this protein has a peptide position
+                                                                                    where the IMPRINTS profiles of the two obtained parts are significantly different.
+                                                                                    This difference can be caused by protein modification and mainly proteolysis; but if most of the peptides
+                                                                                    causing this difference are modified or know modification sites then, proteolysis is most likely not at play.
+                                                                                    <br>The aim here is to refilter the hit list and give the possible false positive occuring due to PTMs
+                                                                                    based on the RESP_summary output and the PhosphoSitePlus database (https://www.phosphosite.org).
+                                                                                    <br>To do so, the function assume you didn't add the mapped PTM as a dynamic modification during the peptide identification.
+                                                                                    Meaning that if a peptide is 'hyper-modified', its non-modified counterpart should have significantly negative fold-changes.
+                                                                                    And conversely if the peptide is 'hypo-modified'.</h5>"),
+
+                                                                   fluidRow(column(4, fileInput("RESPsummaryPTMs_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
+                                                                                   textOutput("RESPsummaryPTMs_pep_check")),
+                                                                            column(4, selectInput("controlPTMs_pep", "Select the control of your experiment (can't be in the RESP summary)",
+                                                                                                  choices = NULL)
+                                                                                   ),
+                                                                            column(4, textInput("xlsxnamePTMs_pep", "Type a name for your mapped PTMs RESP summary (xlsx)", "RESP_PTMs_mapping"))
+                                                                            ),
+                                                                   fluidRow(column(4, numericInput("maxfcPTMs_pep", "Type the minimum value for the maximum log2 fold-change of a peptide to be considered significantly modified",
+                                                                                                   value = 0.25, step = 0.05, min = 0.01)),
+                                                                            column(4, numericInput("minrefPTMs_pep", "Type the required minimum number of references reporting the PTM in PhosphoSitePlus",
+                                                                                                   value = 2, step = 1, min = 1)),
+                                                                            column(4, selectInput("directionPTMs_pep", "Select the direction of the modification to filter out; i.e. hypo, hyper or both",
+                                                                                                  choices = c("Hyper-modified" = "hyper", "Hypo-modified" = "hypo", "Both" = "both"), selected = "hyper"))
+                                                                            ),
+                                                                   fluidRow(column(4, actionButton("goPTMs_pep", "Map PTMs", class = "btn-primary")),
+                                                                            column(4, textOutput("diag_ptmspep_cleaved"))
+                                                                            ),
+                                                                   DT::dataTableOutput("resPTMs_pep")
                                                                    )
                                                                )
                                                       ),
@@ -3147,6 +3182,77 @@ server <- function(input, output, session){
              width = 16, height = 8, dpi = 300)
     }
   )
+
+
+
+  ## PTMs mapping RESP peptides
+  observe({
+    updateSelectInput(session, "controlPTMs_pep", choices = get_treat_level(norm_pep_data$x))
+  })
+
+  cleaved_pep_data_ptms <- reactiveValues(
+    x = NULL,
+    res = NULL
+  )
+  observeEvent(input$RESPsummaryPTMs_pep,{ # uploading RESP hits file
+    File <- input$RESPsummaryPTMs_pep
+    if(!is.null(File)){
+      cleaved_pep_data_ptms$x <- openxlsx::read.xlsx(File$datapath)
+
+      withCallingHandlers({
+        shinyjs::html("RESPsummaryPTMs_pep_check", "")
+        missing_columns <- c("id", "Gene", "description", "treatment",
+                             "combined_pvalue", "RESP_score", "cleaved_site")
+        missing_columns <- missing_columns[!(missing_columns %in% colnames(cleaved_pep_data_ptms$x))]
+        if(length(missing_columns)){
+          message(paste(paste(missing_columns, collapse = ", "), ifelse(length(missing_columns) > 1, "are", "is"),
+                        "missing in your RESP summary !")
+          )
+        }
+      },
+      message = function(m) {
+        shinyjs::html(id = "RESPsummaryPTMs_pep_check",
+                      html = paste0("<span style='color:red;'>", m$message, "</span><br>"),
+                      add = TRUE)
+      })
+
+      if(length(missing_columns)){
+        cleaved_pep_data_ptms$x <- NULL
+      }
+    }
+  })
+
+  observeEvent(input$goPTMs_pep, { # performing PTMs mapping
+    showNotification("Mapping hits", type = "message")
+    withCallingHandlers({
+      shinyjs::html("diag_ptmspep_cleaved", "")
+      if(!is.null(cleaved_pep_data_ptms$x)){
+        cleaved_pep_data_ptms$res <- imprints_ptms_peptides(norm_pep_data$x, cleaved_pep_data_ptms$x,
+                                                            input$controlPTMs_pep, input$minrefPTMs_pep,
+                                                            input$maxfcPTMs_pep, input$directionPTMs_pep,
+                                                            TRUE, input$xlsxnamePTMs_pep)
+
+      }
+      else{
+        message(paste0("<span style='color:red;'>", "You didn't upload a RESP summary !", "</span>"))
+      }
+    },
+    message = function(m) {
+      shinyjs::html(id = "diag_ptmspep_cleaved", html = paste(m$message, "<br>", sep = ""), add = FALSE)
+    })
+
+    showNotification("RESP hits mapped !", type = "message")
+  })
+
+  output$resPTMs_pep <- DT::renderDataTable({
+    DT::datatable(cleaved_pep_data_ptms$res,
+                  caption = htmltools::tags$caption(
+                    style = 'caption-side: top; text-align: left;',
+                    htmltools::strong("Potential RESP effect due to PTMs")
+                  ),
+                  rownames = FALSE,
+                  options = list(lengthMenu = c(10,20,30), pageLength = 10, scrollX = TRUE))
+  })
 
 
   # filter peptides data

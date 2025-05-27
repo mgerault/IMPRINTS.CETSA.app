@@ -453,7 +453,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
           st <- .x %>% dplyr::group_by(temperature) %>%
             dplyr::summarise(value = mean(value, na.rm = TRUE))
           if(is.na(st$value[which(st$temperature == "37C")])){
-            st <- mean(diff(st$value[which(st$temperature != "37C")]), na.rm = TRUE)
+            st <- mean(diff(na.omit(st$value[which(st$temperature != "37C")])), na.rm = TRUE)
           }
           else{
             st$value <-  st$value - st$value[which(st$temperature == "37C")]

@@ -540,17 +540,19 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     if(length(too_long)){
       for(n in too_long){
         name_toolong <- names(vennlist)[n]
-        in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, " & ")[[1]], ""))
-        if(length(in_common)){
-          name_toolong <- gsub(paste(in_common, collapse = "|"), "", name_toolong)
-        }
+        name_toolong <- gsub(" ", "", name_toolong)
+
         if(nchar(name_toolong) > 31){
-          name_toolong <- gsub(" ", "", name_toolong)
-        }
-        if(nchar(name_toolong) > 31){
-          name_toolong <- paste0("&", name_toolong, "&")
-          name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
-          name_toolong <-  gsub("^&|&$", "", name_toolong)
+          in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, "&")[[1]], ""))
+          if(length(in_common)){
+            name_toolong <- gsub(paste(gsub("\\.", "\\\\.", in_common), collapse = "|"), "", name_toolong)
+          }
+
+          if(nchar(name_toolong) > 31){
+            name_toolong <- paste0("&", name_toolong, "&")
+            name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
+            name_toolong <-  gsub("^&|&$", "", name_toolong)
+          }
         }
         names(vennlist)[n] <- name_toolong
       }

@@ -463,7 +463,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
         }
         else{
           pv <- 1
-          st <- NA
+          st <- mean(.x$value, na.rm = TRUE)
         }
         return(data.frame(is_stab = pv <= 0.05, stab_sign = st))
       })

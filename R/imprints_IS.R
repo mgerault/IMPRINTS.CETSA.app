@@ -509,6 +509,13 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
     diff_IS[,grep("category", colnames(diff_IS))] <- apply(as.data.frame(diff_IS[,grep("category", colnames(diff_IS))]),
                                                            2, function(x) tidyr::replace_na(x, "NN")
                                                            )
+
+    # if some treatments have no hits, no category added --> need add column
+    category_missing <- paste0("category_", cond)
+    category_missing <- category_missing[!(category_missing %in% colnames(diff_IS))]
+    if(length(category_missing)){
+      diff_IS[,category_missing] <- "NN"
+    }
   }
   else{# no hits were found
     diff_IS_plot$category <- character(0)

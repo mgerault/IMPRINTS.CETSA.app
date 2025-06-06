@@ -550,15 +550,23 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
         name_toolong <- gsub(" ", "", name_toolong)
 
         if(nchar(name_toolong) > 31){
-          in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, "&")[[1]], ""))
-          if(length(in_common)){
-            name_toolong <- gsub(paste(gsub("\\.", "\\\\.", in_common), collapse = "|"), "", name_toolong)
-          }
+          if(grepl("&", name_toolong)){
+            in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, "&")[[1]], ""))
+            if(length(in_common)){
+              name_toolong <- gsub(paste(gsub("\\.", "\\\\.", in_common), collapse = "|"), "", name_toolong)
+            }
 
-          if(nchar(name_toolong) > 31){
-            name_toolong <- paste0("&", name_toolong, "&")
-            name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
-            name_toolong <-  gsub("^&|&$", "", name_toolong)
+            if(nchar(name_toolong) > 31){
+              name_toolong <- paste0("&", name_toolong, "&")
+              name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
+              name_toolong <-  gsub("^&|&$", "", name_toolong)
+            }
+          }
+          else{# randomly removing character to fit 31 length
+            name_toolong <- strsplit(name_toolong, "")[[1]]
+            to_rm <- sample(1:length(name_toolong), length(name_toolong)-31)
+            name_toolong <- name_toolong[-to_rm]
+            name_toolong <- paste(name_toolong, collapse = "")
           }
         }
         names(vennlist)[n] <- name_toolong

@@ -229,7 +229,7 @@ imprints_ptms_peptides <- function(data, data_cleaved, control, minref = 2,
               }
             }
 
-            if(!(all(is.na(df$PTM)))){ # avoid repetition of information
+            if(!(all(is.na(df$PTM))) & any(is.na(df$PTM))){ # avoid repetition of information
               df <- df[-which(is.na(df$PTM)),]
             }
 

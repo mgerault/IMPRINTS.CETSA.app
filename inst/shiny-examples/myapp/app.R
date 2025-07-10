@@ -673,7 +673,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                 inline = TRUE),
 
                                                    conditionalPanel(condition = "input.example1 == 'up'",
-                                                                    fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18), selected = 10),
+                                                                    fluidRow(column(4, selectInput("n_chan", "Select the number of channels", choices = c(10,11,16,18,32,35), selected = 10),
                                                                                     selectInput("quant_soft", "Select the software you used to obtain your
                                                                                                                Protein.Groups files",
                                                                                                 choices = c("PD", "MaxQuant"), selected = "PD"),
@@ -3611,8 +3611,12 @@ server <- function(input, output, session){
     TMT <- list("10" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131"),
                 "11" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C"),
                 "16" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N"),
-                "18" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N", "134C", "135N")
-    )
+                "18" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N", "134C", "135N"),
+                "32" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N",
+                         "127D", "128ND", "128CD", "129ND", "129CD", "130ND", "130CD", "131ND", "131CD", "132ND", "132CD", "133ND", "133CD", "134ND", "134CD", "135ND"),
+                "35" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N", "134C", "135N",
+                         "127D", "128ND", "128CD", "129ND", "129CD", "130ND", "130CD", "131ND", "131CD", "132ND", "132CD", "133ND", "133CD", "134ND", "134CD", "135ND", "135CD")
+                )
     m <- matrix("", as.numeric(input$n_chan), 1,
                 dimnames = list(c(TMT[[input$n_chan]]), "Treatment"))
 

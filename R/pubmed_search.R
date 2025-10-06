@@ -88,9 +88,9 @@ find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, treatmen
 
     res <- pmQueryTotalCount(query = query, api_key = your_API)
 
-    D <- pmApiRequest_m(query = query, limit = res$total_count, api_key = your_API)
+    if(res$total_count != 0 & save_word){
+      D <- pmApiRequest_m(query = query, limit = res$total_count, api_key = your_API)
 
-    if(D$total_count != 0 & save_word){
       doc_1 <- read_docx()
 
       M <- pmApi2df_m(D)
@@ -118,11 +118,11 @@ find_in_pubmed <- function(data, feat = "PI3K", imp_by_hitlist = FALSE, treatmen
 
       print(doc_1, target = paste0(newfolder_name, "/", i, ".docx"))
     }
-    else if(D$total_count == 0){
+    else if(res$total_count == 0){
       no_res <- append(no_res, i)
     }
 
-    have_paper <- append(have_paper, D$total_count)
+    have_paper <- append(have_paper, res$total_count)
     npri = npri + 1
   }
 

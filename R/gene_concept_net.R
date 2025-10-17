@@ -145,6 +145,22 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
     return(graph)
   }
   else{
+    hits_enrich@result <- hits_enrich@result[which(hits_enrich@result$Count >= minGSSize),]
+    if(nrow(hits_enrich@result) == 0){
+      #no term enriched under specific pvalueCutoff...
+      graph <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
+        geom_text(x=0.5, y=0.5, label = paste("No term enriched with\nmore than", minGSSize, "genes"), size = 10) +
+        cowplot::theme_cowplot() +
+        theme(axis.text.x = element_blank(),
+              axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.ticks.y = element_blank())
+
+      return(graph)
+    }
+
     n_toshow <- length(which(hits_enrich@result$p.adjust <= pval_cutoff))
     if(n_toshow == 0){
       #no term enriched under specific pvalueCutoff...

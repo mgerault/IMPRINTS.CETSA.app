@@ -2705,6 +2705,8 @@ server <- function(input, output, session){
       if(!is.null(protseq_file_pep())){
         prot <- protseq_file_pep()$protein
         sequ <- sub("~", "-", protseq_file_pep()$sequence)
+        if(length(sequ) == 0)
+          sequ <- NULL
       }
       else{
         return(NULL)
@@ -8695,3 +8697,4 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
+

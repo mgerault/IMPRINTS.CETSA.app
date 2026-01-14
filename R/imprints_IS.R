@@ -555,11 +555,15 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
         if(nchar(name_toolong) > 31){
           if(grepl("&", name_toolong)){
-            in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, "&")[[1]], ""))
+            in_common <- Reduce(intersect, strsplit(strsplit(name_toolong, "&")[[1]], "\\.|-|_"))
             if(length(in_common)){
               name_toolong <- gsub(paste(gsub("\\.", "\\\\.", in_common), collapse = "|"), "", name_toolong)
             }
-
+            
+            name_toolong <- gsub("(?<=&)(\\.|-|_)|(\\.|-|_)(?=&)", "", name_toolong, perl = TRUE)
+            name_toolong <- gsub("\\.\\.|\\.-|-\\.|--|__|_\\.|\\._|-_|_-", "", name_toolong, perl = TRUE)
+            name_toolong <- gsub("^(-|\\.|_)|(-|\\.|_)$", "", name_toolong, perl = TRUE)
+            
             if(nchar(name_toolong) > 31){
               name_toolong <- paste0("&", name_toolong, "&")
               name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
@@ -614,4 +618,5 @@ find_cutoff <- function(x,y){
   x <- ifelse(length(x), x[length(x)], NA)
   return(x)
 }
+
 

@@ -12,6 +12,8 @@
 #' @param pval_cutoff The p-value cutoff for the gene concept network.
 #' @param minGSSize minimal size of each gene set for analyzing. default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
+#' @param ont Select ontology when using GO database. Either BP (Biological Process), MF (Molecular Function)
+#'   or CC (Cellular Component). Default if BP.
 #'
 #' @return The gene concept network plot.
 #'
@@ -23,11 +25,13 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
                             treatment_column = NULL, treatment = NULL,
                             species = c("human", "mouse"),
                             pval_cutoff = 0.01, minGSSize = 3,
-                            database = c("WikiPathway", "KEGG", "GO", "CETSA")){
+                            database = c("WikiPathway", "KEGG", "GO", "CETSA"),
+                            ont = c("BP", "MF", "CC")){
   require(clusterProfiler)
   species <- tolower(species)
   species <- match.arg(species)
   database <- match.arg(database)
+  ont <- match.arg(ont)
 
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
@@ -96,13 +100,13 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
   }
   else if(database == "GO"){
     if(species == "human"){
-      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = "BP",
+      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = ont,
                                                OrgDb = "org.Hs.eg.db",
                                                pvalueCutoff = pval_cutoff,
                                                minGSSize = minGSSize)
     }
     else if(species == "mouse"){
-      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = "BP",
+      hits_enrich <- clusterProfiler::enrichGO(hits$Gene_id, ont = ont,
                                                OrgDb = "org.Mm.eg.db",
                                                pvalueCutoff = pval_cutoff,
                                                minGSSize = minGSSize)
@@ -208,7 +212,10 @@ gene_concept_net <- function(hits, gene_column = "Gene", score_column = "IS",
                                   foldChange = fold) +
       scale_color_gradient(low = "#87FE00", high = "#FE0000") +
       labs(title = paste("Gene-concept network", treatment, "hits"),
-           subtitle = paste(database, "p-value cutoff:", pval_cutoff),
+           subtitle = paste(ifelse(database == "GO",
+                                   paste0(database, "-", ont),
+                                   database),
+                            " pvalueCutoff:", pval_cutoff),
            color = score_column,
            size = "Count")
 

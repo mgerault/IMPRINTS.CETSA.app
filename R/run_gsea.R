@@ -13,6 +13,8 @@
 #' @param pval_cutoff The p-value cutoff for the enrichment analysis.
 #' @param minGSSize minimal size of each gene set for analyzing. default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
+#' @param ont Select ontology when using GO database. Either BP (Biological Process), MF (Molecular Function)
+#'   or CC (Cellular Component). Default if BP.
 #'
 #' @return A list that contains the results and the plot.
 #'
@@ -24,11 +26,13 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
                      treatment_column = NULL, treatment = NULL,
                      species = c("human", "mouse"), pos_enrichment = TRUE,
                      pval_cutoff = 0.01, minGSSize = 3,
-                     database = c("WikiPathway", "KEGG", "GO", "CETSA")){
+                     database = c("WikiPathway", "KEGG", "GO", "CETSA"),
+                     ont = c("BP", "MF", "CC")){
   require(clusterProfiler)
   species <- tolower(species)
   species <- match.arg(species)
   database <- match.arg(database)
+  ont <- match.arg(ont)
 
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
@@ -109,11 +113,11 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
   else if(database == "GO"){
     if(species == "human"){
       gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff,
-                                         ont = "BP", minGSSize = minGSSize)
+                                         ont = ont, minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       gsea_res <- clusterProfiler::gseGO(hits, OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff,
-                                         ont = "BP", minGSSize = minGSSize)
+                                         ont = ont, minGSSize = minGSSize)
     }
     rm(.GO_clusterProfiler_Env, .GOTERM_Env, envir=sys.frame()) # hidden object from clusterprofiler prevent dbplyr to load when in the environment
   }
@@ -179,7 +183,10 @@ run_gsea <- function(hits, gene_column = "Gene", score_column = "IS",
                                        geneSetID = which(gsea_res@result$enrichmentScore > 0))
       }
     }
-    graph[[1]]$labels$subtitle <- paste(database, " pvalueCutoff:", pval_cutoff)
+    graph[[1]]$labels$subtitle <- paste(ifelse(database == "GO",
+                                               paste0(database, "-", ont),
+                                               database),
+                                        " pvalueCutoff:", pval_cutoff)
     graph[[1]] <- graph[[1]] +
       theme(legend.position = "inside",
             legend.position.inside = c(0.8,0.9),

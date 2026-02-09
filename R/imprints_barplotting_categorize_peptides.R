@@ -117,7 +117,7 @@ imprints_barplotting_categorize_peptides <- function(data, data_cleaved, treatme
   # ordering data_cleaved according category and Gene
   data_cleaved <- data_cleaved[order(data_cleaved$Gene),]
   data_cleaved <- data_cleaved[order(as.numeric(factor(data_cleaved$category,
-                                                       levels = c("RESP", "SP", "SPm", "MP", "MPm", "FP"))
+                                                       levels = c("RESP", "SP", "SPm", "MP", "MPm", "Unconfident"))
                                                 )
                                      ),]
 
@@ -140,7 +140,7 @@ imprints_barplotting_categorize_peptides <- function(data, data_cleaved, treatme
       p_category <- data_cleaved$category[data_cleaved$id == p]
       p_category <- paste(paste0("<span style='font-size:16pt; color:",
                                  ifelse(p_category == "RESP", "blue",
-                                        ifelse(p_category == "FP",
+                                        ifelse(p_category == "Unconfident",
                                                "red",
                                                "orange")), "'>**",
                                  p_category,
@@ -195,7 +195,7 @@ imprints_barplotting_categorize_peptides <- function(data, data_cleaved, treatme
       p_category <- data_cleaved$category[data_cleaved$id == n]
       p_category <- paste(paste0("<span style='font-size:16pt; color:",
                                  ifelse(p_category == "RESP", "blue",
-                                        ifelse(p_category == "FP",
+                                        ifelse(p_category == "Unconfident",
                                                "red",
                                                "orange")), "'>**",
                                  p_category,

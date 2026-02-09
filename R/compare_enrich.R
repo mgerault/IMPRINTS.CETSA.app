@@ -12,6 +12,8 @@
 #' @param pval_cutoff The p-value cutoff for the enrichment analysis.
 #' @param minGSSize minimal size of each gene set for analyzing. Default here is 3
 #' @param database Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.
+#' @param ont Select ontology when using GO database. Either BP (Biological Process), MF (Molecular Function)
+#'   or CC (Cellular Component). Default if BP.
 #'
 #' @return A list that contains the results and the plot.
 #'
@@ -22,11 +24,13 @@
 compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                        species = c("human", "mouse"), n_pathway = 5,
                        pval_cutoff = 0.01, minGSSize = 3,
-                       database = c("WikiPathway", "KEGG", "GO", "CETSA")){
+                       database = c("WikiPathway", "KEGG", "GO", "CETSA"),
+                       ont = c("BP", "MF", "CC")){
   require(clusterProfiler)
   species <- tolower(species)
   species <- match.arg(species)
   database <- match.arg(database)
+  ont <- match.arg(ont)
 
   if(!("KEGGREST" %in% installed.packages())){
     message("Installing KEGGREST package")
@@ -100,13 +104,13 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
   else if(database == "GO"){
     if(species == "human"){
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
-                                                     data = hits, fun = "enrichGO", ont = "BP",
+                                                     data = hits, fun = "enrichGO", ont = ont,
                                                      OrgDb = "org.Hs.eg.db", pvalueCutoff = pval_cutoff,
                                                      minGSSize = minGSSize)
     }
     else if(species == "mouse"){
       hits_enrich <- clusterProfiler::compareCluster(Gene_id~treatment,
-                                                     data = hits, fun = "enrichGO",ont = "BP",
+                                                     data = hits, fun = "enrichGO", ont = ont,
                                                      OrgDb = "org.Mm.eg.db", pvalueCutoff = pval_cutoff,
                                                      minGSSize = minGSSize)
     }
@@ -184,7 +188,10 @@ compare_enrich <- function(hits, gene_column = "Gene", treatment_column = NULL,
                               guide = guide_colorbar(reverse = TRUE)) +
         scale_size(range = c(3,8)) +
         DOSE::theme_dose(12) +
-        labs(subtitle = paste(database, " pvalueCutoff:", pval_cutoff)) +
+        labs(subtitle = paste(ifelse(database == "GO",
+                                     paste0(database, "-", ont),
+                                     database),
+                              " pvalueCutoff:", pval_cutoff)) +
         theme(axis.title.x = element_blank(),
               axis.text.x = element_text(angle = 30, hjust = 1, size = rel(1.6), face = "bold"),
               axis.text.y = element_text(size = rel(1.3)))

@@ -5,7 +5,7 @@
 #' @details
 #' This function will categorize the hits found by the function \code{imprints_cleaved_peptides} in 4
 #' main categories: RESP for REgional Stabilization after Proteolysis, SP for Single Peptide,
-#' MP for multiple peptides and FP for false positive. When a small 'm' is added to SP or MP it stands
+#' MP for multiple peptides and Unconfident for Unconfident. When a small 'm' is added to SP or MP it stands
 #' for modified.
 #'
 #' @param data The normalized peptides data set, i.e. the outpout from \code{imprints_normalize_peptides}.
@@ -146,10 +146,10 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
 
       ### CATEGORIZATION ###
       if(nrow(pep) == 1){# if only one peptide was cluster in a group
-        if(df_mincl == 2){ # if only one peptide clustered in the low shifting then must be FP (means that all other peptides shift)
-          category <- "false positive"
+        if(df_mincl == 2){ # if only one peptide clustered in the low shifting then must be Unconfident (means that all other peptides shift)
+          category <- "Unconfident"
         }
-        else{# otherwise it's indeed an FP
+        else{# otherwise it's indeed an SP
           pep_s <- sign(apply(pep[,-c(1,2)], 1, mean, na.rm = TRUE))
           modif <- strsplit(pep$Modifications, "(?<=\\]); (?=\\d{1}x)", perl =  TRUE)[[1]]
           modif <- modif[-grep("\\d{1}xTMT", modif)]
@@ -210,7 +210,7 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
           }
         }
         else{
-          # if non significant --> random --> most likely FP or isolated peptides shifting
+          # if non significant --> random --> most likely Unconfident or isolated peptides shifting
           # if significant --> non random --> RESP or 'opposite' peptide shifting
           # significance can below 0.1
           pv_rnd <- randtests::runs.test(df_h, threshold = 1.5)$p.value
@@ -263,7 +263,7 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                     category <- "RESP - low confidence"
                   }
                   else{
-                    category <- "false positive"
+                    category <- "Unconfident"
                   }
                 }
                 else if(any(pvm <= 0.01) & any(pvm > 0.1)){ # only one is far from 0 and the other not
@@ -352,12 +352,12 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
 
               category <- paste(category_neg, "and", category_pos)
 
-              # if too many peptides to report, most likely a FALSE positive
+              # if too many peptides to report, most likely a Unconfident
               nb_reported_pep <- length(grep("\\[\\d{1,4}-\\d{1,4}\\]",
                                              strsplit(category, " ")[[1]])
                                         )
               if(nb_reported_pep > 3){
-                category <- "false positive"
+                category <- "Unconfident"
               }
             }
           }
@@ -368,8 +368,8 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
             df_pvma <- sapply(1:2, function(y) mean(abs(df_m[df_h == y])))
 
             if(sum(df_h == df_mincl) == 2){ # only 2 peptides in one cluster
-              if(df_mincl == which.min(df_pvma)){ # if those are the minimum FC --> FP
-                category <- "false positive"
+              if(df_mincl == which.min(df_pvma)){ # if those are the minimum FC --> Unconfident
+                category <- "Unconfident"
               }
               else{# 2 peptides shifting at different places
                 pepm <- df_m[df_h == df_mincl]
@@ -476,13 +476,13 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                 category <- "RESP - low confidence"
               }
               else{
-                category <- "false positive"
+                category <- "Unconfident"
               }
             }
             else if(df_mincl == which.min(df_pvma)){
               df_lowpos <- strsplit(paste(df_h, collapse = ""), as.character(df_mincl))[[1]]
-              if(mean(nchar(df_lowpos[nchar(df_lowpos) > 0])) >= 1){ # peptide with low FC spread out --> FP
-                category <- "false positive"
+              if(mean(nchar(df_lowpos[nchar(df_lowpos) > 0])) >= 1){ # peptide with low FC spread out --> Unconfident
+                category <- "Unconfident"
               }
               else{ # very less likely
                 category <- "to check"
@@ -498,7 +498,7 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
               df_lowpos <- nchar(df_lowpos[nchar(df_lowpos) > 0])
               # if only one separation (or two?) with only one or two amino acid
               # and that this group has peptides of same FC sign --> RESP (of lower confidence)
-              # if lot of separation between the group, most likely a FP
+              # if lot of separation between the group, most likely a Unconfident
               # if not lot of separation, but far appart, most likely single peptides shifting
 
               if(length(df_lowpos) <= 2){
@@ -642,12 +642,12 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                     category <- category_neg
                   }
 
-                  # if too many peptides to report, most likely a FALSE positive
+                  # if too many peptides to report, most likely a Unconfident
                   nb_reported_pep <- length(grep("\\[\\d{1,4}-\\d{1,4}\\]",
                                                  strsplit(category, " ")[[1]])
                                             )
                   if(nb_reported_pep > 3){
-                    category <- "false positive"
+                    category <- "Unconfident"
                   }
                 }
               }
@@ -765,12 +765,12 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
                   category <- category_neg
                 }
 
-                # if too many peptides to report, most likely a FALSE positive
+                # if too many peptides to report, most likely a Unconfident
                 nb_reported_pep <- length(grep("\\[\\d{1,4}-\\d{1,4}\\]",
                                                strsplit(category, " ")[[1]])
                                           )
                 if(nb_reported_pep > 3){
-                  category <- "false positive"
+                  category <- "Unconfident"
                 }
               }
             }
@@ -786,8 +786,8 @@ imprints_categorize_peptides <- function(data, data_cleaved, control,
         category <- ifelse(grepl("\\d{1}x.* \\[", category),
                            "SPm", "SP")
       }
-      else if(grepl("false positive", category)){
-        category <- "FP"
+      else if(grepl("Unconfident", category)){
+        category <- "Unconfident"
       }
       else{
         category <- ifelse(grepl("\\d{1}x.* \\[", category),

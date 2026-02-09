@@ -346,7 +346,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    shiny::HTML("<h5>By uploading your 'RESP_summary' file below obtained in the previous step, i.e.
                                                                                the proteins being potentially cleaved; you can categorize each hits in 6 categories: <br>
                                                                                RESP (REgional Stabilization Proteolysis), SP (Single Peptide), SPm (Single Peptide modified),
-                                                                               MP (Multiple Peptide), MPm (Multiple Peptide modified) and FP (false positive). Hits categorized
+                                                                               MP (Multiple Peptide), MPm (Multiple Peptide modified) and Unconfident. Hits categorized
                                                                                as RESP are proteins being the most likely cleaved by a protease to be activated or deactivated.<br>
                                                                                Results will be save in an xlsx file.<br></h5>"),
 
@@ -366,7 +366,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                    shiny::HTML("<h5>Here you can plot each categorized hits obtained in the previous steps and save it in a pdf.
                                                                                For each protein, its RESP plot will be plotted alongside its corresponding peptides. Its assigned
                                                                                category will also be highlited on each page of the pdf. The proteins will be ordered according
-                                                                               their category in the following order: RESP, SP, SPm, MP, MPm and FP.<br></h5>"),
+                                                                               their category in the following order: RESP, SP, SPm, MP, MPm and Unconfident.<br></h5>"),
                                                                    fluidRow(column(3, fileInput("RESPsummaryCatPlt_pep", "Import the RESP summary file (xlsx)", accept = ".xlsx"),
                                                                                    shiny::HTML("<h5>If not already categorized, will do it automatically but the categorized RESP
                                                                                                summary file will not be saved.</h5>"),
@@ -471,7 +471,7 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                     where the IMPRINTS profiles of the two obtained parts are significantly different.
                                                                                     This difference can be caused by protein modification and mainly proteolysis; but if most of the peptides
                                                                                     causing this difference are modified or know modification sites then, proteolysis is most likely not at play.
-                                                                                    <br>The aim here is to refilter the hit list and give the possible false positive occuring due to PTMs
+                                                                                    <br>The aim here is to refilter the hit list and give the possible Unconfident occuring due to PTMs
                                                                                     based on the RESP_summary output and the PhosphoSitePlus database (https://www.phosphosite.org).
                                                                                     <br>To do so, the function assume you didn't add the mapped PTM as a dynamic modification during the peptide identification.
                                                                                     Meaning that if a peptide is 'hyper-modified', its non-modified counterpart should have significantly negative fold-changes.
@@ -8697,4 +8697,3 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
-

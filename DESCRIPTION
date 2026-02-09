@@ -1,7 +1,7 @@
 Package: IMPRINTS.CETSA.app
 Type: Package
 Title: A shiny app for IMPRINTS.CETSA package 
-Version: 3.6.1
+Version: 3.6.2
 Author: Marc-Antoine GERAULT
 Maintainer: Marc-Antoine GERAULT <marco.gerault@gmail.com>
 Description: Contains a shiny app for IMPRINTS.CETSA R package and 
@@ -31,3 +31,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+

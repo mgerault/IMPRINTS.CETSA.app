@@ -448,7 +448,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
         if(ntemp > 1){
           # rounding error can sometime produce matrix to not be symmetric and hence produce complex eigen value
           # even though the matrix is actually symmetric; so apply rounding to prevent it:
-          .x$value <- round(.x$value, 12)
+          .x$value <- round(.x$value, 16)
           # anova test:
           pv <- rstatix::anova_test(data = as.data.frame(.x), dv = value, wid = rep, within = temperature)
           pv <- rstatix::get_anova_table(pv, correction = "none")
@@ -618,5 +618,6 @@ find_cutoff <- function(x,y){
   x <- ifelse(length(x), x[length(x)], NA)
   return(x)
 }
+
 
 

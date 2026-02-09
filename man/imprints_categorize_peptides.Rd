@@ -34,6 +34,6 @@ Function to categorize proteins found as hits by the function \code{imprints_cle
 \details{
 This function will categorize the hits found by the function \code{imprints_cleaved_peptides} in 4
 main categories: RESP for REgional Stabilization after Proteolysis, SP for Single Peptide,
-MP for multiple peptides and FP for false positive. When a small 'm' is added to SP or MP it stands
+MP for multiple peptides and Unconfident for Unconfident. When a small 'm' is added to SP or MP it stands
 for modified.
 }

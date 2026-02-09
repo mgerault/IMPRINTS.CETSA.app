@@ -13,7 +13,8 @@ gene_concept_net(
   species = c("human", "mouse"),
   pval_cutoff = 0.01,
   minGSSize = 3,
-  database = c("WikiPathway", "KEGG", "GO", "CETSA")
+  database = c("WikiPathway", "KEGG", "GO", "CETSA"),
+  ont = c("BP", "MF", "CC")
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ gene_concept_net(
 \item{minGSSize}{minimal size of each gene set for analyzing. default here is 3}
 
 \item{database}{Specify the database. Currently, WikiPathway, KEGG, GO and CETSA are available.}
+
+\item{ont}{Select ontology when using GO database. Either BP (Biological Process), MF (Molecular Function)
+or CC (Cellular Component). Default if BP.}
 }
 \value{
 The gene concept network plot.

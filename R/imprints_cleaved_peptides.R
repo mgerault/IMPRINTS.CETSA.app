@@ -4,13 +4,13 @@
 #' For more information, see Details section.
 #'
 #' @details
-#' The idea of this function is to compute the sum from all fold change for each peptide and then compute the cumulative sum of
-#' these summed fold change of every peptides for each protein.
+#' The idea of this function is to compute the maximum from all fold change for each peptide and then compute the cumulative sum of
+#' these maximum fold changes of every peptides of each protein.
 #' If the protein is not cleaved, this cumulative sum should be constantly increasing/decreasing, i.e linear.
 #' If the protein is cleaved, then this cumulative sum will either be convex or concave.
 #' If convex, the last peptides are more abundant; if concave the first peptides are more abundant.
 #' In the end a volcano plot will be plotted where the p-value corresponds to the combined p-value from
-#' the six temperatures comparison between peptides located towards the N-terminal and the ones located
+#' all temperatures comparison between peptides located towards the N-terminal and the ones located
 #' towards the C-terminal position.
 #' You can then use the function \code{imprints_sequence_peptides} to plot the peptides before and after
 #' the potential cleavage site.
@@ -127,9 +127,8 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     dplyr::mutate(Nvalue = paste(temp, Nvalue, sep = "-")) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
     dplyr::filter(length(na.omit(mean_value))/length(mean_value) >= min_ValidValue) %>%  # keeping peptides with more than 40% of valid values
-    dplyr::reframe(sum_profile = sum(mean_value, na.rm = TRUE),  # get sum value for each peptides --> sum all temperatures values
+    dplyr::reframe(max_profile = mean_value[which.max(abs(mean_value))],  # get sum value for each peptides --> sum all temperatures values
                    Nvalue = paste(Nvalue, collapse = "|"))   # keeping track of number of non-missing values
-
 
   message("Filtering and ordering peptides...")
   # separate id in protein and sequence (need to take into account protein groups)
@@ -144,7 +143,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   data_cleaved <- data_cleaved %>%
     dplyr::mutate(sequence = gsub("\\[|\\]", "", sequence)) %>%
     dplyr::ungroup() %>% dplyr::group_by(id, description, treatment) %>%
-    dplyr::filter(length(sum_profile) >= min_peptide)  # only keeping proteins with more than min_peptide peptides
+    dplyr::filter(length(max_profile) >= min_peptide)  # only keeping proteins with more than min_peptide peptides
 
   # order data according proteins and sequence
   # ordering according sequence is capital
@@ -164,18 +163,13 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   data_cleaved$factor <- NULL
 
   message("Computing cumulative sum to find potential cleaved sites...")
-  # compute cumulative sum for each protein
-  data_cleaved <- data_cleaved %>%
-    dplyr::group_by(id, description, treatment) %>%
-    dplyr::mutate(cumsum_profile = cumsum(tidyr::replace_na(sum_profile, 0)))
-
   # get cleaved site
   # if cumulative abundance concave --> first derivative is decreasing globally --> inflexion point is where second derivative is minimum
   # if cumulative abundance convex --> first derivative is increasing globally --> inflexion point is where second derivative is maximum
   data_cleaved <- data_cleaved %>% dplyr::ungroup() %>%
     dplyr::group_by(id, description, treatment) %>%
     dplyr::group_modify(~ {
-      cleaved_sites = .x$sequence[inflex(.x$cumsum_profile)]
+      cleaved_sites = .x$sequence[inflex(.x$max_profile)]
       df <- sapply(cleaved_sites,
                    function(cleaved_site){
                      df <- .x
@@ -189,34 +183,94 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
 
   message("Checking cleaved sites, formating...")
   # set peptide position --> before cleaved site = N-terminal side / after cleaved site = C-terminal side
-  # if protein group, only taking first protein
-  data_cleaved$position_global <- unlist(lapply(strsplit(gsub(";.*", "", data_cleaved$sequence),
-                                                 "~|-"),
-                                        function(s) sum(as.numeric(s)))
-                                 )
-  data_cleaved$cleaved.global <- unlist(lapply(strsplit(gsub(";.*", "", data_cleaved$cleaved_site),
-                                                "~|-"),
-                                       function(s) sum(as.numeric(s)))
-                                )
+  # if protein group, only taking first protein (take into account overlapping peptides --> tolerance of 2 AA)
+  data_cleaved$position_global <- mapply(function(cl, s){
+                                          cl <- as.numeric(cl)
+                                          s <- as.numeric(s)
 
-  data_cleaved <- data_cleaved %>%
-    dplyr::mutate(position_global = ifelse(position_global < cleaved.global,
-                                           "N", ifelse(sequence == cleaved_site,
-                                                       "cleaved", "C"))
-           ) %>%
-    dplyr::select(-cleaved.global)
+                                          ifelse(-2 <= s[1] - cl[1] & s[2] - cl[2] <= 2,
+                                                 "cleaved",
+                                                 ifelse(s[2] <= cl[1], "N",
+                                                        "C")
+                                          )
+                                        },
+                                        strsplit(gsub(";.*", "", data_cleaved$cleaved_site), "~|-"),
+                                        strsplit(gsub(";.*", "", data_cleaved$sequence), "~|-")
+                                        )
+
+  # remove cleavage sites giving same positions and keeping widest cleavage site
+  data_cleaved <-  data_cleaved %>%
+    ungroup() %>%
+    group_by(id, description, treatment) %>%
+    group_modify(~ {
+      simi_pos_seq <- .x %>%
+        group_by(cleaved_site) %>%
+        summarise(position_sequence = paste(table(position_global), collapse = "-"))
+
+      if(any(duplicated(simi_pos_seq$position_sequence))){
+        simi_pos_seq <- simi_pos_seq[which(!is.na(
+                                      match(simi_pos_seq$position_sequence,
+                                            simi_pos_seq$position_sequence[which(duplicated(simi_pos_seq$position_sequence))]
+                                      )
+                                    )),
+                                    ] %>%
+          ungroup() %>% group_by(position_sequence) %>%
+          mutate(size_cleavage = sapply(strsplit(gsub(";.*", "", cleaved_site), "~|-"),
+                                        function(s) diff(as.numeric(s))
+                                        ),
+                 cleavage_torm = size_cleavage != max(size_cleavage)
+                 )
+
+        if(all(!simi_pos_seq$cleavage_torm)){ # meaning none are different from minimum i.e. same size
+          # so take lower bound in left and higher bound in right
+          simi_pos_seq <- simi_pos_seq %>%
+            group_by(position_sequence) %>%
+            mutate(cleavage1 = sapply(strsplit(gsub(";.*", "", cleaved_site), "~|-"),
+                                      function(s) as.numeric(s)[1]
+                                      ),
+                   cleavage2 = sapply(strsplit(gsub(";.*", "", cleaved_site), "~|-"),
+                                      function(s) as.numeric(s)[2]
+                                      )) %>%
+            mutate(new_cleaved = ifelse(cleaved_site == cleaved_site[1],
+                                        paste0(min(cleavage1), "~", max(cleavage2)),
+                                        "torm")
+                   )
+
+          .x <- .x[-which(!is.na(match(.x$cleaved_site,
+                                       simi_pos_seq$cleaved_site[which(simi_pos_seq$new_cleaved == "torm")])
+                                 )
+                          ),]
+
+          for(cl in which(simi_pos_seq$new_cleaved != "torm")){
+            .x$cleaved_site[which(.x$cleaved_site == simi_pos_seq$cleaved_site[cl])] <- simi_pos_seq$new_cleaved[cl]
+          }
+
+          return(.x)
+        }
+        else{ # there exist a  widest cleavage site --> only keeping this one
+          simi_pos_seq <- simi_pos_seq$cleaved_site[which(simi_pos_seq$cleavage_torm)]
+          .x <- .x[-which(!is.na(match(.x$cleaved_site, simi_pos_seq))),]
+
+          return(.x)
+        }
+      }
+      else
+        return(.x)
+    })
 
   # checking cleaved site, if not assign right position
   data_cleaved <- data_cleaved %>% dplyr::group_by(id, description, treatment, cleaved_site) %>%
+    filter(all(c("N", "cleaved", "C") %in% position_global)) %>% # remove proteins not having two sides
     dplyr::mutate(cleaved_site_update = cleaved_site) %>%
     dplyr::group_modify(~ {
-      val_N <- .x$sum_profile[which(.x$position_global == "N")]
-      val_C <- .x$sum_profile[which(.x$position_global == "C")]
-      cle <- .x$sum_profile[which(.x$position_global == "cleaved")]
+      val_N <- .x$max_profile[which(.x$position_global == "N")]
+      val_C <- .x$max_profile[which(.x$position_global == "C")]
+      cle <- .x$max_profile[which(.x$position_global == "cleaved")]
       non_cleaved <- .x$cleaved_site_update[1]
+      npep_cleaved <- length(cle) # in case of overlapping peptides, can have more than one peptide labelled as 'cleaved'
 
-      bef_cleaved <- .x$sequence[which(.x$position_global == "cleaved") -1]
-      aft_cleaved <- .x$sequence[which(.x$position_global == "cleaved") +1]
+      bef_cleaved <- .x$sequence[which(.x$position_global == "cleaved")[1] - 1]
+      aft_cleaved <- .x$sequence[which(.x$position_global == "cleaved")[npep_cleaved] + 1]
 
       bef_cleaved <- sapply(strsplit(bef_cleaved, "; ")[[1]],
                             function(x){
@@ -264,7 +318,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
         }
         non_cleaved <- paste(non_cleaved, collapse = "; ")
       }
-      else if(cle >= 0){ # to be cleaved, peptide should be less abundant, i.e. negative fold changes
+      else if(all(cle >= 0)){ # to be cleaved, peptide should be less abundant, i.e. negative fold changes
         .x$position_global[which(.x$position_global == "cleaved")] <- ifelse(pN <= pC, "N", "C")
         non_cleaved <- sapply(strsplit(non_cleaved, "; ")[[1]],
                               function(x){
@@ -336,15 +390,75 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     dplyr::select(-cleaved_site_update) %>% unique()
 
   ### reducing cleavage site candidate
+  # remove eventual cleavage site put to last or first position due to many overlapping peptides (rare case)
+  # filtering above would then give an NA -->
+  cle_torm <- grep("NA", gsub(";.*", "", data_cleaved$cleaved_site))
+  if(length(cle_torm))
+    data_cleaved <- data_cleaved[-cle_torm,]
+
   # if a protein has 2 or 3 potential cleavage sites and that some are measured peptides,
   # meaning they were decreasing in level and considered as measured cleavage site;
   # then we only keep these as this mean that the two methods used to obtain the inflection point
   # overlapped well and that the measured peptides is very likely to be the actual cleavage site
   data_cleaved <- data_cleaved %>% ungroup() %>%
-    dplyr::select(-sum_profile, -cumsum_profile, -Master.Protein.Accessions) %>%
+    dplyr::select(-max_profile, -Master.Protein.Accessions) %>%
     dplyr::group_by(id, description, treatment)  %>%
     dplyr::filter(length(unique(cleaved_site)) == 1 | length(unique(cleaved_site)) > 3 |
                     (length(unique(cleaved_site)) == 2 | length(unique(cleaved_site)) == 3) & (grepl("-", cleaved_site) | all(grepl("~", cleaved_site))))
+
+  ## continue to reduce candidates --> remove and summarize cleavage sites creating the same comparison
+  data_cleaved <- data_cleaved %>%
+    ungroup() %>%
+    group_by(id, description, treatment) %>%
+    group_modify(~ {
+      simi_pos_seq <- .x %>%
+        group_by(cleaved_site) %>%
+        summarise(position_sequence = paste(table(position_global), collapse = "-"))
+
+      if(any(duplicated(simi_pos_seq$position_sequence))){
+        simi_pos_seq <- simi_pos_seq[which(!is.na(
+                                        match(simi_pos_seq$position_sequence,
+                                              simi_pos_seq$position_sequence[which(duplicated(simi_pos_seq$position_sequence))]
+                                              )
+                                        )),
+                                     ] %>%
+          ungroup() %>% group_by(position_sequence) %>%
+          mutate(cleavage1 = sapply(strsplit(gsub(";.*", "", cleaved_site), "~|-"),
+                                    function(s) as.numeric(s)[1]
+                                    ),
+                 cleavage2 = sapply(strsplit(gsub(";.*", "", cleaved_site), "~|-"),
+                                    function(s) as.numeric(s)[2]
+                                    ),
+                 are_similar = min(cleavage1 - max(cleavage1)) >= -2 &
+                   min(cleavage2 - max(cleavage2)) >= -2
+                 )
+
+        if(all(simi_pos_seq$are_similar)){
+          simi_pos_seq <- simi_pos_seq %>%
+            ungroup() %>% group_by(position_sequence) %>%
+            mutate(new_cleaved = ifelse(cleaved_site == cleaved_site[1],
+                                        paste0(min(cleavage1), "~", max(cleavage2)),
+                                        "torm")
+                   )
+
+          .x <- .x[-which(!is.na(match(.x$cleaved_site,
+                                       simi_pos_seq$cleaved_site[which(simi_pos_seq$new_cleaved == "torm")])
+                                 )
+                          ),]
+
+          for(cl in which(simi_pos_seq$new_cleaved != "torm")){
+            .x$cleaved_site[which(.x$cleaved_site == simi_pos_seq$cleaved_site[cl])] <- simi_pos_seq$new_cleaved[cl]
+          }
+
+          return(.x)
+        }
+        else{
+          return(.x)
+        }
+      }
+      else
+        return(.x)
+    })
 
   ### sum number of values per peptide N and peptide C
   data_cleaved <- data_cleaved %>% dplyr::ungroup() %>%
@@ -390,7 +504,6 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
       unlink(directory_toremove, recursive = TRUE)
     }
 
-
     res[[t]] <- treat_data
     ### removing peptides that could be cleaved site
     treat_data_diff <- imprints_remove_peptides(treat_data_diff,
@@ -409,19 +522,27 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
 
       treat_data_diff$Positions.in.Master.Proteins[which(treat_data_diff$Master.Protein.Accessions != prid_pos)] <- unlist(
                                                                 mapply(function(x, n){
-                                                                          if(grepl("; ", x)){
+                                                                        if(grepl("; ", x)){ # protein group and/or different possible peptides
+                                                                          if(grepl("; \\[", x)){ # different possible peptides
+                                                                            x <- gsub(sub("_.*", "", n),
+                                                                                      n, x)
+                                                                          }
+                                                                          else{ # protein group
                                                                             x <- gsub(paste0("; ", sub("_.*", "", n), ".*"),
                                                                                       "", x)
                                                                             x <- paste0(x, "; ", n)
                                                                           }
-                                                                          else{
-                                                                            x <- gsub(sub("_.*", "", n),
-                                                                                      n, x)
-                                                                          }
-                                                                        },
-                                                                        prid_pos_tochange, prid_new,
-                                                                       SIMPLIFY = FALSE, USE.NAMES = FALSE)
-                                                              )
+                                                                        }
+
+                                                                        else{
+                                                                          x <- gsub(sub("_.*", "", n),
+                                                                                    n, x)
+                                                                        };
+                                                                        x
+                                                                      },
+                                                                      prid_pos_tochange, prid_new,
+                                                                      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+                                                                )
     }
 
     treat_data_diff <- treat_data_diff[,-grep(paste0("_", control), colnames(treat_data_diff))]
@@ -617,22 +738,14 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
       )
   }
 
-  # selecting cleaved site with smallest p-value
-  res <- res %>% dplyr::ungroup() %>%
-    dplyr::mutate(id2 = sub("_.*", "", id)) %>%
-    dplyr::group_by(id2, Gene, treatment) %>%
-    dplyr::summarise(id = id[which.min(combined_pvalue)],
-              combined_pvalue = min(combined_pvalue, na.rm = TRUE),
-              maxFC = maxFC[which.min(combined_pvalue)]) %>%
-    dplyr::ungroup() %>% dplyr::select(-id2)
-
+  # compute RESP-score
   res <- res %>%
     dplyr::group_by(id, Gene, treatment) %>%
     dplyr::group_modify(~ {
       if(!is.na(.x$maxFC)){
         # getting FC
         score <- new_data_diff_matrix[which(new_data_diff_matrix$id == paste0(.x$id, "_", .x$Gene) & new_data_diff_matrix$treatment == .x$treatment),
-                      grep(paste0("_", .x$maxFC, "$"), colnames(new_data_diff_matrix))]
+                                      grep(paste0("_", .x$maxFC, "$"), colnames(new_data_diff_matrix))]
 
         # computing score
         score <- c(mean(as.numeric(score[1,grep("^N_", colnames(score))]), na.rm = TRUE),
@@ -640,41 +753,55 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
         sign_score <- unique(sign(score))
         diff_score <- diff(score)
         if(length(unique(sign_score)) == 1){ # same sign
-          zscore <- diff_score/max(c(0.1, min(abs(score))))
+          resp_score <- diff_score/max(c(0.1, min(abs(score))))
           # ratio give the score where 0.1 is a constant that prevent exploding score when min approach 0
         }
         else{ # one is neg and one is pos
-          zscore <- max(abs(score))*diff_score/0.1  # also use the same constant
+          resp_score <- max(abs(score))*diff_score/0.1  # also use the same constant
           # multiplying by the maximum fold change prevent keepin low profile that would have opposite sign
         }
       }
       else{
-        zscore <- NA
+        resp_score <- NA
       }
 
       score <- .x
       score <- score[,-grep("^id$|^Gene$|^treatment$", colnames(score))]
-      score$zscore <- zscore
+      score$resp_score <- resp_score
       return(score)
-    }, .keep = TRUE) %>%
-    dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
-    dplyr::mutate(zscore = (zscore - mean(zscore, na.rm = TRUE))/sd(zscore, na.rm = TRUE)) %>%
-    dplyr::select(-maxFC)
+    }, .keep = TRUE)
+
+  # selecting cleaved site with smallest p-value and greatest RESP-score
+  res <- res %>%
+    dplyr::ungroup() %>% dplyr::select(-maxFC) %>%
+    filter(!is.na(combined_pvalue)) %>%
+    dplyr::mutate(id2 = sub("_.*", "", id)) %>%
+    dplyr::group_by(id2, Gene, treatment) %>%
+    mutate(rnk = order(order(combined_pvalue)) + order(order(abs(resp_score), decreasing = TRUE)))%>%
+    filter(rnk == min(rnk)) %>%
+    dplyr::summarise(id = id[which.min(combined_pvalue)], # if more than one cleavage site creates the same rank, take the one with smallest p-value
+                     combined_pvalue = min(combined_pvalue, na.rm = TRUE),
+                     resp_score = resp_score[which.min(combined_pvalue)]) %>%
+    dplyr::ungroup() %>% dplyr::select(-id2)
+
+  # z-core normalize RESP-score
+  res <- res %>% dplyr::group_by(treatment) %>%
+    dplyr::mutate(resp_score = (resp_score - mean(resp_score, na.rm = TRUE))/sd(resp_score, na.rm = TRUE))
 
   # compute cutoffs
   if(fixed_score_cutoff){
     cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
       dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
       dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
-                       zscore_pos = RESP_score,
-                       zscore_neg = -RESP_score)
+                       resp_score_pos = RESP_score,
+                       resp_score_neg = -RESP_score)
   }
   else{
     cutoff <- res %>% dplyr::ungroup() %>% dplyr::group_by(treatment) %>%
       dplyr::mutate(BH = (order(order(combined_pvalue))/length(combined_pvalue))*FDR) %>%
       dplyr::summarise(pval = find_cutoff(combined_pvalue, BH),
-                       zscore_pos = RESP_score + median(abs(zscore)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
-                       zscore_neg = -RESP_score - median(abs(zscore)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
+                       resp_score_pos = RESP_score + median(abs(resp_score)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE),
+                       resp_score_neg = -RESP_score - median(abs(resp_score)[which(combined_pvalue < quantile(combined_pvalue, 0.5, na.rm = TRUE))], na.rm = TRUE))
   }
 
   # saving obtained cutoffs
@@ -685,9 +812,9 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   write(extra_info, cutoff_file, sep = "\n", append = TRUE)
 
   res <- res %>% dplyr::group_by(id, Gene, treatment) %>%
-    dplyr::mutate(curve = curve(zscore,
-                                cutoff$zscore_neg[which(cutoff$treatment == treatment)],
-                                cutoff$zscore_pos[which(cutoff$treatment == treatment)],
+    dplyr::mutate(curve = curve(resp_score,
+                                cutoff$resp_score_neg[which(cutoff$treatment == treatment)],
+                                cutoff$resp_score_pos[which(cutoff$treatment == treatment)],
                                 cutoff$pval[which(cutoff$treatment == treatment)],
                                 curvature = curvature),
                   criteria_curve = -log10(combined_pvalue) >= curve
@@ -695,26 +822,27 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   res$criteria_curve <- tidyr::replace_na(res$criteria_curve, FALSE)
 
   n_treat <- length(treat)
-  df_curve <- data.frame(zscore = rep(seq(-max(abs(res$zscore), na.rm = TRUE),
-                                          max(abs(res$zscore), na.rm = TRUE), 0.005),
+  df_curve <- data.frame(resp_score = rep(seq(-max(abs(res$resp_score), na.rm = TRUE),
+                                          max(abs(res$resp_score), na.rm = TRUE), 0.005),
                                      n_treat)
                          )
   df_curve$treatment <- rep(treat, each = nrow(df_curve)/n_treat)
   df_curve <- df_curve %>% dplyr::group_by(treatment, rownames(df_curve)) %>%
-    dplyr::mutate(curve = curve(zscore,
-                                cutoff$zscore_neg[which(cutoff$treatment == treatment)],
-                                cutoff$zscore_pos[which(cutoff$treatment == treatment)],
-                                cutoff$pval[which(cutoff$treatment == treatment)]
+    dplyr::mutate(curve = curve(resp_score,
+                                cutoff$resp_score_neg[which(cutoff$treatment == treatment)],
+                                cutoff$resp_score_pos[which(cutoff$treatment == treatment)],
+                                cutoff$pval[which(cutoff$treatment == treatment)],
+                                curvature = curvature
                                 )
                   )
 
   message("Creating and saving plot")
-  g_h <- ggplot(res, aes(zscore, -log10(combined_pvalue), color = criteria_curve)) +
+  g_h <- ggplot(res, aes(resp_score, -log10(combined_pvalue), color = criteria_curve)) +
     geom_point() +
-    geom_line(data = df_curve, aes(x = zscore, y = curve), linetype = "dashed", color = "black") +
+    geom_line(data = df_curve, aes(x = resp_score, y = curve), linetype = "dashed", color = "black") +
     ylim(c(0, max(-log10(res$combined_pvalue), na.rm = TRUE))) +
-    xlim(c(-max(abs(res$zscore), na.rm = TRUE),
-           max(abs(res$zscore), na.rm = TRUE))
+    xlim(c(-max(abs(res$resp_score), na.rm = TRUE),
+           max(abs(res$resp_score), na.rm = TRUE))
          ) +
     labs(title = "RESP volcano plot",
          y = "-log10(combined p-value)",
@@ -722,7 +850,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     scale_color_manual(values = c("TRUE" = "red", "FALSE" = "grey70"))  +
     facet_wrap(~treatment) +
     ggrepel::geom_label_repel(data = res[res$criteria_curve,],
-                              aes(zscore, -log10(combined_pvalue), label = Gene),
+                              aes(resp_score, -log10(combined_pvalue), label = Gene),
                               show.legend = FALSE, min.segment.length = 0) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
@@ -743,7 +871,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
                        values_from = c("Nvalue", "Npep"))
 
   # saving whole results
-  resp <- res[,c("id", "Gene", "treatment", "combined_pvalue", "zscore", "criteria_curve")]
+  resp <- res[,c("id", "Gene", "treatment", "combined_pvalue", "resp_score", "criteria_curve")]
   colnames(resp)[c(ncol(resp)-1, ncol(resp))] <- c("RESP_score", "RESP_hit")
   resp <- dplyr::left_join(resp, data_cleaved, by = c("id", "treatment"),
                            relationship = "one-to-many")
@@ -752,7 +880,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
   openxlsx::write.xlsx(resp, paste0(outdir, "/", format(Sys.time(), "%y%m%d_%H%M"), "_", "RESP_analysis_full.xlsx"))
 
   # saving summary
-  resp_summary <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "zscore")]
+  resp_summary <- res[res$criteria_curve,c("id", "Gene", "treatment", "combined_pvalue", "resp_score")]
   colnames(resp_summary)[ncol(resp_summary)] <- "RESP_score"
   resp_summary <- dplyr::left_join(resp_summary, data_cleaved, by = c("id", "treatment"),
                           relationship = "one-to-many")
@@ -771,8 +899,14 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
 
 
 ### function to compute discrete inflexion point
-inflex <- function(x){
-  ### compute 'exact' theoritical inflexion point using second derivative
+inflex <- function(mp){
+  ### compute cumulative sum
+  if(any(is.na(mp)))
+    mp[which(is.na(mp))] <- 0
+
+  x <- cumsum(mp)
+
+  ### compute 'exact' theoretical inflexion point using second derivative
   x_df1 <- diff(x) # get first 'first derivative'
   # compute 'tendency' from 'first derivative', i.e. if increasing/decreasing
   df <- data.frame(x = 1:length(x_df1),
@@ -811,6 +945,7 @@ inflex <- function(x){
 
   inflex_point_fit <- which.min(inflex_point_fit) + 1
 
+  ### refilter
   if(is.na(inflex_point_exac)){
     inflex_point <- inflex_point_fit
   }
@@ -820,63 +955,58 @@ inflex <- function(x){
   else{
     inflex_point <- c(inflex_point_fit, inflex_point_exac)
     inflex_point <- inflex_point[order(inflex_point)]
+    inflex_point <- inflex_point[1]:inflex_point[2]
 
     Ninflex <- abs(inflex_point_fit - inflex_point_exac) + 1
     Npep <- length(x)
-    if(Ninflex/Npep > 0.5){ # 50% of the peptides are considered potential cleavage site --> most likely no cleavage
-      if(Npep - inflex_point[2] > inflex_point[1] - 1){
-        inflex_point <- inflex_point[2]
+
+    if((Ninflex/Npep > 0.75 & Ninflex > 5) | Ninflex > 16){ # 75% of the peptides are considered potential cleavage site --> could have two cleavage around the two points
+      # to reduce number of possibilities, checking which method will give greatest mean difference and take its 25% neighbours
+      mp_1 <- mean(mp[1:(inflex_point[1]-1)])
+      mp_2 <- mean(mp[(inflex_point[Ninflex]+1):Npep])
+      Ninflex_25 <- ceiling(Ninflex/4)
+      if(mp_1 >= 0 & mp_2 >= 0){
+        if(mp_1 < mp_2)
+          inflex_point <- inflex_point[1:Ninflex_25]
+        else
+          inflex_point <- inflex_point[(Ninflex - Ninflex_25 + 1):Ninflex]
       }
-      else if(Npep - inflex_point[2] == inflex_point[1] - 1){
-        inflex_point <- inflex_point_exac
+      else if(mp_1 < 0 & mp_2 < 0){
+        if(mp_1 > mp_2)
+          inflex_point <- inflex_point[1:Ninflex_25]
+        else
+          inflex_point <- inflex_point[(Ninflex - Ninflex_25 + 1):Ninflex]
       }
       else{
-        inflex_point <- inflex_point[1]
+        inflex_point <- c(inflex_point[1:Ninflex_25],
+                          inflex_point[(Ninflex - Ninflex_25 + 1):Ninflex])
       }
     }
-    else{
-      inflex_point <- inflex_point[1]:inflex_point[2]
-    }
   }
-
   return(inflex_point)
 }
 
 ### function to sum number of values per peptide N and peptide C
 nb_pepval <- function(x){
-  x <- lapply(strsplit(x, "\\|"), strsplit, split = "-")
+  if(length(x) < 2)
+    return(x)
 
-  x <- lapply(x,
-              function(t){
-                temp <- unlist(lapply(t, "[[", 1))
-                biorep <- strsplit(unlist(lapply(t, "[[", 2)), ";")
-                names(biorep) <- temp
-                biorep <- lapply(biorep,
-                                 function(b){
-                                   b <- strsplit(b, "_")
-                                   b_names <- unlist(lapply(b, "[[", 1))
-                                   nv <- lapply(b, "[[", 2)
-                                   nv <- lapply(nv, as.numeric)
-                                   names(nv) <- b_names;
-                                   nv
-                                 });
-                biorep
-              })
+  x <- strsplit(x, "_|\\||;")
 
-  x <- as.data.frame(x, check.names = FALSE)
-  x <- sapply(unique(names(x)), function(nv) sum(x[,names(x) == nv]))
+  y <- x[[1]]
+  x <- Reduce(rbind,
+              sapply(x,
+                     function(y){
+                       t(as.data.frame(y))
+                     },
+                     simplify = FALSE)
+              )
 
-  temp <- unique(sub("\\..*", "", names(x)))
-  x <- sapply(temp,
-              function(nv){
-                b <- x[grep(nv, names(x))]
-                names(b) <- sub(".*\\.", "", names(b))
-                b <- paste(paste(names(b), b, sep = "_"), collapse = ";")
-                b <- paste(nv, b, sep = "-");
-                b
-              })
+  x[1,grep("^\\d{1,3}$", y)] <- apply(x[,grep("^\\d{1,3}$", y)], 2, function(z) sum(as.numeric(z)))
+  x <- paste(x[1,], collapse = "_")
+  x <- gsub("(?<=_\\d{1,3})_(?=\\d{2}C-)", "|", x, perl = TRUE)
+  x <- gsub("(?<=_\\d{1,3})_(?=B\\d{1}_)", ";", x, perl = TRUE)
 
-  x <- paste(x, collapse = "|")
   return(x)
 }
 

@@ -59,13 +59,13 @@ Function to find proteins that are potentially cleaved and their cleaved sites.
 For more information, see Details section.
 }
 \details{
-The idea of this function is to compute the sum from all fold change for each peptide and then compute the cumulative sum of
-these summed fold change of every peptides for each protein.
+The idea of this function is to compute the maximum from all fold change for each peptide and then compute the cumulative sum of
+these maximum fold changes of every peptides of each protein.
 If the protein is not cleaved, this cumulative sum should be constantly increasing/decreasing, i.e linear.
 If the protein is cleaved, then this cumulative sum will either be convex or concave.
 If convex, the last peptides are more abundant; if concave the first peptides are more abundant.
 In the end a volcano plot will be plotted where the p-value corresponds to the combined p-value from
-the six temperatures comparison between peptides located towards the N-terminal and the ones located
+all temperatures comparison between peptides located towards the N-terminal and the ones located
 towards the C-terminal position.
 You can then use the function \code{imprints_sequence_peptides} to plot the peptides before and after
 the potential cleavage site.

@@ -5006,22 +5006,13 @@ server <- function(input, output, session){
           HIT <- hit_bar$summa
         }
       }
-      c_idx <- str_which(colnames(HIT), "treatment")
-      if(length(c_idx)){
-        HIT_summup <- list()
-        for(i in unique(HIT[, c_idx])){
-          HIT_summup[[i]] <- (HIT %>% dplyr::filter(treatment == i))$id
-        }
-        HIT_summup <- com_protein_loop(HIT_summup)
 
-        for (i in names(HIT_summup)){
-          HIT[which(!is.na(match(HIT$id, HIT_summup[[i]]))), c_idx] <- i
-        }
-        HIT <- unique(HIT)
-      }
+      HIT <- HIT %>% group_by(id) %>%
+        summarise(treatment = paste(sort(treatment), collapse = " & "),
+                  category = category[which.max(table(category))])
     }
 
-    HIT
+    as.data.frame(HIT)
   })
 
   observe({

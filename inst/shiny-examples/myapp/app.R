@@ -4992,7 +4992,7 @@ server <- function(input, output, session){
   Sel_cond_fhit <- reactive({
     HIT <- NULL
 
-    if(input$hit){
+    if(input$hit | input$ALL_prot){
       if(input$drug == "base" & length(input$drug2) >= 1){
         HIT <- do.call(rbind, lapply(drug_data_sh$y$hitlist[input$drug2],
                                      function(x) x[,c("id", "treatment", "category")])
@@ -8688,4 +8688,5 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
+
 

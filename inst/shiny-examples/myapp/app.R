@@ -5381,7 +5381,7 @@ server <- function(input, output, session){
     else{
       NULL
     }
-    if(!is.null(DR) & !is.null(Sel_cond_fhit_SUMMA$hit)){
+    if(!is.null(DR) & !is.null(Sel_cond_fhit_SUMMA$hit)  & nrow(Sel_cond_fhit_SUMMA$hit)){
       hit_info <- Sel_cond_fhit_SUMMA$hit
       hit_info <- hit_info[, !(names(hit_info) %in% "category")]
       names(hit_info)[!(names(hit_info) %in% "id")] <- "Hits_Info"
@@ -8688,6 +8688,7 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
+
 
 
 

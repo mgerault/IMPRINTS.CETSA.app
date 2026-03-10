@@ -5042,7 +5042,7 @@ server <- function(input, output, session){
             prcheck <- drug_data_sh$y$data[[input$drug2]][,c("id", "description")]
           }
           else if(length(input$drug2) > 1){
-            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")[,c("id", "description")]
+            prcheck <- join_drugdata(drug_data_sh$y$data[input$drug2], by = c("id", "description"))[,c("id", "description")]
           }
 
           a <- pr[!(pr %in% prcheck$id)]
@@ -5062,6 +5062,8 @@ server <- function(input, output, session){
             mutate(id = paste0(id, ":", description))
           pr <- pr$id
           pr <- unique(pr)
+
+          print(pr)
         }
       }
       else{
@@ -5092,7 +5094,7 @@ server <- function(input, output, session){
           }
         }
         else if(length(input$drug2) > 1 & all(input$drug2 %in% names(drug_data_sh$y$data))){
-          df <- plyr::join_all(drug_data_sh$y$data[input$drug2], by = c("id", "description"), type = "full")
+          df <- join_drugdata(drug_data_sh$y$data[input$drug2], by = c("id", "description"))
           if(input$hit & !is.null(input$cond_fhit)){
             pr <- Sel_cond_fhit_SUMMA$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit))))
@@ -5381,7 +5383,7 @@ server <- function(input, output, session){
     else{
       NULL
     }
-    if(!is.null(DR) & !is.null(Sel_cond_fhit_SUMMA$hit)  & nrow(Sel_cond_fhit_SUMMA$hit)){
+    if(!is.null(DR) & !is.null(Sel_cond_fhit_SUMMA$hit) & nrow(Sel_cond_fhit_SUMMA$hit)){
       hit_info <- Sel_cond_fhit_SUMMA$hit
       hit_info <- hit_info[, !(names(hit_info) %in% "category")]
       names(hit_info)[!(names(hit_info) %in% "id")] <- "Hits_Info"
@@ -7161,7 +7163,7 @@ server <- function(input, output, session){
             prcheck <- drug_data_sh$y$data[[input$drug2_barnet]][,c("id", "description")]
           }
           else if(length(input$drug2_barnet) > 1){
-            prcheck <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")[,c("id", "description")]
+            prcheck <- join_drugdata(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"))[,c("id", "description")]
           }
 
           a <- pr[!(pr %in% prcheck$id)]
@@ -7211,7 +7213,7 @@ server <- function(input, output, session){
           }
         }
         else if(length(input$drug2_barnet) > 1 & all(input$drug2_barnet %in% names(drug_data_sh$y$data))){
-          df <- plyr::join_all(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"), type = "full")[,c("id", "description")]
+          df <- join_drugdata(drug_data_sh$y$data[input$drug2_barnet], by = c("id", "description"))[,c("id", "description")]
           if(input$onlyhit_barnet & !is.null(input$cond_fhit_barnet)){
             pr <- Sel_cond_fhit_SUMMA_barnet$hit
             pr <- pr %>% dplyr::filter(!is.na(match(treatment, c(input$cond_fhit_barnet))))
@@ -8688,7 +8690,3 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
-
-
-
-

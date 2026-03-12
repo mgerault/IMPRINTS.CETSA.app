@@ -34,8 +34,8 @@ imprints_barplotting_app(
 \item{data}{dataset after imprints_caldiff to plot. Can also be a list of this dataset.}
 
 \item{treatmentlevel}{a vector of treatment labels, such as c("DMSO","TNFa","AT26533")
-the order determines the arrangement, so in this case DMSO
-group would be the first group}
+the order determines the arrangement, so in this case DMSO group would be the first group.
+If data is a list of dataset, treatmentlevel can also be a list of the same length as data.}
 
 \item{setlevel}{a vector of set information if any, such as c("M13","M16")}
 
@@ -52,7 +52,8 @@ group would be the first group}
 \item{layout}{a vector indicating the panel layout for multi-panel plots per page,
 default value is c(2,3) for set containing data, otherwise c(4,3), use when save_pdf = TRUE}
 
-\item{colorpanel}{a vector of color scheme provided by default with the function PaletteWithoutGrey}
+\item{colorpanel}{a vector of color scheme provided by default with the function PaletteWithoutGrey.
+If data is a list of dataset, colorpanel can also be a list of the same length as data.}
 
 \item{usegradient}{whether the barplot should be draw in color gradient format}
 

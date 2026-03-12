@@ -5,15 +5,16 @@
 #'
 #' @param data dataset after imprints_caldiff to plot. Can also be a list of this dataset.
 #' @param treatmentlevel a vector of treatment labels, such as c("DMSO","TNFa","AT26533")
-#'                       the order determines the arrangement, so in this case DMSO
-#'                       group would be the first group
+#'   the order determines the arrangement, so in this case DMSO group would be the first group.
+#'   If data is a list of dataset, treatmentlevel can also be a list of the same length as data.
 #' @param setlevel a vector of set information if any, such as c("M13","M16")
 #' @param printBothName A logical to tell if you want to print the both protein names on the plot
 #' @param printGeneName A logical to tell if you want to print the gene names on the plot
 #' @param witherrorbar A logical to print or not the error bar on the plot
 #' @param withpoint A logical to print or not the data point of each replicate on the plot on top of the bars
 #' @param pointperrep A logical to separate the point per replicate; only active when withpoint is set to TRUE
-#' @param colorpanel a vector of color scheme provided by default with the function PaletteWithoutGrey
+#' @param colorpanel a vector of color scheme provided by default with the function PaletteWithoutGrey.
+#'   If data is a list of dataset, colorpanel can also be a list of the same length as data.
 #' @param usegradient whether the barplot should be draw in color gradient format
 #' @param colorgradient the color scheme of gradient applied, default value c("#4575B4","ivory", "#D73027")
 #' @param linegraph whether to plot the graph in a line graph format, default set to FALSE
@@ -61,7 +62,7 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
   }
 
   ### function to plot IMPRINTS profiles
-  barplotting <- function(d1, withset = FALSE) {
+  barplotting <- function(d1, withset = FALSE){
     if (withset) {
       d1 <- droplevels(d1)
       d1_list <- split(d1, d1$set)
@@ -309,11 +310,51 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
            Retry with setting 'save_pdf' to TRUE.")
     }
     else{
+      if(is.list(treatmentlevel)){
+        if(length(treatmentlevel) != length(data))
+          stop("Your list of treatments is not of the same length as your data !",
+               "treatmentlevel should either be a vector with treatment names present in all datasets of the list of data",
+               "or a list of the same length as the list of dataset.")
+      }
+      else{
+        treatmentlevel <- lapply(1:length(data), function(x) treatmentlevel)
+      }
+
+      # checking if treatments are in the data
+      sav_treatmentlevel <- mapply(function(x, tr){
+        xtr <- get_treat_level(x)
+        treatment_in <- tr[which(tr %in% xtr)]
+        treatment_notin <- tr[which(!(tr %in% xtr))]
+        if(length(treatment_notin))
+          message(paste("Warning:", paste(treatment_notin, collapse = ", "),
+                        ifelse(length(treatment_notin) > 1, "are", "is"),
+                        "not in your data and was removed"))
+
+        return(treatment_in)
+      }, data, treatmentlevel)
+
+      if(!all(sapply(sav_treatmentlevel, length) > 0))
+        stop("The treatment you selected are not in your list of datasets !")
+
+      if(!is.list(colorpanel)){
+        if(colorpanel[1] == "aquamarine3")
+          colorpanel <- sapply(sav_treatmentlevel, PaletteWithoutGrey)
+        else
+          colorpanel <- lapply(1:length(data), function(x) colorpanel)
+      }
+      else if(!all(sapply(colorpanel, length) >= sapply(sav_treatmentlevel, length)))
+        stop("Not enough color provided ! You have more treatment than you provided colors")
+
+      sav_colorpanel <- colorpanel
+      names(sav_colorpanel) <- names(data)
+
       pl <- list()
       sav_data <- data
+
       for(k in names(data)){
         data <- sav_data[[k]]
-        treatmentlevel <- get_treat_level(data)
+        treatmentlevel <- sav_treatmentlevel[[k]]
+        colorpanel <- sav_colorpanel[[k]]
 
         nrowdata <- nrow(data)
         if (nrowdata == 0) {
@@ -388,6 +429,9 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
 
         if (!log2scale) {
           data1 <- dplyr::mutate(data1, reading = 2^reading)
+        }
+        if(length(treatmentlevel) != length(get_treat_level(data))){
+          data1 <- data1[grep(paste0("_", treatmentlevel, "($|_)", collapse = "|"), data1$condition),]
         }
         a <- data1$condition[1]
         if (length(unlist(strsplit(a, "_"))) == 4) {
@@ -758,7 +802,6 @@ imprints_barplotting_app <- function(data, treatmentlevel = get_treat_level(data
   }
 
 }
-
 
 ### PaletteWithoutGrey function ###
 #generates a color list depending on the number of element of a character vector

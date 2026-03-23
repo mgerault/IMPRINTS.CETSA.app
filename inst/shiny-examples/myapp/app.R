@@ -3393,22 +3393,40 @@ server <- function(input, output, session){
     df_filtered <- tofilter_pep_data()
     withCallingHandlers({
       shinyjs::html("diag_pep_filter", "")
-      if(!is.null(prot) & !is.null(sequ)){
-        message("Rmoving specific peptides")
-        df_filtered <- imprints_remove_peptides(tofilter_pep_data(),
-                                                proteins = prot, sequence = sequ,
-                                                mode = input$filtermode_joinpep)
+      if(!is.null(prot)){
+        if(!is.null(sequ)){
+          message("Rmoving specific peptides")
+          df_filtered <- imprints_remove_peptides(tofilter_pep_data(),
+                                                  proteins = prot, sequence = sequ,
+                                                  mode = input$filtermode_joinpep)
+        }
+        else{
+          if(input$filtermode_joinpep == "keep"){
+            df_filtered <- tofilter_pep_data()[which(!is.na(match(tofilter_pep_data()$Master.Protein.Accessions,
+                                                                  prot)
+                                                            )),]
+          }
+          else if(input$filtermode_joinpep == "remove"){
+            df_filtered <- tofilter_pep_data()[which(is.na(match(tofilter_pep_data()$Master.Protein.Accessions,
+                                                                  prot)
+                                                            )),]
+          }
+        }
       }
       if(!is.null(input$remcond_joinpep)){
         message("Removing treatments")
-        df_filtered <- df_filtered[,-grep(paste0("_", input$remcond_joinpep, "$", collapse = "|"),
+        df_filtered <- df_filtered[,-grep(paste0("_", gsub("\\+", "\\\\+",
+                                                           input$remcond_joinpep),
+                                                 "$", collapse = "|"),
                                           colnames(df_filtered)
                                           )
                                    ]
       }
       message("Saving filtered data")
       f_name <- sub("\\.txt", "_filtered.txt", info_filterpep$name)
-      f_name <- gsub("\\d{6}_\\d{4}_", format(Sys.time(), "%y%m%d_%H%M_"), f_name)
+      f_name <- ifelse(grepl("^\\d{6}_\\d{4}_", f_name),
+                       gsub("\\d{6}_\\d{4}_", format(Sys.time(), "%y%m%d_%H%M_"), f_name),
+                       paste0( format(Sys.time(), "%y%m%d_%H%M_"), f_name))
       readr::write_tsv(df_filtered, file = f_name)
       message("Filtered data saved !")
       showNotification("Filtered data saved !",  type = "message")

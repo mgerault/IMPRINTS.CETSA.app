@@ -146,7 +146,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
   message("Computing mean values...")
   # get average value among bioreplicate for each protein
-  diff_IS <- data_diff[,-grep(paste0("_", ctrl, "$"), colnames(data_diff))]
+  diff_IS <- data_diff[,-grep(paste0("_", gsub("\\+", "\\\\+", ctrl), "$"), colnames(data_diff))]
   diff_IS <- tidyr::gather(diff_IS, treatment, reading, -id, -description, -sumUniPeps, -sumPSMs, -countNum)
   diff_IS <- tidyr::separate(diff_IS, treatment, into = c("temperature",
                                                           "replicate", "treatment"), sep = "_")
@@ -162,7 +162,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
   for(k in cond){
     message(k)
     res <- list()
-    M <- data[,grep(paste0("_", ctrl, "$|_", k, "$"), colnames(data))]
+    M <- data[,grep(paste0("_", gsub("\\+", "\\\\+", ctrl), "$|_", gsub("\\+", "\\\\+", k), "$"), colnames(data))]
     for(i in temp){  # 6 temperatures = 6 fractions
       message(i)
       X <- M[,grep(paste0("^", i, "_"), colnames(M))]
@@ -182,7 +182,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
     message("Computing I-score")
     diff_IS[[paste0("IS_", k)]] <-
-      apply(diff_IS[,grep(paste0("_", k, "$"), colnames(diff_IS))], 1,
+      apply(diff_IS[,grep(paste0("_", gsub("\\+", "\\\\+", k), "$"), colnames(diff_IS))], 1,
             function(d){
               d = as.numeric(d)
               stabilization = sign(mean(d, na.rm = TRUE))
@@ -221,7 +221,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
     if(pv_method == "top2"){
       message("Getting top2 fraction")
-      diff_IS[[paste0("Top2_", k)]] <- apply(diff_IS[,grep(paste0("^[^I]*_", k, "$"), colnames(diff_IS))],
+      diff_IS[[paste0("Top2_", k)]] <- apply(diff_IS[,grep(paste0("^[^I]*_", gsub("\\+", "\\\\+", k), "$"), colnames(diff_IS))],
                                              1,
                                              function(x) paste(order(as.numeric(abs(x)),
                                                                      decreasing = TRUE)[1:2],
@@ -547,6 +547,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
                               cat.fontface = "bold",
                               cat.fontfamily = "sans")
     vennlist <- com_protein_loop(vennlist)
+
     too_long <- which(sapply(names(vennlist), nchar) > 31)
     if(length(too_long)){
       for(n in too_long){
@@ -559,11 +560,11 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
             if(length(in_common)){
               name_toolong <- gsub(paste(gsub("\\.", "\\\\.", in_common), collapse = "|"), "", name_toolong)
             }
-            
+
             name_toolong <- gsub("(?<=&)(\\.|-|_)|(\\.|-|_)(?=&)", "", name_toolong, perl = TRUE)
             name_toolong <- gsub("\\.\\.|\\.-|-\\.|--|__|_\\.|\\._|-_|_-", "", name_toolong, perl = TRUE)
             name_toolong <- gsub("^(-|\\.|_)|(-|\\.|_)$", "", name_toolong, perl = TRUE)
-            
+
             if(nchar(name_toolong) > 31){
               name_toolong <- paste0("&", name_toolong, "&")
               name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[a-zA-Z]).+?(?=&)")
@@ -618,6 +619,3 @@ find_cutoff <- function(x,y){
   x <- ifelse(length(x), x[length(x)], NA)
   return(x)
 }
-
-
-

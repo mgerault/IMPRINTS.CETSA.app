@@ -568,7 +568,7 @@ imprints_IS <- function(data, data_diff = NULL, ctrl, valid_val = NULL,
 
             if(nchar(name_toolong) > 31){
               name_toolong <- paste0("&", name_toolong, "&")
-              name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[A-z0-9]).+?(?=[A-z0-9]&)")
+              name_toolong <- stringr::str_remove_all(name_toolong, "(?<=&[A-z0-9].).+?(?=[A-z0-9]&)")
               name_toolong <-  gsub("^&|&$", "", name_toolong)
             }
           }

@@ -708,7 +708,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     res <- res %>%
       dplyr::group_by(id, Gene, treatment) %>%
       dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
-                                                metap::logitp(adj.P.Val)$p, # George's method
+                                                ifelse(ntemp > 1, metap::logitp(adj.P.Val)$p, adj.P.Val), # George's method
                                                 NA),
                        maxFC = ifelse(length(na.omit(logFC)),
                                       temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],
@@ -719,7 +719,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     res <- res %>%
       dplyr::group_by(id, Gene, treatment) %>%
       dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
-                                                metap::sumlog(adj.P.Val)$p, # Fisher's method
+                                                ifelse(ntemp > 1, metap::sumlog(adj.P.Val)$p, adj.P.Val), # Fisher's method
                                                 NA),
                        maxFC = ifelse(length(na.omit(logFC)),
                                       temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],
@@ -730,7 +730,7 @@ imprints_cleaved_peptides <- function(data, data_diff = NULL, control = "Vehicle
     res <- res %>%
       dplyr::group_by(id, Gene, treatment) %>%
       dplyr::summarise(combined_pvalue = ifelse(length(na.omit(logFC)),
-                                                metap::sump(adj.P.Val)$p, # Edgington’s method
+                                                ifelse(ntemp > 1, metap::sump(adj.P.Val)$p, adj.P.Val), # Edgington’s method
                                                 NA),
                        maxFC = ifelse(length(na.omit(logFC)),
                                       temperature[which(abs(logFC) == max(abs(logFC), na.rm = T))],
@@ -1005,7 +1005,7 @@ nb_pepval <- function(x){
   x[1,grep("^\\d{1,3}$", y)] <- apply(x[,grep("^\\d{1,3}$", y)], 2, function(z) sum(as.numeric(z)))
   x <- paste(x[1,], collapse = "_")
   x <- gsub("(?<=_\\d{1,3})_(?=\\d{2}C-)", "|", x, perl = TRUE)
-  x <- gsub("(?<=_\\d{1,3})_(?=B\\d{1}_)", ";", x, perl = TRUE)
+  x <- gsub("(?<=_\\d{1,3})_(?=B\\d{1,2}_)", ";", x, perl = TRUE)
 
   return(x)
 }

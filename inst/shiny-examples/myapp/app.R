@@ -192,7 +192,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                     start with 'Mix'.
                                                                                                                    <br>Same if you have empty channel(s); it needs to explicitely
                                                                                                                     start with 'Empty'.</h5>")),
-                                                                                             column(8, uiOutput("treat_nameui_pep"))
+                                                                                             column(8, radioButtons("pep_expdesign", "Upload a file containg the sample name of each TMT channel (xlsx, csv or txt)",
+                                                                                                                    c("No", "Yes"), inline = TRUE),
+                                                                                                    conditionalPanel(condition = "input.pep_expdesign == 'Yes'",
+                                                                                                                     shiny::HTML("<h5><b>The uploaded file should have only two columns named explicetely 'channel' and 'treatment'!</b></h5>"),
+                                                                                                                     fileInput("pep_expdesign_file", "", ), accept = c(".txt", ".csv", ".xlsx")),
+                                                                                                    uiOutput("treat_nameui_pep"))
                                                                                              ),
                                                                                     tags$hr(),
                                                                                     fluidRow(column(4, shiny::HTML("<br><h5>On your right, you can upload a data frame that contains
@@ -576,8 +581,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                                        "All peptides per proteins" = "peptide_one"),
                                                                                                selected = "individual_peptide")
                                                                                    ),
-                                                                            column(3, numericInput("lay_bar1_plotjoinpep", "Type the number of plot per row", min = 1, max = 10, step = 1, value = 2),
-                                                                                      numericInput("lay_bar2_plotjoinpep", "Type the number of plot per column", min = 1, max = 10, step = 1, value = 2)),
+                                                                            column(3, numericInput("lay_bar1_plotjoinpep", "Type the number of rows per page", min = 1, max = 10, step = 1, value = 2),
+                                                                                      numericInput("lay_bar2_plotjoinpep", "Type the number of columns per page", min = 1, max = 10, step = 1, value = 2)),
                                                                             column(3, numericInput("pdfw_plotjoinpep", "Type the width of the pdf page", min = 1, step = 1, value = 12),
                                                                                       numericInput("pdfh_plotjoinpep", "Type the height of the pdf page", min = 1, step = 1, value = 12)),
                                                                             column(3, textInput("pdftit_plotjoinpep", "Choose a name for your pdf file", "barplot"))
@@ -677,11 +682,11 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                     selectInput("quant_soft", "Select the software you used to obtain your
                                                                                                                Protein.Groups files",
                                                                                                 choices = c("PD", "MaxQuant"), selected = "PD"),
-                                                                                    shiny::HTML("<br><h5>On the table on your right, you can type the name
-                                                                                                 of the sample to the corresponding channel. The underscore '_'
+                                                                                    shiny::HTML("<br><h5>On the table on your right, you can type or upload a file with the name
+                                                                                                 of the sample to the corresponding TMT channel. The underscore '_'
                                                                                                  will be used as a separator between temperatures, bioreplicates and
-                                                                                                 treatments in all further functions, so make sure of your spelling.
-                                                                                                 <br><br>Here, you'll need to type first the bioreplicate and then
+                                                                                                 treatments (in that order) in all further functions, so make sure of your spelling.
+                                                                                                 <br><br>You'll need to type first the bioreplicate and then
                                                                                                  the treatment, like this : 'B1_Vehicle', 'B1_treatment', etc. Make sure that
                                                                                                  all names are different !
                                                                                                  <br>If you have a 'Mix' channel; it needs to explicitely start with 'Mix'.
@@ -689,7 +694,12 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                 'Empty'.</h5>")
                                                                                     ),
 
-                                                                             column(8, uiOutput("treat_nameui"))
+                                                                             column(8, radioButtons("prot_expdesign", "Upload a file containg the sample name of each TMT channel (xlsx, csv or txt)",
+                                                                                                    c("No", "Yes"), inline = TRUE),
+                                                                                    conditionalPanel(condition = "input.prot_expdesign == 'Yes'",
+                                                                                                     shiny::HTML("<h5><b>The uploaded file should have only two columns named explicetely 'channel' and 'treatment'!</b></h5>"),
+                                                                                                     fileInput("prot_expdesign_file", "", ), accept = c(".txt", ".csv", ".xlsx")),
+                                                                                    uiOutput("treat_nameui"))
                                                                              ),
 
                                                                     fileInput("PD_data", "Select txt files for your analysis",
@@ -731,12 +741,18 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                       conditionalPanel(condition = "output.cetsa_cleanup | input.step_cetsa > '2' ",
                                                        fluidRow(box(title = "Protein isoform ambiguity, data rearrangement and normalization", status = "primary",
                                                                     solidHeader = TRUE, collapsible = TRUE, width = 12,
-                                                                    tags$u(h3("Portein isoform ambiguity and data rearrangement")),
+                                                                    tags$u(h3("Protein isoform ambiguity and data rearrangement")),
                                                                     tags$hr(),
-                                                                    radioButtons("example3", "", choices = c("Use your data" = "up", "Load example file" = "load"),
-                                                                                 inline = TRUE),
+                                                                    radioButtons("prot_isoform_resolve_needed", "Do you need to resolve protein isoform ambiguity?",
+                                                                                 choices = c("Yes", "No"), inline = TRUE),
+                                                                    tags$hr(),
 
-                                                                    conditionalPanel(condition = "input.example3 == 'up'",
+                                                                    conditionalPanel(condition = "input.prot_isoform_resolve_needed == 'Yes'",
+                                                                                     radioButtons("example3", "", choices = c("Use your data" = "up", "Load example file" = "load"),
+                                                                                                  inline = TRUE)
+                                                                                     ),
+
+                                                                    conditionalPanel(condition = "input.example3 == 'up' & input.prot_isoform_resolve_needed == 'Yes'",
                                                                                      checkboxInput("got_ISO_cetsa", "Do you already have the file isoform_resolved ?", FALSE),
                                                                                      conditionalPanel(condition = "!input.got_ISO_cetsa",
                                                                                                       actionButton("ISO", "Resolve protein isoform", class = "btn-primary")
@@ -763,7 +779,6 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                        fluidRow(column(6, checkboxInput("iso_conso", "Perform isoform consolidation", TRUE),
                                                                                                                                        tags$hr(),
                                                                                                                                        conditionalPanel(condition = "input.iso_conso",
-                                                                                                                                                        numericInput("n_chan2", "Type the number of reading channels", value = 9, min = 1),
                                                                                                                                                         fileInput("tab_conso", "Upload the txt file containing an isoform substitution matching table",
                                                                                                                                                                   accept = ".txt"),
                                                                                                                                                         actionButton("see_tobe_conso", "View small example file")
@@ -775,9 +790,8 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                                 column(6, checkboxInput("iso_rearr", "Rearrange data", TRUE),
                                                                                                                                        tags$hr(),
                                                                                                                                        conditionalPanel(condition = "input.iso_rearr",
-                                                                                                                                                        numericInput("n_chan3", "Type the number of reading channels", value = 9, min = 1),
                                                                                                                                                         numericInput("count_thr", "Type the minimal threshold number of associated abundance count of proteins",
-                                                                                                                                                                     value = 2, min = 1, step = 1),
+                                                                                                                                                                     value = 1, min = 1, step = 1),
                                                                                                                                                         numericInput("rep_thr", "Type the minimal percentage threshold of protein being sampled from multiple runs",
                                                                                                                                                                      value = 0.1, min = 0, max = 1, step = 0.01),
                                                                                                                                                         checkboxInput("wit_37", "Whether the kept proteins should have readings at 37C", FALSE),
@@ -1106,9 +1120,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                         )
                                                                                        ),
                                                                                 conditionalPanel(condition = "input.save_bar",
-                                                                                                 column(4, numericInput("lay_bar1", "Type the number of plot per row",
+                                                                                                 column(4, numericInput("lay_bar1", "Type the number of rows per page",
                                                                                                                         min = 1, max = 10, step = 1, value = 4),
-                                                                                                          numericInput("lay_bar2", "Type the number of plot per column",
+                                                                                                          numericInput("lay_bar2", "Type the number of columns per page",
                                                                                                                        min = 1, max = 10, step = 1, value = 3)),
                                                                                                  column(4, numericInput("pdfw", "Type the width of the pdf page",
                                                                                                                         min = 1, step = 1, value = 12),
@@ -1230,9 +1244,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                          )
                                                                                                         ),
                                                                                                  conditionalPanel(condition = "input.save_bar_compl",
-                                                                                                                  column(4, numericInput("lay_bar1_compl", "Type the number of plot per row",
+                                                                                                                  column(4, numericInput("lay_bar1_compl", "Type the number of rows per page",
                                                                                                                                          min = 1, max = 10, step = 1, value = 4),
-                                                                                                                         numericInput("lay_bar2_compl", "Type the number of plot per column",
+                                                                                                                         numericInput("lay_bar2_compl", "Type the number of columns per page",
                                                                                                                                       min = 1, max = 10, step = 1, value = 3)),
                                                                                                                   column(4, numericInput("pdfw_compl", "Type the width of the pdf page",
                                                                                                                                          min = 1, step = 1, value = 12),
@@ -1357,9 +1371,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                                                          textInput("pdftit_simpf", "Choose a name for your pdf file", "barplot"))
                                                                                                         ),
                                                                                                  conditionalPanel(condition = "input.save_bar_simpf",
-                                                                                                                  column(4, numericInput("lay_bar1_simpf", "Type the number of plot per row",
+                                                                                                                  column(4, numericInput("lay_bar1_simpf", "Type the number of rows per page",
                                                                                                                                          min = 1, max = 10, step = 1, value = 4),
-                                                                                                                         numericInput("lay_bar2_simpf", "Type the number of plot per column",
+                                                                                                                         numericInput("lay_bar2_simpf", "Type the number of columns per page",
                                                                                                                                       min = 1, max = 10, step = 1, value = 3)),
                                                                                                                   column(4, numericInput("pdfw_simpf", "Type the width of the pdf page",
                                                                                                                                          min = 1, step = 1, value = 12),
@@ -2152,9 +2166,9 @@ ui <-  navbarPage(title = img(src="logo.png", height = "28px"),
                                                                                   )
                                                                  ),
                                                           conditionalPanel(condition = "input.save_bar_cell",
-                                                                           column(4, numericInput("lay_bar1_cell", "Type the number of plot per row",
+                                                                           column(4, numericInput("lay_bar1_cell", "Type the number of rows per page",
                                                                                                   min = 1, max = 10, step = 1, value = 4),
-                                                                                  numericInput("lay_bar2_cell", "Type the number of plot per column",
+                                                                                  numericInput("lay_bar2_cell", "Type the number of columns per page",
                                                                                                min = 1, max = 10, step = 1, value = 3)),
                                                                            column(4, numericInput("pdfw_cell", "Type the width of the pdf page",
                                                                                                   min = 1, step = 1, value = 12),
@@ -2413,6 +2427,53 @@ server <- function(input, output, session){
   })
 
   # treatments
+  treatpep_name_file <- reactive({
+    if(input$pep_expdesign == "Yes"){
+      File <- input$pep_expdesign_file
+      if(is.null(File)){
+        return(NULL)
+      }
+      else{
+        if(grepl("\\.xlsx$", File$datapath))
+          df <- openxlsx::read.xlsx(File$datapath)
+        else if (grepl("\\.csv$", File$datapath))
+          df <- readr::read_csv(File$datapath, show_col_types = FALSE)
+        else if (grepl("\\.txt$", File$datapath))
+          df <- readr::read_tsv(File$datapath, show_col_types = FALSE)
+
+
+        if(!is.null(pep_file_data())){
+          TMT <- colnames(readr::read_tsv(pep_file_data()$datapath[1], n_max = 0, progress = F, show_col_types = F)) # only read header
+          TMT <- unique(unlist(stringr::str_extract_all(TMT, "(?<=: )\\d{3}(C|N|D|CD|ND)(?=,)"))) # extract TMT channels --> not 126
+          TMT <- c("126", TMT)
+          if(length(TMT) == 9){
+            TMT <- c(TMT, "131")
+          }
+        }
+        else{
+          TMT <- NULL
+        }
+
+        if(any(!(c('channel', 'treatment') %in% colnames(df)))){
+          showNotification("Be sure you have the columns 'channel' and 'treatment' in your file!", type = "error")
+          return(NULL)
+        }
+        else if(nrow(df) != length(TMT)){
+          showNotification("Your file should have the same number of rows as your selected number of channels!", type = "error")
+          return(NULL)
+        }
+        else if(length(setdiff(df$channel, TMT))){
+          showNotification("Your file should have the same TMT channel names as shown in the table below!", type = "error")
+          return(NULL)
+        }
+        else
+          return(df)
+      }
+    }
+    else
+      return(NULL)
+  })
+
   output$treat_nameui_pep <- renderUI({
     if(!is.null(pep_file_data())){
       TMT <- colnames(readr::read_tsv(pep_file_data()$datapath[1], n_max = 0, progress = F, show_col_types = F)) # only read header
@@ -2434,6 +2495,13 @@ server <- function(input, output, session){
                 rows = list(names = TRUE),
                 cols = list(names = TRUE)
     )
+  })
+  observeEvent(treatpep_name_file(), {
+    if(!is.null(treatpep_name_file()) & input$pep_expdesign == "Yes"){
+      m <- input$treat_name_pep
+      m[treatpep_name_file()$channel,] <- treatpep_name_file()$treatment
+      updateMatrixInput(session, "treat_name_pep", m)
+    }
   })
 
   # protein file
@@ -3627,6 +3695,50 @@ server <- function(input, output, session){
 
 
   ### analysis tab - Proteins
+  treat_name_file <- reactive({
+    if(input$prot_expdesign == "Yes"){
+      File <- input$prot_expdesign_file
+      if(is.null(File)){
+        return(NULL)
+      }
+      else{
+        if(grepl("\\.xlsx$", File$datapath))
+          df <- openxlsx::read.xlsx(File$datapath)
+        else if (grepl("\\.csv$", File$datapath))
+          df <- readr::read_csv(File$datapath, show_col_types = FALSE)
+        else if (grepl("\\.txt$", File$datapath))
+          df <- readr::read_tsv(File$datapath, show_col_types = FALSE)
+
+        TMT <- list("10" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131"),
+                    "11" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C"),
+                    "16" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N"),
+                    "18" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N", "134C", "135N"),
+                    "32" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N",
+                             "127D", "128ND", "128CD", "129ND", "129CD", "130ND", "130CD", "131ND", "131CD", "132ND", "132CD", "133ND", "133CD", "134ND", "134CD", "135ND"),
+                    "35" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134N", "134C", "135N",
+                             "127D", "128ND", "128CD", "129ND", "129CD", "130ND", "130CD", "131ND", "131CD", "132ND", "132CD", "133ND", "133CD", "134ND", "134CD", "135ND", "135CD")
+                    )
+
+        if(any(!(c('channel', 'treatment') %in% colnames(df)))){
+          showNotification("Be sure you have the columns 'channel' and 'treatment' in your file!", type = "error")
+          return(NULL)
+        }
+        else if(nrow(df) != as.numeric(input$n_chan)){
+          showNotification("Your file should have the same number of rows as your selected number of channels!", type = "error")
+          return(NULL)
+        }
+        else if(length(setdiff(df$channel, TMT[[input$n_chan]]))){
+          showNotification("Your file should have the same TMT channel names as shown in the table below!", type = "error")
+          return(NULL)
+        }
+        else
+          return(df)
+      }
+    }
+    else
+      return(NULL)
+  })
+
   output$treat_nameui <- renderUI({
     TMT <- list("10" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131"),
                 "11" = c("126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C"),
@@ -3645,6 +3757,13 @@ server <- function(input, output, session){
                 rows = list(names = TRUE),
                 cols = list(names = TRUE)
     )
+  })
+  observeEvent(treat_name_file(), {
+    if(!is.null(treat_name_file()) & input$prot_expdesign == "Yes"){
+      m <- input$treat_name
+      m[treat_name_file()$channel,] <- treat_name_file()$treatment
+      updateMatrixInput(session, "treat_name", m)
+    }
   })
 
   cetsa_data <- reactive({
@@ -3966,17 +4085,25 @@ server <- function(input, output, session){
     }
   })
 
-  observeEvent(c(input$example3, input$got_ISO_cetsa, input$ISO, ISOresdata_cetsa()), {
-    if(input$example3 == "load"){
-      cetsa_isoform$x <- elu_example3_isoform_resolved
+  observeEvent(c(input$prot_isoform_resolve_needed, input$example3, input$got_ISO_cetsa,
+                 input$ISO, ISOresdata_cetsa()), {
+    if(input$prot_isoform_resolve_needed == "Yes"){
+      cetsa_isoform$x <- NULL
+      if(input$example3 == "load"){
+        cetsa_isoform$x <- elu_example3_isoform_resolved
+      }
+      else if(input$example3 == "up"){
+        if(input$got_ISO_cetsa){
+          cetsa_isoform$x <- cetsa_isoform_up$y
+        }
+        else{
+          cetsa_isoform$x <- cetsa_isoform_up$x
+        }
+      }
     }
-    else if(input$example3 == "up"){
-      if(input$got_ISO_cetsa){
-        cetsa_isoform$x <- cetsa_isoform_up$y
-      }
-      else{
-        cetsa_isoform$x <- cetsa_isoform_up$x
-      }
+    else{
+      cetsa_isoform$x <- cetsa_data_clean$x
+      updateCheckboxInput(session, "iso_conso", value = FALSE)
     }
   })
   #check if a file is upload
@@ -4021,7 +4148,7 @@ server <- function(input, output, session){
           return(NULL)
 
         d2 <- ms_isoform_consolidate(d2,
-                                     nread = input$n_chan2,
+                                     nread = ncol(d2) - 6, # nb total column minus id, description, condition, sumUniPeps, sumPSMs and countNum
                                      matchtable = File$datapath)
         cetsa_isoform$conso <- d2
         showNotification("Consolidation succeed !", type = "message", duration = 5)
@@ -4031,7 +4158,7 @@ server <- function(input, output, session){
         showNotification("Start rearranging data", type = "message", duration = 3)
         withCallingHandlers({
           shinyjs::html("diag_rearrange", "")
-          d2 <- imprints_rearrange(d2, nread = input$n_chan3,
+          d2 <- imprints_rearrange(d2, nread = ncol(d2) - 6, # nb total column minus id, description, condition, sumUniPeps, sumPSMs and countNum,
                                    repthreshold = input$rep_thr,
                                    averagecount = input$avgcount_abd,
                                    countthreshold = input$count_thr,
@@ -5359,21 +5486,20 @@ server <- function(input, output, session){
   DAT_text <- reactive({
     DAT <- NULL
     if(input$drug == "base" & length(input$drug2) > 1){
-      only_dat <- drug_data_sh$y$data[input$drug2]
-
-      DAT <- join_drugdata(only_dat, by = c("id", "description"))
-      DAT$drug <- rep(paste(input$drug2, collapse = " and "), nrow(DAT))
-      DAT_id <- lapply(only_dat, function(x) x$id)
-
-      com_pr <- com_protein_loop(DAT_id)
-
-      for (i in names(com_pr)){
-        DAT$drug[which(!is.na(match(DAT$id, com_pr[[i]])))] <- i
-      }
-
-      DAT <- DAT[,c("id", "drug")]
+      DAT <- as.data.frame(Reduce(rbind,
+                                  mapply(function(d, df){
+                                    df <- df[,"id", drop = FALSE]
+                                    df$drug <- d;
+                                    df
+                                  }, input$drug2, drug_data_sh$y$data[input$drug2],
+                                  SIMPLIFY = FALSE, USE.NAMES = FALSE)
+                                  )
+                           )
+      DAT <- DAT %>%
+        group_by(id) %>%
+        summarise(drug = paste(sort(drug), collapse = " & "))
     }
-
+    DAT
   })
   tabident_bar <- reactiveValues(
     r = NULL

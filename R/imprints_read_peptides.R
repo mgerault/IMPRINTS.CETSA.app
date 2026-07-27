@@ -124,8 +124,24 @@ imprints_read_peptides <- function(peptides_files, treatment, temperatures,
       message(paste0(ncont - nrow(peptides), " contaminants were removed from the data at temperature ", peptides_temperature))
     }
 
-    # removing mix and/or empty channels if any
+    ## renaming abundance columns as treatments
+    # if channel names in treatment, make sure the channel order is the same in the data:
+    if(!is.null(names(treatment))){
+      if(all(grepl("^\\d{3}", names(treatment)))){
+        abd_names_channel <- colnames(peptides)[(length(info_col)+1):(ncol(peptides) - 1)]
+        ord_channel <- sapply(channels, function(y) grep(paste0(" ", y, ","), abd_names_channel),
+                              USE.NAMES = FALSE)
+        if(all(sapply(ord_channel, length) == 1)){
+          peptides <- peptides[,c(1:length(info_col),
+                                  ord_channel + length(info_col),
+                                  ncol(peptides)
+                                  )]
+        }
+      }
+    }
     colnames(peptides)[(length(info_col)+1):(ncol(peptides) - 1)] <- paste0(peptides_temperature, "_", treatment)
+
+    # removing mix and/or empty channels if any
     if(length(grep("_Mix|_Empty", colnames(peptides)))){
       message(paste(paste(sub(".*_", "",
                               grep("_Mix|_Empty", colnames(peptides), value = TRUE)

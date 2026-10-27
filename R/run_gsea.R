@@ -221,9 +221,8 @@ get_wikipath <- function(wp = TRUE, species = "human"){
   }
   date <- paste0(date, collapse = "")
 
-  url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+  url_wiki <- paste0("https://data.wikipathways.org/", date, "/gmt/wikipathways-",
                      date, "-gmt-", species, ".gmt")
-  url_wiki <- url(url_wiki)
 
   wikipath <- tryCatch({
     if(wp){
@@ -238,9 +237,8 @@ get_wikipath <- function(wp = TRUE, species = "human"){
     date <- strsplit(date, "")[[1]][-(nchar(date)-1)]
     date <- paste0(date, collapse = "")
     date <- paste0(date, 1)
-    url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+    url_wiki <- paste0("https://data.wikipathways.org/", date, "/gmt/wikipathways-",
                        date, "-gmt-", species, ".gmt")
-    url_wiki <- url(url_wiki)
 
     wikipath2 <- tryCatch({
       if(wp){
@@ -264,9 +262,8 @@ get_wikipath <- function(wp = TRUE, species = "human"){
       date[1] <- ifelse(date[2] == "12", as.numeric(date[1]) - 1, date[1])
       date <- paste(date, collapse = "")
 
-      url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+      url_wiki <- paste0("https://data.wikipathways.org/", date, "/gmt/wikipathways-",
                          date, "-gmt-", species, ".gmt")
-      url_wiki <- url(url_wiki)
 
       wikipath3 <- tryCatch({
         if(wp){
@@ -281,15 +278,14 @@ get_wikipath <- function(wp = TRUE, species = "human"){
         date <- strsplit(date, "")[[1]][-(nchar(date)-1)]
         date <- paste0(date, collapse = "")
         date <- paste0(date, 1)
-        url_wiki <- paste0("https://wikipathways-data.wmcloud.org/", date, "/gmt/wikipathways-",
+        url_wiki <- paste0("https://data.wikipathways.org/", date, "/gmt/wikipathways-",
                            date, "-gmt-", species, ".gmt")
-        url_wiki <- url(url_wiki)
 
         if(wp){
           wikipath4 <- clusterProfiler::read.gmt.wp(url_wiki)
         }
         else{
-          wikipath4 <-clusterProfiler::read.gmt(url_wiki)
+          wikipath4 <- clusterProfiler::read.gmt(url_wiki)
         }
 
         return(wikipath4)
@@ -301,8 +297,6 @@ get_wikipath <- function(wp = TRUE, species = "human"){
     return(wikipath2)
   })
 
-
-  close(url_wiki)
   return(wikipath)
 }
 
